@@ -1,0 +1,33 @@
+User-agent: *
+Allow: /
+Allow: /about-us
+Allow: /why_autours
+Allow: /where-we-are
+Allow: /contact-us
+Allow: /blogs
+Allow: /results
+Allow: /vehicles/book
+Allow: /docs/
+
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+Disallow: /index
+Disallow: /membership
+Disallow: /my-bookings
+Disallow: /my-profile
+Disallow: /supplier/
+Disallow: /rentals/
+Disallow: /booking/
+Disallow: /vehicle
+Disallow: /branches
+Disallow: /promos
+Disallow: /reviews
+Disallow: /price-list
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+Sitemap: https://autours.net/sitemap.xml

@@ -1,0 +1,1358 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Autours External Supplier API",
+    "description": "API for external suppliers to integrate with Autours car rental platform. This API allows suppliers to manage their vehicles, view rentals, and receive webhook notifications for rental events.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Autours Support",
+      "email": "info@autours.net",
+      "url": "https://autours.net"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://www.autours.net/api",
+      "description": "Production Server"
+    },
+    {
+      "url": "http://localhost:8000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints for suppliers"
+    },
+    {
+      "name": "Profile",
+      "description": "Supplier profile management"
+    },
+    {
+      "name": "Vehicles",
+      "description": "Vehicle management endpoints"
+    },
+    {
+      "name": "Rentals",
+      "description": "Rental information endpoints"
+    },
+    {
+      "name": "Integration",
+      "description": "Webhook integration settings"
+    }
+  ],
+  "paths": {
+    "/external/supplier/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Supplier Login",
+        "description": "Authenticate a supplier and receive an API token for subsequent requests.",
+        "operationId": "supplierLogin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "supplier@example.com",
+                "password": "your_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": false,
+                  "message": "Invalid credentials."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a supplier account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": false,
+                  "message": "Only suppliers can access this API."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/external/supplier/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Supplier Logout",
+        "description": "Revoke the current API token.",
+        "operationId": "supplierLogout",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Successfully logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Logged out successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/external/supplier/profile": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get Supplier Profile",
+        "description": "Retrieve the authenticated supplier's profile information.",
+        "operationId": "getSupplierProfile",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Supplier profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/external/supplier/integration-settings": {
+      "put": {
+        "tags": ["Integration"],
+        "summary": "Update Integration Settings",
+        "description": "Enable or disable webhook integration and set the webhook URL. When integration is enabled, you will receive HTTP POST requests to your webhook URL for rental events (new rental, rental update, rental cancellation, rental request).",
+        "operationId": "updateIntegrationSettings",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationSettingsRequest"
+              },
+              "examples": {
+                "enable": {
+                  "summary": "Enable integration",
+                  "value": {
+                    "integration": true,
+                    "webhook_url": "https://your-system.com/webhook/autours"
+                  }
+                },
+                "disable": {
+                  "summary": "Disable integration",
+                  "value": {
+                    "integration": false,
+                    "webhook_url": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Integration settings updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Webhook URL required when enabling integration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": false,
+                  "message": "Webhook URL is required when enabling integration."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/external/supplier/vehicles": {
+      "get": {
+        "tags": ["Vehicles"],
+        "summary": "List Vehicles",
+        "description": "Retrieve a paginated list of all vehicles belonging to the authenticated supplier.",
+        "operationId": "listVehicles",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "type": "integer",
+              "default": 15,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vehicles retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Vehicles"],
+        "summary": "Create Vehicle",
+        "description": "Create a new vehicle for the authenticated supplier.",
+        "operationId": "createVehicle",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVehicleRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVehicleRequestJson"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Vehicle created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/external/supplier/vehicles/{vehicleId}/price": {
+      "put": {
+        "tags": ["Vehicles"],
+        "summary": "Update Vehicle Price",
+        "description": "Update the pricing for a specific vehicle. You can update one or more price fields in a single request.",
+        "operationId": "updateVehiclePrice",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the vehicle to update",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVehiclePriceRequest"
+              },
+              "examples": {
+                "allPrices": {
+                  "summary": "Update all prices",
+                  "value": {
+                    "price": 50.00,
+                    "week_price": 45.00,
+                    "month_price": 40.00
+                  }
+                },
+                "dailyOnly": {
+                  "summary": "Update daily price only",
+                  "value": {
+                    "price": 55.00
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vehicle price updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateVehiclePriceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "At least one price field is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "description": "Vehicle not found or no permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": false,
+                  "message": "Vehicle not found or you do not have permission to update it."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/external/supplier/rentals": {
+      "get": {
+        "tags": ["Rentals"],
+        "summary": "List Rentals",
+        "description": "Retrieve a paginated list of all rentals for the authenticated supplier's vehicles.",
+        "operationId": "listRentals",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "type": "integer",
+              "default": 15,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rentals retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Token",
+        "description": "Enter the token received from the login endpoint"
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Authentication required or token invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthenticated."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Supplier email address",
+            "example": "supplier@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 6,
+            "description": "Supplier password",
+            "example": "your_password"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Login successful."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Supplier Company"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "supplier@example.com"
+                  },
+                  "role": {
+                    "type": "string",
+                    "example": "active_supplier"
+                  }
+                }
+              },
+              "token": {
+                "type": "string",
+                "description": "API token to use for authenticated requests",
+                "example": "1|abcdefghijklmnopqrstuvwxyz123456"
+              },
+              "token_type": {
+                "type": "string",
+                "example": "Bearer"
+              }
+            }
+          }
+        }
+      },
+      "ProfileResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "Supplier Company"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "supplier@example.com"
+              },
+              "role": {
+                "type": "string",
+                "example": "active_supplier"
+              },
+              "phone": {
+                "type": "string",
+                "nullable": true,
+                "example": "+1234567890"
+              },
+              "company_name": {
+                "type": "string",
+                "nullable": true,
+                "example": "ABC Car Rentals"
+              },
+              "integration": {
+                "type": "boolean",
+                "description": "Whether webhook integration is enabled",
+                "example": true
+              },
+              "webhook_url": {
+                "type": "string",
+                "nullable": true,
+                "description": "URL where webhook notifications are sent",
+                "example": "https://your-system.com/webhook/autours"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-01-15T10:30:00.000000Z"
+              }
+            }
+          }
+        }
+      },
+      "IntegrationSettingsRequest": {
+        "type": "object",
+        "required": ["integration"],
+        "properties": {
+          "integration": {
+            "type": "boolean",
+            "description": "Enable or disable webhook integration"
+          },
+          "webhook_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "maxLength": 500,
+            "description": "URL to receive webhook notifications (required when integration is true)",
+            "example": "https://your-system.com/webhook/autours"
+          }
+        }
+      },
+      "IntegrationSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Integration settings updated successfully."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "integration": {
+                "type": "boolean",
+                "example": true
+              },
+              "webhook_url": {
+                "type": "string",
+                "nullable": true,
+                "example": "https://your-system.com/webhook/autours"
+              }
+            }
+          }
+        }
+      },
+      "CreateVehicleRequest": {
+        "type": "object",
+        "required": ["name", "description", "price", "week_price", "month_price", "pickup_loc", "category"],
+        "properties": {
+          "photo": {
+            "type": "string",
+            "description": "URL to vehicle photo (required if car_photo not provided)",
+            "example": "https://example.com/car-photo.jpg"
+          },
+          "car_photo": {
+            "type": "string",
+            "format": "binary",
+            "description": "Vehicle photo file upload (required if photo not provided)"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 1000,
+            "description": "Vehicle name/model",
+            "example": "Toyota Camry 2024"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 1000,
+            "description": "Vehicle description",
+            "example": "Comfortable sedan with automatic transmission"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "maximum": 999999.99,
+            "description": "Daily rental price",
+            "example": 50.00
+          },
+          "week_price": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "maximum": 999999.99,
+            "description": "Weekly rental price per day",
+            "example": 45.00
+          },
+          "month_price": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "maximum": 999999.99,
+            "description": "Monthly rental price per day",
+            "example": 40.00
+          },
+          "pickup_loc": {
+            "type": "integer",
+            "description": "Branch ID for pickup location",
+            "example": 1
+          },
+          "category": {
+            "type": "integer",
+            "description": "Category ID",
+            "example": 2
+          },
+          "fuel_policy_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Fuel policy ID",
+            "example": 1
+          },
+          "instant_confirmation": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether bookings are instantly confirmed",
+            "example": true
+          },
+          "activation": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the vehicle is active",
+            "example": true
+          },
+          "location_types": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Array of location type IDs",
+            "example": [1, 2]
+          },
+          "included": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Array of included feature IDs",
+            "example": [1, 3, 5]
+          },
+          "specifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "value"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Specification name",
+                  "example": "Transmission"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Specification value",
+                  "example": "Automatic"
+                },
+                "icon": {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Icon class name",
+                  "example": "fa-cog"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreateVehicleRequestJson": {
+        "type": "object",
+        "required": ["name", "description", "price", "week_price", "month_price", "pickup_loc", "category", "photo"],
+        "properties": {
+          "photo": {
+            "type": "string",
+            "description": "URL to vehicle photo",
+            "example": "https://example.com/car-photo.jpg"
+          },
+          "name": {
+            "type": "string",
+            "example": "Toyota Camry 2024"
+          },
+          "description": {
+            "type": "string",
+            "example": "Comfortable sedan with automatic transmission"
+          },
+          "price": {
+            "type": "number",
+            "example": 50.00
+          },
+          "week_price": {
+            "type": "number",
+            "example": 45.00
+          },
+          "month_price": {
+            "type": "number",
+            "example": 40.00
+          },
+          "pickup_loc": {
+            "type": "integer",
+            "example": 1
+          },
+          "category": {
+            "type": "integer",
+            "example": 2
+          },
+          "fuel_policy_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "instant_confirmation": {
+            "type": "boolean",
+            "example": true
+          },
+          "activation": {
+            "type": "boolean",
+            "example": true
+          },
+          "location_types": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [1, 2]
+          },
+          "included": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [1, 3, 5]
+          },
+          "specifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                }
+              }
+            },
+            "example": [
+              {"name": "Transmission", "value": "Automatic"},
+              {"name": "Seats", "value": "5"}
+            ]
+          }
+        }
+      },
+      "VehicleResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Vehicle created successfully"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Vehicle"
+          }
+        }
+      },
+      "Vehicle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 123
+          },
+          "name": {
+            "type": "string",
+            "example": "Toyota Camry 2024"
+          },
+          "description": {
+            "type": "string",
+            "example": "Comfortable sedan with automatic transmission"
+          },
+          "photo": {
+            "type": "string",
+            "example": "car_1234567890.jpg"
+          },
+          "price": {
+            "type": "number",
+            "example": 50.00
+          },
+          "week_price": {
+            "type": "number",
+            "example": 45.00
+          },
+          "month_price": {
+            "type": "number",
+            "example": 40.00
+          },
+          "activation": {
+            "type": "boolean",
+            "example": true
+          },
+          "instant_confirmation": {
+            "type": "boolean",
+            "example": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "branch": {
+            "$ref": "#/components/schemas/Branch"
+          },
+          "fuelPolicy": {
+            "$ref": "#/components/schemas/FuelPolicy"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "VehicleListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "current_page": {
+                "type": "integer",
+                "example": 1
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              },
+              "first_page_url": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer"
+              },
+              "last_page": {
+                "type": "integer"
+              },
+              "last_page_url": {
+                "type": "string"
+              },
+              "next_page_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "path": {
+                "type": "string"
+              },
+              "per_page": {
+                "type": "integer"
+              },
+              "prev_page_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "to": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "UpdateVehiclePriceRequest": {
+        "type": "object",
+        "description": "At least one price field is required",
+        "properties": {
+          "price": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "maximum": 999999.99,
+            "description": "Daily rental price",
+            "example": 50.00
+          },
+          "week_price": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "maximum": 999999.99,
+            "description": "Weekly rental price per day",
+            "example": 45.00
+          },
+          "month_price": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "maximum": 999999.99,
+            "description": "Monthly rental price per day",
+            "example": 40.00
+          }
+        }
+      },
+      "UpdateVehiclePriceResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Vehicle price updated successfully."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 123
+              },
+              "name": {
+                "type": "string",
+                "example": "Toyota Camry 2024"
+              },
+              "price": {
+                "type": "number",
+                "example": 50.00
+              },
+              "week_price": {
+                "type": "number",
+                "example": 45.00
+              },
+              "month_price": {
+                "type": "number",
+                "example": 40.00
+              }
+            }
+          }
+        }
+      },
+      "RentalListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "current_page": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Rental"
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "per_page": {
+                "type": "integer"
+              },
+              "last_page": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "Rental": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 456
+          },
+          "order_number": {
+            "type": "string",
+            "example": "ORD-2026-001234"
+          },
+          "order_status": {
+            "type": "integer",
+            "description": "Status ID"
+          },
+          "price": {
+            "type": "number",
+            "example": 250.00
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-04-15"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-04-20"
+          },
+          "start_time": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "end_time": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "vehicle": {
+            "$ref": "#/components/schemas/Vehicle"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RentalStatus"
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone_num": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Branch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "location": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "FuelPolicy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "RentalStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "PaymentMethod": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error message here"
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed."
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "email": ["The email field is required."],
+              "password": ["The password must be at least 6 characters."]
+            }
+          }
+        }
+      },
+      "WebhookPayload": {
+        "type": "object",
+        "description": "Payload sent to webhook URL when rental events occur",
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": ["new_rental", "rental_updated", "rental_cancelled", "rental_request"],
+            "description": "Type of rental event"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the event"
+          },
+          "rental": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "integer"},
+              "order_number": {"type": "string"},
+              "order_status": {"type": "integer"},
+              "price": {"type": "number"},
+              "supplier_price": {"type": "number", "nullable": true},
+              "start_date": {"type": "string", "format": "date"},
+              "end_date": {"type": "string", "format": "date"},
+              "start_time": {"type": "string"},
+              "end_time": {"type": "string"},
+              "num_of_days": {"type": "integer", "nullable": true},
+              "comment": {"type": "string", "nullable": true},
+              "created_at": {"type": "string", "format": "date-time"},
+              "updated_at": {"type": "string", "format": "date-time"}
+            }
+          },
+          "vehicle": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {"type": "integer"},
+              "name": {"type": "string"},
+              "description": {"type": "string"},
+              "category_id": {"type": "integer"},
+              "price": {"type": "number"}
+            }
+          },
+          "customer": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {"type": "integer"},
+              "name": {"type": "string"},
+              "email": {"type": "string", "format": "email"},
+              "phone": {"type": "string", "nullable": true}
+            }
+          },
+          "payment_method": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {"type": "integer"},
+              "name": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

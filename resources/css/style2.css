@@ -1,0 +1,42 @@
+.sc-aff-base .lang_box_home{width:130px}
+.sc-aff-base .lang_box_home select{width:100%}
+.sc-aff-base #sc-box .locDrop.dAge{width:auto}
+@media(max-width:329px){.sc-aff-base #sc-box .sc-field.half{width:100%}#sc-box .sc-field.formToggleInc>span{font-size:12px}}
+@media(max-width:509px){.sc-aff-base #sc-box .sc-date-field{width:100%}}
+@media(min-width:400px) and (max-width:509px){.sc-aff-base #sc-box .sc-vl-5 div.dropOffLocInc,.sc-aff-base #sc-box .sc-vl-5 div.pickUpLocInc{width:49%}
+    .sc-aff-base #sc-box .sc-vl-5 div.dropOffLocInc{margin-left:2%}
+    .sc-aff-base #sc-box .sc-vl-5 div.dropOffLocInc select,.sc-aff-base #sc-box .sc-vl-5 div.pickUpLocInc select{width:100%!important}
+    .sc-aff-base #sc-box .sc-date-field{width:100%}
+    .sc-aff-base #sc-box .sc-vl-5 .subMitBtn{float:right;width:65%}
+}
+@media(min-width:510px){.sc-aff-base #sc-box div.dropOffLocInc,.sc-aff-base #sc-box div.pickUpLocInc{width:100%}
+    .sc-aff-base #sc-box div.dropOffLocInc select,.sc-aff-base #sc-box div.pickUpLocInc select{width:calc(33.333% - 10px) !important}
+    .sc-aff-base #sc-box select:not(:last-child){margin-right: 10px;}
+    .sc-aff-base #sc-box div[class*="sc-hr-"] .sc-date-field{width:49%}
+    .sc-aff-base #sc-box div[class*="sc-hr-"] .sc-date-field{width: calc(50% - 6px);}
+    .sc-aff-base #sc-box div[class*="sc-vl-"] div.dropOffLocInc,.sc-aff-base #sc-box div[class*="sc-vl-"] div.pickUpLocInc{width:49%}
+    .sc-aff-base #sc-box div[class*="sc-vl-"] div.dropOffLocInc, .sc-aff-base #sc-box div[class*="sc-vl-"] div.pickUpLocInc {width:calc(50% - 7px);}
+    .sc-aff-base #sc-box div[class*="sc-vl-"] div.dropOffLocInc select,.sc-aff-base #sc-box div[class*="sc-vl-"] div.pickUpLocInc select{width:100%!important}
+    .sc-aff-base #sc-box div[class*="sc-hr-"] div.dropOffLocInc select,.sc-aff-base #sc-box div[class*="sc-hr-"] div.pickUpLocInc select{width:calc(33.333% - 10px) !important}
+    .sc-aff-base #sc-box div[class*="sc-vl-"] div.dropOffLocInc{margin-left:2%}
+    .sc-aff-base #sc-box div[class*="sc-vl-"] .sc-vacc div.dropOffLocInc {margin-left: 14px}
+    .sc-aff-base #sc-box .sc-date-field{width:48.9%}
+    .sc-aff-base #sc-box .sc-date-field:not(:last-child){margin-right:10px;}
+    .sc-aff-base #sc-box .sc-date-field {width: calc(50.5% - 10px);}
+    #sc-box .sc-vl-6 .sc-date-field{width: calc(50% - 5px);}
+    .sc-aff-base #sc-box .sc-vl-5 .sc-date-field{width:100%}
+    .sc-aff-base #sc-box .subMitBtn{float:right;width:50%}
+    .sc-aff-base div[class*="sc-vl-"] .sc-vacc{min-height:0}
+
+    .sc-aff-base #sc-box .sc-suggest.half div.dropOffLocInc,.sc-aff-base #sc-box .sc-suggest.half div.pickUpLocInc{width:49%}
+    .sc-aff-base #sc-box .sc-suggest.half div.dropOffLocInc{margin-left:2%}
+}
+#sc-box .formToggleInc .noInc{white-space:nowrap}
+#sc-box .sc-suggest .sc-field-wrapper,#sc-box .sc-suggest .sc-field-wrapper .suggest_input{position:relative}
+#sc-box .sc-suggest .sc-field-wrapper .data{width:100%}
+.sc-aff-base #sc-box .sc-suggest .sc-field-wrapper{position: unset;}
+.sc-aff-base #sc-box .sc-suggest div.dropOffLocInc .suggest_input,.sc-aff-base #sc-box .sc-suggest div.pickUpLocInc .suggest_input{width:100%}
+#sc-box .sc-field-wrapper .suggest_input #suggestion_preloader{background-color:#fff;z-index:2}
+#sc-box .sc-field-wrapper .suggest_input:after{position:absolute;content:"";font-weight:400;display:inline-block;top:29%;right:10px;background:url("data:image/svg+xml;base64,PCEtLSBHZW5lcmF0ZWQgYnkgSWNvTW9vbi5pbyAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNSIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDE1IDIwIiBmaWxsPSIjYjliOWI5Ij4NCjx0aXRsZT5sb2NhdGlvbi1tYXJrPC90aXRsZT4NCjxwYXRoIGQ9Ik03LjUwMiAwLjAyMGMtNC4xMjEgMC03LjQ3NCAzLjM3Ni03LjQ3NCA3LjUyNyAwIDUuODk5IDYuNzcxIDExLjk4OSA3LjA2MCAxMi4yNDYgMC4xMTkgMC4xMDUgMC4yNjYgMC4xNTcgMC40MTQgMC4xNTdzMC4yOTYtMC4wNTIgMC40MTQtMC4xNTdjMC4yODgtMC4yNTYgNy4wNjAtNi4zNDcgNy4wNjAtMTIuMjQ2IDAtNC4xNTEtMy4zNTMtNy41MjctNy40NzQtNy41Mjd6TTcuNTAyIDExLjY0NmMtMi4yODkgMC00LjE1Mi0xLjg2My00LjE1Mi00LjE1MnMxLjg2My00LjE1MiA0LjE1Mi00LjE1MmMyLjI4OSAwIDQuMTUyIDEuODYzIDQuMTUyIDQuMTUycy0xLjg2MyA0LjE1Mi00LjE1MiA0LjE1MnoiPjwvcGF0aD4NCjwvc3ZnPg0K") no-repeat;width:16px;height:20px;}
+@media only screen and (max-width: 575px) {#sc-box{padding:0 !important;}}
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,400i,500,500i,700,700i&display=swap');
