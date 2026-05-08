@@ -1,0 +1,121 @@
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { User } from '../../types';
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: AuthState = {
+  user: null,
+  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
+  isAuthenticated: false,
+  loading: false,
+  error: null,
+};
+
+// Existing Thunks (Mocks for logic integration)
+export const loginThunk = createAsyncThunk(
+  'auth/login',
+  async (credentials: any, { rejectWithValue }) => {
+    try {
+      // Mock API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (credentials.email === 'admin@autours.net' && credentials.password === 'password') {
+        const mockUser: User = { id: '1', name: 'Admin User', email: 'admin@autours.net', role: 'admin' };
+        const mockToken = 'mock-jwt-token-admin';
+        localStorage.setItem('token', mockToken);
+        return { user: mockUser, token: mockToken };
+      }
+      if (credentials.email === 'supplier@autours.net' && credentials.password === 'password') {
+        const mockUser: User = { id: '2', name: 'Supplier User', email: 'supplier@autours.net', role: 'supplier' };
+        const mockToken = 'mock-jwt-token-supplier';
+        localStorage.setItem('token', mockToken);
+        return { user: mockUser, token: mockToken };
+      }
+      return rejectWithValue('Invalid credentials');
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const registerThunk = createAsyncThunk(
+  'auth/register',
+  async (userData: any, { rejectWithValue }) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const mockUser: User = { id: '2', name: userData.fullName, email: userData.email, role: 'user' };
+      const mockToken = 'mock-jwt-token-new';
+      localStorage.setItem('token', mockToken);
+      return { user: mockUser, token: mockToken };
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const resetPasswordThunk = createAsyncThunk(
+  'auth/resetPassword',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return true;
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      localStorage.removeItem('token');
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loginThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(loginThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(registerThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(registerThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+  },
+});
+
+export const { logout, clearError } = authSlice.actions;
+export default authSlice.reducer;
