@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../../types';
+import { API_CONFIG } from '@/constants';
+import { supplierApi } from '@/services/api/supplierApi';
 
 interface AuthState {
   user: User | null;
@@ -22,23 +24,35 @@ export const loginThunk = createAsyncThunk(
   'auth/login',
   async (credentials: any, { rejectWithValue }) => {
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (credentials.email === 'admin@autours.net' && credentials.password === 'password') {
-        const mockUser: User = { id: '1', name: 'Admin User', email: 'admin@autours.net', role: 'admin' };
-        const mockToken = 'mock-jwt-token-admin';
-        localStorage.setItem('token', mockToken);
-        return { user: mockUser, token: mockToken };
+      if (API_CONFIG.USE_MOCK) {
+        // Mock API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (credentials.email === 'admin@autours.net' && credentials.password === 'password') {
+          const mockUser: User = { id: '1', name: 'Admin User', email: 'admin@autours.net', role: 'admin' };
+          const mockToken = 'mock-jwt-token-admin';
+          localStorage.setItem('token', mockToken);
+          return { user: mockUser, token: mockToken };
+        }
+        if (credentials.email === 'supplier@autours.net' && credentials.password === 'password') {
+          const mockUser: User = { id: '2', name: 'Supplier User', email: 'supplier@autours.net', role: 'supplier' };
+          const mockToken = 'mock-jwt-token-supplier';
+          localStorage.setItem('token', mockToken);
+          return { user: mockUser, token: mockToken };
+        }
+        return rejectWithValue('Invalid credentials');
+      } else {
+        // Real API Call via supplierApi
+        const response: any = await supplierApi.login(credentials);
+        if (response.status) {
+          const { user, token } = response.data;
+          localStorage.setItem('token', token);
+          return { user, token };
+        } else {
+          return rejectWithValue(response.message || 'Invalid credentials');
+        }
       }
-      if (credentials.email === 'supplier@autours.net' && credentials.password === 'password') {
-        const mockUser: User = { id: '2', name: 'Supplier User', email: 'supplier@autours.net', role: 'supplier' };
-        const mockToken = 'mock-jwt-token-supplier';
-        localStorage.setItem('token', mockToken);
-        return { user: mockUser, token: mockToken };
-      }
-      return rejectWithValue('Invalid credentials');
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Login failed');
     }
   }
 );

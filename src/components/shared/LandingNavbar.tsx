@@ -29,7 +29,7 @@ export default function LandingNavbar() {
           <div className="hidden lg:flex items-center gap-6">
             <CurrencySelector />
             <Link 
-              href="/admin" 
+              href="/login" 
               className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-gray-900 text-sm font-bold rounded-full transition-all shadow-lg shadow-primary/20 active:scale-95"
             >
               <LayoutDashboard size={18} />
@@ -57,7 +57,7 @@ export default function LandingNavbar() {
           </div>
           <div className="pt-4 flex flex-col gap-4">
             <Link 
-              href="/admin" 
+              href="/login" 
               onClick={() => dispatch(toggleMobileMenu())}
               className="w-full py-4 flex items-center justify-center gap-2 font-bold text-gray-900 bg-primary rounded-2xl shadow-lg shadow-primary/20"
             >

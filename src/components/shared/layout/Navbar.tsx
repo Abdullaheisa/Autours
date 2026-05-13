@@ -17,7 +17,7 @@ export default function Navbar() {
 
   const getManageHref = () => {
     if (!isAuthenticated) return "/login";
-    return user?.role === 'admin' ? "/admin" : "/company-dashboard";
+    return user?.role === 'admin' ? "/admin" : "/company";
   };
 
   const menuVariants = {
@@ -45,15 +45,15 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100/50">
+    <nav className="sticky top-0 z-50 bg-[var(--primary)] border-b border-black/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14">
-          {/* Logo - Large */}
+          {/* Logo - Proper Size */}
           <Link href="/" className="flex items-center group transition-transform active:scale-95 shrink-0">
             <img
               src={assets.logo}
               alt={siteConfig.name}
-              className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain transition-all"
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-all"
             />
           </Link>
 
@@ -65,16 +65,16 @@ export default function Navbar() {
           {/* Right side Actions */}
           <div className="flex items-center gap-2">
             <div className="hidden lg:flex items-center gap-2">
-              {/* Manage Button - Bigger */}
+              {/* Manage Button - White on Yellow */}
               <Link
                 href={getManageHref()}
-                className="flex items-center gap-1.5 px-4 py-2 bg-primary text-gray-900 border-2 border-primary hover:bg-white font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95"
               >
                 <LayoutDashboard size={14} />
                 <span>Manage</span>
               </Link>
 
-              {/* Currency Selector - Small, no flag, code only */}
+              {/* Currency Selector */}
               <div className="scale-[0.85] origin-right">
                 <CurrencySelector />
               </div>
@@ -82,7 +82,7 @@ export default function Navbar() {
 
             <button
               onClick={() => dispatch(toggleMobileMenu())}
-              className="lg:hidden p-2 bg-gray-50 text-gray-900 rounded-xl transition-all active:scale-90"
+              className="lg:hidden p-2 bg-black/10 text-gray-900 rounded-xl transition-all active:scale-90"
             >
               <motion.div animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}>
                 {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -100,7 +100,7 @@ export default function Navbar() {
             animate="open"
             exit="closed"
             variants={menuVariants}
-            className="lg:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 p-4 space-y-4 shadow-2xl z-40 overflow-hidden"
+            className="lg:hidden absolute top-full left-0 right-0 bg-[var(--primary)] border-b border-black/10 p-4 space-y-4 shadow-2xl z-40 overflow-hidden"
           >
             <motion.div variants={itemVariants} className="flex flex-col gap-3">
               <CurrencySelector variant="mobile" onMobileClose={() => dispatch(toggleMobileMenu())} />
@@ -110,7 +110,7 @@ export default function Navbar() {
               <Link
                 href={getManageHref()}
                 onClick={() => dispatch(toggleMobileMenu())}
-                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-gray-900 bg-primary border-2 border-primary rounded-xl shadow-sm active:scale-95 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-gray-900 bg-white border-2 border-white rounded-xl shadow-sm active:scale-95 transition-all"
               >
                 <LayoutDashboard size={16} />
                 Manage

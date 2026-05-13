@@ -7,8 +7,8 @@
 :root {
   /* ========================================= */
   /* MASTER THEME COLOR - Updated as requested */
-  --primary: #f4d849;
-  --primary-rgb: 244, 216, 73;
+  --primary: #f9d602;
+  --primary-rgb: 249, 214, 2;
   /* ========================================= */
 
   /* Theme Colors */
@@ -18,22 +18,22 @@
   --text: #1a1a1a;
   --card: #f9f9f9;
   --border: #e5e5e5;
-  
+
   --title-font: "Outfit", Helvetica, Arial, sans-serif;
   --body-font: "Manrope", Helvetica, Arial, sans-serif;
   --font-family: var(--body-font);
 
-  /* Primary Shades - Calculated from #f4d849 */
-  --primary-50: #fefbeb;
-  --primary-100: #fdf5c7;
-  --primary-200: #fbe98c;
-  --primary-300: #f8d851;
-  --primary-400: #f4d849;
+  /* Primary Shades - Calculated from #f9d602 */
+  --primary-50: #fefceb;
+  --primary-100: #fef9c7;
+  --primary-200: #fdf38c;
+  --primary-300: #fbe851;
+  --primary-400: #f9d602;
   --primary-500: var(--primary);
-  --primary-600: #d1a114;
-  --primary-700: #a77813;
-  --primary-800: #865f16;
-  --primary-900: #714f18;
+  --primary-600: #d4a814;
+  --primary-700: #a87e13;
+  --primary-800: #8b6316;
+  --primary-900: #745118;
 }
 
 .dark {
@@ -42,7 +42,7 @@
   --card: #141414;
   --border: #1f1f1f;
   --secondary-color: #f3f4f6;
-  
+
   /* In dark mode, we keep the primary yellow but maybe slightly adjust shades if needed */
   /* For now, keep them consistent */
 }
@@ -63,7 +63,7 @@
     @apply bg-[var(--primary)] text-black font-black px-6 py-3 rounded-xl hover:scale-[1.02] transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50 uppercase tracking-tighter;
     font-family: var(--title-font);
   }
-  
+
   .glass {
     @apply bg-white/5 backdrop-blur-xl border border-white/10;
   }
@@ -120,6 +120,6 @@
   background: #e5e7eb;
   border-radius: 10px;
 }
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+.scrollbar-thin::-webkit-scrollbar-thumb-thumb:hover {
   background: #d1d5db;
 }

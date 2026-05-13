@@ -1,66 +1,81 @@
 import { NextResponse } from 'next/server';
+import { cars } from '@/data/cars';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    let cookieHeader = request.headers.get('cookie') || '';
-    let xsrfToken = '';
-    let newSetCookie = '';
+    
+    console.log('--- FILTER PROXY PAYLOAD (MOCKED) ---');
+    console.log(JSON.stringify(body, null, 2));
 
-    // If no session exists, fetch CSRF token from backend
-    if (!cookieHeader.includes('XSRF-TOKEN')) {
-    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-    const csrfRes = await fetch(`${BASE_URL}/sanctum/csrf-cookie`, { method: 'GET' });
-    const setCookie = csrfRes.headers.get('set-cookie');
-    if (setCookie) {
-      newSetCookie = setCookie.replace(/Domain=[^;]+;?/gi, '');
-      cookieHeader = setCookie.split(', ').map((c: string) => c.split(';')[0]).join('; ');
-      const match = setCookie.match(/XSRF-TOKEN=([^;]+)/);
-      if (match) xsrfToken = decodeURIComponent(match[1]);
-    }
-  } else {
-    const match = cookieHeader.match(/XSRF-TOKEN=([^;]+)/);
-    if (match) xsrfToken = decodeURIComponent(match[1]);
-  }
+    // Calculate dynamic dates difference or default to 3 days
+    const dateFrom = body.date_from ? new Date(body.date_from) : new Date();
+    const dateTo = body.date_to ? new Date(body.date_to) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    const diffTime = Math.abs(dateTo.getTime() - dateFrom.getTime());
+    let daysNumber = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (daysNumber === 0) daysNumber = 1;
 
-  console.log('--- FILTER PROXY PAYLOAD ---');
-  console.log(JSON.stringify(body, null, 2));
+    const mockData = {
+      location: body.pickupLoc || 'Dubai',
+      date_from: body.date_from,
+      date_to: body.date_to,
+      count: cars.length,
+      daysNumber: daysNumber,
+      min: 15,
+      max: 1500,
+      priceTax: 10,
+      filteredVehicles: cars.map(c => ({
+        ...c,
+        id: c.id,
+        name: c.name,
+        photo: c.image, // Map image to photo for Vehicle type
+        price_in_usd: c.price_in_usd,
+        supplier: {
+          company: c.supplierName || c.supplier?.name || 'Test Supplier',
+          logo: c.supplier?.logo,
+          rating: c.rating || c.supplier?.rating,
+          reviews_count: c.reviewsCount || c.supplier?.reviewsCount,
+          rentalTerms: c.supplier?.rentalTerms,
+          lat: c.supplier?.lat,
+          lng: c.supplier?.lng,
+          address: c.supplier?.address,
+          instant_confirmation: c.supplier?.instantConfirmation,
+        },
+        specifications: [
+          { name: 'seats', option: String(c.seats || c.passengers) },
+          { name: 'doors', option: String(c.doors) },
+          { name: 'transmission', option: c.transmission },
+          { name: 'fuel', option: c.fuelType },
+          { name: 'bags', option: String(c.suitcases) },
+          { name: 'type', option: c.type || c.category }
+        ],
+        included: c.inclusions?.map((inc, i) => ({ id: i, what_is_included: inc })) || [],
+        fuelPolicy: c.fuelPolicy,
+        locationType: c.locationType,
+        freeCancellation: c.freeCancellation
+      })),
+      filteredCategories: [
+        { id: 1, name: 'Sedan', vehicle_count: 2 },
+        { id: 2, name: 'SUV', vehicle_count: 2 },
+        { id: 3, name: 'Luxury', vehicle_count: 2 }
+      ],
+      filteredSuppliers: [
+        { id: 1, name: 'MAHD Rent', vehicle_count: 1 },
+        { id: 2, name: 'Highway', vehicle_count: 1 },
+        { id: 3, name: 'Royal Star', vehicle_count: 1 }
+      ],
+      filteredLocationTypes: [
+        { id: 1, name: 'Airport', vehicle_count: 3 },
+        { id: 2, name: 'City Center', vehicle_count: 3 }
+      ],
+      paymentMethods: [
+        { id: 1, name: 'Credit Card', vehicle_count: 6 },
+        { id: 2, name: 'Cash', vehicle_count: 4 }
+      ]
+    };
 
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-  const backendResponse = await fetch(`${BASE_URL}/filter/vehicles`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Cookie': cookieHeader,
-      'X-XSRF-TOKEN': xsrfToken,
-    },
-    body: JSON.stringify(body),
-  });
-    let data;
-    const contentType = backendResponse.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      data = await backendResponse.json().catch(() => ({}));
-      console.log('--- BACKEND FILTER DATA ---');
-      console.log(JSON.stringify(data, null, 2));
-    } else {
-      data = { message: 'Success', _raw: await backendResponse.text() };
-    }
+    return NextResponse.json(mockData, { status: 200 });
 
-    const response = NextResponse.json(data, {
-      status: backendResponse.status,
-    });
-
-    if (newSetCookie) {
-      response.headers.set('Set-Cookie', newSetCookie);
-    } else {
-      const backendSetCookie = backendResponse.headers.get('set-cookie');
-      if (backendSetCookie) {
-        response.headers.set('Set-Cookie', backendSetCookie.replace(/Domain=[^;]+;?/gi, ''));
-      }
-    }
-
-    return response;
   } catch (error: any) {
     console.error('Proxy Filter Error:', error);
     return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });

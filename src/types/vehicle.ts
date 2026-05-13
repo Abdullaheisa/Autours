@@ -109,17 +109,12 @@ export interface SearchPayload {
 }
 
 export interface FilterPayload extends SearchPayload {
-  priceRange?: [number, number];
+  priceRange?: number;
   category?: string[];
   supplier?: string[];
-  locationType?: string[];
-  seats?: string[];
-  doors?: string[];
-  transmission?: string[];
-  fuelType?: string[];
-  airConditioning?: string;
-  suitcases?: string[];
-  paymentType?: string[];
+  location_type_id?: string[];
+  payment_methods?: string[];
+  specifications?: { name: string; option: string[] }[];
   rating?: number;
   sortBy?: string;
 }
@@ -130,6 +125,8 @@ export interface FilterResponse {
   daysNumber: number;
   max: number;
   min: number;
+  filteredCategories?: { id: number; name: string; vehicle_count: number }[];
+  filteredSuppliers?: { id: number; name: string; vehicle_count: number }[];
 }
 
 export interface LocationBranch {

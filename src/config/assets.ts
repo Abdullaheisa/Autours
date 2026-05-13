@@ -1,5 +1,5 @@
 export const assets = {
-  logo: '/img/4k_logo.png',
+  logo: '/img/4k-logo.png',
   logoFooter: '/img/4k-logo.png',
   hero: {
     background: '/img/banner-bk.jpg',
@@ -59,5 +59,15 @@ export const assets = {
     visa: '/img/payment/VISA-logo.png',
     mastercard: '/img/payment/Mastercard-logo.svg',
     knet: '/img/payment/knet-logo.png',
+  },
+  // Car Card Icons - used in CarCard component
+  icons: {
+    ac: '/img/icons/air.png',
+    seats: '/img/icons/chair.svg',
+    doors: '/img/icons/doorpng.png',
+    bags: '/img/icons/suitcase.svg',
+    fuel: '/img/icons/fuel.svg',
+    transmission: '/img/icons/otomatc.png',
+    instant: '/img/icons/instant_confirmation.png',
   },
 };

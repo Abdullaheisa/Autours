@@ -95,20 +95,15 @@ export default function CategoryFilterBar({ onFilterChange }: CategoryFilterBarP
                 }`}
             >
               {/* Category Image */}
-              <div className="w-full h-[75px] sm:h-[85px] flex items-center justify-center overflow-hidden">
+              <div className="w-full h-[120px] sm:h-[160px] flex items-center justify-center overflow-hidden">
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-[140%] object-contain"
                   loading="lazy"
                 />
               </div>
-              {/* Category Name */}
-              <span className={`mt-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
-                isSelected ? 'text-primary' : 'text-gray-500'
-              }`}>
-                {cat.name}
-              </span>
+
             </button>
           );
         })}

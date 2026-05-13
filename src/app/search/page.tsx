@@ -58,17 +58,23 @@ function SearchPageContent() {
       currency: currencyCode,
     };
 
-    if (filterParams.priceRange) payload.priceRange = filterParams.priceRange;
+    if (filterParams.priceRange) payload.priceRange = filterParams.priceRange[1];
     if (filterParams.category.length > 0) payload.category = filterParams.category;
     if (filterParams.supplier.length > 0) payload.supplier = filterParams.supplier;
-    if (filterParams.locationType.length > 0) payload.locationType = filterParams.locationType;
-    if (filterParams.seats.length > 0) payload.seats = filterParams.seats;
-    if (filterParams.doors.length > 0) payload.doors = filterParams.doors;
-    if (filterParams.transmission.length > 0) payload.transmission = filterParams.transmission;
-    if (filterParams.fuelType.length > 0) payload.fuelType = filterParams.fuelType;
-    if (filterParams.suitcases.length > 0) payload.suitcases = filterParams.suitcases;
-    if (filterParams.paymentType.length > 0) payload.paymentType = filterParams.paymentType;
-    if (filterParams.airConditioning) payload.airConditioning = filterParams.airConditioning;
+    if (filterParams.locationType.length > 0) payload.location_type_id = filterParams.locationType;
+    if (filterParams.paymentType.length > 0) payload.payment_methods = filterParams.paymentType;
+    
+    // Group specifications
+    const specifications: { name: string; option: string[] }[] = [];
+    if (filterParams.seats.length > 0) specifications.push({ name: 'seats', option: filterParams.seats });
+    if (filterParams.doors.length > 0) specifications.push({ name: 'doors', option: filterParams.doors });
+    if (filterParams.transmission.length > 0) specifications.push({ name: 'transmission', option: filterParams.transmission });
+    if (filterParams.fuelType.length > 0) specifications.push({ name: 'fuel_type', option: filterParams.fuelType });
+    if (filterParams.suitcases.length > 0) specifications.push({ name: 'suitcases', option: filterParams.suitcases });
+    if (filterParams.airConditioning) specifications.push({ name: 'ac', option: [filterParams.airConditioning] });
+    
+    if (specifications.length > 0) payload.specifications = specifications;
+    
     if (filterParams.rating !== null) payload.rating = filterParams.rating;
     if (filterParams.sortBy) payload.sortBy = filterParams.sortBy;
 
@@ -122,7 +128,7 @@ function SearchPageContent() {
   const hasValidSearch = searchParams.location && searchParams.dateFrom && searchParams.dateTo;
 
   return (
-    <main className="min-h-screen bg-[#fcfcfc]">
+    <main className="min-h-screen bg-gray-50">
       <Navbar />
 
       <div className="md:hidden">
@@ -141,7 +147,7 @@ function SearchPageContent() {
       <div className="max-w-[1400px] mx-auto px-4 py-8">
         {!hasValidSearch ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center mb-6">
               <AlertCircle size={32} className="text-gray-400" />
             </div>
             <h2 className="text-xl font-black text-gray-900 mb-2">No Search Data</h2>
@@ -157,11 +163,11 @@ function SearchPageContent() {
           </div>
         ) : (
           <div className="flex flex-col md:flex-row gap-6 items-start">
-            <aside className="w-full md:w-[280px] lg:w-[320px] shrink-0">
-              <div className="hidden md:block mb-4">
+            <aside className="w-full md:w-[280px] lg:w-[320px] shrink-0 space-y-4">
+              <div className="hidden md:block">
                 <SearchSummary />
               </div>
-              <div className="hidden md:block mb-4">
+              <div className="hidden md:block">
                 <ResultsSearchBar
                   onSearch={handleReSearch}
                   isOpen={true}
@@ -208,7 +214,7 @@ function SearchPageContent() {
               )}
 
               {filterError && !isFiltering && (
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+                <div className="bg-white border border-red-200 rounded-2xl p-6 text-center shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
                   <AlertCircle size={24} className="text-red-500 mx-auto mb-3" />
                   <p className="text-sm font-bold text-red-700 mb-1">Failed to load vehicles</p>
                   <p className="text-xs text-red-500 mb-4">{filterError}</p>
@@ -223,7 +229,7 @@ function SearchPageContent() {
 
               {!isFiltering && !filterError && hasSearched && vehicles.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                  <div className="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center mb-6">
                     <Car size={32} className="text-gray-400" />
                   </div>
                   <h3 className="text-lg font-black text-gray-900 mb-2">No Cars Found</h3>

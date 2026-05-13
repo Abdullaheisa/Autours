@@ -49,7 +49,7 @@ export const vehicleApi = {
       };
     }
 
-    const response = await apiClient.post<any>('/api/filter/vehicles', cleanPayload(payload));
+    const response = await apiClient.post<any>('/filter/vehicles', cleanPayload(payload));
     
     // Map response to local domain model
     return {
@@ -67,7 +67,7 @@ export const vehicleApi = {
     }
 
     try {
-      return apiClient.get<LocationBranch[]>('/get/locations');
+      return await apiClient.get<LocationBranch[]>('/get/locations');
     } catch (err) {
       console.error('[LOCATIONS ERROR]', err);
       return [];

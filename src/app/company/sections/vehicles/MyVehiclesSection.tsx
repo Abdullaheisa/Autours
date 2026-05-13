@@ -1,29 +1,76 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Plus, Filter, Edit2, Trash2, CheckCircle2, XCircle, MoreVertical } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, Plus, Filter, Edit2, Trash2, CheckCircle2, XCircle, MoreVertical, Loader2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
-import { vehiclesPhotos } from "@/lib/data";
 import { useSearch } from "../../context/SearchContext";
+import { supplierApi } from "@/services/api/supplierApi";
 
 export default function MyVehiclesSection() {
   const { searchQuery } = useSearch();
   const [localSearch, setLocalSearch] = useState("");
-  const [items, setItems] = useState(vehiclesPhotos);
+  const [items, setItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const response = await supplierApi.getVehicles();
+        if (response && Array.isArray(response.data)) {
+          setItems(response.data);
+        } else if (response && response.data && Array.isArray((response.data as any).data)) {
+          setItems((response.data as any).data);
+        } else {
+          setItems([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch vehicles:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchVehicles();
+  }, []);
 
   const filteredVehicles = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();
-    return items.filter(v => 
-      v.name.toLowerCase().includes(query) || 
-      v.category.toLowerCase().includes(query)
-    );
+    return items.filter(v => {
+      const catName = typeof v.category === 'object' ? v.category?.name : v.category;
+      return v.name?.toLowerCase().includes(query) || 
+             String(catName || '')?.toLowerCase().includes(query);
+    });
   }, [items, searchQuery, localSearch]);
 
   const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this vehicle from your fleet?")) {
+    if (confirm("Are you sure you want to delete this vehicle from your fleet? Note: Delete API is not available yet.")) {
       setItems(prev => prev.filter(v => v.id !== id));
     }
+  };
+
+  const toggleActivation = (id: number, currentStatus: boolean) => {
+    // Optimistic UI update
+    setItems(prev => prev.map(v => v.id === id ? { ...v, activation: !currentStatus } : v));
+    // Note: There is no API endpoint in Swagger for toggling activation yet.
+    // If one is added, you would call it here, e.g., supplierApi.toggleVehicleActivation(id)
+  };
+
+  const getImageUrl = (v: any) => {
+    let img = v.image || v.photo || v.car_photo || v.cover_image;
+    // If it's an array, take the first one
+    if (Array.isArray(img)) img = img[0];
+    // If it's an object with a url or path property
+    if (img && typeof img === 'object') img = img.url || img.path || img.image || '';
+    
+    if (!img || typeof img !== 'string') return null;
+    if (img.startsWith('http')) return img;
+    
+    // Clean up path
+    img = img.replace(/^\/+/, ''); // Remove leading slashes
+    if (img.startsWith('storage/')) return `https://www.autours.net/${img}`;
+    if (img.startsWith('public/')) return `https://www.autours.net/storage/${img.replace('public/', '')}`;
+    
+    return `https://www.autours.net/storage/${img}`;
   };
 
   return (
@@ -59,8 +106,8 @@ export default function MyVehiclesSection() {
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Vehicle Details</th>
                 <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Category</th>
-                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Year</th>
-                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Availability</th>
+                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Daily Price</th>
+                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Active / Available</th>
                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Management</th>
               </tr>
             </thead>
@@ -69,22 +116,31 @@ export default function MyVehiclesSection() {
                 <tr key={vehicle.id} className="hover:bg-gray-50/30 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-12 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 shrink-0">
-                        {vehicle.image && <img src={vehicle.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />}
+                      <div className="w-20 h-12 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 shrink-0 flex items-center justify-center">
+                        {getImageUrl(vehicle) ? (
+                          <img src={getImageUrl(vehicle)} alt={vehicle.name || "Car"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Car&background=f3f4f6&color=9ca3af'; }} />
+                        ) : (
+                          <span className="text-xs text-gray-400 font-bold">No img</span>
+                        )}
                       </div>
                       <span className="font-bold text-gray-900 text-sm">{vehicle.name}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-[10px] font-bold px-3 py-1.5 bg-primary-50 text-primary-700 rounded-lg uppercase tracking-wider border border-primary-100">
-                      {vehicle.category}
+                      {typeof vehicle.category === 'object' ? vehicle.category?.name : vehicle.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 font-bold">2024</td>
+                  <td className="px-6 py-4 text-sm text-gray-500 font-bold">
+                    {vehicle.price ? `$${vehicle.price}` : 'N/A'}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center">
-                      <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-emerald-500 shadow-inner">
-                        <span className="inline-block h-4 w-4 translate-x-6 transform rounded-full bg-white transition-transform shadow-sm" />
+                      <button 
+                        onClick={() => toggleActivation(vehicle.id, vehicle.activation)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full shadow-inner transition-colors duration-300 ${vehicle.activation ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${vehicle.activation ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </div>
                   </td>

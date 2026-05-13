@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { assets } from '@/config/assets';
 import { RootState, AppDispatch } from '@/store';
-import { initiateSearch, setSearchParams } from '@/store/slices/searchSlice';
+import { setSearchParams } from '@/store/slices/searchSlice';
 
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
@@ -127,20 +127,7 @@ export default function HeroSearch() {
       endTime,
     }));
 
-    // Call the search API to save session on backend
-    try {
-      await dispatch(initiateSearch({
-        pickupLoc: location.trim(),
-        date_from: dateFrom,
-        date_to: dateTo,
-        time_from: startTime,
-        time_to: endTime,
-        currency: currencyCode,
-      })).unwrap();
-    } catch {
-      // Even if the session-save fails, we still navigate so the
-      // filter endpoint can be called from the results page.
-    }
+
 
     // Navigate to results page with search params in URL
     const params = new URLSearchParams();
@@ -157,7 +144,7 @@ export default function HeroSearch() {
   return (
     <>
       {/* ==== HERO SECTION ==== */}
-      <section className="relative min-h-[70vh] flex flex-col items-center justify-start pt-20 pb-0" aria-label="Car Rental Search">
+      <section className="relative min-h-[95vh] flex flex-col items-center justify-start pt-28 pb-0" aria-label="Car Rental Search">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <div 
@@ -167,26 +154,26 @@ export default function HeroSearch() {
               filter: 'brightness(0.5) contrast(1.1)'
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/80" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 w-full flex flex-col items-center">
               {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-medium text-white leading-tight drop-shadow-2xl">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
               Car Rentals - <span className="text-primary">Search, Book & Enjoy.</span>
             </h1>
           </div>
 
           {/* Search Form */}
-          <div className="bg-white/70 backdrop-blur-sm p-3 lg:p-5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 w-full max-w-7xl">
+          <div className="bg-white/40 backdrop-blur-md p-4 lg:p-6 rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/20 w-full max-w-7xl">
             <form onSubmit={handleSearch} className="space-y-6">
               <div className="mb-1">
-                <span className="text-sm font-semibold text-gray-700">Select Pickup Location</span>
+                <span className="text-sm font-black text-gray-900">Select Pickup Location</span>
               </div>
 
               {/* ==== صف الحقول فقط ==== */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-1.5 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 items-end">
                 {/* Location Input */}
                 <div className="lg:col-span-5 relative space-y-2" ref={locationsRef}>
                   <div className="relative group">
@@ -200,11 +187,11 @@ export default function HeroSearch() {
                       }}
                       onFocus={() => location.length > 0 && setShowLocations(true)}
                       placeholder="Enter your Location"
-                      className={`w-full h-11 pl-5 pr-10 bg-gray-50 border rounded-2xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all ${
-                        errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-100'
+                      className={`w-full h-10 pl-5 pr-10 bg-white/90 border rounded-2xl text-sm font-black text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
+                        errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                       }`}
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                       <Search size={18} />
                     </div>
 
@@ -226,8 +213,8 @@ export default function HeroSearch() {
                                 {loc.location_type?.toLowerCase().includes('airport') ? <Plane size={18} /> : <Building size={18} />}
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm font-bold text-gray-800">{loc.location}</span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{loc.country} • {loc.name}</span>
+                                <span className="text-sm font-black text-gray-900">{loc.location}</span>
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{loc.country} • {loc.name}</span>
                               </div>
                             </button>
                           ))
@@ -236,8 +223,8 @@ export default function HeroSearch() {
                             <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300 mx-auto mb-3">
                               <MapPin size={24} />
                             </div>
-                            <p className="text-sm font-bold text-gray-400">No locations available</p>
-                            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-1">Try a different search term</p>
+                            <p className="text-sm font-black text-gray-500">No locations available</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Try a different search term</p>
                           </div>
                         )}
                       </div>
@@ -250,7 +237,7 @@ export default function HeroSearch() {
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="text-xs font-bold text-red-500 flex items-center gap-1 pl-1"
+                        className="text-xs font-black text-red-500 flex items-center gap-1 pl-1"
                       >
                         <AlertCircle size={12} />
                         {errors.location}
@@ -261,8 +248,8 @@ export default function HeroSearch() {
 
                 {/* Date Range Picker - Split into Pickup/Return */}
                 <div className="lg:col-span-5 relative" ref={calendarRef}>
-                  <div className={`flex items-center h-11 bg-gray-50 border rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-primary/10 transition-all ${
-                    errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-100'
+                  <div className={`flex items-center h-10 bg-white/90 border rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
+                    errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                   }`}>
                     <button 
                       type="button"
@@ -270,12 +257,12 @@ export default function HeroSearch() {
                         setShowCalendar(!showCalendar);
                         if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                       }}
-                      className="flex-1 px-5 h-full flex items-center gap-3 hover:bg-white transition-all group border-r border-gray-100"
+                      className="flex-1 px-5 h-full flex items-center gap-3 hover:bg-white transition-all group border-r border-gray-200"
                     >
-                      <Calendar size={18} className="text-gray-400 group-hover:text-primary transition-colors" />
+                      <Calendar size={18} className="text-gray-500 group-hover:text-primary transition-colors" />
                       <div className="flex flex-col items-start leading-tight">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Pickup</span>
-                        <span className="text-sm font-bold text-gray-700">{startDate ? format(startDate, 'MMM dd') : 'Select Date'}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
+                        <span className="text-sm font-black text-gray-900">{startDate ? format(startDate, 'dd/MM/yyyy') : 'Select Date'}</span>
                       </div>
                     </button>
 
@@ -288,8 +275,8 @@ export default function HeroSearch() {
                       className="flex-1 px-5 h-full flex items-center gap-3 hover:bg-white transition-all group"
                     >
                       <div className="flex flex-col items-start leading-tight">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Return</span>
-                        <span className="text-sm font-bold text-gray-700">{endDate ? format(endDate, 'MMM dd') : 'Select Date'}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
+                        <span className="text-sm font-black text-gray-900">{endDate ? format(endDate, 'dd/MM/yyyy') : 'Select Date'}</span>
                       </div>
                     </button>
                   </div>
@@ -301,7 +288,7 @@ export default function HeroSearch() {
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="text-xs font-bold text-red-500 flex items-center gap-1 pl-1 mt-2"
+                        className="text-xs font-black text-red-500 flex items-center gap-1 pl-1 mt-2"
                       >
                         <AlertCircle size={12} />
                         {errors.dates}
@@ -337,20 +324,20 @@ export default function HeroSearch() {
                 </div>
 
                 {/* Time Pickers */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-1.5">
+                <div className="lg:col-span-2 grid grid-cols-2 gap-2">
                   <div className="relative" ref={startRef}>
                     <button 
                       type="button"
                       onClick={() => setShowStartTime(!showStartTime)}
-                      className="w-full h-11 px-3 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between text-sm font-bold text-gray-700 hover:bg-white hover:border-primary transition-all"
+                      className="w-full h-10 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-black text-gray-900 hover:bg-white hover:border-primary transition-all"
                     >
                       <span>{startTime}</span>
-                      <Clock size={14} className="text-gray-300" />
+                      <Clock size={14} className="text-gray-500" />
                     </button>
                     {showStartTime && (
                       <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
                         {TIME_OPTIONS.map((time) => (
-                          <button key={time} type="button" onClick={() => { setStartTime(time); setShowStartTime(false); }} className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-primary/10 transition-all ${startTime === time ? 'bg-primary/10 text-gray-900' : ''}`}>{time}</button>
+                          <button key={time} type="button" onClick={() => { setStartTime(time); setShowStartTime(false); }} className={`w-full px-4 py-3 text-left text-xs font-black hover:bg-primary/10 transition-all ${startTime === time ? 'bg-primary/10 text-gray-900' : ''}`}>{time}</button>
                         ))}
                       </div>
                     )}
@@ -359,15 +346,15 @@ export default function HeroSearch() {
                     <button 
                       type="button"
                       onClick={() => setShowEndTime(!showEndTime)}
-                      className="w-full h-11 px-3 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between text-sm font-bold text-gray-700 hover:bg-white hover:border-primary transition-all"
+                      className="w-full h-10 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-black text-gray-900 hover:bg-white hover:border-primary transition-all"
                     >
                       <span>{endTime}</span>
-                      <Clock size={14} className="text-gray-300" />
+                      <Clock size={14} className="text-gray-500" />
                     </button>
                     {showEndTime && (
                       <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
                         {TIME_OPTIONS.map((time) => (
-                          <button key={time} type="button" onClick={() => { setEndTime(time); setShowEndTime(false); }} className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-primary/10 transition-all ${endTime === time ? 'bg-primary/10 text-gray-900' : ''}`}>{time}</button>
+                          <button key={time} type="button" onClick={() => { setEndTime(time); setShowEndTime(false); }} className={`w-full px-4 py-3 text-left text-xs font-black hover:bg-primary/10 transition-all ${endTime === time ? 'bg-primary/10 text-gray-900' : ''}`}>{time}</button>
                         ))}
                       </div>
                     )}
@@ -376,31 +363,38 @@ export default function HeroSearch() {
               </div>
 
               {/* ==== الصف التاني: Search Button + Trust Badges ==== */}
-              {/* الزرار على اليمين في الشاشات الكبيرة، وقبل الفيتشرز في الشاشات الصغيرة */}
-              <div className="flex flex-col lg:flex-row-reverse lg:items-center lg:justify-between gap-4 pt-3 border-t border-gray-50">
+              <div className="flex flex-col lg:flex-row-reverse lg:items-center lg:justify-between gap-4 pt-4 border-t border-gray-300/50">
 
-                {/* Search Button - يظهر أولاً في الشاشات الصغيرة (الترتيب الطبيعي) */}
-                <button
+                {/* Search Button - Bigger + Premium Hover Animation */}
+                <motion.button
                   type="submit"
                   disabled={isSearching}
-                  className="h-11 w-full lg:w-auto px-8 bg-primary hover:bg-primary-600 text-black font-bold text-xs uppercase tracking-wide transition-all rounded-2xl shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+                  whileHover={{ 
+                    scale: 1.03,
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
+                  }}
+                  whileTap={{ scale: 0.97 }}
+                  className="h-14 w-full lg:w-auto px-16 bg-primary hover:bg-gray-900 hover:text-primary text-black font-black text-base uppercase tracking-wider transition-all duration-500 rounded-2xl shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
                 >
+                  {/* Animated background slide */}
+                  <span className="absolute inset-0 bg-gray-900 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+
                   {isSearching ? (
-                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    <div className="relative z-10 w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Search size={18} />
-                      SEARCH CARS
+                      <Search size={20} className="relative z-10 group-hover:text-primary transition-colors duration-500" />
+                      <span className="relative z-10 group-hover:text-primary transition-colors duration-500">SEARCH CARS</span>
                     </>
                   )}
-                </button>
+                </motion.button>
 
                 {/* Trust Badges */}
                 <div className="flex flex-wrap items-center justify-center lg:justify-end gap-4 md:gap-6">
                   {TRUST_BADGES.map((text, i) => (
                     <div key={i} className="flex items-center gap-1.5">
-                      <CheckCircle2 size={16} className="text-primary" />
-                      <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">{text}</span>
+                      <CheckCircle2 size={16} className="text-green-500" />
+                      <span className="text-[11px] font-black text-gray-800 uppercase tracking-wider">{text}</span>
                     </div>
                   ))}
                 </div>
@@ -410,7 +404,7 @@ export default function HeroSearch() {
 
             {/* ==== الجملة اتنقلت هنا جوه الهيرو مباشرة ==== */}
             <p 
-              className="mt-8 mb-2 pb-6 relative z-[-1] text-xl md:text-2xl lg:text-3xl font-medium text-white text-center drop-shadow-lg"
+              className="mt-10 mb-2 pb-8 relative z-[-1] text-2xl md:text-3xl lg:text-4xl font-black text-white text-center drop-shadow-lg tracking-tight"
             >
               Looking for a vehicle? You're at the right place!
             </p>

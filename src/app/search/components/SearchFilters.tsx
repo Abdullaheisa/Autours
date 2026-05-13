@@ -22,7 +22,7 @@ interface SearchFiltersProps {
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { filterParams, minPrice, maxPrice, searchParams } = useSelector((state: RootState) => state.search);
+  const { filterParams, minPrice, maxPrice, searchParams, filteredSuppliers, filteredCategories } = useSelector((state: RootState) => state.search);
   const { code: currencyCode, rate: currencyRate } = useSelector((state: RootState) => state.currency);
 
   // Trigger API fetch when filters change
@@ -47,6 +47,8 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           minPrice={minPrice}
           maxPrice={maxPrice}
           currencyCode={currencyCode}
+          filteredSuppliers={filteredSuppliers}
+          filteredCategories={filteredCategories}
           onClearAll={handleClearAll}
         />
       </div>
@@ -113,6 +115,8 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
                     minPrice={minPrice}
                     maxPrice={maxPrice}
                     currencyCode={currencyCode}
+                    filteredSuppliers={filteredSuppliers}
+                    filteredCategories={filteredCategories}
                     onClearAll={handleClearAll}
                   />
                 </div>
@@ -141,6 +145,8 @@ function FiltersContent({
   minPrice, 
   maxPrice, 
   currencyCode,
+  filteredSuppliers,
+  filteredCategories,
   onClearAll 
 }: any) {
   const dispatch = useDispatch<AppDispatch>();
@@ -255,16 +261,41 @@ function FiltersContent({
           ))}
         </FilterSection>
 
+        {/* Categories */}
+        <FilterSection title="Categories" expanded>
+          {filteredCategories && filteredCategories.length > 0 
+            ? filteredCategories.map((cat: any) => (
+                <FilterOption 
+                  key={cat.id} 
+                  label={`${cat.name} (${cat.vehicle_count})`} 
+                  checked={isChecked('category', String(cat.id))}
+                  onToggle={() => handleToggle('category', String(cat.id))}
+                />
+              ))
+            : <div className="text-xs text-gray-500 px-2 py-1">No categories available</div>
+          }
+        </FilterSection>
+
         {/* Suppliers */}
         <FilterSection title="Suppliers">
-          {filterOptions.suppliers.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
-              checked={isChecked('supplier', opt.value)}
-              onToggle={() => handleToggle('supplier', opt.value)}
-            />
-          ))}
+          {filteredSuppliers && filteredSuppliers.length > 0 
+            ? filteredSuppliers.map((sup: any) => (
+                <FilterOption 
+                  key={sup.id} 
+                  label={`${sup.name} (${sup.vehicle_count})`} 
+                  checked={isChecked('supplier', String(sup.id))}
+                  onToggle={() => handleToggle('supplier', String(sup.id))}
+                />
+              ))
+            : filterOptions.suppliers.map(opt => (
+                <FilterOption 
+                  key={opt.value} 
+                  label={opt.label} 
+                  checked={isChecked('supplier', opt.value)}
+                  onToggle={() => handleToggle('supplier', opt.value)}
+                />
+              ))
+          }
         </FilterSection>
 
         {/* Payment Types */}

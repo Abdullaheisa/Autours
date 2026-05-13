@@ -25,7 +25,7 @@ export default function LoginPage() {
       if (user.role === 'admin') {
         router.push('/admin');
       } else {
-        router.push('/company-dashboard');
+        router.push('/company');
       }
     }
   };
@@ -146,7 +146,7 @@ export default function LoginPage() {
 
             <div className="mt-6">
               <Link
-                href="/register"
+                href="/be-supplier"
                 className="w-full inline-flex justify-center py-4 px-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
               >
                 Create new account

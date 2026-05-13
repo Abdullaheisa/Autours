@@ -10,6 +10,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import { specsData, vehiclesPhotos, includedItems } from "@/lib/data";
 import { categories } from "@/data/categories";
+import { supplierApi } from "@/services/api/supplierApi";
 
 const SectionCard = ({ 
   icon: Icon, 
@@ -113,6 +114,8 @@ export default function CreateVehicleSection() {
     }
   });
 
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
   const includedDropdownRef = useRef<HTMLDivElement>(null);
   const vehicleDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +153,46 @@ export default function CreateVehicleSection() {
     }));
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setValidationErrors([]);
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: selectedPhoto?.name || "Unknown Vehicle",
+        description: formData.description || "No description provided",
+        price: parseFloat(formData.price12) || 10,
+        week_price: parseFloat(formData.price37) || 10,
+        month_price: parseFloat(formData.price830) || 10,
+        pickup_loc: 1, 
+        category: formData.category || 1, // Try sending the string name selected by user
+        photo: selectedPhoto?.image || "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800",
+        instant_confirmation: !formData.reserveWithoutConfirmation,
+        activation: true,
+        location_types: [1],
+        included: formData.includedFeatures.map(id => includedItems.find(i => i.id === id)?.name).filter(Boolean),
+        specifications: Object.entries(formData.specifications)
+          .filter(([_, value]) => value !== "")
+          .map(([name, value]) => ({ name, value }))
+      };
+      
+      await supplierApi.createVehicle(payload);
+      alert("Vehicle created successfully!");
+      window.location.href = "/company/vehicles";
+    } catch (error: any) {
+      if (error.errors && typeof error.errors === 'object') {
+        const errorsList = Object.entries(error.errors).map(([key, val]) => `${key}: ${(val as string[]).join(', ')}`);
+        setValidationErrors(errorsList);
+      } else {
+        setValidationErrors([error.message || "An unexpected error occurred."]);
+      }
+      window.scrollTo(0, 0);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <SectionLayout>
       <PageHeader 
@@ -159,6 +202,17 @@ export default function CreateVehicleSection() {
       />
 
       <div className="space-y-6 pb-12 mt-6 max-w-5xl mx-auto">
+        {validationErrors.length > 0 && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl shadow-sm">
+            <h3 className="text-red-800 font-bold mb-2">Please fix the following errors to create the vehicle:</h3>
+            <ul className="list-disc pl-5 text-red-600 text-sm space-y-1">
+              {validationErrors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Car Details Section */}
         <SectionCard icon={Car} title="Car Details">
           <div className="space-y-6">
@@ -431,8 +485,8 @@ export default function CreateVehicleSection() {
           <button type="button" className="px-10 py-3.5 bg-white border-2 border-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-all hover:bg-gray-50 hover:border-gray-300 active:scale-95">
             Cancel
           </button>
-          <button type="button" className="px-12 py-3.5 bg-primary-500 text-white font-bold text-sm rounded-xl transition-all hover:bg-primary-600 active:scale-95 shadow-lg shadow-primary-500/20">
-            Submit
+          <button type="button" onClick={handleSubmit} disabled={isSubmitting} className="px-12 py-3.5 bg-primary-500 text-white font-bold text-sm rounded-xl transition-all hover:bg-primary-600 active:scale-95 shadow-lg shadow-primary-500/20 disabled:opacity-50">
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
         </div>
       </div>

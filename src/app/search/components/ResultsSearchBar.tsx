@@ -155,8 +155,7 @@ export default function ResultsSearchBar({
   };
 
   return (
-    <div className={`
-      bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden
+    <div className={`bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden
       transition-all duration-300 ease-in-out
       ${isOpen ? 'block' : 'hidden'}
     `}>

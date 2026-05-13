@@ -14,7 +14,7 @@ const STEPS = [
 
 export default function Stepper({ currentStep }: StepperProps) {
   return (
-    <div className="w-full bg-white border-b border-gray-200">
+    <div className="w-full bg-white border-b border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
       <div className="max-w-[1400px] mx-auto px-4 py-2">
         <div className="flex items-stretch gap-2 md:gap-3">
           {STEPS.map((step) => {

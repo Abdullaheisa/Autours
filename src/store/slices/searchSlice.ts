@@ -45,6 +45,8 @@ interface SearchState {
   daysNumber: number;
   maxPrice: number;
   minPrice: number;
+  filteredCategories: { id: number; name: string; vehicle_count: number }[];
+  filteredSuppliers: { id: number; name: string; vehicle_count: number }[];
 
   // UI state
   isSearching: boolean;
@@ -82,6 +84,8 @@ const initialState: SearchState = {
   daysNumber: 0,
   maxPrice: 0,
   minPrice: 0,
+  filteredCategories: [],
+  filteredSuppliers: [],
   isSearching: false,
   isFiltering: false,
   searchError: null,
@@ -195,6 +199,8 @@ const searchSlice = createSlice({
         state.daysNumber = action.payload.daysNumber;
         state.maxPrice = action.payload.max;
         state.minPrice = action.payload.min;
+        state.filteredCategories = action.payload.filteredCategories || [];
+        state.filteredSuppliers = action.payload.filteredSuppliers || [];
       })
       .addCase(fetchVehicles.rejected, (state, action) => {
         state.isFiltering = false;
