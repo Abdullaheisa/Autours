@@ -75,7 +75,7 @@ export default function Navbar() {
               </Link>
 
               {/* Currency Selector */}
-              <div className="scale-[0.85] origin-right">
+              <div className="scale-[0.95]">
                 <CurrencySelector />
               </div>
             </div>
@@ -100,10 +100,10 @@ export default function Navbar() {
             animate="open"
             exit="closed"
             variants={menuVariants}
-            className="lg:hidden absolute top-full left-0 right-0 bg-[var(--primary)] border-b border-black/10 p-4 space-y-4 shadow-2xl z-40 overflow-hidden"
+            className="lg:hidden absolute top-full left-0 right-0 bg-[var(--primary)] border-b border-black/10 p-4 space-y-4 shadow-2xl z-40"
           >
             <motion.div variants={itemVariants} className="flex flex-col gap-3">
-              <CurrencySelector variant="mobile" onMobileClose={() => dispatch(toggleMobileMenu())} />
+              <CurrencySelector variant="mobile-dropdown" onMobileClose={() => dispatch(toggleMobileMenu())} />
             </motion.div>
 
             <motion.div variants={itemVariants}>

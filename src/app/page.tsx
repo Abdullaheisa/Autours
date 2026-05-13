@@ -13,6 +13,7 @@ import Fleet from '@/components/sections/Fleet';
 import DynamicBanners from '@/components/sections/DynamicBanners';
 import FAQ from '@/components/sections/FAQ';
 import Contact from '@/components/sections/Contact';
+import SectionDivider from '@/components/sections/SectionDivider';
 import { siteConfig } from '@/config/site';
 
 export default function HomePage() {
@@ -35,18 +36,24 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      
+
       <Navbar />
-      
+
       <main>
         <HeroSearch />
+        <SectionDivider />
         <div className="hidden sm:block">
           <PartnersBanner />
           <Features />
+          <SectionDivider />
           <Locations />
+          <SectionDivider />
           <Fleet />
+          <SectionDivider />
           <DynamicBanners />
+          <SectionDivider />
           <FAQ />
+          <SectionDivider />
           <Contact />
         </div>
       </main>

@@ -57,10 +57,10 @@ function BookingContent() {
               <div>
                 <h3 className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Total Rental Price</h3>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-gray-900 tracking-tighter">{currencyCode}</span>
                   <span className="text-5xl font-black text-gray-900 tracking-tighter">
                     {totalPrice.toLocaleString()}
                   </span>
+                  <span className="text-4xl font-black text-gray-900 tracking-tighter">{currencyCode}</span>
                 </div>
                 <p className="text-xs font-bold text-green-600 mt-2 flex items-center gap-1">
                   <Check size={14} strokeWidth={3} /> For {daysNumber} {daysNumber === 1 ? 'day' : 'days'}
@@ -70,26 +70,22 @@ function BookingContent() {
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 <div className="flex justify-between text-sm font-semibold text-gray-600">
                   <span>Daily Rate</span>
-                  <span className="text-gray-900">{currencyCode} {Math.round(dailyPrice).toLocaleString()}</span>
+                  <span className="text-gray-900">{Math.round(dailyPrice).toLocaleString()} {currencyCode}</span>
                 </div>
                 <div className="flex justify-between text-sm font-semibold text-gray-600">
                   <span>Total Duration</span>
                   <span className="text-gray-900">{daysNumber} Days</span>
                 </div>
                 <div className="h-px bg-gray-50" />
-                <div className="flex justify-between text-sm font-bold text-blue-600">
-                  <span>Pay Now (12.5%)</span>
-                  <span>{currencyCode} {Number(depositAmount).toLocaleString()}</span>
-                </div>
                 <div className="flex justify-between text-sm font-semibold text-gray-500">
                   <span>Pay at Pickup</span>
-                  <span>{currencyCode} {Number(payAtPickup).toLocaleString()}</span>
+                  <span>{Number(payAtPickup).toLocaleString()} {currencyCode}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                 <span className="text-sm font-black text-gray-900 uppercase tracking-wide">Grand Total</span>
-                <span className="text-lg font-black text-gray-900">{currencyCode} {totalPrice.toLocaleString()}</span>
+                <span className="text-lg font-black text-gray-900">{totalPrice.toLocaleString()} {currencyCode}</span>
               </div>
             </div>
           </div>

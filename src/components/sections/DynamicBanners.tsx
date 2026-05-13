@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+import SectionDivider from '@/components/sections/SectionDivider';
 
 export default function DynamicBanners() {
   const [supplierEmail, setSupplierEmail] = useState('');
@@ -109,6 +110,8 @@ export default function DynamicBanners() {
         </div>
       </motion.div>
 
+      <SectionDivider />
+
       {/* Banner 2: Cinema Promo */}
       <motion.div 
         whileHover="hover"
@@ -150,4 +153,3 @@ export default function DynamicBanners() {
     </section>
   );
 }
-

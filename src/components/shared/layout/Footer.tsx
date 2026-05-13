@@ -41,11 +41,10 @@ const footerLinks = {
     { name: 'Register', href: '/register' },
     { name: 'Our Fleet', href: '#fleet' },
   ],
-  'Rental': [
-    { name: 'Rental Qatar', href: '#' },
-    { name: 'Rental Dubai', href: '#' },
-    { name: 'Rental Saudi Arabia', href: '#' },
-    { name: 'Rental Kuwait', href: '#' },
+  Location: [
+    { name: 'Dubai Car Rental', href: '#' },
+    { name: 'Qatar Car Rental', href: '#' },
+    { name: 'Kuwait Car Rental', href: '#' },
   ],
 };
 

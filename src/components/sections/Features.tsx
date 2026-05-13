@@ -134,7 +134,7 @@ export default function WhyAutoursSection() {
             transition={{ duration: 0.5 }}
             className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight"
           >
-            Why <span className="text-primary">Autours</span>?
+            Why <span className="text-primary">AUTOURS </span>?
           </motion.h2>
         </div>
 

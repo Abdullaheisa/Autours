@@ -22,7 +22,7 @@ export const currencies = [
 ];
 
 interface CurrencySelectorProps {
-  variant?: 'desktop' | 'mobile';
+  variant?: 'desktop' | 'mobile' | 'mobile-dropdown';
   onMobileClose?: () => void;
 }
 
@@ -61,6 +61,16 @@ export default function CurrencySelector({
   // Base currency for initial server render to match Redux initialState
   const displayCode = mounted ? currentCode : 'AED';
   const currentCurrency = currencies.find(c => c.code === displayCode) || currencies[0];
+
+  if (variant === 'mobile-dropdown') {
+    return (
+      <MobileDropdownCurrency 
+        currentCode={mounted ? currentCode : 'AED'}
+        onSelect={handleCurrencySelect}
+        mounted={mounted}
+      />
+    );
+  }
 
   if (variant === 'mobile') {
     return (
@@ -162,4 +172,105 @@ export default function CurrencySelector({
       </AnimatePresence>
     </div>
   );
+
+
+// ========== Mobile Dropdown Currency Component ==========
+function MobileDropdownCurrency({ 
+  currentCode, 
+  onSelect, 
+  mounted 
+}: { 
+  currentCode: string; 
+  onSelect: (code: string) => void;
+  mounted: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const currentCurrency = currencies.find(c => c.code === currentCode) || currencies[0];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between gap-2.5 px-4 py-3 bg-white hover:bg-gray-50 rounded-xl transition-all border border-gray-200 shadow-sm"
+      >
+        <div className="flex items-center gap-3">
+          <img 
+            src={`https://flagcdn.com/w40/${currentCurrency.flag}.png`} 
+            alt={currentCurrency.code}
+            className="w-6 h-auto rounded-sm"
+          />
+          <div className="flex flex-col items-start">
+            <span className="text-sm font-black text-gray-900">{currentCurrency.code}</span>
+            <span className="text-xs font-bold text-gray-400">{currentCurrency.name}</span>
+          </div>
+        </div>
+        <ChevronDown 
+          size={18} 
+          className={`text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="fixed left-4 right-4 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[9999] overflow-hidden max-w-md mx-auto"
+          >
+            <div className="px-3 pb-2 mb-2 border-b border-gray-50">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Choose Currency</span>
+            </div>
+
+            <div className="max-h-[280px] overflow-y-auto scrollbar-mobile">
+              {currencies.map((curr) => (
+                <button
+                  key={curr.code}
+                  onClick={() => {
+                    onSelect(curr.code);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 transition-colors group ${
+                    mounted && currentCode === curr.code ? 'bg-primary/5' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-6 flex items-center justify-center overflow-hidden rounded shadow-sm border border-gray-100">
+                      <img 
+                        src={`https://flagcdn.com/w40/${curr.flag}.png`} 
+                        alt={curr.code}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className={`text-sm font-black ${mounted && currentCode === curr.code ? 'text-gray-900' : 'text-gray-600'}`}>{curr.code}</span>
+                      <span className="text-xs font-bold text-gray-400">{curr.name}</span>
+                    </div>
+                  </div>
+                  {mounted && currentCode === curr.code && (
+                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                      <Check size={10} className="text-gray-900" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 }
