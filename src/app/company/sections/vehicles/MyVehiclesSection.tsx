@@ -62,7 +62,7 @@ export default function MyVehiclesSection() {
     // If it's an object with a url or path property
     if (img && typeof img === 'object') img = img.url || img.path || img.image || '';
     
-    if (!img || typeof img !== 'string') return null;
+    if (!img || typeof img !== 'string') return undefined;
     if (img.startsWith('http')) return img;
     
     // Clean up path
@@ -118,7 +118,7 @@ export default function MyVehiclesSection() {
                     <div className="flex items-center gap-4">
                       <div className="w-20 h-12 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 shrink-0 flex items-center justify-center">
                         {getImageUrl(vehicle) ? (
-                          <img src={getImageUrl(vehicle)} alt={vehicle.name || "Car"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Car&background=f3f4f6&color=9ca3af'; }} />
+                          <img src={getImageUrl(vehicle) as string} alt={vehicle.name || "Car"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Car&background=f3f4f6&color=9ca3af'; }} />
                         ) : (
                           <span className="text-xs text-gray-400 font-bold">No img</span>
                         )}
