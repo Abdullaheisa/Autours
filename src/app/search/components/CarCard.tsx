@@ -4,10 +4,12 @@ import { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { 
-  Check, Info, Users, Gauge, Briefcase, 
-  Fuel, Zap, X, Snowflake, DoorOpen, MapPin, ChevronDown, ChevronUp,
-  Earth,
-  Handshake
+  Check, Info, X, Snowflake, DoorOpen, MapPin, ChevronDown, ChevronUp,
+  Globe,
+  Fuel,
+  Handshake,
+  Plane,
+  Droplets
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -23,12 +25,36 @@ interface CarCardProps {
   hideBookingControls?: boolean;
 }
 
+function PickupIcon({ pickupType }: { pickupType: string }) {
+  const type = pickupType?.toLowerCase().trim() || '';
+  if (type.includes('meet') || type.includes('greet') || type.includes('hand') || type.includes('handover')) {
+    return <Handshake size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+  }
+  if (type.includes('airport') || type.includes('terminal') || type.includes('plane') || type.includes('flight')) {
+    return <Plane size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+  }
+  if (type.includes('mineral') || type.includes('water') || type.includes('drop')) {
+    return <Droplets size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+  }
+  return <Handshake size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+}
+
+function PickupLabel({ pickupType }: { pickupType: string }) {
+  const type = pickupType?.toLowerCase().trim() || '';
+  if (type.includes('meet') || type.includes('greet')) return 'Meet & Greet';
+  if (type.includes('airport') || type.includes('terminal')) return 'Airport Pickup';
+  if (type.includes('mineral') || type.includes('water')) return 'Mineral Water';
+  if (type.includes('handover')) return 'Handover';
+  return pickupType.charAt(0).toUpperCase() + pickupType.slice(1);
+}
+
 export default function CarCard({ vehicle, daysNumber, hideBookingControls = false }: CarCardProps) {
   const [showTerms, setShowTerms] = useState(false);
   const [showAllInclusions, setShowAllInclusions] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
+  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
+  const [showInstantTooltip, setShowInstantTooltip] = useState(false);
 
-  // Redux Currency State
   const currencyState = useSelector((state: RootState) => state.currency);
   const { code: currencyCode, rate: currencyRate, allRates } = currencyState;
 
@@ -79,10 +105,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       else if (key.includes('type')) {
         result = t.type ?? t.category ?? t.class ?? t.vehicle_type ?? t.car_type ?? t.vehicleType;
       }
-
       if (result !== null && result !== undefined) break;
     }
-
     return safeString(result) || 'N/A';
   };
 
@@ -96,6 +120,15 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     const imgSource = targets.map(t => t.photo || t.image || t.car_photo || t.main_image || t.thumbnail || t.car_image).find(Boolean);
     const supplierSource = targets.map(t => t.supplier || t.company || t.rental_company).find(Boolean);
 
+    const pickupType = (
+      v.pickup_type ?? 
+      v.delivery_type ?? 
+      v.meet_and_greet ?? 
+      v.location_type ?? 
+      v.pickup_location_type ??
+      'meet_and_greet'
+    );
+
     const inclusions = (vehicle.included || [])
       .map((i: any) => {
         if (!i) return '';
@@ -104,7 +137,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       })
       .filter(Boolean);
 
-    // Calculate dynamic price using base USD price from API
     const basePriceUsd = vehicle.price_in_usd || (vehicle as any).price || 0;
     const convertedAmount = basePriceUsd * (allRates[currencyCode] || currencyRate) * daysNumber;
 
@@ -137,7 +169,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       inclusions,
       fuelPolicy: 'Full to Full',
       locationType: 'Airport',
+      pickupType: pickupType,
       freeCancellation: inclusions.some(i => i.toLowerCase().includes('cancel')),
+      freeCancellationHours: 24,
     };
   }, [vehicle, daysNumber, currencyCode, currencyRate, allRates]);
 
@@ -154,7 +188,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       initial={{ opacity: 0, y: 10 }} 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white rounded-2xl border-2 border-gray-100 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all duration-300 transition-all duration-300 w-full overflow-hidden text-sm"
+      className="bg-white rounded-2xl border-2 shadow-md border-gray-100 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all duration-300 w-full overflow-hidden text-sm"
     >
       {/* ═══════════════════════════════════════════════════════════
           MOBILE (< 768px): Compact stacked layout
@@ -180,62 +214,80 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           <p className="text-xs font-black text-gray-500">{carData.type}</p>
         </div>
 
-        {/* Features - Compact 2 cols */}
+        {/* Features */}
         <div className="px-3 pb-2">
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-            <div className="flex items-center gap-1.5">
-              <img src={assets.icons.ac} alt="AC" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">A/C</span>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+            <div className="flex items-center gap-2">
+              <img src={assets.icons.ac} alt="AC" className="w-5 h-5 shrink-0" />
+              <span className="text-[11px] font-black text-gray-600">A/C</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <img src={assets.icons.seats} alt="Seats" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.seats} Seats</span>
+            <div className="flex items-center gap-2">
+              <img src={assets.icons.seats} alt="Seats" className="w-5 h-5 shrink-0" />
+              <span className="text-[11px] font-black text-gray-600">{carData.seats} Seats</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <img src={assets.icons.doors} alt="Doors" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.doors} Doors</span>
+            <div className="flex items-center gap-2">
+              <img src={assets.icons.doors} alt="Doors" className="w-5 h-5 shrink-0" />
+              <span className="text-[11px] font-black text-gray-600">{carData.doors} Doors</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <img src={assets.icons.bags} alt="Bags" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.suitcases} Bags</span>
+            <div className="flex items-center gap-2">
+              <img src={assets.icons.bags} alt="Bags" className="w-5 h-5 shrink-0" />
+              <span className="text-[11px] font-black text-gray-600">{carData.suitcases} Bags</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <img src={assets.icons.fuel} alt="Fuel" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.fuelType}</span>
+            <div className="flex items-center gap-2">
+              <img src={assets.icons.fuel} alt="Fuel" className="w-5 h-5 shrink-0" />
+              <span className="text-[11px] font-black text-gray-600">{carData.fuelType}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <img src={assets.icons.transmission} alt="Transmission" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.transmission}</span>
+            <div className="flex items-center gap-2">
+              <img src={assets.icons.transmission} alt="Transmission" className="w-5 h-5 shrink-0" />
+              <span className="text-[11px] font-black text-gray-600">{carData.transmission}</span>
             </div>
           </div>
         </div>
 
-        {/* Supplier - Compact */}
-        <div className="mx-3 mb-2 bg-gray-50 flex items-center gap-4 rounded-lg p-2.5">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-24 h-10 shrink-0 shadow-sm">
+        {/* Supplier Box - FIT CONTENT */}
+        <div className="mx-3 mb-2 flex items-center gap-2">
+          <div className="w-fit bg-gray-100 rounded-lg px-3 py-2.5 flex items-center gap-3">
+            <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               <img 
                 src={carData.supplier.logo} 
-                alt={carData.supplier.name} 
-                className="h-7 w-auto max-w-[90px] object-contain"
+                alt="" 
+                className="h-6 w-auto max-w-[70px] object-contain"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             </div>
+            
             <div className="min-w-0">
-              <span className="text-xs font-black text-gray-800 block">{carData.supplier.name}</span>
+              <span className="text-xs font-black text-gray-800 block truncate">{carData.supplier.name}</span>
               <button 
                 onClick={() => setShowTerms(true)}
-                className="text-[10px] font-black text-blue-600 underline hover:text-blue-800"
+                className="text-[10px] font-black text-blue-600 underline hover:text-blue-800 leading-none"
               >
                 Rental Terms
               </button>
             </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="bg-[var(--primary)] text-gray-900 px-2 py-1 rounded-md text-xs font-black">{carData.supplier.rating}/10</span>
+              <div className="flex flex-col leading-none">
+                <span className="text-[10px] font-black text-gray-700">Excellent</span>
+                <span className="text-[9px] font-black text-gray-500">({carData.supplier.reviewsCount}+)</span>
+              </div>
+            </div>
+
+            {carData.supplier.instantConfirmation && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <img src={assets.icons.instant} alt="Instant" className="w-5 h-5 shrink-0" />
+                <span className="text-[10px] font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-xs font-black">{carData.supplier.rating}/10</span>
-            <span className="text-xs font-black text-gray-700">Excellent</span>
-            <span className="text-[10px] font-black text-gray-500">({carData.supplier.reviewsCount}+)</span>
-          </div>
+
+          {carData.freeCancellation && (
+            <div className="flex items-center gap-1 text-green-700 shrink-0">
+              <Check size={12} className="stroke-[2.5]" />
+              <span className="text-[10px] font-black whitespace-nowrap">Free Cancellation ({carData.freeCancellationHours}h)</span>
+            </div>
+          )}
         </div>
 
         {/* Expandable Details */}
@@ -257,7 +309,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 className="overflow-hidden"
               >
                 <div className="pt-2 space-y-2">
-                  {/* Inclusions */}
                   <div>
                     <h4 className="text-xs font-black text-green-700 mb-1">What's Included</h4>
                     <div className="grid grid-cols-2 gap-x-2 gap-y-1">
@@ -278,16 +329,26 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     )}
                   </div>
 
-                  {/* Pickup */}
-                  <div className="flex items-center gap-2 py-1">
-                <button onClick={openMap} className="text-xs font-black text-blue-600 underline hover:text-blue-800"><Earth size={14} className="text-blue-600" /></button>
-                <div className="flex items-start gap-1">
-                  <span className="text-xs font-black text-gray-600 shrink-0">Address:</span>
-                  <span className="text-xs font-black text-gray-800">{carData.supplier.address}</span>
-                </div>
+                  <div className="flex items-start gap-2 py-1">
+                    <PickupIcon pickupType={carData.pickupType} />
+                    <div>
+                      <span className="text-xs font-black">Pick-up: </span>
+                      <span className="text-[11px] font-black text-gray-800">
+                        <PickupLabel pickupType={carData.pickupType} />
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Fuel */}
+                  <div className="flex items-center gap-2 py-1">
+                    <button onClick={openMap} className="shrink-0">
+                      <Globe size={14} className="text-blue-600" />
+                    </button>
+                    <div className="flex items-start gap-1">
+                      <span className="text-xs font-black text-gray-600 shrink-0">Address:</span>
+                      <span className="text-xs font-black text-gray-800">{carData.supplier.address}</span>
+                    </div>
+                  </div>
+
                   <div className="flex items-center gap-1.5">
                     <Fuel size={16} className="text-blue-600 shrink-0" />
                     <div className="flex items-center gap-1.5">
@@ -301,29 +362,21 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           </AnimatePresence>
         </div>
 
-        {/* Bottom: Price + Select */}
+        {/* Bottom: Price + Book */}
         <div className="p-3">
-          {carData.freeCancellation && (
-            <div className="flex items-center gap-1 mb-2">
-              <Check size={14} className="text-green-600 stroke-[2.5]" />
-              <span className="text-xs font-black text-green-700">Free Cancellation</span>
-            </div>
-          )}
-
           <div className="flex items-end justify-between gap-2">
             <div>
-              <span className="text-[10px] font-black text-gray-500">{carData.price.totalDays} days</span>
+              <span className="text-sm font-bold text-gray-500 block mb-1">for {carData.price.totalDays} days</span>
               <div className="flex items-baseline justify-start">
-                <span className="text-xl font-black text-gray-900">
+                <span className="text-2xl font-black text-gray-900">
                   {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                 </span>
               </div>
-              
             </div>
             {!hideBookingControls && (
               <Link 
                 href={`/booking?vehicleId=${vehicle.id}`}
-                className="px-5 py-2 bg-[var(--primary)] text-gray-900 rounded-lg font-black text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center"
+                className="px-6 py-3 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
               >
                 Book Now
               </Link>
@@ -336,11 +389,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           TABLET (768px - 1023px): Side image + stacked info
           ═══════════════════════════════════════════════════════════ */}
       <div className="hidden md:flex lg:hidden">
-        <div className="w-[200px] shrink-0 p-3 flex items-center justify-center">
+        <div className="w-[160px] shrink-0 p-3 flex items-center justify-center">
           <img 
             src={carData.image} 
             alt={carData.name} 
-            className="w-full h-auto max-h-[140px] object-contain"
+            className="w-full h-auto max-h-[120px] object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x180?text=No+Image';
             }}
@@ -353,63 +406,87 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           </h3>
           <p className="text-xs font-black text-gray-500 mb-2">{carData.type}</p>
 
-          <div className="grid grid-cols-3 gap-x-4 gap-y-1 mb-2">
-            <div className="flex items-center gap-1.5">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-2">
+            <div className="flex items-center gap-2">
               <img src={assets.icons.seats} alt="Seats" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.seats} Seats</span>
+              <span className="text-[11px] font-black text-gray-600">{carData.seats} Seats</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <img src={assets.icons.doors} alt="Doors" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.doors} Doors</span>
+              <span className="text-[11px] font-black text-gray-600">{carData.doors} Doors</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <img src={assets.icons.bags} alt="Bags" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.suitcases} Bags</span>
+              <span className="text-[11px] font-black text-gray-600">{carData.suitcases} Bags</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <img src={assets.icons.ac} alt="AC" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">A/C</span>
+              <span className="text-[11px] font-black text-gray-600">A/C</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <img src={assets.icons.fuel} alt="Fuel" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.fuelType}</span>
+              <span className="text-[11px] font-black text-gray-600">{carData.fuelType}</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <img src={assets.icons.transmission} alt="Transmission" className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-black text-gray-600">{carData.transmission}</span>
+              <span className="text-[11px] font-black text-gray-600">{carData.transmission}</span>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-2 mb-2">
-            <div className="flex items-center gap-2">
-              <div className="bg-white p-1.5 rounded-lg w-12 h-9 flex items-center justify-center shrink-0 shadow-sm">
-                <img src={carData.supplier.logo} alt="" className="h-6 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          {/* Supplier Box + Free Cancellation - TABLET */}
+          <div className="mb-2 space-y-1.5">
+            <div className="w-full bg-gray-100 rounded-lg px-2.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              {/* Logo */}
+              <div className="bg-white p-1 rounded-lg flex items-center justify-center w-16 h-8 shrink-0 shadow-sm">
+                <img src={carData.supplier.logo} alt="" className="h-5 w-auto max-w-[60px] object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               </div>
-              <span className="text-xs font-black text-gray-800">{carData.supplier.name}</span>
-              <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-xs font-black ml-auto">{carData.supplier.rating}/10</span>
+
+              {/* Name + Terms */}
+              <div className="min-w-0">
+                <span className="text-[11px] font-black text-gray-800 block truncate">{carData.supplier.name}</span>
+                <button onClick={() => setShowTerms(true)} className="text-[9px] font-black text-blue-600 underline hover:text-blue-800 leading-none">Rental Terms</button>
+              </div>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[10px] font-black">{carData.supplier.rating}/10</span>
+                <div className="flex flex-col leading-none">
+                  <span className="text-[9px] font-black text-gray-700">Excellent</span>
+                  <span className="text-[8px] font-black text-gray-500">({carData.supplier.reviewsCount}+)</span>
+                </div>
+              </div>
+
+              {/* Instant Confirmation - FULL TEXT */}
+              {carData.supplier.instantConfirmation && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <img src={assets.icons.instant} alt="Instant" className="w-4 h-4 shrink-0" />
+                  <span className="text-[9px] font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
+                </div>
+              )}
             </div>
+
+            {/* Free Cancellation - OUTSIDE BOX */}
+            {carData.freeCancellation && (
+              <div className="flex items-center gap-1 text-green-700">
+                <Check size={12} className="stroke-[2.5] shrink-0" />
+                <span className="text-[10px] font-black whitespace-nowrap">Free Cancellation ({carData.freeCancellationHours}h)</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-end justify-between gap-2">
             <div>
-              {carData.freeCancellation && (
-                <div className="flex items-center gap-1 mb-1">
-                  <Check size={12} className="text-green-600" />
-                  <span className="text-[11px] font-black text-green-700">Free Cancellation</span>
-                </div>
-              )}
-              <span className="text-[10px] font-black text-gray-500">{carData.price.totalDays} days</span>
+              <span className="text-xs font-bold text-gray-500 block mb-0.5">for {carData.price.totalDays} days</span>
               <div className="flex items-baseline justify-start">
                 <span className="text-lg font-black text-gray-900">
                   {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                 </span>
               </div>
             </div>
-            <div className="h-2" /> {/* Spacer */}
             {!hideBookingControls && (
               <Link 
                 href={`/booking?vehicleId=${vehicle.id}`}
-                className="px-4 py-2 bg-[var(--primary)] text-gray-900 rounded-lg font-black text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center"
+                className="px-4 py-2 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
               >
                 Book Now
               </Link>
@@ -423,167 +500,221 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           ═══════════════════════════════════════════════════════════ */}
       <div className="hidden lg:block">
         {/* ROW 1: Image + Details */}
-        <div className="flex">
-          <div className="w-[260px] shrink-0 p-4 flex items-center justify-center">
+        <div className="flex items-start">
+          <div className="w-[300px] shrink-0 p-5 flex items-center justify-center">
             <img 
               src={carData.image} 
               alt={carData.name} 
-              className="w-full h-auto max-h-[160px] object-contain"
+              className="w-full h-auto max-h-[200px] object-contain"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x250?text=No+Image';
               }}
             />
           </div>
 
-          <div className="flex-1 p-4 min-w-0">
-            <h3 className="text-lg font-black text-gray-900">
-              {carData.name} <span className="text-sm font-normal text-gray-500">or Similar</span>
-            </h3>
-            <p className="text-sm font-black text-gray-500 mb-3">{carData.type}</p>
+          <div className="flex-1 p-5 pl-10 min-w-0 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-black text-gray-900">{carData.name}</h3>
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setShowInfoTooltip(true)}
+                  onMouseLeave={() => setShowInfoTooltip(false)}
+                >
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 shadow-sm"
+                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
+                  >
+                    <Info size={11} className="text-gray-900" strokeWidth={3} />
+                  </div>
+                  <AnimatePresence>
+                    {showInfoTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                      >
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
+                        The supplier will provide a car with same class and specifications, though the make may vary.
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <span className="text-xs font-normal text-gray-500">or Similar</span>
+              </div>
+              <p className="text-xs font-black text-gray-500 mb-4">{carData.type}</p>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-              <div className="flex items-center gap-2">
-                <img src={assets.icons.seats} alt="Seats" className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-black text-gray-700">{carData.seats} Seats</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <img src={assets.icons.doors} alt="Doors" className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-black text-gray-700">{carData.doors} Doors</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <img src={assets.icons.bags} alt="Bags" className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-black text-gray-700">{carData.suitcases} Suitcase</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <img src={assets.icons.ac} alt="AC" className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-black text-gray-700">Air Conditioning</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <img src={assets.icons.fuel} alt="Fuel" className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-black text-gray-700">{carData.fuelType}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <img src={assets.icons.transmission} alt="Transmission" className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-black text-gray-700">{carData.transmission}</span>
+              <div className="grid grid-cols-2 gap-x-1 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <img src={assets.icons.seats} alt="Seats" className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black text-gray-700">{carData.seats} Seats</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <img src={assets.icons.doors} alt="Doors" className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black text-gray-700">{carData.doors} Doors</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <img src={assets.icons.bags} alt="Bags" className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black text-gray-700">{carData.suitcases} Suitcase</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <img src={assets.icons.ac} alt="AC" className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black text-gray-700">Air Conditioning</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <img src={assets.icons.fuel} alt="Fuel" className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black text-gray-700">{carData.fuelType}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <img src={assets.icons.transmission} alt="Transmission" className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black text-gray-700">{carData.transmission}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ROW 2: Supplier */}
-        <div className="">
-          <div className="flex">
-            <div className="flex-1 bg-gray-50 px-4 py-3">
-              <div className="grid grid-cols-3 gap-4 items-center">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-24 h-12 shrink-0 shadow-sm">
-                    <img src={carData.supplier.logo} alt="" className="h-8 w-auto max-w-[100px] object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-sm font-black text-gray-800 block">{carData.supplier.name}</span>
-                    <button onClick={() => setShowTerms(true)} className="text-xs font-black text-blue-600 underline hover:text-blue-800">Rental Terms</button>
-                  </div>
-                </div>
+        {/* Supplier Box - FIT CONTENT */}
+        <div className="mx-5 mb-2 flex items-center gap-3">
+          <div className="w-fit bg-gray-100 rounded-lg px-4 py-3 flex items-center gap-4">
+            <div className="bg-white p-2 rounded-lg flex items-center justify-center w-24 h-12 shrink-0 shadow-sm">
+              <img 
+                src={carData.supplier.logo} 
+                alt="" 
+                className="h-8 w-auto max-w-[80px] object-contain" 
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} 
+              />
+            </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="bg-[var(--primary)] text-gray-900 px-2 py-1 rounded text-sm font-black">{carData.supplier.rating}/10</div>
-                  <div>
-                    <span className="text-sm font-black text-gray-700">Excellent</span>
-                    <span className="text-xs font-black text-gray-500 block">({carData.supplier.reviewsCount}+ reviews)</span>
-                  </div>
-                </div>
+            <div className="min-w-0">
+              <span className="text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
+              <button onClick={() => setShowTerms(true)} className="text-xs font-black text-blue-600 underline hover:text-blue-800 leading-none">Rental Terms</button>
+            </div>
 
-                <div className="flex items-center gap-2">
-                  {carData.supplier.instantConfirmation && (
-                    <div className="flex items-center gap-1.5">
-                      <img src={assets.icons.instant} alt="Instant" className="w-5 h-5 shrink-0" />
-                      <span className="text-xs font-black text-gray-700">Instant Confirmation</span>
-                    </div>
-                  )}
-                </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="bg-[var(--primary)] text-gray-900 px-2.5 py-1.5 rounded-lg text-sm font-black">{carData.supplier.rating}/10</span>
+              <div className="flex flex-col leading-none">
+                <span className="text-xs font-black text-gray-700">Excellent</span>
+                <span className="text-[10px] font-black text-gray-500">({carData.supplier.reviewsCount}+ reviews)</span>
               </div>
             </div>
 
-            <div className="w-[260px] shrink-0 flex items-center justify-center bg-white">
-              {carData.freeCancellation && (
-                <div className="flex items-center gap-1.5 text-green-700">
-                  <Check size={16} className="stroke-[2.5]" />
-                  <span className="text-sm font-black">Free Cancellation</span>
+            {carData.supplier.instantConfirmation && (
+              <div className="flex items-center gap-2 shrink-0">
+                <img src={assets.icons.instant} alt="Instant" className="w-6 h-6 shrink-0" />
+                <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setShowInstantTooltip(true)}
+                  onMouseLeave={() => setShowInstantTooltip(false)}
+                >
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
+                  >
+                    <Info size={10} className="text-gray-900" strokeWidth={3} />
+                  </div>
+                  <AnimatePresence>
+                    {showInstantTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                      >
+                        <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-900 rotate-45" />
+                        Receive instant booking confirmation!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
+
+          {carData.freeCancellation && (
+            <div className="flex items-center gap-1.5 text-green-700 shrink-0">
+              <Check size={14} className="stroke-[2.5]" />
+              <span className="text-xs font-black whitespace-nowrap">Free Cancellation ({carData.freeCancellationHours}h)</span>
+            </div>
+          )}
         </div>
 
         {/* ROW 3: Inclusions + Details + Price */}
-        <div className="">
-          <div className="flex">
-            <div className="w-[45%] p-4">
-              <h4 className="text-sm font-black text-green-700 mb-2">What is Included!</h4>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {displayedInclusions.map((inc, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <Check size={12} className="text-green-600 shrink-0" />
-                    <span className="text-xs font-black text-gray-700">{inc}</span>
-                  </div>
-                ))}
-              </div>
-              {carData.inclusions.length > 4 && (
-                <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-xs font-black text-gray-800 underline hover:text-gray-600">
-                  {showAllInclusions ? 'Show Less' : 'Show More +'}
-                </button>
-              )}
+        <div className="flex">
+          {/* What's Included */}
+          <div className="w-[45%] p-5 pt-3">
+            <div className="mb-2">
+              <h4 className="text-xs font-black text-green-700">What is Included!</h4>
+              <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
             </div>
-
-            <div className="flex-1 p-4 space-y-2">
-
-              <div className="flex items-start gap-2 py-1">
-                <button onClick={openMap} className="shrink-0"><Earth size={16} className="text-blue-600" /></button>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-xs font-black text-gray-500 uppercase tracking-wider shrink-0">Address</span>
-                  <span className="text-sm font-black text-gray-800">{carData.supplier.address}</span>
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 mt-3">
+              {displayedInclusions.map((inc, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <Check size={11} className="text-green-600 shrink-0" />
+                  <span className="text-[11px] font-black text-gray-700">{inc}</span>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Fuel size={18} className="text-blue-600 shrink-0" />
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Fuel Policy</span>
-                  <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
-                </div>
-              </div>
+              ))}
+            </div>
+            {carData.inclusions.length > 4 && (
+              <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-[11px] font-black text-gray-800 underline hover:text-gray-600">
+                {showAllInclusions ? 'Show Less' : 'Show More +'}
+              </button>
+            )}
+          </div>
+
+          {/* Details - Lucide Icons */}
+          <div className="flex-1 p-5 pt-3 space-y-3">
+            <div className="flex items-start gap-2">
+              <button onClick={openMap} className="shrink-0 pt-0.5">
+                <Globe size={14} className="text-blue-600" />
+              </button>
               <div className="flex items-start gap-1.5">
-                <Handshake size={14} className="text-blue-600 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-sm font-black">Pick-up: </span>
-                  <span className="text-xs font-black text-gray-800">Meet and Greet</span>
-                </div>
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider shrink-0">Address</span>
+                <span className="text-xs font-black text-gray-800">{carData.supplier.address}</span>
               </div>
             </div>
-
-            <div className="w-[260px] shrink-0 p-4 flex flex-col items-start justify-center bg-white">
-              <span className="text-xs font-black text-gray-500 mb-1">for {carData.price.totalDays} days</span>
-              <div className="text-left mb-1">
-                <span className="text-3xl font-black text-gray-900">
-                  {formatPrice(carData.price.amount, carData.price.currency as Currency)}
+            
+            <div className="flex items-center gap-1.5">
+              <Fuel size={16} className="text-blue-600 shrink-0" />
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider">Fuel Policy</span>
+                <span className="text-xs font-black text-gray-800">{carData.fuelPolicy}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-1.5">
+              <PickupIcon pickupType={carData.pickupType} />
+              <div>
+                <span className="text-xs font-black">Pick-up: </span>
+                <span className="text-[11px] font-black text-gray-800">
+                  <PickupLabel pickupType={carData.pickupType} />
                 </span>
               </div>
-              
-              {!hideBookingControls && (
-                <Link 
-                  href={`/booking?vehicleId=${vehicle.id}`}
-                  className="w-full py-2.5 bg-[var(--primary)] text-gray-900 rounded font-black text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center"
-                >
-                  Book Now
-                </Link>
-              )}
             </div>
+          </div>
+
+          {/* Price + Book */}
+          <div className="w-[260px] shrink-0 p-5 pt-3 flex flex-col items-start justify-start">
+            <span className="text-sm font-bold text-gray-500 block mb-2">for {carData.price.totalDays} days</span>
+            <div className="text-left mb-5">
+              <span className="text-3xl font-black text-gray-900">
+                {formatPrice(carData.price.amount, carData.price.currency as Currency)}
+              </span>
+            </div>
+
+            {!hideBookingControls && (
+              <Link 
+                href={`/booking?vehicleId=${vehicle.id}`}
+                className="w-full py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg"
+              >
+                Book Now
+              </Link>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════
-          MODAL: Rental Terms
-          ═══════════════════════════════════════════════════════════ */}
+      {/* Modal: Rental Terms */}
       <AnimatePresence>
         {showTerms && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 md:p-4">

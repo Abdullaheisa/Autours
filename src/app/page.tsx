@@ -42,20 +42,18 @@ export default function HomePage() {
       <main>
         <HeroSearch />
         <SectionDivider />
-        <div className="hidden sm:block">
-          <PartnersBanner />
-          <Features />
-          <SectionDivider />
-          <Locations />
-          <SectionDivider />
-          <Fleet />
-          <SectionDivider />
-          <DynamicBanners />
-          <SectionDivider />
-          <FAQ />
-          <SectionDivider />
-          <Contact />
-        </div>
+        <PartnersBanner />
+        <Features />
+        <SectionDivider />
+        <Locations />
+        <SectionDivider />
+        <Fleet />
+        <SectionDivider />
+        <DynamicBanners />
+        <SectionDivider />
+        <FAQ />
+        <SectionDivider />
+        <Contact />
       </main>
 
       <Footer />

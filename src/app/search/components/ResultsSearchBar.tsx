@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { createPortal } from 'react-dom';
 import {
-  Search, MapPin, Calendar, Clock, Plane, Building, X
+  Search, MapPin, Calendar, Clock, Plane, Building, X, SlidersHorizontal
 } from 'lucide-react';
 import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { RootState, AppDispatch } from '@/store';
@@ -155,17 +155,20 @@ export default function ResultsSearchBar({
   };
 
   return (
-    <div className={`bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden
+    <div className={`bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 overflow-hidden
       transition-all duration-300 ease-in-out
       ${isOpen ? 'block' : 'hidden'}
     `}>
       {/* Mobile Header with Close (only when inside drawer) */}
       {onClose && (
-        <div className="md:hidden flex items-center justify-between bg-gray-100 px-5 py-3">
-          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>
+        <div className="md:hidden flex items-center justify-between bg-yellow-50 px-5 py-3 border-b border-yellow-100">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal size={14} className="text-yellow-700" />
+            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>
+          </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+            className="p-1 hover:bg-yellow-100 rounded-lg transition-colors"
           >
             <X size={16} className="text-gray-600" />
           </button>
@@ -173,8 +176,11 @@ export default function ResultsSearchBar({
       )}
 
       {/* Desktop + Tablet Header */}
-      <div className="hidden md:block bg-gray-100 px-5 py-4">
-        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>
+      <div className="hidden md:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal size={14} className="text-yellow-700" />
+          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>
+        </div>
       </div>
 
       <form onSubmit={handleReSearch} className="p-5 space-y-3">

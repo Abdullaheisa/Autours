@@ -22,9 +22,9 @@ const config: Config = {
         "secondary": "var(--secondary-color)",
       },
       fontFamily: {
-        sans: ["var(--body-font)", "Manrope", "system-ui", "sans-serif"],
+        sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
         title: ["var(--title-font)", "Outfit", "system-ui", "sans-serif"],
-        body: ["var(--body-font)", "Manrope", "system-ui", "sans-serif"],
+        body: ["var(--font-manrope)", "system-ui", "sans-serif"],
       },
     },
   },

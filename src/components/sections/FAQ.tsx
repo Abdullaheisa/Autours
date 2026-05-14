@@ -152,7 +152,7 @@ This coverage provides financial protection for medical expenses resulting from 
   }, []);
 
   return (
-    <section id="faq" className="py20 md:py-20 bg-gradient-to-br from-primary via-primary-300 to-primary-600 relative overflow-hidden">
+    <section id="faq" className=" bg-gradient-to-br from-primary via-primary-300 to-primary-600 relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-primary-100 rounded-full opacity-30 blur-3xl" />

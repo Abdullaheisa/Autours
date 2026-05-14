@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronDown, Check, SlidersHorizontal, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
-import { 
-  setFilterParams, 
-  toggleFilterParam, 
-  resetFilters, 
-  fetchVehicles 
+import {
+  setFilterParams,
+  toggleFilterParam,
+  resetFilters,
+  fetchVehicles
 } from '@/store/slices/searchSlice';
 import { filterOptions } from '@/data/filterOptions';
 import { formatPrice } from '@/utils/currency';
@@ -28,10 +28,6 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   // Trigger API fetch when filters change
   useEffect(() => {
     if (onFilterChange) onFilterChange();
-    
-    // We don't call fetchVehicles directly here to avoid infinite loops 
-    // if onFilterChange also triggers a fetch. 
-    // The Results page should handle the orchestration.
   }, [filterParams, onFilterChange]);
 
   const handleClearAll = () => {
@@ -42,7 +38,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
     <>
       {/* Desktop/Tablet Sidebar - visible on md and above */}
       <div className="hidden md:block w-full space-y-0">
-        <FiltersContent 
+        <FiltersContent
           filterParams={filterParams}
           minPrice={minPrice}
           maxPrice={maxPrice}
@@ -92,7 +88,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
               className="md:hidden fixed top-0 right-0 bottom-0 w-full max-w-[400px] bg-white z-[9999] shadow-2xl flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-yellow-100 bg-yellow-50">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                     <SlidersHorizontal size={16} className="text-gray-900" />
@@ -110,7 +106,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
               {/* Filters Content - Scrollable */}
               <div className="flex-1 overflow-y-auto">
                 <div className="px-4 py-2">
-                  <FiltersContent 
+                  <FiltersContent
                     filterParams={filterParams}
                     minPrice={minPrice}
                     maxPrice={maxPrice}
@@ -140,22 +136,16 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
 }
 
 // Filters Content - reused for both desktop and mobile
-function FiltersContent({ 
-  filterParams, 
-  minPrice, 
-  maxPrice, 
+function FiltersContent({
+  filterParams,
+  minPrice,
+  maxPrice,
   currencyCode,
   filteredSuppliers,
   filteredCategories,
-  onClearAll 
+  onClearAll
 }: any) {
   const dispatch = useDispatch<AppDispatch>();
-
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Current priceRange is [min, max]
-    const val = parseInt(e.target.value);
-    dispatch(setFilterParams({ priceRange: [minPrice, val] }));
-  };
 
   const isChecked = (key: string, value: string) => {
     const current = (filterParams as any)[key];
@@ -167,94 +157,43 @@ function FiltersContent({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-lg shadow-gray-300/40 overflow-hidden">
-      <div className="bg-gray-100 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-700">Filter By</h3>
-        <button 
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden">
+      <div className="bg-yellow-50 px-5 py-3.5 border-b border-yellow-100 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal size={14} className="text-yellow-700" />
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-800">Filter By</h3>
+        </div>
+        <button
           onClick={onClearAll}
-          className="text-[10px] font-bold text-primary-600 hover:underline uppercase tracking-wider"
+          className="text-[10px] font-bold text-yellow-700 hover:text-yellow-900 hover:underline uppercase tracking-wider transition-colors"
         >
           Clear All
         </button>
       </div>
 
       <div className="divide-y divide-gray-100">
-        {/* Price Range */}
-        <FilterSection 
-          title="Price Range" 
-          expanded
-        >
-          <div className="pt-6 pb-4 px-2">
-            {/* Current value bubble with arrow */}
-            {(() => {
-              const currentVal = filterParams.priceRange ? filterParams.priceRange[1] : maxPrice;
-              const range = maxPrice - minPrice || 1;
-              const pct = ((currentVal - minPrice) / range) * 100;
-              const clampedPct = Math.min(Math.max(pct, 0), 100);
-              const offset = `calc(${clampedPct}% - ${clampedPct * 0.18}px)`;
-              return (
-                <div className="relative mb-5 h-7">
-                  <div
-                    className="absolute -top-0 flex flex-col items-center pointer-events-none"
-                    style={{ left: offset, transform: 'translateX(-50%)' }}
-                  >
-                    <div className="bg-gray-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap shadow-lg">
-                      {formatPrice(currentVal, currencyCode)}
-                    </div>
-                    {/* Arrow */}
-                    <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-gray-900" />
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Slider with filled track */}
-            {(() => {
-              const currentVal = filterParams.priceRange ? filterParams.priceRange[1] : maxPrice;
-              const range = maxPrice - minPrice || 1;
-              const pct = Math.min(Math.max(((currentVal - minPrice) / range) * 100, 0), 100);
-              return (
-                <div className="relative">
-                  {/* Background track */}
-                  <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-2 bg-gray-200 rounded-full" />
-                  {/* Filled track */}
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 left-0 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500"
-                    style={{ width: `${pct}%` }}
-                  />
-                  <input
-                    type="range"
-                    min={minPrice}
-                    max={maxPrice}
-                    value={currentVal}
-                    onChange={handlePriceChange}
-                    className="relative w-full h-2 bg-transparent rounded-full appearance-none cursor-pointer accent-yellow-400 z-10"
-                    style={{ WebkitAppearance: 'none' } as any}
-                  />
-                </div>
-              );
-            })()}
-
-            {/* Min / Max labels */}
-            <div className="flex justify-between mt-3">
-              <div className="text-center">
-                <div className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Min</div>
-                <div className="text-[11px] font-bold text-gray-700">{formatPrice(minPrice, currencyCode)}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Max</div>
-                <div className="text-[11px] font-bold text-gray-700">{formatPrice(maxPrice, currencyCode)}</div>
-              </div>
-            </div>
+        {/* Price Range - Simple & Clean */}
+        <FilterSection title="Price Range" expanded>
+          <div className="pt-2 pb-5 px-1">
+            <SimplePriceRange
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              currentMin={filterParams.priceRange ? filterParams.priceRange[0] : minPrice}
+              currentMax={filterParams.priceRange ? filterParams.priceRange[1] : maxPrice}
+              currencyCode={currencyCode}
+              onChange={(min: number, max: number) => {
+                dispatch(setFilterParams({ priceRange: [min, max] }));
+              }}
+            />
           </div>
         </FilterSection>
 
         {/* Location Types */}
         <FilterSection title="Location Types" expanded>
           {filterOptions.locationTypes.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={isChecked('locationType', opt.value)}
               onToggle={() => handleToggle('locationType', opt.value)}
             />
@@ -263,47 +202,47 @@ function FiltersContent({
 
         {/* Categories */}
         <FilterSection title="Categories" expanded>
-          {filteredCategories && filteredCategories.length > 0 
+          {filteredCategories && filteredCategories.length > 0
             ? filteredCategories.map((cat: any) => (
-                <FilterOption 
-                  key={cat.id} 
-                  label={`${cat.name} (${cat.vehicle_count})`} 
-                  checked={isChecked('category', String(cat.id))}
-                  onToggle={() => handleToggle('category', String(cat.id))}
-                />
-              ))
+              <FilterOption
+                key={cat.id}
+                label={`${cat.name} (${cat.vehicle_count})`}
+                checked={isChecked('category', String(cat.id))}
+                onToggle={() => handleToggle('category', String(cat.id))}
+              />
+            ))
             : <div className="text-xs text-gray-500 px-2 py-1">No categories available</div>
           }
         </FilterSection>
 
         {/* Suppliers */}
         <FilterSection title="Suppliers">
-          {filteredSuppliers && filteredSuppliers.length > 0 
+          {filteredSuppliers && filteredSuppliers.length > 0
             ? filteredSuppliers.map((sup: any) => (
-                <FilterOption 
-                  key={sup.id} 
-                  label={`${sup.name} (${sup.vehicle_count})`} 
-                  checked={isChecked('supplier', String(sup.id))}
-                  onToggle={() => handleToggle('supplier', String(sup.id))}
-                />
-              ))
+              <FilterOption
+                key={sup.id}
+                label={`${sup.name} (${sup.vehicle_count})`}
+                checked={isChecked('supplier', String(sup.id))}
+                onToggle={() => handleToggle('supplier', String(sup.id))}
+              />
+            ))
             : filterOptions.suppliers.map(opt => (
-                <FilterOption 
-                  key={opt.value} 
-                  label={opt.label} 
-                  checked={isChecked('supplier', opt.value)}
-                  onToggle={() => handleToggle('supplier', opt.value)}
-                />
-              ))
+              <FilterOption
+                key={opt.value}
+                label={opt.label}
+                checked={isChecked('supplier', opt.value)}
+                onToggle={() => handleToggle('supplier', opt.value)}
+              />
+            ))
           }
         </FilterSection>
 
         {/* Payment Types */}
         <FilterSection title="Payment Types">
           {filterOptions.paymentTypes.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={isChecked('paymentType', opt.value)}
               onToggle={() => handleToggle('paymentType', opt.value)}
             />
@@ -313,9 +252,9 @@ function FiltersContent({
         {/* Number of seats */}
         <FilterSection title="Number of seats">
           {filterOptions.seats.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={isChecked('seats', opt.value)}
               onToggle={() => handleToggle('seats', opt.value)}
             />
@@ -325,9 +264,9 @@ function FiltersContent({
         {/* Fuel */}
         <FilterSection title="Fuel">
           {filterOptions.fuel.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={isChecked('fuelType', opt.value)}
               onToggle={() => handleToggle('fuelType', opt.value)}
             />
@@ -337,9 +276,9 @@ function FiltersContent({
         {/* Suitcase */}
         <FilterSection title="Suitcase">
           {filterOptions.suitcases.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={isChecked('suitcases', opt.value)}
               onToggle={() => handleToggle('suitcases', opt.value)}
             />
@@ -349,9 +288,9 @@ function FiltersContent({
         {/* Air Conditioner */}
         <FilterSection title="Air Conditioner">
           {filterOptions.airConditioning.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={filterParams.airConditioning === opt.value}
               onToggle={() => dispatch(setFilterParams({ airConditioning: filterParams.airConditioning === opt.value ? null : opt.value }))}
             />
@@ -361,9 +300,9 @@ function FiltersContent({
         {/* Transmission */}
         <FilterSection title="Transmission">
           {filterOptions.transmission.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={isChecked('transmission', opt.value)}
               onToggle={() => handleToggle('transmission', opt.value)}
             />
@@ -373,14 +312,210 @@ function FiltersContent({
         {/* Doors */}
         <FilterSection title="Doors">
           {filterOptions.doors.map(opt => (
-            <FilterOption 
-              key={opt.value} 
-              label={opt.label} 
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
               checked={isChecked('doors', opt.value)}
               onToggle={() => handleToggle('doors', opt.value)}
             />
           ))}
         </FilterSection>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIMPLE & CLEAN PRICE RANGE SLIDER
+// ═══════════════════════════════════════════════════════════════
+function SimplePriceRange({
+  minPrice,
+  maxPrice,
+  currentMin,
+  currentMax,
+  currencyCode,
+  onChange
+}: {
+  minPrice: number;
+  maxPrice: number;
+  currentMin: number;
+  currentMax: number;
+  currencyCode: Currency;
+  onChange: (min: number, max: number) => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
+
+  const range = maxPrice - minPrice || 1;
+  const minPct = ((currentMin - minPrice) / range) * 100;
+  const maxPct = ((currentMax - minPrice) / range) * 100;
+
+  const getValueFromPosition = useCallback((clientX: number) => {
+    if (!trackRef.current) return minPrice;
+    const rect = trackRef.current.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const rawValue = minPrice + pct * range;
+    return Math.round(rawValue / 10) * 10;
+  }, [minPrice, range]);
+
+  const handleMouseDown = (thumb: 'min' | 'max') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDragging(thumb);
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newValue = getValueFromPosition(e.clientX);
+
+      if (dragging === 'min') {
+        const clampedMin = Math.max(minPrice, Math.min(newValue, currentMax - 10));
+        onChange(clampedMin, currentMax);
+      } else {
+        const clampedMax = Math.max(currentMin + 10, Math.min(newValue, maxPrice));
+        onChange(currentMin, clampedMax);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setDragging(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging, currentMin, currentMax, minPrice, maxPrice, onChange, getValueFromPosition]);
+
+  // Touch support
+  useEffect(() => {
+    if (!dragging) return;
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const newValue = getValueFromPosition(touch.clientX);
+
+      if (dragging === 'min') {
+        const clampedMin = Math.max(minPrice, Math.min(newValue, currentMax - 10));
+        onChange(clampedMin, currentMax);
+      } else {
+        const clampedMax = Math.max(currentMin + 10, Math.min(newValue, maxPrice));
+        onChange(currentMin, clampedMax);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      setDragging(null);
+    };
+
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [dragging, currentMin, currentMax, minPrice, maxPrice, onChange, getValueFromPosition]);
+
+  return (
+    <div className="relative px-2 pt-8 pb-2 select-none">
+      {/* Floating Price Labels - Small & Clean */}
+      <div className="relative h-7 mb-1">
+        {/* Min Label */}
+        <div
+          className="absolute top-0 -translate-x-1/2 z-10"
+          style={{ left: `${minPct}%` }}
+        >
+          <div className={`
+            px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm
+            transition-colors duration-150
+            ${dragging === 'min' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border border-gray-200'}
+          `}>
+            {formatPrice(currentMin, currencyCode)}
+          </div>
+        </div>
+
+        {/* Max Label */}
+        <div
+          className="absolute top-0 -translate-x-1/2 z-10"
+          style={{ left: `${maxPct}%` }}
+        >
+          <div className={`
+            px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm
+            transition-colors duration-150
+            ${dragging === 'max' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border border-gray-200'}
+          `}>
+            {formatPrice(currentMax, currencyCode)}
+          </div>
+        </div>
+      </div>
+
+      {/* Track */}
+      <div
+        ref={trackRef}
+        className="relative h-10 flex items-center cursor-pointer"
+      >
+        {/* Background Track */}
+        <div className="absolute inset-x-0 h-1.5 bg-gray-200 rounded-full">
+          {/* Active Track */}
+          <div
+            className="absolute h-full rounded-full bg-primary"
+            style={{
+              left: `${minPct}%`,
+              width: `${maxPct - minPct}%`,
+            }}
+          />
+        </div>
+
+        {/* Min Thumb */}
+        <div
+          className="absolute w-5 h-5 -ml-2.5 cursor-grab active:cursor-grabbing z-20"
+          style={{ left: `${minPct}%` }}
+          onMouseDown={handleMouseDown('min')}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            setDragging('min');
+          }}
+        >
+          <div className={`
+            w-full h-full rounded-full border-2 shadow-md
+            transition-all duration-150
+            ${dragging === 'min'
+              ? 'bg-primary border-primary scale-110'
+              : 'bg-white border-gray-300 hover:border-primary'
+            }
+          `} />
+        </div>
+
+        {/* Max Thumb */}
+        <div
+          className="absolute w-5 h-5 -ml-2.5 cursor-grab active:cursor-grabbing z-20"
+          style={{ left: `${maxPct}%` }}
+          onMouseDown={handleMouseDown('max')}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            setDragging('max');
+          }}
+        >
+          <div className={`
+            w-full h-full rounded-full border-2 shadow-md
+            transition-all duration-150
+            ${dragging === 'max'
+              ? 'bg-primary border-primary scale-110'
+              : 'bg-white border-gray-300 hover:border-primary'
+            }
+          `} />
+        </div>
+      </div>
+
+      {/* Min/Max Labels */}
+      <div className="flex justify-between mt-1 px-1">
+        <span className="text-[11px] text-gray-400">{formatPrice(minPrice, currencyCode)}</span>
+        <span className="text-[11px] text-gray-400">{formatPrice(maxPrice, currencyCode)}</span>
       </div>
     </div>
   );

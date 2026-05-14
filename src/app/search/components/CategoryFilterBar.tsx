@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { RootState, AppDispatch } from '@/store';
 import { setFilterParams, applyLocalFilters } from '@/store/slices/searchSlice';
 import { categories } from '@/data/categories';
@@ -31,7 +32,7 @@ export default function CategoryFilterBar({ onFilterChange }: CategoryFilterBarP
     const el = scrollRef.current;
     if (el) {
       el.addEventListener('scroll', handleScroll);
-      handleScroll(); // Initial check
+      handleScroll();
     }
     return () => el?.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
@@ -76,7 +77,7 @@ export default function CategoryFilterBar({ onFilterChange }: CategoryFilterBarP
         </button>
       )}
 
-      {/* All Screens: Scrollable slider */}
+      {/* Scrollable slider */}
       <div
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto no-scrollbar px-2 sm:px-12 py-2"
@@ -86,25 +87,26 @@ export default function CategoryFilterBar({ onFilterChange }: CategoryFilterBarP
           const isSelected = filterParams.category.includes(cat.id);
 
           return (
-            <button
+            <motion.button
               key={cat.id}
               onClick={() => handleCategoryClick(cat.id)}
-              className={`flex flex-col items-center justify-center min-w-[140px] sm:min-w-[180px] w-[140px] sm:w-[180px] h-[120px] sm:h-[120px] p-2 rounded-lg border transition-all shrink-0 ${isSelected
-                  ? 'border-primary bg-primary/10 shadow-sm'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              className={`relative flex flex-col items-center justify-center min-w-[140px] sm:min-w-[180px] w-[140px] sm:w-[180px] rounded-xl border transition-all shrink-0 overflow-hidden ${isSelected
+                  ? 'border-yellow-400 bg-white shadow-[0_8px_30px_rgba(244,216,73,0.4)] ring-2 ring-yellow-400/30'
+                  : 'border-gray-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.18)] hover:border-yellow-300'
                 }`}
             >
-              {/* Category Image */}
-              <div className="w-full h-[120px] sm:h-[160px] flex items-center justify-center overflow-hidden">
+              {/* Category Image - Large */}
+              <div className="w-full h-[140px] sm:h-[160px] flex items-center justify-center overflow-hidden p-3">
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="w-full h-[140%] object-contain"
+                  className="w-[200px] h-[200px] object-contain transition-transform duration-300 group-hover:scale-105"
                   loading="lazy"
                 />
               </div>
-
-            </button>
+            </motion.button>
           );
         })}
       </div>

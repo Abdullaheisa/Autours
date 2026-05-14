@@ -63,7 +63,7 @@ function SearchPageContent() {
     if (filterParams.supplier.length > 0) payload.supplier = filterParams.supplier;
     if (filterParams.locationType.length > 0) payload.location_type_id = filterParams.locationType;
     if (filterParams.paymentType.length > 0) payload.payment_methods = filterParams.paymentType;
-    
+
     // Group specifications
     const specifications: { name: string; option: string[] }[] = [];
     if (filterParams.seats.length > 0) specifications.push({ name: 'seats', option: filterParams.seats });
@@ -72,9 +72,9 @@ function SearchPageContent() {
     if (filterParams.fuelType.length > 0) specifications.push({ name: 'fuel_type', option: filterParams.fuelType });
     if (filterParams.suitcases.length > 0) specifications.push({ name: 'suitcases', option: filterParams.suitcases });
     if (filterParams.airConditioning) specifications.push({ name: 'ac', option: [filterParams.airConditioning] });
-    
+
     if (specifications.length > 0) payload.specifications = specifications;
-    
+
     if (filterParams.rating !== null) payload.rating = filterParams.rating;
     if (filterParams.sortBy) payload.sortBy = filterParams.sortBy;
 
@@ -128,7 +128,7 @@ function SearchPageContent() {
   const hasValidSearch = searchParams.location && searchParams.dateFrom && searchParams.dateTo;
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-100">
       <Navbar />
 
       <div className="md:hidden">

@@ -1,40 +1,40 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectCoverflow } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { categories } from '@/data/categories';
+import { assets } from '@/config/assets';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import 'swiper/css/effect-coverflow';
+
+// الصور الجاهزة من assets
+const swiperImages = [
+  { id: 'swiper1', src: assets.swiper.swiper1, alt: 'Swiper 1' },
+  { id: 'swiper2', src: assets.swiper.swiper2, alt: 'Swiper 2' },
+  { id: 'swiper3', src: assets.swiper.swiper3, alt: 'Swiper 3' },
+  { id: 'swiper4', src: assets.swiper.swiper4, alt: 'Swiper 4' },
+  { id: 'swiper5', src: assets.swiper.swiper5, alt: 'Swiper 5' },
+  { id: 'swiper6', src: assets.swiper.swiper6, alt: 'Swiper 6' },
+  { id: 'swiper7', src: assets.swiper.swiper7, alt: 'Swiper 7' },
+];
 
 export default function Fleet() {
   const { currentLanguage } = useSelector((state: RootState) => state.ui);
   const isRTL = currentLanguage === 'ar';
-  const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const swiperRef = useRef<any>(null);
 
-  const filteredCategories = activeCategory === 'ALL' 
-    ? categories 
-    : categories.filter((cat) => cat.id === activeCategory);
-
-  const categoryIds = ['ALL', ...categories.map((cat) => cat.id)];
-
-  useEffect(() => {
-    if (swiperRef.current) {
-      swiperRef.current.slideTo(0);
-    }
-  }, [activeCategory]);
-
   return (
-    <section id="fleet" className="relative bg-white overflow-hidden py-24">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="fleet" className="relative overflow-hidden py-8">
+      {/* خلفية مش أبيض */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#f8f9fa] via-[#f0f1f3] to-[#f8f9fa]" />
+
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="text-center mb-16">
@@ -43,13 +43,11 @@ export default function Fleet() {
           </h2>
         </div>
 
-
-
-        {/* Swiper Slider - 3 visible at once */}
+        {/* Swiper Slider */}
         <div className="relative px-2 md:px-16">
           <Swiper
             onSwiper={(swiper) => { swiperRef.current = swiper; }}
-            modules={[Navigation, Pagination, Autoplay, EffectCoverflow]}
+            modules={[Navigation, Pagination, Autoplay]}
             grabCursor={true}
             slidesPerView={3}
             spaceBetween={24}
@@ -63,7 +61,7 @@ export default function Fleet() {
               disableOnInteraction: false,
               pauseOnMouseEnter: true,
             }}
-            loop={filteredCategories.length > 3}
+            loop={swiperImages.length > 3}
             breakpoints={{
               320: { slidesPerView: 1, spaceBetween: 16 },
               640: { slidesPerView: 2, spaceBetween: 20 },
@@ -71,27 +69,19 @@ export default function Fleet() {
             }}
             className="!pb-14"
           >
-            {filteredCategories.map((cat) => (
-              <SwiperSlide key={cat.id}>
-                <div className="group h-full">
-                  {/* Card - Image Only */}
-                  <div className="relative bg-gray-50 rounded-[2rem] overflow-hidden border border-gray-100 hover:border-primary/30 transition-all duration-500 shadow-xl hover:shadow-2xl">
-
-                    {/* Image - Bigger size, no text */}
-                    <div className="relative h-[350px] sm:h-[400px] flex items-center justify-center overflow-hidden">
-                      <Image
-                        src={cat.image}
-                        alt={cat.name}
-                        fill
-                        className="object-contain p-4 transition-transform duration-700 group-hover:scale-110"
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                      />
-
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500" />
-                    </div>
-
-                  </div>
+            {swiperImages.map((img) => (
+              <SwiperSlide key={img.id}>
+                <div className="group relative rounded-[1.5rem] overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-500">
+                  {/* الصورة الجاهزة — تظهر كاملة بحجمها الأصلي */}
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    width={800}
+                    height={600}
+                    className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    priority
+                  />
                 </div>
               </SwiperSlide>
             ))}

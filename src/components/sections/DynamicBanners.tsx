@@ -84,26 +84,26 @@ export default function DynamicBanners() {
           />
         </motion.div>
 
-        {/* Content - Input + Button */}
-        <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[85%] sm:max-w-xl flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-24">
+        {/* Content - Input + Button (BALANCED ON DESKTOP) */}
+        <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[180px] sm:max-w-md flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-24">
           <motion.div 
             variants={inputVariants}
-            className="flex items-center w-full bg-black/70 backdrop-blur-xl rounded-full border border-white/10 overflow-hidden p-1.5 sm:p-2 shadow-2xl transition-colors duration-300 hover:border-primary/30"
+            className="flex items-center w-full h-8 sm:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
           >
             <input 
               type="email" 
               value={supplierEmail}
               onChange={(e) => setSupplierEmail(e.target.value)}
-              placeholder="WRITE YOUR MAIL" 
-              className="flex-1 bg-transparent px-4 sm:px-8 py-3 sm:py-4 text-[10px] sm:text-sm font-bold text-white placeholder:text-white/30 outline-none tracking-widest uppercase"
+              placeholder="YOUR MAIL" 
+              className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-bold text-white placeholder:text-white/30 outline-none tracking-tight sm:tracking-widest uppercase h-full"
             />
-            <Link href="/be-supplier">
+            <Link href="/be-supplier" className="h-full block shrink-0">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 sm:px-10 py-3 sm:py-4 bg-primary text-black text-[10px] sm:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-[0.2em] shrink-0 shadow-lg hover:bg-white"
+                className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center"
               >
-                SUBMIT
+                Submit
               </motion.button>
             </Link>
           </motion.div>
@@ -126,27 +126,29 @@ export default function DynamicBanners() {
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/20 transition-opacity duration-700 hover:opacity-30 z-10 pointer-events-none" />
 
-        {/* Content - Input + Button */}
-        <div className="absolute inset-y-0 right-0 z-20 w-full max-w-[85%] sm:max-w-xl flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-10">
+        {/* Content - Input + Button (BALANCED ON DESKTOP) */}
+        <div className="absolute bottom-4 left-4 sm:left-20 z-20 w-full max-w-[160px] sm:max-w-md flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-10">
           <motion.div 
             variants={inputVariants}
-            className="flex items-center w-full bg-black/70 backdrop-blur-xl rounded-full border border-white/10 overflow-hidden p-1.5 sm:p-2 shadow-2xl transition-colors duration-300 hover:border-primary/30"
+            className="flex items-center w-full h-8 sm:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
           >
             <input 
               type="email" 
               value={cinemaEmail}
               onChange={(e) => setCinemaEmail(e.target.value)}
-              placeholder="اكتب بريدك هنا" 
-              className="flex-1 bg-transparent px-4 sm:px-8 py-3 sm:py-4 text-[10px] sm:text-sm font-bold text-white placeholder:text-white/30 outline-none text-right"
+              placeholder="بريدك" 
+              className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-bold text-white placeholder:text-white/30 outline-none text-right h-full"
               dir="rtl"
             />
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 sm:px-10 py-3 sm:py-4 bg-primary text-black text-[10px] sm:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-widest shrink-0 shadow-lg hover:bg-white"
-            >
-              سجل الآن
-            </motion.button>
+            <div className="h-full block shrink-0">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center"
+              >
+                سجل الآن
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </motion.div>

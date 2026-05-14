@@ -71,7 +71,7 @@ export default function Navbar() {
                 className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95"
               >
                 <LayoutDashboard size={14} />
-                <span>Manage</span>
+                <span>Manage Booking</span>
               </Link>
 
               {/* Currency Selector */}
@@ -113,7 +113,7 @@ export default function Navbar() {
                 className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-gray-900 bg-white border-2 border-white rounded-xl shadow-sm active:scale-95 transition-all"
               >
                 <LayoutDashboard size={16} />
-                Manage
+                Manage Booking
               </Link>
             </motion.div>
           </motion.div>

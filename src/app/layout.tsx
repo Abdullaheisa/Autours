@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/components/shared/StoreProvider";
 import RootLayoutContent from "@/components/shared/layout/RootLayoutContent";
 import { siteConfig } from "@/config/site";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -52,7 +59,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased font-sans">
+      <head>
+        <link rel="stylesheet" href="https://unpkg.com/@github/hubot-sans@latest/dist/hubot-sans.css" />
+      </head>
+      <body className={`${manrope.variable} antialiased font-sans`}>
         <StoreProvider>
           <RootLayoutContent>{children}</RootLayoutContent>
         </StoreProvider>

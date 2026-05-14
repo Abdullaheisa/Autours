@@ -144,38 +144,37 @@ export default function HeroSearch() {
   return (
     <>
       {/* ==== HERO SECTION ==== */}
-      <section className="relative min-h-[95vh] flex flex-col items-center justify-start pt-28 pb-0" aria-label="Car Rental Search">
-        {/* Background */}
+      <section className="relative min-h-[85vh] sm:min-h-[90vh] flex flex-col items-center justify-start pt-16 sm:pt-20 pb-0" aria-label="Car Rental Search">
+        {/* Background - LIGHTER overlay */}
         <div className="absolute inset-0 z-0">
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed transition-transform duration-[10s] hover:scale-105"
             style={{
               backgroundImage: `url(${assets.hero.background})`,
-              filter: 'brightness(0.5) contrast(1.1)'
+              filter: 'brightness(0.65) contrast(1.05)'
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/15 to-black/50" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 w-full flex flex-col items-center">
-              {/* Title */}
-          <div className="text-center mb-10">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
+
+          {/* Title - MOVED UP, smaller on mobile */}
+          <div className="text-center mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
               Car Rentals - <span className="text-primary">Search, Book & Enjoy.</span>
             </h1>
           </div>
 
-          {/* Search Form */}
-          <div className="bg-white/40 backdrop-blur-md p-4 lg:p-6 rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/20 w-full max-w-7xl">
-            <form onSubmit={handleSearch} className="space-y-6">
-              <div className="mb-1">
-                <span className="text-sm font-black text-gray-900">Select Pickup Location</span>
-              </div>
+          {/* Search Form - MOVED UP, tighter padding */}
+          <div className="bg-white/25 backdrop-blur-sm py-6 px-4 sm:py-8 sm:px-6 lg:py-10 lg:px-8 rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/15 w-full max-w-5xl">
+            <form onSubmit={handleSearch} className="space-y-5 sm:space-y-6">
 
-              {/* ==== صف الحقول فقط ==== */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 items-end">
+              {/* ==== ALL INPUTS IN ONE ROW - Responsive ==== */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-start">
+
                 {/* Location Input */}
-                <div className="lg:col-span-5 relative space-y-2" ref={locationsRef}>
+                <div className="lg:col-span-4 relative" ref={locationsRef}>
                   <div className="relative group">
                     <input 
                       type="text" 
@@ -187,7 +186,7 @@ export default function HeroSearch() {
                       }}
                       onFocus={() => location.length > 0 && setShowLocations(true)}
                       placeholder="Enter your Location"
-                      className={`w-full h-10 pl-5 pr-10 bg-white/90 border rounded-2xl text-sm font-black text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
+                      className={`w-full h-12 sm:h-14 pl-4 sm:pl-5 pr-10 bg-white/90 border rounded-2xl text-sm font-black text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
                         errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                       }`}
                     />
@@ -196,7 +195,7 @@ export default function HeroSearch() {
                     </div>
 
                     {showLocations && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[300px] overflow-y-auto z-[60]">
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[280px] overflow-y-auto z-[60]">
                         {filteredLocations.length > 0 ? (
                           filteredLocations.map((loc) => (
                             <button
@@ -207,7 +206,7 @@ export default function HeroSearch() {
                                 setShowLocations(false);
                                 if (errors.location) setErrors(prev => ({ ...prev, location: undefined }));
                               }}
-                              className="w-full px-5 py-4 text-left hover:bg-primary/10 transition-all flex items-center gap-4 border-b border-gray-50 last:border-0"
+                              className="w-full px-5 py-3.5 text-left hover:bg-primary/10 transition-all flex items-center gap-4 border-b border-gray-50 last:border-0"
                             >
                               <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
                                 {loc.location_type?.toLowerCase().includes('airport') ? <Plane size={18} /> : <Building size={18} />}
@@ -237,7 +236,7 @@ export default function HeroSearch() {
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="text-xs font-black text-red-500 flex items-center gap-1 pl-1"
+                        className="text-xs font-black text-red-500 flex items-center gap-1 pl-1 mt-1"
                       >
                         <AlertCircle size={12} />
                         {errors.location}
@@ -246,9 +245,9 @@ export default function HeroSearch() {
                   </AnimatePresence>
                 </div>
 
-                {/* Date Range Picker - Split into Pickup/Return */}
-                <div className="lg:col-span-5 relative" ref={calendarRef}>
-                  <div className={`flex items-center h-10 bg-white/90 border rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
+                {/* Date Range Picker */}
+                <div className="lg:col-span-4 relative" ref={calendarRef}>
+                  <div className={`flex items-center h-12 sm:h-14 bg-white/90 border rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
                     errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                   }`}>
                     <button 
@@ -257,12 +256,12 @@ export default function HeroSearch() {
                         setShowCalendar(!showCalendar);
                         if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                       }}
-                      className="flex-1 px-5 h-full flex items-center gap-3 hover:bg-white transition-all group border-r border-gray-200"
+                      className="flex-1 px-4 h-full flex items-center gap-2 hover:bg-white transition-all group border-r border-gray-200"
                     >
-                      <Calendar size={18} className="text-gray-500 group-hover:text-primary transition-colors" />
-                      <div className="flex flex-col items-start leading-tight">
+                      <Calendar size={16} className="text-gray-500 group-hover:text-primary transition-colors shrink-0" />
+                      <div className="flex flex-col items-start leading-tight min-w-0">
                         <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
-                        <span className="text-sm font-black text-gray-900">{startDate ? format(startDate, 'dd/MM/yyyy') : 'Select Date'}</span>
+                        <span className="text-sm font-black text-gray-900 truncate">{startDate ? format(startDate, 'dd/MM/yyyy') : 'Select Date'}</span>
                       </div>
                     </button>
 
@@ -272,11 +271,11 @@ export default function HeroSearch() {
                         setShowCalendar(!showCalendar);
                         if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                       }}
-                      className="flex-1 px-5 h-full flex items-center gap-3 hover:bg-white transition-all group"
+                      className="flex-1 px-4 h-full flex items-center gap-2 hover:bg-white transition-all group"
                     >
-                      <div className="flex flex-col items-start leading-tight">
+                      <div className="flex flex-col items-start leading-tight min-w-0">
                         <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
-                        <span className="text-sm font-black text-gray-900">{endDate ? format(endDate, 'dd/MM/yyyy') : 'Select Date'}</span>
+                        <span className="text-sm font-black text-gray-900 truncate">{endDate ? format(endDate, 'dd/MM/yyyy') : 'Select Date'}</span>
                       </div>
                     </button>
                   </div>
@@ -288,7 +287,7 @@ export default function HeroSearch() {
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="text-xs font-black text-red-500 flex items-center gap-1 pl-1 mt-2"
+                        className="text-xs font-black text-red-500 flex items-center gap-1 pl-1 mt-1"
                       >
                         <AlertCircle size={12} />
                         {errors.dates}
@@ -298,13 +297,13 @@ export default function HeroSearch() {
 
                   {showCalendar && (
                     <>
-                      {/* Mobile/Tablet Backdrop - light dark overlay */}
+                      {/* Mobile/Tablet Backdrop */}
                       <div 
                         className="fixed inset-0 bg-black/40 z-[55] lg:hidden"
                         onClick={() => setShowCalendar(false)}
                       />
 
-                      {/* Calendar Wrapper - both months visible on all screens */}
+                      {/* Calendar Wrapper */}
                       <div className="fixed lg:absolute top-[5%] lg:top-full left-1/2 -translate-x-1/2 mt-3 z-[60] w-[95vw] lg:w-fit flex justify-center">
                         <div className="scale-[0.78] sm:scale-90 md:scale-95 origin-top">
                           <CalendarRangePicker 
@@ -324,15 +323,18 @@ export default function HeroSearch() {
                 </div>
 
                 {/* Time Pickers */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:col-span-4">
                   <div className="relative" ref={startRef}>
                     <button 
                       type="button"
                       onClick={() => setShowStartTime(!showStartTime)}
-                      className="w-full h-10 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-black text-gray-900 hover:bg-white hover:border-primary transition-all"
+                      className="w-full h-12 sm:h-14 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-black text-gray-900 hover:bg-white hover:border-primary transition-all"
                     >
-                      <span>{startTime}</span>
-                      <Clock size={14} className="text-gray-500" />
+                      <div className="flex flex-col items-start leading-tight">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
+                        <span>{startTime}</span>
+                      </div>
+                      <Clock size={14} className="text-gray-500 shrink-0" />
                     </button>
                     {showStartTime && (
                       <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
@@ -342,14 +344,18 @@ export default function HeroSearch() {
                       </div>
                     )}
                   </div>
+
                   <div className="relative" ref={endRef}>
                     <button 
                       type="button"
                       onClick={() => setShowEndTime(!showEndTime)}
-                      className="w-full h-10 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-black text-gray-900 hover:bg-white hover:border-primary transition-all"
+                      className="w-full h-12 sm:h-14 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-black text-gray-900 hover:bg-white hover:border-primary transition-all"
                     >
-                      <span>{endTime}</span>
-                      <Clock size={14} className="text-gray-500" />
+                      <div className="flex flex-col items-start leading-tight">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
+                        <span>{endTime}</span>
+                      </div>
+                      <Clock size={14} className="text-gray-500 shrink-0" />
                     </button>
                     {showEndTime && (
                       <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
@@ -362,10 +368,21 @@ export default function HeroSearch() {
                 </div>
               </div>
 
-              {/* ==== الصف التاني: Search Button + Trust Badges ==== */}
-              <div className="flex flex-col lg:flex-row-reverse lg:items-center lg:justify-between gap-4 pt-4 border-t border-gray-300/50">
+              {/* ==== Search Button + Trust Badges ==== */}
+              {/* MOBILE: Button FIRST (flex-col-reverse), Desktop: side by side */}
+              <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-5 sm:pt-6 border-t border-gray-300/50">
 
-                {/* Search Button - Bigger + Premium Hover Animation */}
+                {/* Trust Badges - 2x2 GRID */}
+                <div className="grid grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
+                  {TRUST_BADGES.map((text, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-green-500 shrink-0" />
+                      <span className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-wider">{text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Search Button */}
                 <motion.button
                   type="submit"
                   disabled={isSearching}
@@ -374,7 +391,7 @@ export default function HeroSearch() {
                     boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
                   }}
                   whileTap={{ scale: 0.97 }}
-                  className="h-14 w-full lg:w-auto px-16 bg-primary hover:bg-gray-900 hover:text-primary text-black font-black text-base uppercase tracking-wider transition-all duration-500 rounded-2xl shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
+                  className="h-12 sm:h-14 w-full sm:w-auto px-6 sm:px-8 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm uppercase tracking-wider transition-all duration-500 rounded-2xl shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
                 >
                   {/* Animated background slide */}
                   <span className="absolute inset-0 bg-gray-900 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
@@ -383,28 +400,18 @@ export default function HeroSearch() {
                     <div className="relative z-10 w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Search size={20} className="relative z-10 group-hover:text-primary transition-colors duration-500" />
+                      <Search size={18} className="relative z-10 group-hover:text-primary transition-colors duration-500" />
                       <span className="relative z-10 group-hover:text-primary transition-colors duration-500">SEARCH CARS</span>
                     </>
                   )}
                 </motion.button>
-
-                {/* Trust Badges */}
-                <div className="flex flex-wrap items-center justify-center lg:justify-end gap-4 md:gap-6">
-                  {TRUST_BADGES.map((text, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
-                      <CheckCircle2 size={16} className="text-green-500" />
-                      <span className="text-[11px] font-black text-gray-800 uppercase tracking-wider">{text}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </form>
           </div>
 
-            {/* ==== الجملة اتنقلت هنا جوه الهيرو مباشرة ==== */}
+            {/* Bottom Tagline - VISIBLE on screen */}
             <p 
-              className="mt-10 mb-2 pb-8 relative z-[-1] text-2xl md:text-3xl lg:text-4xl font-black text-white text-center drop-shadow-lg tracking-tight"
+              className="mt-6 sm:mt-8 mb-2 pb-6 relative z-[-1] text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white text-center drop-shadow-lg tracking-tight"
             >
               Looking for a vehicle? You're at the right place!
             </p>

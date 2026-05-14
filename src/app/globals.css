@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Outfit:wght@100..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -19,9 +17,8 @@
   --card: #f9f9f9;
   --border: #e5e5e5;
 
-  --title-font: "Outfit", Helvetica, Arial, sans-serif;
-  --body-font: "Manrope", Helvetica, Arial, sans-serif;
-  --font-family: var(--body-font);
+  --title-font: "Hubot Sans", "Outfit", Helvetica, Arial, sans-serif;
+  --font-family: var(--font-manrope);
 
   /* Primary Shades - Calculated from #f9d602 */
   --primary-50: #fefceb;
@@ -50,10 +47,11 @@
 @layer base {
   body {
     @apply bg-[var(--background)] text-[var(--text)] transition-colors duration-300 antialiased;
-    font-family: var(--body-font);
+    font-family: var(--font-manrope);
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--title-font);
+    @apply tracking-tight;
   }
 }
 
@@ -69,13 +67,32 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all;
+    @apply w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all font-medium;
   }
 
   .section-title {
     @apply text-3xl md:text-4xl font-black tracking-tighter uppercase italic text-center mb-12;
     font-family: var(--title-font);
   }
+
+  /* Utility classes for consistency */
+  .text-title {
+    font-family: var(--title-font) !important;
+  }
+
+  .text-body {
+    font-family: var(--body-font) !important;
+  }
+}
+
+/* Global overrides for specific Tailwind font weight classes to use Hubot Sans */
+.font-bold, .font-black, .font-extrabold {
+  font-family: var(--title-font) !important;
+}
+
+/* Headings should always use title font regardless of weight */
+h1, h2, h3, h4, h5, h6, .section-title, .btn-primary {
+  font-family: var(--title-font) !important;
 }
 
 .scrollbar-hide::-webkit-scrollbar {

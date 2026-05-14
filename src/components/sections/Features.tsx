@@ -120,7 +120,7 @@ export default function WhyAutoursSection() {
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
 
   return (
-    <section ref={sectionRef} className="relative py-20 lg:py-24 bg-white overflow-hidden">
+    <section ref={sectionRef} className="relative py-16 lg:py-20 bg-white overflow-hidden">
       {/* Top accent line */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-60" />
 

@@ -1,6 +1,15 @@
 export const assets = {
   logo: '/img/4k-logo.png',
   logoFooter: '/img/4k-logo.png',
+    swiper: {
+    swiper1: '/img/swiper/swiper1.png',
+    swiper2: '/img/swiper/swiper2.png',
+    swiper3: '/img/swiper/swiper3.png',
+    swiper4: '/img/swiper/swiper4.png',
+    swiper5: '/img/swiper/swiper5.png',
+    swiper6: '/img/swiper/swiper6.png',
+    swiper7: '/img/swiper/swiper7.png',
+  },
   hero: {
     background: '/img/banner-bk.jpg',
   },
@@ -71,3 +80,14 @@ export const assets = {
     instant: '/img/icons/instant_confirmation.png',
   },
 };
+
+
+
+
+
+// أضف ده في ملف assets.ts
+
+  // ... كل الحاجات اللي موجودة
+  
+
+  

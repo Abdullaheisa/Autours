@@ -119,7 +119,7 @@ export default function Footer() {
           {/* Left: Copyright & Socials */}
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 w-full md:w-auto">
             <p className="text-[13px] font-bold text-black">
-              Copyright © 2024.
+              Copyright © 2026.
             </p>
             <div className="flex gap-2">
               {[
