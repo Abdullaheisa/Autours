@@ -308,7 +308,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             {carData.supplier.instantConfirmation && (
               <div className="flex items-center gap-1 shrink-0">
                 <img src={assets.icons.instant} alt="Instant" className="w-4 h-4 shrink-0" />
-                <span className="text-[10px] font-black text-gray-700">Instant</span>
+                <span className="text-[10px] font-black text-gray-700">Instant confirmation</span>
               </div>
             )}
           </div>
