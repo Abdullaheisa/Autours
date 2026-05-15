@@ -285,7 +285,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
 
             {/* Name + Terms */}
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 ">
               <span className="text-xs font-black text-gray-800 block truncate">{carData.supplier.name}</span>
               <button 
                 onClick={() => setShowTerms(true)}
