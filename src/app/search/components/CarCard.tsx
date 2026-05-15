@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { 
+import {
   Check, Info, X, ChevronDown, ChevronUp,
   Globe,
   Fuel,
@@ -67,7 +67,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       return null;
     };
 
-    const fromSpec = vehicle.specifications?.find(s => 
+    const fromSpec = vehicle.specifications?.find(s =>
       s.name?.toLowerCase().includes(name.toLowerCase())
     )?.option;
 
@@ -121,10 +121,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     const supplierSource = targets.map(t => t.supplier || t.company || t.rental_company).find(Boolean);
 
     const pickupType = (
-      v.pickup_type ?? 
-      v.delivery_type ?? 
-      v.meet_and_greet ?? 
-      v.location_type ?? 
+      v.pickup_type ??
+      v.delivery_type ??
+      v.meet_and_greet ??
+      v.location_type ??
       v.pickup_location_type ??
       'meet_and_greet'
     );
@@ -149,7 +149,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       seats: getSpec('seats'),
       doors: getSpec('doors'),
       suitcases: getSpec('bags') !== 'N/A' ? getSpec('bags') : getSpec('luggage'),
-      ac: getSpec('air conditioning') !== 'No',
+      ac: getSpec('air conditioning') !== 'No' ? 'Air Conditioning' : 'No A/C',
       supplier: {
         name: (supplierSource?.company || supplierSource?.name || vehicle.supplier?.company || 'Supplier').toString().trim(),
         logo: getImageUrl(supplierSource?.logo || vehicle.supplier?.logo),
@@ -179,13 +179,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     window.open(`https://www.google.com/maps?q=${carData.supplier.lat},${carData.supplier.lng}`, '_blank');
   };
 
-  const displayedInclusions = showAllInclusions 
-    ? carData.inclusions 
+  const displayedInclusions = showAllInclusions
+    ? carData.inclusions
     : carData.inclusions.slice(0, 4);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }} 
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className="bg-white rounded-2xl border-2 shadow-md border-gray-100 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all duration-300 w-full overflow-hidden text-sm"
@@ -196,9 +196,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       <div className="md:hidden">
         {/* Image */}
         <div className="p-4 pb-2 flex justify-center">
-          <img 
-            src={carData.image} 
-            alt={carData.name} 
+          <img
+            src={carData.image}
+            alt={carData.name}
             className="w-full max-w-[240px] h-auto max-h-[140px] object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x180?text=No+Image';
@@ -212,7 +212,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <h3 className="text-base font-black text-gray-900 leading-tight">
               {carData.name}
             </h3>
-            <div 
+            <div
               className="relative"
               onMouseEnter={() => setShowInfoTooltip(true)}
               onMouseLeave={() => setShowInfoTooltip(false)}
@@ -225,12 +225,12 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <AnimatePresence>
                 {showInfoTooltip && (
                   <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+ initial={{ opacity: 0, y: 5, x: "-50%" }}
+  animate={{ opacity: 1, y: 0, x: "-50%" }}
+  exit={{ opacity: 0, y: 5, x: "-50%" }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl"
                   >
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
+                    <div className="absolute -top-1 left-1/2 translate-x-[-50%]  w-2 h-2 bg-gray-900 rotate-45" />
                     The supplier will provide a car with same class and specifications, though the make may vary.
                   </motion.div>
                 )}
@@ -258,7 +258,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
             <div className="flex flex-col items-center gap-1 bg-gray-50 rounded-lg py-2">
               <img src={assets.icons.ac} alt="AC" className="w-5 h-5" />
-              <span className="text-[10px] font-black text-gray-600">A/C</span>
+              <span className="text-[10px] font-black text-gray-600">{carData.ac}</span>
             </div>
             <div className="flex flex-col items-center gap-1 bg-gray-50 rounded-lg py-2">
               <img src={assets.icons.fuel} alt="Fuel" className="w-5 h-5" />
@@ -273,13 +273,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         {/* Supplier Box - COMPACT INLINE */}
         <div className="mx-4 mb-2">
-          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-5 flex-wrap">
+          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-x-6 gap-y-3  flex-wrap">
             {/* Logo */}
-            <div className="bg-white p-1 rounded-lg flex items-center justify-center w-14 h-8 shrink-0 shadow-sm">
-              <img 
-                src={carData.supplier.logo} 
-                alt="" 
-                className="h-5 w-auto max-w-[50px] object-contain"
+            <div className="bg-white p-1 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
+              <img
+                src={carData.supplier.logo}
+                alt=""
+                className="h-10 w-auto max-w-[80px] object-contain"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             </div>
@@ -287,7 +287,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             {/* Name + Terms */}
             <div className="min-w-0 ">
               <span className="text-xs font-black text-gray-800 block truncate">{carData.supplier.name}</span>
-              <button 
+              <button
                 onClick={() => setShowTerms(true)}
                 className="text-[10px] font-black text-blue-600 underline hover:text-blue-800 leading-none"
               >
@@ -309,6 +309,30 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1 shrink-0">
                 <img src={assets.icons.instant} alt="Instant" className="w-4 h-4 shrink-0" />
                 <span className="text-[10px] font-black text-gray-700">Instant confirmation</span>
+                                <div
+                  className="relative"
+                  onMouseEnter={() => setShowInstantTooltip(true)}
+                  onMouseLeave={() => setShowInstantTooltip(false)}
+                >
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
+                  >
+                    <Info size={10} className="text-gray-900" strokeWidth={3} />
+                  </div>
+                  <AnimatePresence>
+                    {showInstantTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full right-[-60px] mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                      >
+                        <div className="absolute -top-1 right-[63px] w-2 h-2 bg-gray-900 rotate-45" />
+                        Receive instant booking confirmation!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
           </div>
@@ -423,7 +447,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
             {!hideBookingControls && (
-              <Link 
+              <Link
                 href={`/booking?vehicleId=${vehicle.id}`}
                 className="px-6 py-3 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
               >
@@ -440,9 +464,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       <div className="hidden md:flex lg:hidden flex-col">
         {/* Image */}
         <div className="p-4 pb-2 flex justify-center">
-          <img 
-            src={carData.image} 
-            alt={carData.name} 
+          <img
+            src={carData.image}
+            alt={carData.name}
             className="w-full max-w-[260px] h-auto max-h-[150px] object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x180?text=No+Image';
@@ -456,25 +480,25 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <h3 className="text-lg font-black text-gray-900 leading-tight">
               {carData.name}
             </h3>
-            <div 
+            <div
               className="relative"
               onMouseEnter={() => setShowInfoTooltip(true)}
               onMouseLeave={() => setShowInfoTooltip(false)}
             >
-              <div className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 shadow-sm"
+              <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 shadow-sm"
                 style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
               >
-                <Info size={10} className="text-gray-900" strokeWidth={3} />
+                <Info size={9} className="text-gray-900" strokeWidth={3} />
               </div>
               <AnimatePresence>
                 {showInfoTooltip && (
                   <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+ initial={{ opacity: 0, y: 5, x: "-50%" }}
+  animate={{ opacity: 1, y: 0, x: "-50%" }}
+  exit={{ opacity: 0, y: 5, x: "-50%" }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl"
                   >
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
+                    <div className="absolute -top-1 left-1/2 translate-x-[-50%]  w-2 h-2 bg-gray-900 rotate-45" />
                     The supplier will provide a car with same class and specifications, though the make may vary.
                   </motion.div>
                 )}
@@ -502,7 +526,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
             <div className="flex flex-col items-center gap-1 bg-gray-50 rounded-lg py-2.5">
               <img src={assets.icons.ac} alt="AC" className="w-5 h-5" />
-              <span className="text-[11px] font-black text-gray-600">A/C</span>
+              <span className="text-[11px] font-black text-gray-600">{carData.ac}</span>
             </div>
             <div className="flex flex-col items-center gap-1 bg-gray-50 rounded-lg py-2.5">
               <img src={assets.icons.fuel} alt="Fuel" className="w-5 h-5" />
@@ -517,21 +541,21 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         {/* Supplier Box - COMPACT INLINE */}
         <div className="mx-4 mb-2.5">
-          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-2.5 flex-wrap">
+          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-x-6 gap-y-3  flex-wrap">
             {/* Logo */}
-            <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-[72px] h-10 shrink-0 shadow-sm">
-              <img 
-                src={carData.supplier.logo} 
-                alt="" 
-                className="h-6 w-auto max-w-[60px] object-contain"
+            <div className="bg-white p-1 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
+              <img
+                src={carData.supplier.logo}
+                alt=""
+                className="h-10 w-auto max-w-[80px] object-contain"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             </div>
 
             {/* Name + Terms */}
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 ">
               <span className="text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
-              <button 
+              <button
                 onClick={() => setShowTerms(true)}
                 className="text-xs font-black text-blue-600 underline hover:text-blue-800 leading-none"
               >
@@ -552,7 +576,31 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             {carData.supplier.instantConfirmation && (
               <div className="flex items-center gap-1.5 shrink-0">
                 <img src={assets.icons.instant} alt="Instant" className="w-5 h-5 shrink-0" />
-                <span className="text-xs font-black text-gray-700">Instant</span>
+                <span className="text-xs font-black text-gray-700">Instant Confirmation</span>
+                                                <div
+                  className="relative"
+                  onMouseEnter={() => setShowInstantTooltip(true)}
+                  onMouseLeave={() => setShowInstantTooltip(false)}
+                >
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
+                  >
+                    <Info size={10} className="text-gray-900" strokeWidth={3} />
+                  </div>
+                  <AnimatePresence>
+                    {showInstantTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full right-[-60px] mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                      >
+                        <div className="absolute -top-1 right-[63px] w-2 h-2 bg-gray-900 rotate-45" />
+                        Receive instant booking confirmation!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
           </div>
@@ -667,7 +715,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
             {!hideBookingControls && (
-              <Link 
+              <Link
                 href={`/booking?vehicleId=${vehicle.id}`}
                 className="px-8 py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
               >
@@ -685,9 +733,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         {/* ROW 1: Image + Details */}
         <div className="flex items-start">
           <div className="w-[300px] shrink-0 p-5 flex items-center justify-center">
-            <img 
-              src={carData.image} 
-              alt={carData.name} 
+            <img
+              src={carData.image}
+              alt={carData.name}
               className="w-full h-auto max-h-[200px] object-contain"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x250?text=No+Image';
@@ -699,7 +747,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-lg font-black text-gray-900">{carData.name}</h3>
-                <div 
+                <div
                   className="relative"
                   onMouseEnter={() => setShowInfoTooltip(true)}
                   onMouseLeave={() => setShowInfoTooltip(false)}
@@ -742,7 +790,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 </div>
                 <div className="flex items-center gap-2">
                   <img src={assets.icons.ac} alt="AC" className="w-5 h-5 shrink-0" />
-                  <span className="text-xs font-black text-gray-700">Air Conditioning</span>
+                  <span className="text-xs font-black text-gray-700">{carData.ac}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <img src={assets.icons.fuel} alt="Fuel" className="w-5 h-5 shrink-0" />
@@ -762,11 +810,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           <div className="w-fit bg-gray-100 rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap">
             {/* Logo */}
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
-              <img 
-                src={carData.supplier.logo} 
-                alt="" 
-                className="h-7 w-auto max-w-[65px] object-contain" 
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} 
+              <img
+                src={carData.supplier.logo}
+                alt=""
+                className="h-7 w-auto max-w-[65px] object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             </div>
 
@@ -790,7 +838,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1.5 shrink-0">
                 <img src={assets.icons.instant} alt="Instant" className="w-5 h-5 shrink-0" />
                 <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
-                <div 
+                <div
                   className="relative"
                   onMouseEnter={() => setShowInstantTooltip(true)}
                   onMouseLeave={() => setShowInstantTooltip(false)}
@@ -817,13 +865,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             )}
           </div>
-                  {/* Free Cancellation - OUTSIDE BOX - DESKTOP */}
-        {carData.freeCancellation && (
-          <div className="mx-5 mb-2 flex items-center gap-2 text-green-700">
-            <Check size={16} className="stroke-[2.5] shrink-0" />
-            <span className="text-sm font-black">Free Cancellation ({carData.freeCancellationHours}h)</span>
-          </div>
-        )}
+          {/* Free Cancellation - OUTSIDE BOX - DESKTOP */}
+          {carData.freeCancellation && (
+            <div className="mx-5 mb-2 flex items-center gap-2 text-green-700">
+              <Check size={16} className="stroke-[2.5] shrink-0" />
+              <span className="text-sm font-black">Free Cancellation ({carData.freeCancellationHours}h)</span>
+            </div>
+          )}
         </div>
 
 
@@ -892,7 +940,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
 
             {!hideBookingControls && (
-              <Link 
+              <Link
                 href={`/booking?vehicleId=${vehicle.id}`}
                 className="w-full py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg"
               >
@@ -907,14 +955,14 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       <AnimatePresence>
         {showTerms && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 md:p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowTerms(false)}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
