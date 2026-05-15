@@ -30,28 +30,49 @@ function BookingContent() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-10">
+      {/* Mobile Search Summary */}
+      <div className="lg:hidden mb-4">
+        <SearchSummary hideEditButton={true} forceMobileLayout={true} />
+      </div>
+
+      {/* Mobile Results Search Bar (Editable Search) */}
+      <div className="lg:hidden mb-6">
+        <ResultsSearchBar
+          onSearch={() => {
+            console.log("Checking availability with new dates...");
+          }}
+          buttonText="Check Availability"
+          readOnlyLocation={true}
+          preventRedirect={true}
+        />
+      </div>
+
+      {/* Mobile Car Card: Appears next on mobile */}
+      <div className="lg:hidden mb-8">
+        {selectedVehicle ? (
+          <CarCard
+            vehicle={selectedVehicle}
+            daysNumber={daysNumber}
+            hideBookingControls={true}
+          />
+        ) : (
+          <div className="p-8 bg-white rounded-2xl border border-gray-100 text-center text-gray-500">
+            No vehicle selected or found.
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-8 items-start">
 
         {/* ==================================
-            LEFT SIDEBAR: Details & Price
+            LEFT SIDEBAR: Details & Price (Invoice)
         ================================== */}
         <aside className="w-full lg:w-[320px] shrink-0 space-y-6">
           <div className="hidden lg:block">
             <SearchSummary hideEditButton={true} />
           </div>
 
-          {/* Reusable Availability Check Card from Search Page */}
-          <ResultsSearchBar
-            onSearch={() => {
-              // Logic to re-check availability could go here
-              console.log("Checking availability with new dates...");
-            }}
-            buttonText="Check Availability"
-            readOnlyLocation={true}
-            preventRedirect={true}
-          />
-
-          {/* Total Price Card */}
+          {/* Total Price Card (Invoice) */}
           <div className="bg-white rounded-2xl border-2 border-primary overflow-hidden shadow-lg shadow-primary/5">
             <div className="p-6 space-y-6">
               <div>
@@ -90,6 +111,18 @@ function BookingContent() {
             </div>
           </div>
 
+          {/* Reusable Availability Check Card (Desktop Only) */}
+          <div className="hidden lg:block">
+            <ResultsSearchBar
+              onSearch={() => {
+                console.log("Checking availability with new dates...");
+              }}
+              buttonText="Check Availability"
+              readOnlyLocation={true}
+              preventRedirect={true}
+            />
+          </div>
+
         </aside>
 
         {/* ==================================
@@ -97,19 +130,20 @@ function BookingContent() {
         ================================== */}
         <div className="flex-1 space-y-6 min-w-0">
 
-          {/* Main Content Area */}
-
-          {selectedVehicle ? (
-            <CarCard
-              vehicle={selectedVehicle}
-              daysNumber={daysNumber}
-              hideBookingControls={true}
-            />
-          ) : (
-            <div className="p-8 bg-white rounded-2xl border border-gray-100 text-center text-gray-500">
-              No vehicle selected or found.
-            </div>
-          )}
+          {/* Desktop Car Card: Hidden on mobile since it's shown above */}
+          <div className="hidden lg:block">
+            {selectedVehicle ? (
+              <CarCard
+                vehicle={selectedVehicle}
+                daysNumber={daysNumber}
+                hideBookingControls={true}
+              />
+            ) : (
+              <div className="p-8 bg-white rounded-2xl border border-gray-100 text-center text-gray-500">
+                No vehicle selected or found.
+              </div>
+            )}
+          </div>
 
           {/* Register Form */}
           <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm space-y-8 mt-8">
@@ -182,10 +216,7 @@ export default function BookingPage() {
       <Navbar />
       <Stepper currentStep={3} />
 
-      {/* Mobile Search Summary */}
-      <div className="md:hidden px-4 pt-3 pb-2">
-        <SearchSummary hideEditButton={true} forceMobileLayout={true} />
-      </div>
+      {/* Mobile Search Summary moved inside BookingContent for better alignment */}
 
       <Suspense fallback={<div className="p-20 text-center">Loading...</div>}>
         <BookingContent />
