@@ -808,7 +808,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         {/* Supplier Box - DESKTOP - COMPACT INLINE LAYOUT */}
         <div className="mx-5 mb-2 flex ">
-          <div className="w-[95%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-between gap-x-10 gap-y-4 flex-wrap">
+          <div className="w-[75%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center  gap-x-12 gap-y-4 flex-wrap">
             {/* Logo */}
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               <img
