@@ -808,7 +808,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         {/* Supplier Box - DESKTOP - COMPACT INLINE LAYOUT */}
         <div className="mx-5 mb-2 flex ">
-          <div className="w-[75%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center  gap-x-12 gap-y-4 flex-wrap">
+          <div className="w-[74%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center  gap-x-8 gap-y-4 flex-wrap">
             {/* Logo */}
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               <img
@@ -878,10 +878,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
 
         {/* ROW 3: Inclusions + Details + Price */}
-        <div className="flex">
+        <div className="flex ">
+          <div className='flex bg-green-100/35 rounded-xl p-4  mx-4 mb-4 w-[75%]'>
           {/* What's Included */}
           <div className="w-[50%] p-5 pt-3 ">
-          <div className="bg-green-50/50 rounded-xl p-4 ">
+          <div className=" ">
                           <div className="mb-2 ">
               <h4 className="text-xs font-black text-green-700">What is Included!</h4>
               <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
@@ -932,6 +933,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 </span>
               </div>
             </div>
+          </div>
           </div>
 
           {/* Price + Book */}

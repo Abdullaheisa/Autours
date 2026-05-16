@@ -64,12 +64,12 @@ export default function Contact() {
 
   return (
     <section id="contact" className="relative overflow-hidden bg-white w-full">
-      {/* Main Content Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
+      {/* Main Content Container - full width on lg, no max-w constraint */}
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-stretch min-h-[500px]">
 
-          {/* Left: Contact Info */}
-          <div className="relative z-10 space-y-6 lg:max-w-lg py-4">
+          {/* Left: Contact Info - constrained width with padding */}
+          <div className="relative z-10 space-y-6 py-8 lg:py-12 lg:pl-8 xl:pl-12 lg:pr-6 flex flex-col justify-center max-w-2xl mx-auto lg:mx-0 lg:ml-auto">
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -164,18 +164,18 @@ export default function Contact() {
             </motion.div>
           </div>
 
-          {/* Right Image: Hidden on mobile/tablet, aligned on desktop */}
+          {/* Right Image: Hidden below 1024px (lg breakpoint), full bleed on lg+ */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="hidden lg:flex relative right-[-33px] w-full items-center justify-center lg:justify-end"
+            className="hidden lg:flex relative w-full items-center justify-end overflow-visible"
           >
             <img
               src="/img/contactus.png"
               alt="Contact Autours"
-              className="w-full h-full max-h-[450px] object-contain object-right select-none"
+              className="h-full w-auto max-h-[550px] object-contain object-right select-none"
             />
           </motion.div>
 
