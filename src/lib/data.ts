@@ -97,6 +97,7 @@ export const recentBookings = [
 
 export const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard", active: true },
+  { id: "bookings-calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
   { id: "profile", label: "My Profile", icon: "UserCircle" },
   { id: "companies", label: "My Companies", icon: "Building2" },
   { id: "blogs", label: "Blogs", icon: "BookOpen" },

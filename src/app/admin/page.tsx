@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sidebar, Header } from "@/app/admin/components";
-import { DashboardOverviewPage, CompaniesPage, BlogsPage } from "@/app/admin/pages";
+import { DashboardOverviewPage, CompaniesPage, BlogsPage, BookingsCalendarPage } from "@/app/admin/pages";
 
 // Other sections still imported directly until page components are created
 import ProfileSection from "@/app/admin/sections/profile/ProfileSection";
@@ -23,6 +23,7 @@ import LogoutSection from "@/app/admin/sections/logout/LogoutSection";
 
 const pageTitles: Record<string, string> = {
   dashboard: "Dashboard",
+  // "bookings-calendar": "Bookings Calendar",
   profile: "My Profile",
   companies: "My Companies",
   blogs: "Blog Management",
@@ -64,6 +65,7 @@ export default function AdminDashboard() {
       case "included": return <WhatIsIncludedSection />;
       case "subscribers": return <SubscribersSection />;
       case "background": return <BackgroundSettingsSection />;
+      // case "bookings-calendar": return <BookingsCalendarPage />;
       case "logout": return <LogoutSection />;
       case "dashboard":
       default: return <DashboardOverviewPage />;

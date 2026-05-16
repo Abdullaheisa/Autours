@@ -747,7 +747,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-lg font-black text-gray-900">{carData.name}</h3>
-                <div
+
+                <span className="text-xs font-normal text-gray-500">or Similar</span>
+                                <div
                   className="relative"
                   onMouseEnter={() => setShowInfoTooltip(true)}
                   onMouseLeave={() => setShowInfoTooltip(false)}
@@ -771,11 +773,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     )}
                   </AnimatePresence>
                 </div>
-                <span className="text-xs font-normal text-gray-500">or Similar</span>
               </div>
               <p className="text-xs font-black text-gray-500 mb-4">{carData.type}</p>
 
-              <div className="grid grid-cols-2 gap-x-1 gap-y-2">
+              <div className="grid grid-cols-2 w-[80%] justify-between gap-x-0 gap-y-2">
                 <div className="flex items-center gap-2">
                   <img src={assets.icons.seats} alt="Seats" className="w-5 h-5 shrink-0" />
                   <span className="text-xs font-black text-gray-700">{carData.seats} Seats</span>
@@ -807,7 +808,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         {/* Supplier Box - DESKTOP - COMPACT INLINE LAYOUT */}
         <div className="mx-5 mb-2 flex ">
-          <div className="w-fit bg-gray-100 rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap">
+          <div className="w-[95%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-between gap-x-10 gap-y-4 flex-wrap">
             {/* Logo */}
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               <img
@@ -869,7 +870,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           {carData.freeCancellation && (
             <div className="mx-5 mb-2 flex items-center gap-2 text-green-700">
               <Check size={16} className="stroke-[2.5] shrink-0" />
-              <span className="text-sm font-black">Free Cancellation ({carData.freeCancellationHours}h)</span>
+              <span className="text-sm font-bold">Free Cancellation ({carData.freeCancellationHours}h)</span>
             </div>
           )}
         </div>
@@ -879,8 +880,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         {/* ROW 3: Inclusions + Details + Price */}
         <div className="flex">
           {/* What's Included */}
-          <div className="w-[50%] p-5 pt-3">
-            <div className="mb-2">
+          <div className="w-[50%] p-5 pt-3 ">
+          <div className="bg-green-50/50 rounded-xl p-4 ">
+                          <div className="mb-2 ">
               <h4 className="text-xs font-black text-green-700">What is Included!</h4>
               <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
             </div>
@@ -898,9 +900,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </button>
             )}
           </div>
+          </div>
+
 
           {/* Details - Lucide Icons */}
-          <div className="w-[50%] p-5 pt-3 space-y-3">
+          <div className="w-[50%] p-5 pt-14 space-y-3">
             <div className="flex items-start gap-2">
               <button onClick={openMap} className="shrink-0 pt-0.5">
                 <Globe size={14} className="text-blue-600" />
