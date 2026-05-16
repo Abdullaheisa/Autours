@@ -879,7 +879,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         {/* ROW 3: Inclusions + Details + Price */}
         <div className="flex ">
-          <div className='flex bg-green-100/35 rounded-xl p-4  mx-4 mb-4 w-[75%]'>
+          <div className='flex bg-green-100/35 rounded-xl mx-4 mb-4 w-[75%]'>
           {/* What's Included */}
           <div className="w-[50%] p-5 pt-3 ">
           <div className=" ">
@@ -937,10 +937,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           </div>
 
           {/* Price + Book */}
-          <div className="w-[260px] shrink-0 p-5 pt-3 flex flex-col items-start justify-start">
-            <span className="text-sm font-bold text-gray-500 block mb-2">for {carData.price.totalDays} days</span>
+          <div className="w-[260px] shrink-0 p-5 pt-6 flex flex-col items-start justify-end">
+            <span className="text-sm font-bold pl-4 text-gray-500 block mb-2">for {carData.price.totalDays} days</span>
             <div className="text-left mb-5">
-              <span className="text-3xl font-black text-gray-900">
+              <span className="text-3xl pl-4 font-black text-gray-900">
                 {formatPrice(carData.price.amount, carData.price.currency as Currency)}
               </span>
             </div>
@@ -948,7 +948,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             {!hideBookingControls && (
               <Link
                 href={`/booking?vehicleId=${vehicle.id}`}
-                className="w-full py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg"
+                className="w-full py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-lg uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg"
               >
                 Book Now
               </Link>
