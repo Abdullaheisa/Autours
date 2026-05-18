@@ -212,7 +212,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <h3 className="text-base font-black text-gray-900 leading-tight">
               {carData.name}
             </h3>
-            <div
+
+            <span className="text-xs font-normal text-gray-500">or Similar</span>
+                        <div
               className="relative"
               onMouseEnter={() => setShowInfoTooltip(true)}
               onMouseLeave={() => setShowInfoTooltip(false)}
@@ -236,7 +238,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 )}
               </AnimatePresence>
             </div>
-            <span className="text-xs font-normal text-gray-500">or Similar</span>
           </div>
           <p className="text-xs font-black text-gray-500 mt-0.5">{carData.type}</p>
         </div>
@@ -309,7 +310,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1 shrink-0">
                 <img src={assets.icons.instant} alt="Instant" className="w-4 h-4 shrink-0" />
                 <span className="text-[10px] font-black text-gray-700">Instant confirmation</span>
-                                <div
+              <div
                   className="relative"
                   onMouseEnter={() => setShowInstantTooltip(true)}
                   onMouseLeave={() => setShowInstantTooltip(false)}
@@ -381,23 +382,27 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="bg-green-50/50 rounded-xl px-3 py-3">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-black text-green-700">What is Included</h4>
-                    {carData.inclusions.length > 4 && (
-                      <button
-                        onClick={() => setShowAllInclusions(!showAllInclusions)}
-                        className="text-xs font-black text-gray-600 underline hover:text-gray-800"
-                      >
-                        {showAllInclusions ? 'Show Less' : 'More +'}
-                      </button>
-                    )}
+
                   </div>
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                    <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3">
                     {displayedInclusions.map((inc, i) => (
                       <div key={i} className="flex items-center gap-1.5">
                         <Check size={12} className="text-green-600 shrink-0" />
                         <span className="text-xs font-black text-gray-600">{inc}</span>
                       </div>
                     ))}
+                    
                   </div>
+                                      {carData.inclusions.length > 4 && (
+                      <button
+                        onClick={() => setShowAllInclusions(!showAllInclusions)}
+                        className="text-xs text-end w-full py-3 pr-5 font-black text-gray-600 underline hover:text-gray-800"
+                      >
+                        {showAllInclusions ? 'Show Less' : 'More +'}
+                      </button>
+                    )}
                 </div>
               </div>
 
@@ -408,7 +413,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     <Globe size={16} className="text-blue-600" />
                   </button>
                   <div>
-                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider block">Address</span>
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider ">Address: </span>
                     <span className="text-sm font-black text-gray-800">{carData.supplier.address}</span>
                   </div>
                 </div>
@@ -416,7 +421,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="flex items-center gap-2.5">
                   <Fuel size={17} className="text-blue-600 shrink-0" />
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Fuel Policy</span>
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Fuel Policy: </span>
                     <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
                   </div>
                 </div>
@@ -424,7 +429,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="flex items-start gap-2.5">
                   <PickupIcon pickupType={carData.pickupType} />
                   <div>
-                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider block">Pick-up</span>
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Pick-up: </span>
                     <span className="text-sm font-black text-gray-800">
                       <PickupLabel pickupType={carData.pickupType} />
                     </span>
@@ -480,7 +485,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <h3 className="text-lg font-black text-gray-900 leading-tight">
               {carData.name}
             </h3>
-            <div
+
+            <span className="text-sm font-normal text-gray-500">or Similar</span>
+                        <div
               className="relative"
               onMouseEnter={() => setShowInfoTooltip(true)}
               onMouseLeave={() => setShowInfoTooltip(false)}
@@ -504,7 +511,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 )}
               </AnimatePresence>
             </div>
-            <span className="text-sm font-normal text-gray-500">or Similar</span>
           </div>
           <p className="text-sm font-black text-gray-500 mt-1">{carData.type}</p>
         </div>
@@ -649,34 +655,38 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="bg-green-50/50 rounded-xl px-3 py-3">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-black text-green-700">What is Included</h4>
-                    {carData.inclusions.length > 4 && (
-                      <button
-                        onClick={() => setShowAllInclusions(!showAllInclusions)}
-                        className="text-xs font-black text-gray-600 underline hover:text-gray-800"
-                      >
-                        {showAllInclusions ? 'Show Less' : 'More +'}
-                      </button>
-                    )}
+
                   </div>
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                    <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3">
                     {displayedInclusions.map((inc, i) => (
                       <div key={i} className="flex items-center gap-1.5">
                         <Check size={12} className="text-green-600 shrink-0" />
                         <span className="text-xs font-black text-gray-600">{inc}</span>
                       </div>
                     ))}
+                    
                   </div>
+                                      {carData.inclusions.length > 4 && (
+                      <button
+                        onClick={() => setShowAllInclusions(!showAllInclusions)}
+                        className="text-xs text-end w-full py-3 pr-5 font-black text-gray-600 underline hover:text-gray-800"
+                      >
+                        {showAllInclusions ? 'Show Less' : 'More +'}
+                      </button>
+                    )}
                 </div>
               </div>
 
-              {/* Details: Address → Fuel Policy → Pick-up */}
+                {/* Details: Address → Fuel Policy → Pick-up */}
               <div className="px-4 pb-4 space-y-2.5">
                 <div className="flex items-start gap-2.5">
                   <button onClick={openMap} className="shrink-0 pt-0.5">
                     <Globe size={16} className="text-blue-600" />
                   </button>
                   <div>
-                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider block">Address</span>
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider ">Address: </span>
                     <span className="text-sm font-black text-gray-800">{carData.supplier.address}</span>
                   </div>
                 </div>
@@ -684,7 +694,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="flex items-center gap-2.5">
                   <Fuel size={17} className="text-blue-600 shrink-0" />
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Fuel Policy</span>
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Fuel Policy: </span>
                     <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
                   </div>
                 </div>
@@ -692,7 +702,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="flex items-start gap-2.5">
                   <PickupIcon pickupType={carData.pickupType} />
                   <div>
-                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider block">Pick-up</span>
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Pick-up: </span>
                     <span className="text-sm font-black text-gray-800">
                       <PickupLabel pickupType={carData.pickupType} />
                     </span>
