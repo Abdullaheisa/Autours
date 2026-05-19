@@ -19,7 +19,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await dispatch(loginThunk({ email, password }));
-    
+
     if (loginThunk.fulfilled.match(result)) {
       const user = result.payload.user;
       if (user.role === 'admin') {
@@ -48,7 +48,7 @@ export default function LoginPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white py-10 px-4 shadow-2xl shadow-gray-200/50 sm:rounded-[2rem] sm:px-10 border border-gray-100"
@@ -146,7 +146,7 @@ export default function LoginPage() {
 
             <div className="mt-6">
               <Link
-                href="/be-supplier"
+                href="/register"
                 className="w-full inline-flex justify-center py-4 px-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
               >
                 Create new account
@@ -154,7 +154,7 @@ export default function LoginPage() {
             </div>
           </div>
         </motion.div>
-        
+
         <p className="mt-8 text-center text-xs text-gray-400 font-medium">
           By signing in, you agree to our{' '}
           <Link href="/terms" className="underline hover:text-gray-600">Terms of Service</Link>

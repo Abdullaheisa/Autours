@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react';
 import { X, HelpCircle, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function FAQ() {
-  const faqs = [
+interface FAQProps {
+  data?: { q: string; a: string }[];
+  title?: string;
+}
+
+export default function FAQ({ data, title = "FAQ" }: FAQProps = {}) {
+  const defaultFaqs = [
     {
       q: 'Can I receive a specific color of the car model?',
       a: `The cars displayed online are just examples of the vehicles the customer may get, and unfortunately, we cannot guarantee the exact make or model, or aspects such as the color of the car.
@@ -132,6 +137,8 @@ This coverage provides financial protection for medical expenses resulting from 
     },
   ];
 
+  const faqs = data || defaultFaqs;
+
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const openModal = (index: number) => {
@@ -170,7 +177,7 @@ This coverage provides financial protection for medical expenses resulting from 
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-6xl font-black text-gray-800 tracking-tight mt-1"
           >
-            FAQ
+            {title}
           </motion.h3>
         </div>
 

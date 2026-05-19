@@ -27,7 +27,17 @@ const TRUST_BADGES = [
   'Free amendment',
 ];
 
-export default function HeroSearch() {
+interface HeroSearchProps {
+  title?: string;
+  titleHighlight?: string;
+  bottomText?: string;
+}
+
+export default function HeroSearch({
+  title = "Car Rentals - ",
+  titleHighlight = "Search, Book & Enjoy.",
+  bottomText = "Looking for a vehicle? You're at the right place!"
+}: HeroSearchProps = {}) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const currencyCode = useSelector((state: RootState) => state.currency.code);
@@ -162,7 +172,7 @@ export default function HeroSearch() {
           {/* Title - MOVED UP, smaller on mobile */}
           <div className="text-center mb-4 sm:mb-6">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
-              Car Rentals - <span className="text-primary">Search, Book & Enjoy.</span>
+              {title} <span className="text-primary">{titleHighlight}</span>
             </h1>
           </div>
 
@@ -413,7 +423,7 @@ export default function HeroSearch() {
             <p 
               className="mt-6 sm:mt-8 mb-2 pb-6 relative z-[-1] text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white text-center drop-shadow-lg tracking-tight"
             >
-              Looking for a vehicle? You're at the right place!
+              {bottomText}
             </p>
           </div>
       </section>

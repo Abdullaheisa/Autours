@@ -3,35 +3,38 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { countries, Country } from '@/data/countries';
+import Link from 'next/link';
 
 function CountryCard({ country, index }: { country: Country; index: number }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-30px" });
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.4, delay: index * 0.06 }}
-      className="group relative aspect-[4/3] rounded-3xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl transition-all"
-    >
-      <img
-        src={country.image}
-        alt={country.name}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-300" />
+    <Link href={`/countries/${country.id}`} className="block">
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.4, delay: index * 0.06 }}
+        className="group relative aspect-[4/3] rounded-3xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl transition-all"
+      >
+        <img
+          src={country.image}
+          alt={country.name}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-300" />
 
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] text-center italic">
-          {country.name}
-        </h3>
-      </div>
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] text-center italic">
+            {country.name}
+          </h3>
+        </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-center" />
-    </motion.div>
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-center" />
+      </motion.div>
+    </Link>
   );
 }
 

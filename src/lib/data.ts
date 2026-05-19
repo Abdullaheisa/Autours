@@ -97,6 +97,7 @@ export const recentBookings = [
 
 export const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard", active: true },
+  { id: "supplier-intelligence", label: "Supplier Intelligence", icon: "BarChart3" },
   { id: "bookings-calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
   { id: "profile", label: "My Profile", icon: "UserCircle" },
   { id: "companies", label: "My Companies", icon: "Building2" },
@@ -113,6 +114,7 @@ export const sidebarItems = [
   { id: "terms", label: "Rental Terms", icon: "FileText" },
   { id: "included", label: "What is included?", icon: "CheckCircle2" },
   { id: "subscribers", label: "Subscribers", icon: "Mail" },
+  { id: "contest-popup", label: "Contest Control", icon: "Gift" },
   { id: "background", label: "Background Settings", icon: "Palette" },
   { id: "logout", label: "Sign Out", icon: "LogOut" },
 ];

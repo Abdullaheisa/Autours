@@ -11,6 +11,8 @@ import contentReducer from "./slices/contentSlice";
 import currencyReducer from "./slices/currencySlice";
 import searchReducer from "./slices/searchSlice";
 import dashboardReducer from "./slices/dashboardSlice";
+import supplierAnalyticsReducer from "./slices/supplierAnalyticsSlice";
+import contestReducer from "./slices/contestSlice";
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +28,8 @@ export const store = configureStore({
     currency: currencyReducer,
     search: searchReducer,
     dashboard: dashboardReducer,
+    supplierAnalytics: supplierAnalyticsReducer,
+    contest: contestReducer,
   },
 });
 

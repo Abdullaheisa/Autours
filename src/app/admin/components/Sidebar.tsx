@@ -4,14 +4,14 @@ import { useState } from "react";
 import {
   LayoutDashboard, UserCircle, Building2, BookOpen, TrendingUp, Car, Upload,
   Grid3X3, Settings2, Crown, Users, CalendarCheck, Star, FileText, CheckCircle2,
-  Mail, Palette, LogOut, ChevronLeft, ChevronRight,
+  Mail, Palette, LogOut, ChevronLeft, ChevronRight, BarChart3, Gift
 } from "lucide-react";
-import { sidebarItems } from "@/lib/data";
+import { sidebarItems as defaultSidebarItems } from "@/lib/data";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, UserCircle, Building2, BookOpen, TrendingUp, Car, Upload,
   Grid3X3, Settings2, Crown, Users, CalendarCheck, Star, FileText, CheckCircle2,
-  Mail, Palette, LogOut,
+  Mail, Palette, LogOut, BarChart3, Gift
 };
 
 interface SidebarProps {
@@ -19,10 +19,13 @@ interface SidebarProps {
   onItemClick: (id: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  /** Pre-filtered list of sidebar items. Falls back to the full list when not provided. */
+  items?: typeof defaultSidebarItems;
 }
 
-export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClose, items }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const resolvedItems = items ?? defaultSidebarItems;
 
   return (
     <>
@@ -54,7 +57,7 @@ export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClo
         </button>
         <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-hide">
           <ul className="space-y-1">
-            {sidebarItems.map((item) => {
+            {resolvedItems.map((item) => {
               const Icon = iconMap[item.icon];
               const isActive = activeItem === item.id;
               const isLogout = item.id === "logout";

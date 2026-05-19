@@ -13,7 +13,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
+  token: null,
   isAuthenticated: false,
   loading: false,
   error: null,
@@ -31,12 +31,14 @@ export const loginThunk = createAsyncThunk(
           const mockUser: User = { id: '1', name: 'Admin User', email: 'admin@autours.net', role: 'admin' };
           const mockToken = 'mock-jwt-token-admin';
           localStorage.setItem('token', mockToken);
+          localStorage.setItem('user', JSON.stringify(mockUser));
           return { user: mockUser, token: mockToken };
         }
         if (credentials.email === 'supplier@autours.net' && credentials.password === 'password') {
           const mockUser: User = { id: '2', name: 'Supplier User', email: 'supplier@autours.net', role: 'supplier' };
           const mockToken = 'mock-jwt-token-supplier';
           localStorage.setItem('token', mockToken);
+          localStorage.setItem('user', JSON.stringify(mockUser));
           return { user: mockUser, token: mockToken };
         }
         return rejectWithValue('Invalid credentials');
@@ -46,6 +48,7 @@ export const loginThunk = createAsyncThunk(
         if (response.status) {
           const { user, token } = response.data;
           localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
           return { user, token };
         } else {
           return rejectWithValue(response.message || 'Invalid credentials');
@@ -65,6 +68,7 @@ export const registerThunk = createAsyncThunk(
       const mockUser: User = { id: '2', name: userData.fullName, email: userData.email, role: 'user' };
       const mockToken = 'mock-jwt-token-new';
       localStorage.setItem('token', mockToken);
+      localStorage.setItem('user', JSON.stringify(mockUser));
       return { user: mockUser, token: mockToken };
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -88,11 +92,23 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    // Restores persisted session from localStorage on client mount.
+    // Called by GlobalLoginGate in useEffect to avoid SSR issues.
+    restoreAuth: (state) => {
+      const token = localStorage.getItem('token');
+      const userRaw = localStorage.getItem('user');
+      if (token && userRaw) {
+        state.token = token;
+        state.user = JSON.parse(userRaw);
+        state.isAuthenticated = true;
+      }
+    },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     clearError: (state) => {
       state.error = null;
@@ -131,5 +147,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, restoreAuth } = authSlice.actions;
 export default authSlice.reducer;

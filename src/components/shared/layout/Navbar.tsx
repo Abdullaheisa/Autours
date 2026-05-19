@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
 import { toggleMobileMenu } from '@/store/slices/uiSlice';
@@ -15,27 +16,27 @@ export default function Navbar() {
   const { isMobileMenuOpen } = useSelector((state: RootState) => state.ui);
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
+  // Guard against SSR/client hydration mismatch:
+  // Both server and first client render must agree on href="/login".
+  // After mount, the client updates to the correct role-based route.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const getManageHref = () => {
-    if (!isAuthenticated) return "/login";
-    return user?.role === 'admin' ? "/admin" : "/company";
+    if (!mounted || !isAuthenticated) return '/login';
+    return user?.role === 'admin' ? '/admin' : '/company';
   };
 
   const menuVariants = {
     closed: {
       opacity: 0,
       y: -20,
-      transition: {
-        staggerChildren: 0.05,
-        staggerDirection: -1
-      }
+      transition: { staggerChildren: 0.05, staggerDirection: -1 }
     },
     open: {
       opacity: 1,
       y: 0,
-      transition: {
-        staggerChildren: 0.07,
-        delayChildren: 0.1
-      }
+      transition: { staggerChildren: 0.07, delayChildren: 0.1 }
     }
   };
 
@@ -47,17 +48,18 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-[var(--primary)] border-b border-black/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14">
-          {/* Logo - Proper Size */}
+        <div className="flex justify-between items-center h-20">
+
+          {/* Logo */}
           <Link href="/" className="flex items-center group transition-transform active:scale-95 shrink-0">
             <img
               src={assets.logo}
               alt={siteConfig.name}
-              className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-all"
+              className="h-12 sm:h-10 md:h-12 w-auto object-contain transition-all"
             />
           </Link>
 
-          {/* Desktop Navigation - Removed links */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {/* Links removed as per request */}
           </div>
@@ -65,7 +67,8 @@ export default function Navbar() {
           {/* Right side Actions */}
           <div className="flex items-center gap-2">
             <div className="hidden lg:flex items-center gap-2">
-              {/* Manage Button - White on Yellow */}
+
+              {/* Manage Booking Button */}
               <Link
                 href={getManageHref()}
                 className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95"
@@ -80,6 +83,7 @@ export default function Navbar() {
               </div>
             </div>
 
+            {/* Mobile hamburger */}
             <button
               onClick={() => dispatch(toggleMobileMenu())}
               className="lg:hidden p-2 bg-black/10 text-gray-900 rounded-xl transition-all active:scale-90"

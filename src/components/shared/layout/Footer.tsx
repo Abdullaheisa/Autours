@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { 
-  Facebook, Instagram, Linkedin, Twitter, Mail, 
+  Facebook, Instagram, Linkedin, Twitter, Mail 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { assets } from '@/config/assets';
+import { countries } from '@/data/countries';
 
 // Custom X icon (formerly Twitter)
 const XIcon = ({ size = 18 }: { size?: number }) => (
@@ -22,8 +24,8 @@ const XIcon = ({ size = 18 }: { size?: number }) => (
 // Footer links
 const footerLinks = {
   Company: [
-    { name: 'About us', href: '#about' },
-    { name: 'Contact us', href: '#contact' },
+    { name: 'About us', href: '/about-us' },
+    { name: 'Contact us', href: '/contact-us' },
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms & Condition', href: '/terms' },
     { name: 'Site Map', href: '/sitemap' },
@@ -32,23 +34,20 @@ const footerLinks = {
     { name: 'Manage Booking', href: '/login' },
     { name: 'FAQ', href: '#faq' },
     { name: 'Subscribe', href: '/subscribe' },
-    { name: 'Why Autours?', href: '#why' },
+    { name: 'Why Autours?', href: '/why-autours' },
     { name: 'Our Blogs', href: '/blog' },
   ],
   Supplier: [
     { name: 'Be Supplier', href: '/be-supplier' },
-    { name: 'Where we are?', href: '#locations' },
+    { name: 'Where we are?', href: '/where-we-are' },
     { name: 'Register', href: '/register' },
     { name: 'Our Fleet', href: '#fleet' },
-  ],
-  Location: [
-    { name: 'Dubai Car Rental', href: '#' },
-    { name: 'Qatar Car Rental', href: '#' },
-    { name: 'Kuwait Car Rental', href: '#' },
-  ],
+  ]
 };
 
 export default function Footer() {
+  const [showAll, setShowAll] = useState(false);
+
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith('#')) {
       e.preventDefault();
@@ -58,6 +57,8 @@ export default function Footer() {
       }
     }
   };
+
+  const displayedCountries = showAll ? countries : countries.slice(0, 5);
 
   return (
     <footer className="bg-primary pt-10 pb-6 text-black border-t border-black/5">
@@ -108,6 +109,39 @@ export default function Footer() {
               </ul>
             </motion.div>
           ))}
+
+          {/* Location Category: Dynamic Countries Selector */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="space-y-2"
+          >
+            <h4 className="text-base font-black text-black">
+              Location
+            </h4>
+            <ul className="space-y-0.5">
+              {displayedCountries.map((country) => (
+                <li key={country.id}>
+                  <Link 
+                    href={`/countries/${country.id}`}
+                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all"
+                  >
+                    {country.name} Car Rental
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {countries.length > 5 && (
+              <button 
+                onClick={() => setShowAll(!showAll)}
+                className="text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block"
+              >
+                {showAll ? '- Show Less' : `+ Show ${countries.length - 5} More`}
+              </button>
+            )}
+          </motion.div>
         </div>
 
         {/* Separator */}
