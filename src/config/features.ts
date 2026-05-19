@@ -32,6 +32,9 @@ export const features = {
   /** Contest control page in admin dashboard */
   contestControl: false,
 
+  /** Global login gate popup on homepage */
+  loginGate: false,
+
 } as const;
 
 /** Helper: returns true only if the feature flag is enabled */
