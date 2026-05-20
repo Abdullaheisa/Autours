@@ -98,8 +98,8 @@ export const recentBookings = [
 export const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard", active: true },
   { id: "supplier-intelligence", label: "Supplier Intelligence", icon: "BarChart3" },
-  { id: "bookings-calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
   { id: "profile", label: "My Profile", icon: "UserCircle" },
+  { id: "bookings-calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
   { id: "companies", label: "My Companies", icon: "Building2" },
   { id: "blogs", label: "Blogs", icon: "BookOpen" },
   { id: "profit", label: "Profit Margin", icon: "TrendingUp" },
@@ -152,12 +152,12 @@ export interface ExcelRow {
 }
 
 export const bulkUploadSuppliers = [
-  "Nile Motors", "MAHD Rent", "Autocar Elite", 
+  "Nile Motors", "MAHD Rent", "Autocar Elite",
   "Doha Wheels", "Kuwait Ride", "Jordan Cars", "Cairo Wheels"
 ];
 
 export const bulkUploadBranches = [
-  "Hurghada International Airport", "Dubai Airport", 
+  "Hurghada International Airport", "Dubai Airport",
   "Riyadh Airport", "Doha Airport", "Kuwait City", "Amman Airport"
 ];
 

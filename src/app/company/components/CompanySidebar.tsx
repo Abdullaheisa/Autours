@@ -4,20 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, UserCircle, Building2, Car, PlusCircle, 
-  Tag, Crown, CalendarCheck, FileText, Star, Ticket, 
-  CreditCard, LogOut, ChevronLeft, ChevronRight
+  LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
+  Tag, Crown, CalendarCheck, FileText, Star, Ticket,
+  CreditCard, LogOut, ChevronLeft, ChevronRight, Calendar
 } from "lucide-react";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  LayoutDashboard, UserCircle, Building2, Car, PlusCircle, 
-  Tag, Crown, CalendarCheck, FileText, Star, Ticket, 
-  CreditCard, LogOut
+  LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
+  Tag, Crown, CalendarCheck, FileText, Star, Ticket,
+  CreditCard, LogOut, Calendar
 };
+
 
 const companySidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard", href: "/company" },
   { id: "profile", label: "My Profile", icon: "UserCircle", href: "/company/profile" },
+  { id: "calendar", label: "Bookings Calendar", icon: "CalendarCheck", href: "/company/calendar" },
   { id: "branches", label: "Branches", icon: "Building2", href: "/company/branches" },
   { id: "payment-methods", label: "Payment Methods", icon: "CreditCard", href: "/company/payment-methods" },
   { id: "create-vehicle", label: "Create Vehicle", icon: "PlusCircle", href: "/company/create-vehicle" },
@@ -75,37 +77,28 @@ export default function CompanySidebar({ isOpen = false, onClose }: CompanySideb
               const isActive = pathname === item.href;
               const isLogout = item.id === "logout";
               return (
-                <li key={item.id}>
-                  <Link
-                    href={item.href}
-                    onClick={() => { onClose?.(); }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                      ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20" : isLogout ? "text-red-500 hover:bg-red-50" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
-                  >
-                    {Icon && <Icon className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
-                    <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>{item.label}</span>
-                    {isCollapsed && (
-                      <div className="hidden lg:block absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                        {item.label}
-                      </div>
-                    )}
-                  </Link>
-                </li>
+                <>
+                  <li key={item.id}>
+                    <Link
+                      href={item.href}
+                      onClick={() => { onClose?.(); }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                        ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20" : isLogout ? "text-red-500 hover:bg-red-50" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+                    >
+                      {Icon && <Icon className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
+                      <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>{item.label}</span>
+                      {isCollapsed && (
+                        <div className="hidden lg:block absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                          {item.label}
+                        </div>
+                      )}
+                    </Link>
+                  </li>
+                </>
               );
             })}
           </ul>
         </nav>
-        <div className="p-4 border-t border-gray-100">
-          <div className={`flex items-center gap-3 ${isCollapsed ? "lg:justify-center" : ""}`}>
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-              <UserCircle size={18} className="text-gray-500" />
-            </div>
-            <div className={`${isCollapsed ? "lg:hidden" : "block"}`}>
-              <p className="text-sm font-medium text-gray-900">Company User</p>
-              <p className="text-xs text-gray-500">Branch Manager</p>
-            </div>
-          </div>
-        </div>
       </aside>
     </>
   );

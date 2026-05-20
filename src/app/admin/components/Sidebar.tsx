@@ -81,17 +81,6 @@ export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClo
             })}
           </ul>
         </nav>
-        <div className="p-4 border-t border-gray-100">
-          <div className={`flex items-center gap-3 ${isCollapsed ? "lg:justify-center" : ""}`}>
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-              <UserCircle size={18} className="text-gray-500" />
-            </div>
-            <div className={`${isCollapsed ? "lg:hidden" : "block"}`}>
-              <p className="text-sm font-medium text-gray-900">Admin User</p>
-              <p className="text-xs text-gray-500">Super Admin</p>
-            </div>
-          </div>
-        </div>
       </aside>
     </>
   );
