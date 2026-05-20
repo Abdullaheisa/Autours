@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
   Tag, Crown, CalendarCheck, FileText, Star, Ticket,
@@ -17,30 +15,31 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 
 const companySidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard", href: "/company" },
-  { id: "profile", label: "My Profile", icon: "UserCircle", href: "/company/profile" },
-  { id: "calendar", label: "Bookings Calendar", icon: "CalendarCheck", href: "/company/calendar" },
-  { id: "branches", label: "Branches", icon: "Building2", href: "/company/branches" },
-  { id: "payment-methods", label: "Payment Methods", icon: "CreditCard", href: "/company/payment-methods" },
-  { id: "create-vehicle", label: "Create Vehicle", icon: "PlusCircle", href: "/company/create-vehicle" },
-  { id: "price-list", label: "Price List", icon: "Tag", href: "/company/price-list" },
-  { id: "vehicles", label: "My Vehicles", icon: "Car", href: "/company/vehicles" },
-  { id: "membership", label: "Membership", icon: "Crown", href: "/company/membership" },
-  { id: "rentals", label: "Rentals", icon: "CalendarCheck", href: "/company/rentals" },
-  { id: "rental-terms", label: "Rental Terms", icon: "FileText", href: "/company/rental-terms" },
-  { id: "promos", label: "Promos", icon: "Ticket", href: "/company/promos" },
-  { id: "rental-reviews", label: "Rental Reviews", icon: "Star", href: "/company/rental-reviews" },
-  { id: "logout", label: "Sign Out", icon: "LogOut", href: "/" },
+  { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard" },
+  { id: "profile", label: "My Profile", icon: "UserCircle" },
+  { id: "calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
+  { id: "branches", label: "Branches", icon: "Building2" },
+  { id: "payment-methods", label: "Payment Methods", icon: "CreditCard" },
+  { id: "create-vehicle", label: "Create Vehicle", icon: "PlusCircle" },
+  { id: "price-list", label: "Price List", icon: "Tag" },
+  { id: "vehicles", label: "My Vehicles", icon: "Car" },
+  { id: "membership", label: "Membership", icon: "Crown" },
+  { id: "rentals", label: "Rentals", icon: "CalendarCheck" },
+  { id: "rental-terms", label: "Rental Terms", icon: "FileText" },
+  { id: "promos", label: "Promos", icon: "Ticket" },
+  { id: "rental-reviews", label: "Rental Reviews", icon: "Star" },
+  { id: "logout", label: "Sign Out", icon: "LogOut" },
 ];
 
 interface CompanySidebarProps {
+  activeItem: string;
+  onItemClick: (id: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export default function CompanySidebar({ isOpen = false, onClose }: CompanySidebarProps) {
+export default function CompanySidebar({ activeItem, onItemClick, isOpen = false, onClose }: CompanySidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const pathname = usePathname();
 
   return (
     <>
@@ -74,27 +73,31 @@ export default function CompanySidebar({ isOpen = false, onClose }: CompanySideb
           <ul className="space-y-1">
             {companySidebarItems.map((item) => {
               const Icon = iconMap[item.icon];
-              const isActive = pathname === item.href;
+              const isActive = activeItem === item.id;
               const isLogout = item.id === "logout";
               return (
-                <>
-                  <li key={item.id}>
-                    <Link
-                      href={item.href}
-                      onClick={() => { onClose?.(); }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                        ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20" : isLogout ? "text-red-500 hover:bg-red-50" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
-                    >
-                      {Icon && <Icon className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
-                      <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>{item.label}</span>
-                      {isCollapsed && (
-                        <div className="hidden lg:block absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                          {item.label}
-                        </div>
-                      )}
-                    </Link>
-                  </li>
-                </>
+                <li key={item.id}>
+                  <button
+                    onClick={() => {
+                      if (isLogout) {
+                        window.location.href = "/";
+                        return;
+                      }
+                      onItemClick(item.id);
+                      onClose?.();
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                      ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20" : isLogout ? "text-red-500 hover:bg-red-50" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+                  >
+                    {Icon && <Icon className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
+                    <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>{item.label}</span>
+                    {isCollapsed && (
+                      <div className="hidden lg:block absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        {item.label}
+                      </div>
+                    )}
+                  </button>
+                </li>
               );
             })}
           </ul>

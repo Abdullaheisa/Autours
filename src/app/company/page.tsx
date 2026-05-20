@@ -1,94 +1,81 @@
 "use client";
 
-import { useMemo } from "react";
-import { Building2, CalendarCheck, DollarSign, Car, TrendingUp } from "lucide-react";
-import StatsGrid from "@/app/company/components/StatsGrid";
-import { CompanyRecentBookingsTable, CompanyMonthlyBookingsChart, CompanyVehicleCards } from "@/app/company/components/CompanyDashboardComponents";
-import { companies, recentBookings, vehiclesPhotos } from "@/lib/data";
+import { useState } from "react";
+import CompanySidebar from "./components/CompanySidebar";
+import CompanyHeader from "./components/CompanyHeader";
 
-const LOGGED_IN_COMPANY = "MAHD Rent";
+// Import all sections
+import CompanyDashboardOverview from "./sections/dashboard/CompanyDashboardOverview";
+import CompanyProfileSection from "./sections/profile/CompanyProfileSection";
+import CompanyCalendarSection from "./sections/calendar/CompanyCalendarSection";
+import BranchesSection from "./sections/branches/BranchesSection";
+import PaymentMethodsSection from "./sections/payment-methods/PaymentMethodsSection";
+import CreateVehicleSection from "./sections/create-vehicle/CreateVehicleSection";
+import PriceListSection from "./sections/price-list/PriceListSection";
+import MyVehiclesSection from "./sections/vehicles/MyVehiclesSection";
+import CompanyMembershipSection from "./sections/membership/CompanyMembershipSection";
+import CompanyRentalsSection from "./sections/rentals/CompanyRentalsSection";
+import CompanyRentalTermsSection from "./sections/rental-terms/CompanyRentalTermsSection";
+import PromosSection from "./sections/promos/PromosSection";
+import CompanyRentalReviewsSection from "./sections/rental-reviews/CompanyRentalReviewsSection";
 
-export default function CompanyDashboardPage() {
-  const companyStats = useMemo(() => {
-    const company = companies.find(c => c.name === LOGGED_IN_COMPANY);
-    const bookings = recentBookings.filter(b => b.company === LOGGED_IN_COMPANY);
-    const vehicles = vehiclesPhotos.filter(v => v.id <= 12); // Mocking company vehicles
+const pageTitles: Record<string, string> = {
+  dashboard: "Dashboard",
+  profile: "My Profile",
+  calendar: "Bookings Calendar",
+  branches: "Branches",
+  "payment-methods": "Payment Methods",
+  "create-vehicle": "Create Vehicle",
+  "price-list": "Price List",
+  vehicles: "My Vehicles",
+  membership: "Membership",
+  rentals: "Rentals",
+  "rental-terms": "Rental Terms",
+  promos: "Promos",
+  "rental-reviews": "Rental Reviews",
+};
 
-    return [
-      { 
-        label: "Total Earnings", 
-        value: company ? `$${(company.revenue / 1000).toFixed(1)}K` : "$0", 
-        icon: <DollarSign size={20} />, 
-        change: "+12%", 
-        trend: "up" as const, 
-        color: "emerald" as const 
-      },
-      { 
-        label: "Total Rentals", 
-        value: bookings.length * 12, // Mocking multiplier
-        icon: <CalendarCheck size={20} />, 
-        change: "+8%", 
-        trend: "up" as const, 
-        color: "blue" as const 
-      },
-      { 
-        label: "My Vehicles", 
-        value: 18, // Mocking
-        icon: <Car size={20} />, 
-        change: "+2", 
-        trend: "up" as const, 
-        color: "purple" as const 
-      },
-      { 
-        label: "Avg. Rating", 
-        value: company?.rating || "0.0", 
-        icon: <Building2 size={20} />, 
-        change: "+0.2", 
-        trend: "up" as const, 
-        color: "amber" as const 
-      },
-    ];
-  }, []);
+export default function CompanyDashboard() {
+  const [activeItem, setActiveItem] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const renderContent = () => {
+    switch (activeItem) {
+      case "profile":         return <CompanyProfileSection />;
+      case "calendar":        return <CompanyCalendarSection />;
+      case "branches":        return <BranchesSection />;
+      case "payment-methods": return <PaymentMethodsSection />;
+      case "create-vehicle":  return <CreateVehicleSection />;
+      case "price-list":      return <PriceListSection />;
+      case "vehicles":        return <MyVehiclesSection />;
+      case "membership":      return <CompanyMembershipSection />;
+      case "rentals":         return <CompanyRentalsSection />;
+      case "rental-terms":    return <CompanyRentalTermsSection />;
+      case "promos":          return <PromosSection />;
+      case "rental-reviews":  return <CompanyRentalReviewsSection />;
+      case "dashboard":
+      default:                return <CompanyDashboardOverview />;
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <StatsGrid stats={companyStats} />
-      
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <CompanyMonthlyBookingsChart />
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Earnings History</h3>
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
-                    <TrendingUp size={16} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">Payment Received</p>
-                    <p className="text-[10px] text-gray-500">May {10-i}, 2024</p>
-                  </div>
-                </div>
-                <span className="text-sm font-bold text-emerald-600">+$450.00</span>
-              </div>
-            ))}
+    <div className="min-h-screen bg-gray-50 flex">
+      <CompanySidebar
+        activeItem={activeItem}
+        onItemClick={setActiveItem}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+      <div className="flex-1 flex flex-col min-w-0">
+        <CompanyHeader
+          title={pageTitles[activeItem] || "Dashboard"}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        <main className="flex-1 p-3 sm:p-4 lg:p-8 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            {renderContent()}
           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        <CompanyRecentBookingsTable />
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Featured Vehicles</h3>
-          <button className="text-sm text-primary-600 font-medium">View Fleet</button>
-        </div>
-        <CompanyVehicleCards />
+        </main>
       </div>
     </div>
   );
