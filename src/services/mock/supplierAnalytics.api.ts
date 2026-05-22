@@ -51,11 +51,7 @@ export interface SupplierIntelligenceResponse {
   };
 }
 
-export interface NegotiationUpdatePayload {
-  negotiationStatus: 'none' | 'in-progress' | 'completed' | 'rejected';
-  notes?: string;
-  priority?: 'Low' | 'Medium' | 'High';
-}
+export type NegotiationUpdatePayload = Partial<SupplierComparison>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MOCK IMPLEMENTATION
