@@ -14,7 +14,7 @@ export const features = {
   // ── Admin Dashboard Modules ───────────────────────────────────────────────
 
   /** Supplier Pricing Intelligence page (/admin → supplier-intelligence tab) */
-  supplierIntelligence: false,
+  supplierIntelligence: true,
 
   /** Bookings Calendar page (/admin → bookings-calendar tab) */
   bookingsCalendar: true,
@@ -27,13 +27,13 @@ export const features = {
   // ── Global UI Features ────────────────────────────────────────────────────
 
   /** Contest promotional popup — shows on homepage only */
-  contestPopup: false,
+  contestPopup: true,
 
   /** Contest control page in admin dashboard */
-  contestControl: false,
+  contestControl: true,
 
   /** Global login gate popup on homepage */
-  loginGate: false,
+  loginGate: true,
 
 } as const;
 
