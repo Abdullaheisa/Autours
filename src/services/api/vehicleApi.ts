@@ -1,6 +1,3 @@
-import { cars as mockCars } from '@/data/cars';
-import { mockLocations } from '@/data/locations';
-import { API_CONFIG } from '@/constants';
 import { apiClient, cleanPayload } from './apiClient';
 import { vehicleMapper } from '../mappers/vehicleMapper';
 import { 
@@ -11,66 +8,52 @@ import {
   LocationBranch 
 } from '@/types';
 
-const USE_MOCK_DATA = API_CONFIG.USE_MOCK;
-
-/**
- * Vehicle API Service
- * Handles all vehicle-related requests including searching, filtering, and location fetching.
- * Optimized for clean architecture with centralized mapping and mock support.
- */
 export const vehicleApi = {
-  /**
-   * Search for vehicles based on dates and location.
-   */
   search: async (payload: SearchPayload) => {
-    if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { status: true };
-    }
-    return apiClient.post('/api/search/vehicles', cleanPayload(payload));
+    return apiClient.post('/search/vehicles', cleanPayload(payload));
   },
 
-  /**
-   * Filter and fetch vehicles based on sidebar criteria.
-   */
   filter: async (payload: FilterPayload): Promise<FilterResponse> => {
-    if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Mock mapping logic using the centralized mapper
-      const mappedVehicles = vehicleMapper.toLocalList(mockCars);
-
-      return {
-        filteredVehicles: mappedVehicles,
-        count: mappedVehicles.length,
-        daysNumber: 3, // Mock value
-        max: 2000,
-        min: 50,
-      };
-    }
-
     const response = await apiClient.post<any>('/filter/vehicles', cleanPayload(payload));
-    
-    // Map response to local domain model
+
     return {
-      ...response,
-      filteredVehicles: vehicleMapper.toLocalList(response.filteredVehicles)
+      filteredVehicles: vehicleMapper.toLocalList(response.filteredVehicles || []),
+      count: response.count || 0,
+      daysNumber: response.daysNumber || 0,
+      max: response.max || 0,
+      min: response.min || 0,
+      filteredCategories: (response.filteredCategories || []).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        vehicle_count: c.vehicle_count ?? c.pivot?.vehicle_count ?? 0,
+      })),
+      filteredSuppliers: (response.filteredSuppliers || []).map((s: any) => ({
+        id: s.id,
+        name: s.name || s.company,
+        vehicle_count: s.vehicle_count ?? 0,
+      })),
     };
   },
 
-  /**
-   * Fetch available pickup/dropoff locations.
-   */
   getLocations: async (): Promise<LocationBranch[]> => {
-    if (USE_MOCK_DATA) {
-      return mockLocations;
-    }
-
     try {
-      return await apiClient.get<LocationBranch[]>('/get/locations');
+      const data = await apiClient.get<any[]>('/get/locations');
+      return (data || []).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name || '',
+        location: loc.location || '',
+        country: loc.country || '',
+        adresse: loc.adresse || '',
+        location_type: loc.location_type || '',
+      }));
     } catch (err) {
       console.error('[LOCATIONS ERROR]', err);
       return [];
     }
+  },
+
+  getVehicleData: async (payload: { id: number; location: string; date_from: string; date_to: string; currency: string }) => {
+    const response = await apiClient.post<any>('/get/vehicle/data', cleanPayload(payload));
+    return response;
   },
 };

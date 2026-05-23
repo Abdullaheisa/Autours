@@ -1,38 +1,31 @@
 import { NextResponse } from 'next/server';
 
+const BACKEND_URL = 'https://www.autours.net';
+
+async function getCsrf() {
+  const res = await fetch(`${BACKEND_URL}/sanctum/csrf-cookie`, { method: 'GET' });
+  const setCookie = res.headers.get('set-cookie') || '';
+  const tokenMatch = setCookie.match(/XSRF-TOKEN=([^;]+)/);
+  const sessionMatch = setCookie.match(/autours_session=([^;]+)/);
+  const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : '';
+  const parts: string[] = [];
+  if (tokenMatch) parts.push(`XSRF-TOKEN=${tokenMatch[1]}`);
+  if (sessionMatch) parts.push(`autours_session=${sessionMatch[1]}`);
+  return { cookie: parts.join('; '), token };
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    let cookieHeader = request.headers.get('cookie') || '';
-    let xsrfToken = '';
-    let newSetCookie = '';
+    const csrf = await getCsrf();
 
-    // If no session exists, fetch CSRF token from backend
-    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-    if (!cookieHeader.includes('XSRF-TOKEN')) {
-      const csrfRes = await fetch(`${BASE_URL}/sanctum/csrf-cookie`, { method: 'GET' });
-      const setCookie = csrfRes.headers.get('set-cookie');
-      if (setCookie) {
-        newSetCookie = setCookie.replace(/Domain=[^;]+;?/gi, '');
-        cookieHeader = setCookie.split(', ').map((c: string) => c.split(';')[0]).join('; ');
-        const match = setCookie.match(/XSRF-TOKEN=([^;]+)/);
-        if (match) xsrfToken = decodeURIComponent(match[1]);
-      }
-    } else {
-      const match = cookieHeader.match(/XSRF-TOKEN=([^;]+)/);
-      if (match) xsrfToken = decodeURIComponent(match[1]);
-    }
-
-    console.log('--- SEARCH PROXY PAYLOAD ---');
-    console.log(JSON.stringify(body, null, 2));
-
-    const backendResponse = await fetch(`${BASE_URL}/search/vehicles`, {
+    const backendResponse = await fetch(`${BACKEND_URL}/search/vehicles`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Cookie': cookieHeader,
-        'X-XSRF-TOKEN': xsrfToken,
+        'Cookie': csrf.cookie,
+        'X-XSRF-TOKEN': csrf.token,
       },
       body: JSON.stringify(body),
     });
@@ -45,20 +38,7 @@ export async function POST(request: Request) {
       data = { message: 'Success', _raw: await backendResponse.text() };
     }
 
-    const response = NextResponse.json(data, {
-      status: backendResponse.status,
-    });
-
-    if (newSetCookie) {
-      response.headers.set('Set-Cookie', newSetCookie);
-    } else {
-      const backendSetCookie = backendResponse.headers.get('set-cookie');
-      if (backendSetCookie) {
-        response.headers.set('Set-Cookie', backendSetCookie.replace(/Domain=[^;]+;?/gi, ''));
-      }
-    }
-
-    return response;
+    return NextResponse.json(data, { status: backendResponse.status });
   } catch (error: any) {
     console.error('Proxy Search Error:', error);
     return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });

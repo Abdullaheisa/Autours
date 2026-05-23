@@ -16,14 +16,7 @@ interface CategoriesState {
 }
 
 const initialState: CategoriesState = {
-  items: [
-    { id: 1, name: "Sedan", image: "https://images.unsplash.com/photo-1541443131876-44b03de101c5?w=400&h=300&fit=crop", vehicles: 45, active: true },
-    { id: 2, name: "SUV", image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop", vehicles: 62, active: true },
-    { id: 3, name: "Luxury", image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop", vehicles: 28, active: true },
-    { id: 4, name: "Sports", image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=300&fit=crop", vehicles: 15, active: true },
-    { id: 5, name: "Van", image: "https://images.unsplash.com/photo-1523983388277-336a66bf9bcd?w=400&h=300&fit=crop", vehicles: 22, active: false },
-    { id: 6, name: "Truck", image: "https://images.unsplash.com/photo-1586191582056-a15cd11e29a2?w=400&h=300&fit=crop", vehicles: 12, active: true },
-  ],
+  items: [],
   loading: false,
   error: null
 };

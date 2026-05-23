@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { dashboardApi } from '@/services/api';
 
 interface Booking {
   id: string;
@@ -18,22 +19,47 @@ interface DashboardState {
     newUsers: number;
     totalCars: number;
   };
+  rawData: any;
   isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: DashboardState = {
-  bookings: [
-    { id: 'BK-001', carId: '1', userId: 'USR-123', startDate: '2026-05-10', endDate: '2026-05-15', status: 'Confirmed', totalPrice: 2500 },
-    { id: 'BK-002', carId: '2', userId: 'USR-456', startDate: '2026-05-12', endDate: '2026-05-14', status: 'Pending', totalPrice: 400 },
-  ],
+  bookings: [],
   stats: {
-    totalRevenue: 45000,
-    activeBookings: 12,
-    newUsers: 156,
-    totalCars: 48,
+    totalRevenue: 0,
+    activeBookings: 0,
+    newUsers: 0,
+    totalCars: 0,
   },
+  rawData: null,
   isLoading: false,
+  error: null,
 };
+
+export const fetchDashboard = createAsyncThunk(
+  'dashboard/fetch',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: any = await dashboardApi.getAdmin();
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Failed to fetch dashboard');
+    }
+  }
+);
+
+export const fetchSupplierDashboard = createAsyncThunk(
+  'dashboard/fetchSupplier',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: any = await dashboardApi.getSupplier();
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Failed to fetch supplier dashboard');
+    }
+  }
+);
 
 const dashboardSlice = createSlice({
   name: 'dashboard',
@@ -48,6 +74,34 @@ const dashboardSlice = createSlice({
     addBooking: (state, action: PayloadAction<Booking>) => {
       state.bookings.unshift(action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchDashboard.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(fetchDashboard.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.rawData = action.payload;
+        const data = action.payload?.data || action.payload;
+        if (data) {
+          state.stats.totalRevenue = data.totalRevenue || data.total_revenue || 0;
+          state.stats.activeBookings = data.activeBookings || data.active_bookings || 0;
+          state.stats.newUsers = data.newUsers || data.new_users || 0;
+          state.stats.totalCars = data.totalCars || data.total_cars || 0;
+        }
+      })
+      .addCase(fetchDashboard.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchSupplierDashboard.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(fetchSupplierDashboard.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.rawData = action.payload;
+      })
+      .addCase(fetchSupplierDashboard.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 

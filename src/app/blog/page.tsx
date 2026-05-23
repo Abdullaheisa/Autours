@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { Search, Calendar, User, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import { blogPosts } from '@/data/blog';
 
 export const metadata: Metadata = {
   title: 'Autours Blog | Travel Tips, Destination Guides, and Car Rental Insights',
@@ -16,7 +15,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogPage() {
+async function getBlogPosts() {
+  try {
+    const res = await fetch('https://www.autours.net/api/blogs/published', {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const wrapper = json?.data;
+    if (Array.isArray(wrapper)) return wrapper;
+    if (wrapper?.data && Array.isArray(wrapper.data)) return wrapper.data;
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function BlogPage() {
+  const posts = await getBlogPosts();
+
   return (
     <main className="min-h-screen bg-[#fcfcfc]">
       <Navbar />
@@ -41,7 +59,6 @@ export default function BlogPage() {
             Discover travel tips, destination guides, and car rental insights to make your next journey unforgettable.
           </p>
 
-          {/* Search Bar */}
           <div className="max-w-2xl mx-auto relative group">
             <input
               type="text"
@@ -59,24 +76,27 @@ export default function BlogPage() {
       {/* Blog Grid */}
       <section className="max-w-7xl mx-auto px-4 -mt-16 pb-20 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogPosts.map((post) => (
+          {posts.map((post: any) => (
             <article 
               key={post.id}
               className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-500 group"
             >
               <Link href={`/blog/${post.slug}`} className="block relative h-64 overflow-hidden">
-                <Image
-                  src={post.image}
-                  alt={post.title}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+                {post.image ? (
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200" />
+                )}
                 <div className="absolute top-4 left-4">
                   <span className="bg-primary text-gray-900 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg">
-                    {post.category}
+                    {post.blog_category?.title || (typeof post.category === 'string' ? post.category : post.category?.title) || 'Blog'}
                   </span>
                 </div>
-                {/* Arrow Button */}
                 <div className="absolute bottom-4 right-4 w-12 h-12 bg-white rounded-full flex items-center justify-center opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 shadow-xl">
                   <ArrowRight size={20} className="text-gray-900" />
                 </div>
@@ -86,11 +106,11 @@ export default function BlogPage() {
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
                     <Calendar size={14} className="text-primary" />
-                    {post.date}
+                    {post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
                     <User size={14} className="text-primary" />
-                    By: {post.author.name}
+                    By: {post.author || 'Autours'}
                   </div>
                 </div>
 
@@ -101,7 +121,7 @@ export default function BlogPage() {
                 </Link>
 
                 <p className="text-sm text-gray-500 mb-8 line-clamp-3 leading-relaxed">
-                  {post.excerpt}
+                  {post.meta_description || post.excerpt || ''}
                 </p>
 
                 <Link 

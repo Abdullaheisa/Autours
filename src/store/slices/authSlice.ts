@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../../types';
-import { API_CONFIG } from '@/constants';
-import { supplierApi } from '@/services/api/supplierApi';
+import { authApi } from '@/services/api';
 
 interface AuthState {
   user: User | null;
@@ -19,43 +18,31 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Existing Thunks (Mocks for logic integration)
 export const loginThunk = createAsyncThunk(
   'auth/login',
-  async (credentials: any, { rejectWithValue }) => {
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      if (API_CONFIG.USE_MOCK) {
-        // Mock API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        if (credentials.email === 'admin@autours.net' && credentials.password === 'password') {
-          const mockUser: User = { id: '1', name: 'Admin User', email: 'admin@autours.net', role: 'admin' };
-          const mockToken = 'mock-jwt-token-admin';
-          localStorage.setItem('token', mockToken);
-          localStorage.setItem('user', JSON.stringify(mockUser));
-          return { user: mockUser, token: mockToken };
-        }
-        if (credentials.email === 'supplier@autours.net' && credentials.password === 'password') {
-          const mockUser: User = { id: '2', name: 'Supplier User', email: 'supplier@autours.net', role: 'supplier' };
-          const mockToken = 'mock-jwt-token-supplier';
-          localStorage.setItem('token', mockToken);
-          localStorage.setItem('user', JSON.stringify(mockUser));
-          return { user: mockUser, token: mockToken };
-        }
-        return rejectWithValue('Invalid credentials');
-      } else {
-        // Real API Call via supplierApi
-        const response: any = await supplierApi.login(credentials);
-        if (response.status) {
-          const { user, token } = response.data;
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-          return { user, token };
-        } else {
-          return rejectWithValue(response.message || 'Invalid credentials');
-        }
+      const response: any = await authApi.login(credentials);
+
+      if (response.status === true || response.status === 'true') {
+        const userData = response.data || response.user || {};
+        const user: User = {
+          id: userData.id?.toString() || '1',
+          name: userData.name || credentials.email,
+          email: userData.email || credentials.email,
+          role: response.user_type || userData.role || 'customer',
+        };
+        const token = response.token || 'session-auth';
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        return { user, token };
       }
+
+      const errorMsg = Array.isArray(response.message) ? response.message[0] : (response.message || 'Invalid credentials');
+      return rejectWithValue(errorMsg);
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Login failed');
+      const msg = error.errors ? Object.values(error.errors).flat().join(', ') : (error.message || 'Login failed');
+      return rejectWithValue(msg);
     }
   }
 );
@@ -64,14 +51,32 @@ export const registerThunk = createAsyncThunk(
   'auth/register',
   async (userData: any, { rejectWithValue }) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockUser: User = { id: '2', name: userData.fullName, email: userData.email, role: 'user' };
-      const mockToken = 'mock-jwt-token-new';
-      localStorage.setItem('token', mockToken);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return { user: mockUser, token: mockToken };
+      const response: any = await authApi.register({
+        name: userData.fullName || userData.name,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone || '',
+        country: userData.country || '',
+      });
+
+      if (response.status === true || response.status === 'true') {
+        const user: User = {
+          id: response.data?.id?.toString() || '1',
+          name: userData.fullName || userData.name,
+          email: userData.email,
+          role: 'customer',
+        };
+        const token = response.token || 'session-auth';
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        return { user, token };
+      }
+
+      const errorMsg = response.message || 'Registration failed';
+      return rejectWithValue(errorMsg);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      const msg = error.errors ? Object.values(error.errors).flat().join(', ') : (error.message || 'Registration failed');
+      return rejectWithValue(msg);
     }
   }
 );
@@ -80,10 +85,13 @@ export const resetPasswordThunk = createAsyncThunk(
   'auth/resetPassword',
   async (email: string, { rejectWithValue }) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response: any = await authApi.forgotPassword({ email });
+      if (response.status === false) {
+        return rejectWithValue(response.message || 'Failed to send reset email');
+      }
       return true;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to send reset email');
     }
   }
 );
@@ -92,8 +100,6 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    // Restores persisted session from localStorage on client mount.
-    // Called by GlobalLoginGate in useEffect to avoid SSR issues.
     restoreAuth: (state) => {
       const token = localStorage.getItem('token');
       const userRaw = localStorage.getItem('user');
@@ -109,6 +115,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      authApi.logout().catch(() => {});
     },
     clearError: (state) => {
       state.error = null;
@@ -147,5 +154,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, restoreAuth } = authSlice.actions;
+export const { restoreAuth, logout, clearError } = authSlice.actions;
 export default authSlice.reducer;

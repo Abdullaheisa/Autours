@@ -1,55 +1,57 @@
 import { Vehicle } from "@/types";
 
-/**
- * Mappers are used to transform raw API responses into the application's domain models.
- * This ensures that if the backend API structure changes, only the mapper needs to be updated.
- */
-
 export const vehicleMapper = {
-  /**
-   * Maps a raw vehicle object from the API to the local Vehicle type.
-   */
   toLocal: (raw: any): Vehicle => {
+    const categoryName = typeof raw.category === 'object' ? raw.category?.name : (raw.category || '');
+    const supplierData = raw.supplier || {};
+    const price = parseFloat(raw.price) || parseFloat(raw.price_in_usd) || 0;
+    const specs = raw.specifications || [];
+    const specMap: Record<string, string> = {};
+    if (Array.isArray(specs)) {
+      specs.forEach((s: any) => {
+        const name = (s.name || '').toLowerCase();
+        const val = s.pivot?.value || s.value || (Array.isArray(s.options) ? s.options[0] : '');
+        specMap[name] = val;
+      });
+    }
+
     return {
       id: raw.id?.toString() || '',
-      name: raw.name || raw.car_name || 'Car',
+      name: raw.name || '',
       brand: raw.brand || raw.make || '',
-      category: raw.category || raw.vehicle_type || '',
-      type: raw.type || raw.class || '',
-      photo: raw.image || raw.photo || raw.car_photo || '',
-      image: raw.image || raw.photo || raw.car_photo || '',
-      transmission: raw.transmission || raw.gearbox || raw.shifter || 'Automatic',
-      fuelType: raw.fuel_type || raw.fuel || raw.engine_type || raw.fuelType || 'Petrol',
-      seats: raw.seats || raw.passenger_count || 5,
-      doors: raw.doors || raw.door_count || 4,
-      suitcases: raw.suitcases || raw.bags || '',
-      ac: !!(raw.ac || raw.air_conditioning),
+      category: categoryName,
+      type: raw.type || categoryName,
+      photo: raw.photo || raw.image || '',
+      image: raw.photo || raw.image || '',
+      transmission: specMap['transmission'] || specMap['gear'] || raw.transmission || 'Automatic',
+      fuelType: specMap['fuel'] || raw.fuel_type || raw.fuelType || 'Petrol',
+      seats: parseInt(specMap['number of seats'] || specMap['seats']) || raw.seats || 5,
+      doors: parseInt(specMap['doors']) || raw.doors || 4,
+      suitcases: specMap['suitcases'] || specMap['luggage'] || raw.suitcases || '',
+      ac: specMap['air conditioner'] === 'Air Conditioning' || !!(raw.ac),
       supplier: {
-        company: raw.supplier?.name || raw.company_name || raw.supplier?.company || 'Supplier',
-        logo: raw.supplier?.logo || raw.company_logo || '',
-        rating: raw.supplier?.rating || 0,
-        reviews_count: raw.supplier?.reviews_count || 0,
-        rentalTerms: raw.supplier?.terms || 'Standard terms apply.',
-        instant_confirmation: !!(raw.supplier?.instant_confirmation),
-        lat: raw.supplier?.lat || 0,
-        lng: raw.supplier?.lng || 0,
-        address: raw.supplier?.address || '',
+        company: supplierData.name || supplierData.company || '',
+        logo: supplierData.logo || '',
+        rating: supplierData.rating || 0,
+        reviews_count: supplierData.reviews_count || 0,
+        rentalTerms: supplierData.terms || '',
+        instant_confirmation: !!(supplierData.instant_confirmation),
+        lat: parseFloat(supplierData.lat) || 0,
+        lng: parseFloat(supplierData.lng) || 0,
+        address: supplierData.address || '',
       },
-      price_in_usd: raw.price_in_usd || raw.price || 0,
-      included: (raw.inclusions || raw.included || []).map((inc: any, index: number) => ({
-        id: index,
-        what_is_included: typeof inc === 'string' ? inc : (inc.what_is_included || ''),
+      price_in_usd: price,
+      included: (raw.included || raw.inclusions || []).map((inc: any, index: number) => ({
+        id: inc.id || index,
+        what_is_included: typeof inc === 'string' ? inc : (inc.what_is_included || inc.name || ''),
       })),
-      fuelPolicy: raw.fuel_policy || 'Full to Full',
+      fuelPolicy: raw.fuel_policy?.name || raw.fuel_policy || 'Full to Full',
       locationType: raw.location_type || 'Airport',
       freeCancellation: !!raw.free_cancellation,
-      specifications: raw.specifications || [],
+      specifications: specs,
     };
   },
 
-  /**
-   * Maps an array of raw vehicles.
-   */
   toLocalList: (rawList: any[]): Vehicle[] => {
     if (!Array.isArray(rawList)) return [];
     return rawList.map(vehicleMapper.toLocal);
