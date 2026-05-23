@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   },
 };
 
+function getBlogImageUrl(image: string | undefined | null): string | null {
+  if (!image) return null;
+  if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/')) return image;
+  return `https://www.autours.net/img/blogs/${image}`;
+}
+
 async function getBlogPosts() {
   try {
     const res = await fetch('https://www.autours.net/api/blogs/published', {
@@ -82,9 +88,9 @@ export default async function BlogPage() {
               className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-500 group"
             >
               <Link href={`/blog/${post.slug}`} className="block relative h-64 overflow-hidden">
-                {post.image ? (
+                {getBlogImageUrl(post.image) ? (
                   <Image
-                    src={post.image}
+                    src={getBlogImageUrl(post.image)!}
                     alt={post.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"

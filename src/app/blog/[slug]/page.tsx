@@ -11,6 +11,12 @@ import Footer from '@/components/shared/layout/Footer';
 import ShareButtons from '@/components/blog/ShareButtons';
 import { siteConfig } from '@/config/site';
 
+function getBlogImageUrl(image: string | undefined | null): string | null {
+  if (!image) return null;
+  if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/')) return image;
+  return `https://www.autours.net/img/blogs/${image}`;
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -108,9 +114,9 @@ export default async function BlogPostDetail({ params }: PageProps) {
 
       {/* Article Hero */}
       <header className="relative h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden">
-        {post.image && (
+        {getBlogImageUrl(post.image) && (
           <Image
-            src={post.image}
+            src={getBlogImageUrl(post.image)!}
             alt={post.title}
             fill
             className="object-cover"
@@ -225,8 +231,8 @@ export default async function BlogPostDetail({ params }: PageProps) {
                 {relatedPosts.map((rp: any) => (
                   <Link key={rp.id} href={`/blog/${rp.slug}`} className="flex gap-4 group">
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
-                      {rp.image ? (
-                        <Image src={rp.image} alt={rp.title} fill className="object-cover transition-transform group-hover:scale-110" />
+                      {getBlogImageUrl(rp.image) ? (
+                        <Image src={getBlogImageUrl(rp.image)!} alt={rp.title} fill className="object-cover transition-transform group-hover:scale-110" />
                       ) : (
                         <div className="w-full h-full bg-gray-200" />
                       )}
