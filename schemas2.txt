@@ -1,0 +1,426 @@
+﻿=== Vehicle ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "name": {
+      "type": "string",
+      "example": "Toyota Camry 2024"
+    },
+    "description": {
+      "type": "string",
+      "example": "Comfortable sedan with automatic transmission"
+    },
+    "photo": {
+      "type": "string",
+      "example": "toyota_camry.jpg"
+    },
+    "price": {
+      "type": "number",
+      "example": 50
+    },
+    "week_price": {
+      "type": "number",
+      "example": 45
+    },
+    "month_price": {
+      "type": "number",
+      "example": 40
+    },
+    "activation": {
+      "type": "boolean",
+      "example": true
+    },
+    "instant_confirmation": {
+      "type": "boolean",
+      "example": true
+    },
+    "supplier": {
+      "type": "integer",
+      "example": 5
+    },
+    "pickup_loc": {
+      "type": "integer",
+      "example": 1
+    },
+    "category": {
+      "type": "integer",
+      "example": 2
+    },
+    "fuel_policy_id": {
+      "type": "integer",
+      "example": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
+=== Branch ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "name": {
+      "type": "string",
+      "example": "Downtown Branch"
+    },
+    "location": {
+      "type": "string",
+      "example": "London"
+    },
+    "location_address": {
+      "type": "string",
+      "example": "123 Main St"
+    },
+    "adresse": {
+      "type": "string",
+      "example": "123 Main St"
+    },
+    "city": {
+      "type": "string",
+      "example": "London"
+    },
+    "country": {
+      "type": "string",
+      "example": "UK"
+    },
+    "phone": {
+      "type": "string",
+      "example": "+44 20 1234 5678"
+    },
+    "lat": {
+      "type": "number",
+      "example": 51.5074
+    },
+    "lng": {
+      "type": "number",
+      "example": -0.1278
+    },
+    "email": {
+      "type": "string",
+      "example": "branch@example.com"
+    },
+    "company_id": {
+      "type": "integer",
+      "example": 5
+    },
+    "currency": {
+      "type": "string",
+      "example": "GBP"
+    },
+    "location_type": {
+      "type": "string",
+      "example": "Airport"
+    }
+  }
+}
+=== Category ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "name": {
+      "type": "string",
+      "example": "Sedan"
+    },
+    "photo": {
+      "type": "string",
+      "example": "sedan.png"
+    }
+  }
+}
+=== User ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "name": {
+      "type": "string",
+      "example": "John Doe"
+    },
+    "email": {
+      "type": "string",
+      "example": "john@example.com"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "customer",
+        "supplier",
+        "active_supplier",
+        "under_review",
+        "member"
+      ],
+      "example": "customer"
+    },
+    "phone_num": {
+      "type": "string",
+      "example": "+1234567890"
+    },
+    "company": {
+      "type": "string",
+      "example": "Acme Rentals"
+    },
+    "logo": {
+      "type": "string",
+      "example": "logo.png"
+    },
+    "country": {
+      "type": "string",
+      "example": "USA"
+    },
+    "language": {
+      "type": "string",
+      "example": "en"
+    },
+    "price_tax": {
+      "type": "number",
+      "example": 10
+    },
+    "integration": {
+      "type": "boolean",
+      "example": false
+    },
+    "webhook_url": {
+      "type": "string",
+      "example": "https://example.com/webhook"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
+=== Blog ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "blog_category_id": {
+      "type": "integer",
+      "example": 1
+    },
+    "title": {
+      "type": "string",
+      "example": "10 Tips for Renting a Car"
+    },
+    "slug": {
+      "type": "string",
+      "example": "10-tips-for-renting-a-car"
+    },
+    "author": {
+      "type": "string",
+      "example": "John Doe"
+    },
+    "image": {
+      "type": "string",
+      "example": "blog/renting_tips.jpg"
+    },
+    "image_alt_text": {
+      "type": "string",
+      "example": "Car rental tips"
+    },
+    "content": {
+      "type": "string",
+      "example": "<p>Renting a car can be easy...</p>"
+    },
+    "meta_description": {
+      "type": "string",
+      "example": "Learn the best tips for renting a car."
+    },
+    "is_published": {
+      "type": "boolean",
+      "example": true
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
+=== Pagination ===
+{
+  "type": "object",
+  "properties": {
+    "current_page": {
+      "type": "integer",
+      "example": 1
+    },
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "first_page_url": {
+      "type": "string"
+    },
+    "from": {
+      "type": "integer"
+    },
+    "last_page": {
+      "type": "integer"
+    },
+    "last_page_url": {
+      "type": "string"
+    },
+    "next_page_url": {
+      "type": "string",
+      "nullable": true
+    },
+    "path": {
+      "type": "string"
+    },
+    "per_page": {
+      "type": "integer"
+    },
+    "prev_page_url": {
+      "type": "string",
+      "nullable": true
+    },
+    "to": {
+      "type": "integer"
+    },
+    "total": {
+      "type": "integer"
+    }
+  }
+}
+=== SuccessResponse ===
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "boolean",
+      "example": true
+    },
+    "message": {
+      "type": "string",
+      "example": "Success"
+    },
+    "data": {
+      "type": "object"
+    }
+  }
+}
+=== ErrorResponse ===
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "boolean",
+      "example": false
+    },
+    "message": {
+      "type": "string",
+      "example": "Error message"
+    }
+  }
+}
+=== ValidationErrorResponse ===
+{
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "string",
+      "example": "The given data was invalid."
+    },
+    "errors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+=== BlogCategory ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "title": {
+      "type": "string",
+      "example": "Travel Tips"
+    },
+    "activation": {
+      "type": "boolean",
+      "example": true
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
+=== RentalResponse ===
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "boolean"
+    },
+    "data": {
+      "$ref": "#/components/schemas/Rental"
+    }
+  }
+}
+=== LocationType ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "name": {
+      "type": "string",
+      "example": "Airport"
+    },
+    "icon": {
+      "type": "string",
+      "example": "fa-plane"
+    }
+  }
+}
+=== PaymentMethod ===
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "name": {
+      "type": "string",
+      "example": "Credit Card"
+    }
+  }
+}

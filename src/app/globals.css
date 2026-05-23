@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ========================================= */
+  /* MASTER THEME COLOR - Updated as requested */
+  --primary: #f9d602;
+  --primary-rgb: 249, 214, 2;
+  /* ========================================= */
+
+  /* Theme Colors */
+  --secondary-color: #f4d849;
+  --secondary-color-rgb: 244, 216, 73;
+  --background: #ffffff;
+  --text: #1a1a1a;
+  --card: #f9f9f9;
+  --border: #e5e5e5;
+
+  --title-font: "Hubot Sans", "Outfit", Helvetica, Arial, sans-serif;
+  --font-family: var(--font-manrope);
+
+  /* Primary Shades - Calculated from #f9d602 */
+  --primary-50: #fefceb;
+  --primary-100: #fef9c7;
+  --primary-200: #fdf38c;
+  --primary-300: #fbe851;
+  --primary-400: #f9d602;
+  --primary-500: var(--primary);
+  --primary-600: #d4a814;
+  --primary-700: #a87e13;
+  --primary-800: #8b6316;
+  --primary-900: #745118;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --text: #f3f4f6;
+  --card: #141414;
+  --border: #1f1f1f;
+  --secondary-color: #f3f4f6;
+
+  /* In dark mode, we keep the primary yellow but maybe slightly adjust shades if needed */
+  /* For now, keep them consistent */
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--background)] text-[var(--text)] transition-colors duration-300 antialiased;
+    font-family: var(--font-manrope);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--title-font);
+    @apply tracking-tight;
+  }
+}
+
+@layer components {
+  /* Site-wide Button Styles */
+  .btn-primary {
+    @apply bg-[var(--primary)] text-black font-black px-6 py-3 rounded-xl hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50 uppercase tracking-tighter;
+    font-family: var(--title-font);
+    box-shadow: 0 10px 15px -3px rgba(var(--primary-rgb), 0.2), 0 4px 6px -4px rgba(var(--primary-rgb), 0.2);
+  }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all font-medium;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-black tracking-tighter uppercase italic text-center mb-12;
+    font-family: var(--title-font);
+  }
+
+  /* Utility classes for consistency */
+  .text-title {
+    font-family: var(--title-font) !important;
+  }
+
+  .text-body {
+    font-family: var(--body-font) !important;
+  }
+}
+
+/* Global overrides for specific Tailwind font weight classes to use Hubot Sans */
+.font-bold, .font-black, .font-extrabold {
+  font-family: var(--title-font) !important;
+}
+
+/* Headings should always use title font regardless of weight */
+h1, h2, h3, h4, h5, h6, .section-title, .btn-primary {
+  font-family: var(--title-font) !important;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+/* no-scrollbar: hide scrollbar but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* scrollbar-thin: slim styled scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb-thumb:hover {
+  background: #d1d5db;
+}

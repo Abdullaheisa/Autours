@@ -1,0 +1,140 @@
+﻿=== GET /get/categories ===
+{
+  "200": {
+    "description": "Categories",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/CategoryListResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /dashboard ===
+{
+  "200": {
+    "description": "Dashboard data",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/DashboardResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /supplier-dashboard ===
+{
+  "200": {
+    "description": "Dashboard data",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/SupplierDashboardResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /get/companies ===
+{
+  "200": {
+    "description": "Companies",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/UserListResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /get/customers ===
+{
+  "200": {
+    "description": "Customers",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/UserListResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /get/rentals ===
+{
+  "200": {
+    "description": "Rentals list",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/RentalListWithStatusesResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /get/rentals/admin ===
+{
+  "200": {
+    "description": "Admin rentals",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/RentalListWithStatusesResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /api/blog-categories ===
+{
+  "200": {
+    "description": "Categories",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/BlogCategoryListResponse"
+        }
+      }
+    }
+  }
+}
+=== POST /api/blog-categories ===
+{
+  "201": {
+    "description": "Created",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/BlogCategoryResponse"
+        }
+      }
+    }
+  },
+  "422": {
+    "description": "Validation error",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/ValidationErrorResponse"
+        }
+      }
+    }
+  }
+}
+=== GET /api/blogs/published ===
+{
+  "200": {
+    "description": "Published blogs",
+    "content": {
+      "application/json": {
+        "schema": {
+          "$ref": "#/components/schemas/BlogPaginatedResponse"
+        }
+      }
+    }
+  }
+}
