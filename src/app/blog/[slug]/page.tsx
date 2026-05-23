@@ -272,8 +272,8 @@ export default async function BlogPostDetail({ params }: PageProps) {
             {relatedPosts.map((rp: any) => (
               <article key={rp.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 group">
                 <Link href={`/blog/${rp.slug}`} className="block relative h-48">
-                  {rp.image ? (
-                    <Image src={rp.image} alt={rp.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  {getBlogImageUrl(rp.image) ? (
+                    <Image src={getBlogImageUrl(rp.image)!} alt={rp.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   ) : (
                     <div className="w-full h-full bg-gray-200" />
                   )}
