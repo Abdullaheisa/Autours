@@ -40,7 +40,7 @@ const initialState: SupplierAnalyticsState = {
 
 export const loadSupplierAnalytics = createAsyncThunk(
   "supplierAnalytics/load",
-  async (filters: any) => {
+  async (filters: Record<string, any>) => {
     const response = await fetchSupplierAnalytics(filters);
     return response;
   }

@@ -3,33 +3,38 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { 
-  Calendar, User, Clock, Facebook, Twitter, 
-  Linkedin, ArrowLeft, ArrowRight 
+  Calendar, User, Clock, ArrowLeft, Eye 
 } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import ShareButtons from '@/components/blog/ShareButtons';
 import { siteConfig } from '@/config/site';
-
-function getBlogImageUrl(image: string | undefined | null): string | null {
-  if (!image) return null;
-  if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/')) return image;
-  return `https://www.autours.net/img/blogs/${image}`;
-}
+import { getBlogImageUrl } from '@/utils/getImageUrl';
+import { SERVER_API_BASE } from '@/config/api';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getBlogBySlug(slug: string) {
+
+
+async function getBlogBySlugOrId(slug: string) {
   try {
-    const res = await fetch(`https://www.autours.net/api/blogs/slug/${slug}`, {
+    let res = await fetch(`${SERVER_API_BASE}/blogs/slug/${slug}`, {
       headers: { 'Accept': 'application/json' },
-      next: { revalidate: 300 },
+      cache: 'no-store'
     });
+
+    if (!res.ok) {
+      res = await fetch(`${SERVER_API_BASE}/blogs/${slug}`, {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
+      });
+    }
+
     if (!res.ok) return null;
-    const data = await res.json();
-    return data?.data || data;
+    const json = await res.json();
+    return json?.data || json;
   } catch {
     return null;
   }
@@ -37,9 +42,9 @@ async function getBlogBySlug(slug: string) {
 
 async function getRelatedPosts() {
   try {
-    const res = await fetch('https://www.autours.net/api/blogs/published', {
+    const res = await fetch(`${SERVER_API_BASE}/blogs/published`, {
       headers: { 'Accept': 'application/json' },
-      next: { revalidate: 300 },
+      cache: 'no-store'
     });
     if (!res.ok) return [];
     const json = await res.json();
@@ -52,198 +57,220 @@ async function getRelatedPosts() {
   }
 }
 
+// 🚀 حل مشكلة اختفاء الوصف في جوجل
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getBlogBySlug(slug);
+  const post = await getBlogBySlugOrId(slug);
   
-  if (!post) return { title: 'Post Not Found' };
+  const defaultDesc = 'Discover the latest travel tips, destination guides, and expert car rental insights from Autours. Stay informed and save more on your next trip.';
+
+  if (!post) {
+    return { 
+      title: 'Post Not Found | Autours Blog',
+      description: defaultDesc, // 🚀 تأمين الوصف حتى لو المقالة مش موجودة
+    }; 
+  }
+
+  const safeDescription = (post.meta_description && post.meta_description.trim() !== '') 
+    ? post.meta_description.trim() 
+    : defaultDesc;
+    
+  const blogImg = getBlogImageUrl(post.image) || `${siteConfig.url}/og-image.jpg`;
 
   return {
+    metadataBase: new URL(siteConfig.url),
     title: `${post.title} | Autours Blog`,
-    description: post.meta_description || post.excerpt || '',
+    description: safeDescription,
+    keywords: post.tags ? post.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : undefined,
+    alternates: {
+      canonical: `/blog/${post.slug || post.id}`,
+    },
     openGraph: {
       title: post.title,
-      description: post.meta_description || '',
-      images: post.image ? [post.image] : [],
+      description: safeDescription,
+      url: `/blog/${post.slug || post.id}`,
       type: 'article',
       publishedTime: post.created_at,
       authors: [post.author || 'Autours'],
+      images: [
+        {
+          url: blogImg,
+          width: 1200,
+          height: 630,
+          alt: post.image_alt_text || post.title,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.meta_description || '',
-      images: post.image ? [post.image] : [],
+      description: safeDescription,
+      images: [blogImg],
     },
   };
 }
 
 export default async function BlogPostDetail({ params }: PageProps) {
   const { slug } = await params;
-  const post = await getBlogBySlug(slug);
+  const post = await getBlogBySlugOrId(slug);
   
   if (!post) notFound();
 
   const authorName = post.author || 'Autours';
-  const postDate = post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-  const readingTime = post.reading_time || '5 min read';
+  const publishDate = post.created_at ? new Date(post.created_at) : null;
+  
+  const formattedDate = publishDate ? publishDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
+  const formattedTime = publishDate ? publishDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Unknown Time';
+  
+  const viewsCount = post.views || post.views_count || post.view_count || 0;
+  const blogImg = getBlogImageUrl(post.image);
+
+  const allPosts = await getRelatedPosts();
+  const relatedPosts = allPosts.filter((p: Record<string, any>) => p.slug !== slug).slice(0, 3);
+
+  const safeDescription = (post.meta_description && post.meta_description.trim() !== '') 
+    ? post.meta_description.trim() 
+    : 'Expert car rental insights from Autours.';
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": post.title,
-    "image": post.image,
+    "image": blogImg ? [blogImg] : [],
     "datePublished": post.created_at,
+    "dateModified": post.created_at,
     "author": {
       "@type": "Person",
       "name": authorName
     },
-    "description": post.meta_description || ''
+    "description": safeDescription, 
+    "publisher": {
+      "@type": "Organization",
+      "name": "Autours"
+    }
   };
 
-  const allPosts = await getRelatedPosts();
-  const relatedPosts = allPosts.filter((p: any) => p.slug !== slug).slice(0, 3);
-
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen container bg-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Navbar />
 
-      {/* Article Hero */}
-      <header className="relative h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden">
-        {getBlogImageUrl(post.image) && (
-          <Image
-            src={getBlogImageUrl(post.image)!}
-            alt={post.title}
-            fill
-            className="object-cover"
-            priority
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
-        
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
-          <Link 
-            href="/blog"
-            className="inline-flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-widest mb-6 hover:translate-x-1 transition-transform"
-          >
-            <ArrowLeft size={16} /> Back to Blog
-          </Link>
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-8 tracking-tight leading-[1.1]">
-            {post.title}
-          </h1>
-          
-          <div className="flex flex-wrap items-center justify-center gap-6 text-white/80">
-            <div className="flex items-center gap-2 font-bold text-sm">
-              <Calendar size={18} className="text-primary" />
-              {postDate}
-            </div>
-            <div className="flex items-center gap-2 font-bold text-sm">
-              <User size={18} className="text-primary" />
-              By {authorName}
-            </div>
-            <div className="flex items-center gap-2 font-bold text-sm">
-              <Clock size={18} className="text-primary" />
-              {readingTime}
-            </div>
-          </div>
-        </div>
-      </header>
+<div className="relative w-full h-[136px] md:h-[245px] lg:h-[328px] bg-gray-100 overflow-hidden shadow-inner border-b border-gray-100">
+  {blogImg ? (
+    <Image
+      src={blogImg}
+      alt={post.image_alt_text || post.title}
+      fill
+      sizes="100vw"
+      quality={85}
+      // object-contain هتضمن إن الصورة تظهر بالكامل من غير ما تتقص في التلات مقاسات
+      className="object-contain" 
+      priority={true}
+      fetchPriority="high"
+    />
+  ) : (
+    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+      No Featured Image
+    </div>
+  )}
+</div>
 
-      <div className="max-w-7xl mx-auto px-4 py-20">
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
+        <div className="mb-5">
+          <Link href="/blog" className="inline-flex items-center gap-2 text-gray-700 font-bold text-sm uppercase tracking-wider hover:text-gray-900 transition-all focus:outline-none focus:underline">
+            <ArrowLeft size={16} className="text-primary" aria-hidden="true" /> Back to Blog
+          </Link>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           
-          {/* Main Content */}
-          <article className="lg:col-span-8">
-            <ShareButtons 
-              url={`${siteConfig.url}/blog/${post.slug}`} 
-              title={post.title} 
-            />
+          <article className="lg:col-span-8 space-y-6">
+            <header className="space-y-4">
+              <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                {post.title}
+              </h1>
+              
+              {/* 🚀 Contrast Fix: text-gray-500 -> text-gray-600 */}
+              <div className="flex flex-wrap items-center gap-6 text-gray-600 border-b border-gray-100 pb-5">
+                <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
+                  <User size={15} className="text-primary" aria-hidden="true" /> By {authorName}
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
+                  <Calendar size={15} className="text-primary" aria-hidden="true" /> {formattedDate}
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
+                  <Clock size={15} className="text-primary" aria-hidden="true" /> {formattedTime}
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
+                  <Eye size={15} className="text-primary" aria-hidden="true" /> {viewsCount} Views
+                </div>
+              </div>
+            </header>
+
+            <ShareButtons url={`${siteConfig.url}/blog/${post.slug || post.id}`} title={post.title} />
 
             <div 
-              className="prose prose-lg max-w-none prose-headings:font-black prose-headings:text-gray-900 prose-p:text-gray-600 prose-p:leading-relaxed prose-li:text-gray-600 prose-strong:text-gray-900 prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-a:text-primary-600 prose-a:font-bold hover:prose-a:text-primary-700"
+              className="prose prose-base max-w-none text-gray-800 leading-relaxed space-y-4
+                prose-headings:font-black prose-headings:text-gray-900 
+                prose-strong:font-bold prose-strong:text-gray-900 
+                [!&_*]:font-inherit"
               dangerouslySetInnerHTML={{ __html: post.content || '' }}
             />
 
-            {/* Author Section */}
-            <section className="mt-20 p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 flex flex-col md:flex-row items-center gap-8">
-              <div className="relative w-24 h-24 rounded-full overflow-hidden shrink-0 ring-4 ring-white shadow-xl">
-                <Image
-                  src={post.author_image || 'https://i.pravatar.cc/150?u=autours'}
-                  alt={authorName}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="text-center md:text-left">
-                <p className="text-xs font-black text-primary-600 uppercase tracking-widest mb-1">About Author</p>
-                <h3 className="text-xl font-black text-gray-900 mb-2">{authorName}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed max-w-xl">
-                  {authorName} is a senior travel writer and car rental expert at Autours, specializing in the Middle East region.
-                </p>
-                <div className="flex justify-center md:justify-start gap-4 mt-4">
-                  {[Facebook, Twitter, Linkedin].map((Icon, i) => (
-                    <Link key={i} href="#" className="text-gray-400 hover:text-primary transition-colors">
-                      <Icon size={18} />
-                    </Link>
+            {/* Dynamic SEO Tag Badges */}
+            {post.tags && post.tags.trim() !== '' && (
+              <div className="mt-10 pt-6 border-t border-gray-100">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Related Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean).map((tag: string) => (
+                    <span key={tag} className="px-3.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-xl border border-gray-200/60 shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95 duration-200">
+                      #{tag}
+                    </span>
                   ))}
                 </div>
               </div>
-            </section>
+            )}
           </article>
 
-          {/* Sidebar */}
-          <aside className="lg:col-span-4 space-y-12">
-            <div className="p-8 bg-gray-900 rounded-[2rem] shadow-2xl">
-              <h4 className="text-lg font-black text-white mb-6">Search Articles</h4>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Keywords..."
-                  className="w-full bg-white/10 border border-white/20 rounded-xl py-3.5 px-5 text-white outline-none focus:ring-2 focus:ring-primary transition-all"
+          <aside className="lg:col-span-4 space-y-8">
+            <div className="p-6 bg-gray-900 rounded-2xl shadow-xl">
+              <h2 className="text-md font-black text-white mb-4">Search Articles</h2>
+              <form action="/blog" method="GET" className="relative">
+                <label htmlFor="blog-search-sidebar" className="sr-only">Search keywords</label>
+                <input 
+                  id="blog-search-sidebar"
+                  type="text" 
+                  name="search"
+                  placeholder="Keywords..." 
+                  className="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-white outline-none focus:ring-2 focus:ring-primary text-sm" 
                 />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-                  <SearchIcon size={16} className="text-gray-900" />
-                </button>
-              </div>
+              </form>
             </div>
 
-            <div className="p-8 border border-gray-100 rounded-[2rem]">
-              <h4 className="text-lg font-black text-gray-900 mb-6 border-b border-gray-100 pb-4">Categories</h4>
-              <ul className="space-y-4">
-                {['Best Agencies', 'Money Saving Tips', 'Car Reviews', 'Country Travel Guides'].map((cat) => (
-                  <li key={cat}>
-                    <Link href="#" className="flex items-center justify-between text-sm font-bold text-gray-500 hover:text-primary-600 transition-colors group">
-                      {cat}
-                      <span className="w-6 h-6 bg-gray-50 rounded flex items-center justify-center text-[10px] group-hover:bg-primary/10 transition-colors">12</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="p-8 border border-gray-100 rounded-[2rem]">
-              <h4 className="text-lg font-black text-gray-900 mb-6 border-b border-gray-100 pb-4">Related Articles</h4>
-              <div className="space-y-6">
+            <div className="p-6 border border-gray-100 rounded-2xl">
+              <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Related Articles</h2>
+              <div className="space-y-4">
                 {relatedPosts.map((rp: any) => (
-                  <Link key={rp.id} href={`/blog/${rp.slug}`} className="flex gap-4 group">
-                    <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
-                      {getBlogImageUrl(rp.image) ? (
-                        <Image src={getBlogImageUrl(rp.image)!} alt={rp.title} fill className="object-cover transition-transform group-hover:scale-110" />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200" />
+                  <Link key={rp.id} href={`/blog/${rp.slug || rp.id}`} className="flex gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl">
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-50">
+                      {getBlogImageUrl(rp.image) && (
+                        <Image 
+                          src={getBlogImageUrl(rp.image)!} 
+                          alt={rp.image_alt_text || rp.title}
+                          fill 
+                          sizes="4rem"
+                          quality={70}
+                          className="object-cover transition-transform group-hover:scale-110" 
+                        />
                       )}
                     </div>
                     <div>
-                      <h5 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-primary-600 transition-colors mb-1">
-                        {rp.title}
-                      </h5>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                        {rp.created_at ? new Date(rp.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                      </span>
+                      <h3 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-1">{rp.title}</h3>
+                      {/* 🚀 Contrast Fix: text-gray-500 -> text-gray-600 */}
+                      <span className="text-[10px] font-bold text-gray-600">{rp.created_at ? new Date(rp.created_at).toLocaleDateString() : ''}</span>
                     </div>
                   </Link>
                 ))}
@@ -253,57 +280,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
         </div>
       </div>
 
-      {/* You May Also Like Section */}
-      <section className="bg-gray-50 py-24">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight italic">You May Also Like</h2>
-            <div className="flex gap-3">
-              <button className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-white hover:shadow-lg transition-all text-gray-400 hover:text-gray-900">
-                <ArrowLeft size={20} />
-              </button>
-              <button className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-white hover:shadow-lg transition-all text-gray-400 hover:text-gray-900">
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {relatedPosts.map((rp: any) => (
-              <article key={rp.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 group">
-                <Link href={`/blog/${rp.slug}`} className="block relative h-48">
-                  {getBlogImageUrl(rp.image) ? (
-                    <Image src={getBlogImageUrl(rp.image)!} alt={rp.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200" />
-                  )}
-                </Link>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-primary-600 uppercase tracking-[0.2em] mb-3">
-                    <Calendar size={12} /> {rp.created_at ? new Date(rp.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                  </div>
-                  <h3 className="text-lg font-black text-gray-900 line-clamp-2 mb-4 group-hover:text-primary transition-colors">
-                    {rp.title}
-                  </h3>
-                  <Link href={`/blog/${rp.slug}`} className="inline-flex items-center gap-2 text-xs font-black text-gray-900 uppercase tracking-widest hover:gap-3 transition-all">
-                    Read Post <ArrowRight size={14} className="text-primary" />
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <Footer />
     </main>
-  );
-}
-
-function SearchIcon(props: any) {
-  return (
-    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
   );
 }

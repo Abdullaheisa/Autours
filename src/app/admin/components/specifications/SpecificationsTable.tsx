@@ -3,9 +3,10 @@
 import { useState, useMemo } from "react";
 import {
   Search, Pencil, Trash2, X, Settings2, Gauge, Fuel, Users, Briefcase,
-  Car, Wind, DoorOpen, Luggage, Palette, Cog, Sparkles, CheckCircle2
+  Car, Wind, DoorOpen, Luggage, Palette, Cog, Sparkles, CheckCircle2, Armchair
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
+import Pagination from "@/components/ui/Pagination";
 
 export interface Specification {
   id: number;
@@ -15,10 +16,48 @@ export interface Specification {
   icon: string;
 }
 
+const CarSeat = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
+  <span
+    className={`inline-block bg-current ${className}`}
+    style={{
+      width: `${size}px`,
+      height: `${size}px`,
+      maskImage: "url('/img/icons/chair.svg')",
+      maskSize: "contain",
+      maskRepeat: "no-repeat",
+      maskPosition: "center",
+      WebkitMaskImage: "url('/img/icons/chair.svg')",
+      WebkitMaskSize: "contain",
+      WebkitMaskRepeat: "no-repeat",
+      WebkitMaskPosition: "center",
+      verticalAlign: "middle"
+    }}
+  />
+);
+
+const AirConditionIcon = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
+  <span
+    className={`inline-block bg-current ${className}`}
+    style={{
+      width: `${size}px`,
+      height: `${size}px`,
+      maskImage: "url('/img/icons/air.png')",
+      maskSize: "contain",
+      maskRepeat: "no-repeat",
+      maskPosition: "center",
+      WebkitMaskImage: "url('/img/icons/air.png')",
+      WebkitMaskSize: "contain",
+      WebkitMaskRepeat: "no-repeat",
+      WebkitMaskPosition: "center",
+      verticalAlign: "middle"
+    }}
+  />
+);
+
 // Map icon names to Lucide components
 const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   // Core icons
-  Gauge, Fuel, Users, Briefcase, Settings2, Car, Wind, DoorOpen, Luggage,
+  Gauge, Fuel, Users, Briefcase, Settings2, Car, Wind: AirConditionIcon, DoorOpen, Luggage, Armchair: CarSeat,
   // Additional icons for specs
   Palette, Cog, Sparkles, CheckCircle2,
 };
@@ -59,11 +98,13 @@ function getIconComponent(iconName: string): React.ComponentType<{ size?: number
     if (mapped) return mapped;
   }
   // Default fallback
-  return Settings2;
+  return iconMap["Settings2"];
 }
 
 export default function SpecificationsTable({ specifications, onEdit, onDelete }: SpecificationsTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filteredSpecs = useMemo(() => {
     if (!searchQuery) return specifications;
@@ -74,6 +115,8 @@ export default function SpecificationsTable({ specifications, onEdit, onDelete }
         spec.options.some((opt) => opt.toLowerCase().includes(query))
     );
   }, [specifications, searchQuery]);
+
+  const paginatedSpecs = filteredSpecs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (specifications.length === 0) {
     return (
@@ -124,68 +167,80 @@ export default function SpecificationsTable({ specifications, onEdit, onDelete }
           onAction={() => setSearchQuery("")}
         />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead>
-              <tr className="bg-gray-50/50">
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 w-12">#</th>
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3">Name</th>
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3">Options</th>
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 w-24">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredSpecs.map((spec, index) => {
-                const Icon = getIconComponent(spec.icon);
-                return (
-                  <tr key={spec.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-4 sm:px-5 py-3">
-                      <span className="text-xs text-gray-400 font-mono">{index + 1}</span>
-                    </td>
-                    <td className="px-4 sm:px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
-                          <Icon size={16} className="text-primary-600" />
-                        </div>
-                        <span className="text-sm font-semibold text-gray-900">{spec.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 sm:px-5 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {spec.options.map((opt, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-xs"
-                          >
-                            {opt}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 sm:px-5 py-3">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => onEdit(spec.id)}
-                          className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => onDelete(spec.id)}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
+        <>
+          <div className="overflow-x-auto" style={{ transform: "rotateX(180deg)" }}>
+            <div style={{ transform: "rotateX(180deg)" }}>
+              <table className="w-full min-w-[600px]">
+                <thead>
+                  <tr className="bg-gray-50/50">
+                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 w-12">#</th>
+                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3">Name</th>
+                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3">Options</th>
+                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 w-24">Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedSpecs.map((spec, index) => {
+                    const Icon = getIconComponent(spec.icon);
+                    return (
+                      <tr key={spec.id} className="hover:bg-gray-50/50 transition-colors group">
+                        <td className="px-4 sm:px-5 py-3">
+                          <span className="text-xs text-gray-400 font-mono">{(currentPage - 1) * itemsPerPage + index + 1}</span>
+                        </td>
+                        <td className="px-4 sm:px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
+                              <Icon size={16} className="text-primary-600" />
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">{spec.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 sm:px-5 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {spec.options.map((opt, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-xs"
+                              >
+                                {opt}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 sm:px-5 py-3">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => onEdit(spec.id)}
+                              className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => onDelete(spec.id)}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-100 p-4">
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={Math.ceil(filteredSpecs.length / itemsPerPage)} 
+              onPageChange={setCurrentPage} 
+            />
+          </div>
+        </>
       )}
     </div>
   );

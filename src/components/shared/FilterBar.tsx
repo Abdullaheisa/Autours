@@ -56,15 +56,15 @@ export default function FilterBar({
         </div>
 
         {/* Filter Selects */}
-        {filters.map((filter, index) => (
-          <div key={index} className="relative lg:w-44">
+        {filters.map((filter) => (
+          <div key={filter.label} className="relative lg:w-44">
             <select
               value={filter.value}
               onChange={(e) => filter.onChange(e.target.value)}
               className="appearance-none w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer"
             >
-              {filter.options.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              {filter.options.map((opt, idx) => (
+                <option key={`${filter.label}-${opt.value}-${idx}`} value={opt.value}>{opt.label}</option>
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
@@ -106,15 +106,15 @@ export default function FilterBar({
 
         {showMobileFilters && (
           <div className="mt-3 space-y-3 pt-3 border-t border-gray-100">
-            {filters.map((filter, index) => (
-              <div key={index} className="relative">
+            {filters.map((filter) => (
+              <div key={filter.label} className="relative">
                 <select
                   value={filter.value}
                   onChange={(e) => filter.onChange(e.target.value)}
                   className="appearance-none w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer"
                 >
-                  {filter.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {filter.options.map((opt, idx) => (
+                    <option key={`${filter.label}-${opt.value}-${idx}`} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />

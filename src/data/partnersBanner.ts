@@ -7,18 +7,14 @@
 }
 
 export const PARTNERS: Partner[] = [
-  { id: '1', name: 'MAHD Rent', logoUrl: assets.suppliers.mahd },
-  { id: '2', name: 'Highway', logoUrl: assets.suppliers.highway },
-  { id: '3', name: 'KTC', logoUrl: assets.suppliers.ktc },
-  { id: '4', name: 'RAMA', logoUrl: assets.suppliers.rama },
-  { id: '5', name: 'GO RENTAL', logoUrl: assets.suppliers.goRental },
-  { id: '6', name: 'Royal Star', logoUrl: assets.suppliers.royalStar },
-  { id: '7', name: 'Europcar', logoUrl: assets.suppliers.europcar },
-  { id: '8', name: 'AVIS', logoUrl: assets.suppliers.avis },
-  { id: '9', name: 'Alamo', logoUrl: assets.suppliers.alamo },
-  { id: '10', name: 'SIXT', logoUrl: assets.suppliers.sixt },
-  { id: '11', name: 'Hertz', logoUrl: assets.suppliers.hertz },
-  { id: '12', name: 'Enterprise', logoUrl: assets.suppliers.enterprise },
-  { id: '13', name: 'Budget', logoUrl: assets.suppliers.budget },
-  { id: '14', name: 'SOVOY', logoUrl: assets.suppliers.sovoy },
+  { id: '1', name: 'Europcar', logoUrl: assets.suppliers.europcar },
+  { id: '2', name: 'AVIS', logoUrl: assets.suppliers.avis },
+  { id: '3', name: 'Alamo', logoUrl: assets.suppliers.alamo },
+  { id: '4', name: 'SIXT', logoUrl: assets.suppliers.sixt },
+  { id: '5', name: 'Hertz', logoUrl: assets.suppliers.hertz },
+  { id: '6', name: 'Enterprise', logoUrl: assets.suppliers.enterprise },
+  { id: '7', name: 'Budget', logoUrl: assets.suppliers.budget },
+  { id: '8', name: 'thrifty', logoUrl: assets.suppliers.thrifty },
+  { id: '9', name: 'national', logoUrl: assets.suppliers.national },
+  { id: '10', name: 'dollar', logoUrl: assets.suppliers.dollar },
 ];

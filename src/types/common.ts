@@ -9,7 +9,11 @@ export interface User {
   name: string;
   email: string;
   role: string;
+  status?: string;
   avatar?: string;
+  logo?: string;
+  phone_num?: string;
+  country?: string;
 }
 
 export interface Country {

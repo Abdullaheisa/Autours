@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { rentalApi } from "@/services/api";
 import { 
   Calendar as CalendarIcon, 
   ChevronLeft, 
@@ -88,7 +89,7 @@ const generateMockBookings = (): Booking[] => {
   return bookings;
 };
 
-const ALL_BOOKINGS = generateMockBookings();
+const ALL_BOOKINGS_FALLBACK = generateMockBookings();
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -100,42 +101,74 @@ export default function BookingsCalendarSection() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false); // For mobile toggle
 
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    rentalApi.getAdmin().then((res: any) => {
+      const list = res?.rentals || res?.data?.rentals || (Array.isArray(res) ? res : []);
+      const formatted = list.map((r: any) => {
+        const type = r.order_status === 2 || r.order_status === 7 ? "completed" : r.order_status === 3 || r.order_status === 5 ? "cancelled" : "pending";
+        return {
+          id: r.order_number || `BK-${r.id}`,
+          vehicle: r.vehicle?.name || "Vehicle",
+          category: r.vehicle?.category?.name || r.vehicle?.category || "Economy",
+          grade: r.vehicle?.specifications?.[0]?.value || "Standard",
+          companyName: r.supplier?.name || "Company",
+          country: r.vehicle?.branch?.country || "UAE",
+          countryName: r.vehicle?.branch?.country || "UAE",
+          duration: `${r.number_of_days || 1} Days`,
+          status: r.status?.name_en || (r.order_status === 2 ? "Confirmed" : r.order_status === 3 ? "Canceled" : r.order_status === 4 ? "Pending" : "Pending"),
+          type,
+          date: r.start_date ? new Date(r.start_date) : new Date(),
+        };
+      });
+      setAllBookings(formatted);
+    }).catch((err) => {
+      console.warn("Failed to fetch bookings, using fallback mock data:", err.message);
+      setAllBookings(ALL_BOOKINGS_FALLBACK);
+    }).finally(() => {
+      setIsLoading(false);
+    });
+  }, []);
+
   const filteredBookings = useMemo(() => {
-    return ALL_BOOKINGS.filter(booking => {
+    return allBookings.filter(booking => {
       const matchesDate = isSameDay(booking.date, selectedDate);
       const matchesCountry = countryFilter === "All" || booking.countryName === countryFilter;
       const matchesStatus = statusFilter === "All" || booking.type === statusFilter.toLowerCase();
       return matchesDate && matchesCountry && matchesStatus;
     });
-  }, [selectedDate, countryFilter, statusFilter]);
+  }, [allBookings, selectedDate, countryFilter, statusFilter]);
 
   const stats = useMemo(() => {
-    const dayBookings = ALL_BOOKINGS.filter(b => isSameDay(b.date, selectedDate));
+    const dayBookings = allBookings.filter(b => isSameDay(b.date, selectedDate));
     return [
       { label: "Total Bookings", value: dayBookings.length, icon: ClipboardList, color: "blue" },
       { label: "Completed", value: dayBookings.filter(b => b.type === "completed").length, icon: CheckCircle2, color: "green" },
       { label: "Pending", value: dayBookings.filter(b => b.type === "pending").length, icon: AlertCircle, color: "orange" },
       { label: "Cancelled", value: dayBookings.filter(b => b.type === "cancelled").length, icon: XCircle, color: "red" },
     ];
-  }, [selectedDate]);
+  }, [allBookings, selectedDate]);
 
   const countryStats = useMemo(() => {
-    const dayBookings = ALL_BOOKINGS.filter(b => isSameDay(b.date, selectedDate));
+    const dayBookings = allBookings.filter(b => isSameDay(b.date, selectedDate));
     const counts: Record<string, number> = {};
     dayBookings.forEach(b => {
       counts[b.countryName] = (counts[b.countryName] || 0) + 1;
     });
     return counts;
-  }, [selectedDate]);
+  }, [allBookings, selectedDate]);
 
   const statusStats = useMemo(() => {
-    const dayBookings = ALL_BOOKINGS.filter(b => isSameDay(b.date, selectedDate));
+    const dayBookings = allBookings.filter(b => isSameDay(b.date, selectedDate));
     return {
       completed: dayBookings.filter(b => b.type === "completed").length,
       pending: dayBookings.filter(b => b.type === "pending").length,
       cancelled: dayBookings.filter(b => b.type === "cancelled").length,
     };
-  }, [selectedDate]);
+  }, [allBookings, selectedDate]);
 
   const handleDownload = () => {
     const headers = ["Booking ID", "Vehicle", "Category", "Grade", "Company", "Country", "Duration", "Status", "Date"];
@@ -173,11 +206,11 @@ export default function BookingsCalendarSection() {
     const result = [];
     for (let i = 1; i <= 5; i++) {
       const date = addDays(new Date(), i);
-      const bookings = ALL_BOOKINGS.filter(b => isSameDay(b.date, date));
+      const bookings = allBookings.filter(b => isSameDay(b.date, date));
       if (bookings.length > 0) {
-        const saCount = bookings.filter(b => b.country === "SA").length;
-        const aeCount = bookings.filter(b => b.country === "AE").length;
-        const kwCount = bookings.filter(b => b.country === "KW").length;
+        const saCount = bookings.filter(b => b.country === "SA" || b.country === "Saudi Arabia").length;
+        const aeCount = bookings.filter(b => b.country === "AE" || b.country === "UAE").length;
+        const kwCount = bookings.filter(b => b.country === "KW" || b.country === "Kuwait").length;
         
         let summary = "";
         if (saCount > 0) summary += `SA ${saCount} `;
@@ -192,7 +225,7 @@ export default function BookingsCalendarSection() {
       }
     }
     return result;
-  }, []);
+  }, [allBookings]);
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-full overflow-x-hidden pb-10">
@@ -334,65 +367,72 @@ export default function BookingsCalendarSection() {
             </AnimatePresence>
 
             {/* Bookings List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {filteredBookings.map((booking) => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  key={booking.id} 
-                  className="bg-white border border-gray-100 rounded-xl p-5 hover:border-primary/40 transition-all relative group shadow-sm"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-md">{booking.id}</span>
-                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${
-                      booking.type === 'completed' ? 'bg-emerald-50 text-emerald-600' :
-                      booking.type === 'pending' ? 'bg-orange-50 text-orange-600' :
-                      'bg-red-50 text-red-600'
-                    }`}>
-                      {booking.status}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-base font-black text-gray-900 leading-tight">{booking.vehicle}</h3>
-                      <div className="flex gap-2 mt-2">
-                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50/50 px-2 py-0.5 rounded border border-gray-100 uppercase">{booking.category}</span>
-                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50/50 px-2 py-0.5 rounded border border-gray-100 uppercase">{booking.grade}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-xs">
-                      <div className="flex items-center gap-2 text-gray-700 font-black">
-                        <MapPin size={14} className="text-primary" />
-                        <span>{booking.countryName}</span>
-                      </div>
-                      <div className="text-gray-500 font-bold flex items-center gap-1.5">
-                        <Clock size={14} />
-                        <span>{booking.duration}</span>
-                      </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <span className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                {filteredBookings.map((booking) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    key={booking.id} 
+                    className="bg-white border border-gray-100 rounded-xl p-5 hover:border-primary/40 transition-all relative group shadow-sm"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-md">{booking.id}</span>
+                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${
+                        booking.type === 'completed' ? 'bg-emerald-50 text-emerald-600' :
+                        booking.type === 'pending' ? 'bg-orange-50 text-orange-600' :
+                        'bg-red-50 text-red-600'
+                      }`}>
+                        {booking.status}
+                      </span>
                     </div>
                     
-                    <div className="text-xs text-gray-500 pt-1">
-                       <span className="font-black text-gray-400 uppercase text-[10px] tracking-wider block mb-1">Provider</span>
-                       <p className="font-bold text-gray-700">{booking.companyName}</p>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-base font-black text-gray-900 leading-tight">{booking.vehicle}</h3>
+                        <div className="flex gap-2 mt-2">
+                          <span className="text-[10px] font-bold text-gray-400 bg-gray-50/50 px-2 py-0.5 rounded border border-gray-100 uppercase">{booking.category}</span>
+                          <span className="text-[10px] font-bold text-gray-400 bg-gray-50/50 px-2 py-0.5 rounded border border-gray-100 uppercase">{booking.grade}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-xs">
+                        <div className="flex items-center gap-2 text-gray-700 font-black">
+                          <MapPin size={14} className="text-primary" />
+                          <span>{booking.countryName}</span>
+                        </div>
+                        <div className="text-gray-500 font-bold flex items-center gap-1.5">
+                          <Clock size={14} />
+                          <span>{booking.duration}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 pt-1">
+                         <span className="font-black text-gray-400 uppercase text-[10px] tracking-wider block mb-1">Provider</span>
+                         <p className="font-bold text-gray-700">{booking.companyName}</p>
+                      </div>
                     </div>
+                  </motion.div>
+                ))}
+                {filteredBookings.length === 0 && (
+                  <div className="col-span-full py-16 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">No bookings found</p>
                   </div>
-                </motion.div>
-              ))}
-              {filteredBookings.length === 0 && (
-                <div className="col-span-full py-16 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                  <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">No bookings found</p>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Desktop Sidebar */}
         <div className="hidden lg:block lg:col-span-4 space-y-4 sm:space-y-6">
           <CalendarSidebar 
+            allBookings={allBookings}
             currentMonth={currentMonth} 
             setCurrentMonth={setCurrentMonth} 
             selectedDate={selectedDate} 
@@ -425,6 +465,7 @@ export default function BookingsCalendarSection() {
                   </button>
                 </div>
                 <CalendarSidebar 
+                  allBookings={allBookings}
                   currentMonth={currentMonth} 
                   setCurrentMonth={setCurrentMonth} 
                   selectedDate={selectedDate} 
@@ -441,7 +482,7 @@ export default function BookingsCalendarSection() {
 }
 
 // Sub-component to avoid duplication
-function CalendarSidebar({ currentMonth, setCurrentMonth, selectedDate, setSelectedDate, upcomingDays }: any) {
+function CalendarSidebar({ allBookings, currentMonth, setCurrentMonth, selectedDate, setSelectedDate, upcomingDays }: any) {
   const today = startOfDay(new Date());
 
   return (
@@ -474,7 +515,7 @@ function CalendarSidebar({ currentMonth, setCurrentMonth, selectedDate, setSelec
             while (day <= endDate) {
               for (let i = 0; i < 7; i++) {
                 const cloneDay = day;
-                const hasBookings = ALL_BOOKINGS.some(b => isSameDay(b.date, cloneDay));
+                const hasBookings = allBookings.some((b: any) => isSameDay(b.date, cloneDay));
                 const isSelected = isSameDay(day, selectedDate);
                 const isCurrentMonth = isSameMonth(day, monthStart);
                 const isPast = isBefore(startOfDay(cloneDay), today);

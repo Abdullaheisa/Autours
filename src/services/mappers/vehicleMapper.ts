@@ -33,14 +33,19 @@ export const vehicleMapper = {
       type: raw.type || categoryName,
       photo: raw.photo || raw.image || '',
       image: raw.photo || raw.image || '',
-      final_price: parseFloat(raw.final_price) || 0,
-      price_in_usd: parseFloat(raw.price) || parseFloat(raw.price_in_usd) || 0,
+      final_price:
+        parseFloat(raw.final_price) ||
+        parseFloat(raw.total_price) ||
+        parseFloat(raw.total) ||
+        0,
+      price_in_usd: parseFloat(raw.price_in_usd) || 0,
       transmission: specMap['transmission'] || specMap['gear'] || raw.transmission || 'Automatic',
       fuelType: specMap['fuel'] || raw.fuel_type || raw.fuelType || 'Petrol',
       seats: parseInt(specMap['number of seats'] || specMap['seats']) || raw.seats || 5,
       doors: parseInt(specMap['doors']) || raw.doors || 4,
       suitcases: specMap['suitcase'] || specMap['suitcases'] || specMap['luggage'] || raw.suitcases || '',
       ac: specMap['air conditioner'] === 'Air Conditioning' || !!(raw.ac),
+      baseCurrency: branch.currency || 'AED',
       supplier: {
         id: supplierData.id,
         company: supplierData.company || supplierData.name || '',
@@ -58,10 +63,22 @@ export const vehicleMapper = {
         what_is_included: typeof inc === 'string' ? inc : (inc.what_is_included || inc.name || ''),
         description: inc.description || '',
       })),
-      fuelPolicy: (typeof raw.fuel_policy === 'object' ? raw.fuel_policy?.name : raw.fuel_policy) || 'Full to Full',
+      fuelPolicy: (
+        (typeof raw.fuel_policy === 'object' ? (raw.fuel_policy?.name || raw.fuel_policy?.title) : null) ||
+        (typeof raw.fuelPolicy === 'object' ? (raw.fuelPolicy?.name || raw.fuelPolicy?.title) : null) ||
+        raw.fuel_policy ||
+        raw.fuelPolicy ||
+        'Full to Full'
+      ),
       locationType: raw.location_type || branch.location_type || 'Airport',
       freeCancellation: !!raw.free_cancellation,
       specifications: mappedSpecs,
+      rental_terms: raw.rental_terms || [],
+      instant_confirmation: raw.instant_confirmation !== undefined
+        ? !!raw.instant_confirmation
+        : (supplierData.instant_confirmation !== undefined
+            ? !!supplierData.instant_confirmation
+            : true),
     };
   },
 

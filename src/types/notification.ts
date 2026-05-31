@@ -5,4 +5,6 @@ export interface Notification {
   type: "booking" | "blog" | "system";
   timestamp: string;
   isRead: boolean;
+  targetUrl?: string;
 }
+

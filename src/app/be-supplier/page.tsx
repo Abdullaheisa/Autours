@@ -1,15 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { User, Mail, Globe, Phone, Lock, ArrowRight, X } from 'lucide-react';
+import { User, Mail, Globe, Phone, Lock, ArrowRight, X, Loader2 } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import SectionDivider from '@/components/sections/SectionDivider';
 import { worldCountries } from '@/data/worldCountries';
+import { AppDispatch, RootState } from '@/store';
+import { registerThunk } from '@/store/slices/authSlice';
+import { getPostLoginPath } from '@/utils/auth';
 
 export default function BeSupplierPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [country, setCountry] = useState('');
@@ -19,9 +28,35 @@ export default function BeSupplierPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const countryName = worldCountries.find((c) => c.iso === country)?.name || country;
+    const result = await dispatch(
+      registerThunk({
+        fullName,
+        email,
+        password,
+        phone: `${phoneCode}${phone}`,
+        country: countryName,
+        supplier: 1,
+      })
+    );
+
+    if (registerThunk.fulfilled.match(result)) {
+      // 🚀 حل مشكلة الـ Type 'never' والـ Null Check باستخدام الـ Type Casting الاحترافي
+      const payload = result.payload as unknown as { user?: { role: string } };
+
+      if (payload.user && payload.user.role) {
+        router.push(getPostLoginPath(payload.user.role));
+      } else {
+        router.push('/login');
+      }
+    }
+  };
+
   const contentText = (
     <>
-      <p>
+      <p className="text-[17px] leading-relaxed">
         Become a car rental supplier! Autours is a company operating in the tourism field
         since its establishment in 2005, with car rental bookings being our main area of
         expertise. We provide you a great chance to increase the business, as through our
@@ -33,26 +68,36 @@ export default function BeSupplierPage() {
         are welcome to join our car rental partner network.
       </p>
 
-      <div className="border-t border-black/15 pt-6">
+      <div className="border-t border-black/15 pt-6 space-y-4">
         <p
-          className="font-black text-gray-900 text-lg md:text-xl mb-5"
+          className="font-black text-gray-900 text-lg md:text-xl mb-4"
           style={{ fontFamily: 'var(--title-font)' }}
         >
           Benefits from joining the car rental network of www.autours.net
         </p>
-        <p className="leading-[2.2]">
-          No financial risk at all. The customers pay directly to you upon the arrival.<br />
-          Immediate increase of your car rental sales.<br />
-          No entry/administration fee or other costs.<br />
-          Access to our agent area for special offers, stop sales, statistics, information
-          and evaluation results from customers.<br />
-          The results from the feedback and evaluation will help you and improve your
-          service.<br />
-          Smart reservation procedure for confirming via e-mail or Dashboard for your admin
-          interface.<br />
-          Flexible system for amendments, cancellations and one-way rentals.<br />
-          Guaranteed bookings and very low volume of no-show customers Our team will assist
-          you, proposing rates, car groups purchase, changes and tips.
+        <ul className="space-y-3 pl-1">
+          {[
+            "No financial risk at all. The customers pay directly to you upon the arrival.",
+            "Immediate increase of your car rental sales.",
+            "No entry/administration fee or other costs.",
+            "Access to our agent area for special offers, stop sales, statistics, information and evaluation results from customers.",
+            "The results from the feedback and evaluation will help you and improve your service.",
+            "Smart reservation procedure for confirming via e-mail or Dashboard for your admin interface.",
+            "Flexible system for amendments, cancellations and one-way rentals.",
+            "Guaranteed bookings and very low volume of no-show customers.",
+            "Our team will assist you, proposing rates, car groups purchase, changes and tips."
+          ].map((benefit, i) => (
+            <li key={i} className="flex items-start gap-3 text-[15px]">
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-black/80 shrink-0" />
+              <span className="leading-relaxed font-bold text-gray-900">{benefit}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="border-t border-black/15 pt-6">
+        <p className="font-extrabold text-gray-900 text-[15px] leading-relaxed italic">
+          Please fill in the Supplier Application Form in order to get more information on how you can become an www.autours.net Supplier.
         </p>
       </div>
     </>
@@ -61,10 +106,29 @@ export default function BeSupplierPage() {
   return (
     <div className="flex flex-col bg-white" dir="ltr">
       <Navbar />
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-supplier-scroll::-webkit-scrollbar {
+          width: 14px;
+        }
+        .custom-supplier-scroll::-webkit-scrollbar-track {
+          background: #ffffff;
+          border-radius: 99px;
+          border: 4px solid var(--primary);
+        }
+        .custom-supplier-scroll::-webkit-scrollbar-thumb {
+          background: #a1a1aa;
+          border-radius: 99px;
+          border: 4px solid #ffffff;
+        }
+        .custom-supplier-scroll::-webkit-scrollbar-thumb:hover {
+          background: #71717a;
+        }
+      `}} />
 
       <section className="flex flex-col lg:flex-row lg:h-[calc(100vh-56px)] lg:overflow-hidden">
         {/* ── LEFT: scrollable content ── */}
-        <div className="w-full lg:w-1/2 lg:h-full bg-[var(--primary)] overflow-y-auto order-2 lg:order-1 p-8 sm:p-10 lg:p-14">
+        <div className="w-full lg:w-1/2 lg:h-full bg-[var(--primary)] overflow-y-auto order-2 lg:order-1 p-8 sm:p-10 lg:p-14 custom-supplier-scroll">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -111,7 +175,7 @@ export default function BeSupplierPage() {
               Registration
             </h2>
 
-            <form className="space-y-2.5" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-2.5" onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={14} />
@@ -187,14 +251,25 @@ export default function BeSupplierPage() {
                 />
               </div>
 
+              {error && (
+                <p className="text-xs text-red-600 font-bold text-center px-1">{error}</p>
+              )}
+
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-[var(--primary)] hover:brightness-105 text-gray-900 font-black rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] group text-sm uppercase tracking-widest shadow-md border-2 border-black/10"
+                  disabled={loading}
+                  className="w-full py-3.5 bg-[var(--primary)] hover:brightness-105 disabled:opacity-60 text-gray-900 font-black rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] group text-sm uppercase tracking-widest shadow-md border-2 border-black/10"
                   style={{ fontFamily: 'var(--title-font)' }}
                 >
-                  Register Now
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  {loading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      Register Now
+                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
               </div>
 

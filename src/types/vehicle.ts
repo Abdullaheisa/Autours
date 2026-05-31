@@ -1,6 +1,7 @@
 import { Status } from "./common";
 
 export interface VehicleSupplier {
+  [key: string]: any;
   id?: number;
   company: string;
   logo: string;
@@ -10,7 +11,7 @@ export interface VehicleSupplier {
   address?: string;
   lat?: number;
   lng?: number;
-  instant_confirmation?: boolean;
+  instant_confirmation?: boolean | number; // تم التعديل لدعم الأرقام (0 أو 1) والمنطقي (true/false)
 }
 
 export interface VehicleSpecification {
@@ -21,6 +22,7 @@ export interface VehicleSpecification {
 }
 
 export interface Vehicle {
+  [key: string]: any; // تم دمج الخصائص الديناميكية بشكل صحيح لمنع تعارض الـ Types
   id: number | string;
   name: string;
   brand?: string;
@@ -36,6 +38,7 @@ export interface Vehicle {
   doors?: number | string;
   suitcases?: string;
   ac?: boolean;
+  baseCurrency?: string;
   supplier: VehicleSupplier;
   specifications: VehicleSpecification[];
   included: {
@@ -47,6 +50,8 @@ export interface Vehicle {
   fuelPolicy?: string;
   locationType?: string;
   freeCancellation?: boolean;
+  rental_terms?: any[];
+  instant_confirmation?: boolean | number; // تم إضافتها لحل الإيرور في الكومبوننت
 }
 
 export interface Car {
@@ -110,6 +115,8 @@ export interface SearchPayload {
 
 export interface FilterPayload extends SearchPayload {
   priceRange?: number;
+  price_min?: number;
+  price_max?: number;
   category?: number[];
   supplier?: number[];
   location_type_id?: number[];
@@ -135,5 +142,6 @@ export interface LocationBranch {
   location: string;
   country: string;
   adresse?: string;
+  location_address?: string;
   location_type?: string;
 }

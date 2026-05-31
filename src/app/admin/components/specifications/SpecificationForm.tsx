@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, X, Check, Settings2, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, X, Check, Settings2, ChevronDown, XCircle } from "lucide-react";
+import { Specification } from "./SpecificationsTable";
 
 const availableIcons = [
   { value: "Gauge", label: "Gauge" },
@@ -13,17 +14,53 @@ const availableIcons = [
   { value: "Wind", label: "Air Condition" },
   { value: "DoorOpen", label: "Doors" },
   { value: "Luggage", label: "Suitcase" },
+  { value: "Armchair", label: "Seats" },
 ];
 
+const iconNameMap: Record<string, string> = {
+  "🎨": "Palette",
+  "⚙️": "Cog",
+  "🚪": "DoorOpen",
+  "👥": "Users",
+  "⛽": "Fuel",
+  "🆕": "Sparkles",
+  "Color": "Palette",
+  "Gearbox": "Cog",
+  "Doors": "DoorOpen",
+  "Seats": "Users",
+  "Fuel": "Fuel",
+  "Fuel Type": "Fuel",
+  "Condition": "Sparkles",
+  "Air Conditioner": "Wind",
+  "Suitcase": "Luggage",
+  "Transmission": "Settings2",
+};
+
 interface SpecificationFormProps {
-  onSubmit: (name: string, options: string[], icon: string) => void;
+  onSubmit: (id: number | null, name: string, options: string[], icon: string) => void;
+  initialData?: Specification | null;
+  onCancel?: () => void;
 }
 
-export default function SpecificationForm({ onSubmit }: SpecificationFormProps) {
+export default function SpecificationForm({ onSubmit, initialData, onCancel }: SpecificationFormProps) {
   const [name, setName] = useState("");
   const [options, setOptions] = useState<string[]>([]);
   const [newOption, setNewOption] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("");
+
+  useEffect(() => {
+    if (initialData) {
+      setName(initialData.name);
+      setOptions(initialData.options || []);
+      const rawIcon = initialData.icon || "";
+      const normalizedIcon = iconNameMap[rawIcon] || rawIcon;
+      setSelectedIcon(normalizedIcon);
+    } else {
+      setName("");
+      setOptions([]);
+      setSelectedIcon("");
+    }
+  }, [initialData]);
 
   const handleAddOption = () => {
     if (newOption.trim() && !options.includes(newOption.trim())) {
@@ -45,17 +82,24 @@ export default function SpecificationForm({ onSubmit }: SpecificationFormProps) 
 
   const handleSubmit = () => {
     if (name.trim() && options.length > 0 && selectedIcon) {
-      onSubmit(name.trim(), options, selectedIcon);
-      setName("");
-      setOptions([]);
-      setSelectedIcon("");
+      onSubmit(initialData ? initialData.id : null, name.trim(), options, selectedIcon);
+      if (!initialData) {
+        setName("");
+        setOptions([]);
+        setSelectedIcon("");
+      }
     }
   };
 
   const isValid = name.trim() && options.length > 0 && selectedIcon;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 lg:p-6">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 lg:p-6 mb-6">
+      {initialData && (
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-sm font-bold text-gray-900">Edit Specification</h3>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Specification Name */}
         <div>
@@ -138,14 +182,22 @@ export default function SpecificationForm({ onSubmit }: SpecificationFormProps) 
       </div>
 
       {/* Submit */}
-      <div className="mt-5 flex justify-end">
+      <div className="mt-5 flex justify-end gap-3">
+        {initialData && onCancel && (
+          <button
+            onClick={onCancel}
+            className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+          >
+            Cancel
+          </button>
+        )}
         <button
           onClick={handleSubmit}
           disabled={!isValid}
           className="bg-primary-600 hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-primary-200 flex items-center gap-2"
         >
           <Check size={16} />
-          Submit
+          {initialData ? "Update" : "Submit"}
         </button>
       </div>
     </div>

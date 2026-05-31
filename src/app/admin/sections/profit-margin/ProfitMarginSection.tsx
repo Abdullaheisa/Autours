@@ -1,58 +1,158 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Car, Percent, Save, Store, TrendingUp } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Wallet, Percent, Download, Search, Filter, Car, Save, Store } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import StatsCard from "@/components/ui/StatsCard";
-import ProfitFilters from "@/app/admin/components/profit/ProfitFilters";
+import { profitApi } from "@/services/api";
+import ProfitFilters, { FilterItem } from "@/app/admin/components/profit/ProfitFilters";
 import ProfitPercentageForm from "@/app/admin/components/profit/ProfitPercentageForm";
-import VehicleProfitTable, { VehicleProfit } from "@/app/admin/components/profit/VehicleProfitTable";
+import VehicleProfitTable from "@/app/admin/components/profit/VehicleProfitTable";
+import toast from "react-hot-toast";
+import { getVehicleImageUrl } from "@/utils/getImageUrl";
 
-// Mock Data
-const mockVehicles: VehicleProfit[] = [
-  { id: 1, name: "Nissan Sunny Automatic", image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=150&h=100&fit=crop", country: "Egypt", supplier: "Nile Motors", branch: "Hurghada International Airport", profit1_2: 15, profit3_7: 12, profit8_30: 10, profitWeekend: 20, isSaved: true },
-  { id: 2, name: "Peugeot 301 Automatic", image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=150&h=100&fit=crop", country: "Egypt", supplier: "Nile Motors", branch: "Hurghada International Airport", profit1_2: 18, profit3_7: 15, profit8_30: 12, profitWeekend: 22, isSaved: true },
-  { id: 3, name: "Renault Logan Automatic", image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=150&h=100&fit=crop", country: "Egypt", supplier: "Cairo Wheels", branch: "Hurghada International Airport", profit1_2: 14, profit3_7: 11, profit8_30: 9, profitWeekend: 18, isSaved: true },
-  { id: 4, name: "Toyota Camry", image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=150&h=100&fit=crop", country: "UAE", supplier: "MAHD Rent", branch: "Dubai Airport", profit1_2: 25, profit3_7: 22, profit8_30: 18, profitWeekend: 28, isSaved: false },
-  { id: 5, name: "BMW X5", image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=150&h=100&fit=crop", country: "Saudi Arabia", supplier: "Autocar Elite", branch: "Riyadh Airport", profit1_2: 30, profit3_7: 28, profit8_30: 25, profitWeekend: 35, isSaved: false },
-  { id: 6, name: "Mercedes C-Class", image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=150&h=100&fit=crop", country: "Qatar", supplier: "Doha Wheels", branch: "Doha Airport", profit1_2: 35, profit3_7: 32, profit8_30: 28, profitWeekend: 40, isSaved: false },
-  { id: 7, name: "Hyundai Tucson", image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=150&h=100&fit=crop", country: "Kuwait", supplier: "Kuwait Ride", branch: "Kuwait City", profit1_2: 20, profit3_7: 18, profit8_30: 15, profitWeekend: 25, isSaved: false },
-  { id: 8, name: "Kia Sportage", image: "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=150&h=100&fit=crop", country: "Jordan", supplier: "Jordan Cars", branch: "Amman Airport", profit1_2: 22, profit3_7: 20, profit8_30: 17, profitWeekend: 26, isSaved: false },
-];
-
-const countries = ["All Countries", "Egypt", "UAE", "Saudi Arabia", "Qatar", "Kuwait", "Jordan"];
-const suppliers = ["All Suppliers", "Nile Motors", "MAHD Rent", "Autocar Elite", "Doha Wheels", "Kuwait Ride", "Jordan Cars", "Cairo Wheels"];
-const branches = ["All Branches", "Hurghada International Airport", "Dubai Airport", "Riyadh Airport", "Doha Airport", "Kuwait City", "Amman Airport"];
-const vehiclesList = ["All Vehicles", "Nissan Sunny Automatic", "Peugeot 301 Automatic", "Renault Logan Automatic", "Toyota Camry", "BMW X5", "Mercedes C-Class", "Hyundai Tucson", "Kia Sportage"];
+interface VehicleProfit {
+  id: number;
+  name: string;
+  image: string;
+  country: string;
+  supplier: string;
+  branch: string;
+  profit1_2: number;
+  profit3_7: number;
+  profit8_30: number;
+  profitWeekend: number;
+  isSaved: boolean;
+  hasMargin?: boolean;
+}
 
 export default function ProfitMarginsPage() {
   // Filters State
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState("All Countries");
-  const [selectedSupplier, setSelectedSupplier] = useState("All Suppliers");
-  const [selectedBranch, setSelectedBranch] = useState("All Branches");
-  const [selectedVehicle, setSelectedVehicle] = useState("All Vehicles");
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [showNoProfitOnly, setShowNoProfitOnly] = useState(false);
+
+  // Options State
+  const [countries, setCountries] = useState<FilterItem[]>([]);
+  const [suppliers, setSuppliers] = useState<FilterItem[]>([]);
+  const [branches, setBranches] = useState<FilterItem[]>([]);
+  const [vehiclesList, setVehiclesList] = useState<FilterItem[]>([]);
 
   // Vehicles State
-  const [vehicles, setVehicles] = useState<VehicleProfit[]>(mockVehicles);
+  const [vehicles, setVehicles] = useState<VehicleProfit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Filter Logic
-  const filteredVehicles = useMemo(() => {
-    return vehicles.filter((vehicle) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vehicle.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vehicle.branch.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCountry = selectedCountry === "All Countries" || vehicle.country === selectedCountry;
-      const matchesSupplier = selectedSupplier === "All Suppliers" || vehicle.supplier === selectedSupplier;
-      const matchesBranch = selectedBranch === "All Branches" || vehicle.branch === selectedBranch;
-      const matchesVehicle = selectedVehicle === "All Vehicles" || vehicle.name === selectedVehicle;
+  // Fetch Options
+  useEffect(() => {
+    profitApi.getCountries().then((res: any) => {
+      const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setCountries(data.map((item: any) => ({ id: item, name: item })));
+    }).catch(console.error);
+  }, []);
 
-      return matchesSearch && matchesCountry && matchesSupplier && matchesBranch && matchesVehicle;
-    });
-  }, [vehicles, searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle]);
+  const fetchSuppliers = useCallback(() => {
+    if (selectedCountry) {
+      profitApi.getSuppliers(selectedCountry).then((res: any) => {
+        const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        setSuppliers(data.map((item: any) => ({ id: String(item.id), name: item.name })));
+      }).catch(console.error);
+    } else {
+      setSuppliers([]);
+    }
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    fetchSuppliers();
+    setSelectedSupplier("");
+  }, [fetchSuppliers]);
+
+  const fetchBranches = useCallback(() => {
+    if (selectedSupplier) {
+      profitApi.getBranches(selectedSupplier).then((res: any) => {
+        const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        setBranches(data.map((item: any) => ({ id: String(item.id), name: item.name })));
+      }).catch(console.error);
+    } else {
+      setBranches([]);
+    }
+  }, [selectedSupplier]);
+
+  useEffect(() => {
+    fetchBranches();
+    setSelectedBranch("");
+  }, [fetchBranches]);
+
+  const fetchVehiclesList = useCallback(() => {
+    if (selectedBranch) {
+      profitApi.getVehicles(selectedSupplier, selectedBranch).then((res: any) => {
+        const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        setVehiclesList(data.map((item: any) => ({ id: String(item.id), name: item.name })));
+      }).catch(console.error);
+    } else {
+      setVehiclesList([]);
+    }
+  }, [selectedSupplier, selectedBranch]);
+
+  useEffect(() => {
+    fetchVehiclesList();
+    setSelectedVehicle("");
+  }, [fetchVehiclesList]);
+
+  // Fetch Main Data
+  const fetchData = useCallback(() => {
+    setIsLoading(true);
+    
+    // Always fetch page 1 with all applied filters to show the matching vehicles
+    const params: any = {
+      page: 1,
+      per_page: 10000 // Fetch all items to support local pagination
+    };
+    
+    if (searchQuery) params.search = searchQuery;
+    if (selectedCountry) params.country = selectedCountry;
+    if (selectedSupplier) params.supplier = selectedSupplier;
+    if (selectedBranch) params.branch = selectedBranch;
+    if (selectedVehicle) params.selectedVehicles = [selectedVehicle]; // API expects array of IDs
+    if (showNoProfitOnly) params.no_profit = 'true';
+
+    profitApi.getAll(params)
+      .then((res: any) => {
+        const items = Array.isArray(res?.data?.data) ? res.data.data
+          : Array.isArray(res?.data) ? res.data
+          : Array.isArray(res) ? res
+          : [];
+
+        setVehicles(items.map((item: any) => ({
+          id: item.vehicle_id ?? item.id,
+          name: item.vehicle_name || item.name || "Unknown Vehicle",
+          image: getVehicleImageUrl(item.photo || item.image || ""),
+          country: item.branch_country || item.country || "Unknown",
+          supplier: item.supplier_name || item.supplier?.name || item.supplier || "—",
+          branch: item.branch_name || item.branch?.name || item.branch || "—",
+          profit1_2: parseFloat(item.per_day_profit ?? item.profit1_2 ?? 0),
+          profit3_7: parseFloat(item.per_week_profit ?? item.profit3_7 ?? 0),
+          profit8_30: parseFloat(item.per_month_profit ?? item.profit8_30 ?? 0),
+          profitWeekend: parseFloat(item.weekend_profit ?? item.profitWeekend ?? 0),
+          isSaved: true,
+          hasMargin: item.per_day_profit !== null && item.per_day_profit !== undefined,
+        })));
+      })
+      .catch((err) => {
+        console.warn("Failed to load profit margins:", err.message);
+      })
+      .finally(() => setIsLoading(false));
+  }, [searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]); // Auto fetch when filters change
+
+  // Local filtering is removed since API handles it now
+  const filteredVehicles = vehicles;
 
   // Stats
   const totalVehicles = filteredVehicles.length;
@@ -79,48 +179,79 @@ export default function ProfitMarginsPage() {
     }
   };
 
-  const handleSaveRow = (id: number) => {
-    setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, isSaved: true } : v)));
+  const handleSaveRow = async (id: number) => {
+    const vehicle = vehicles.find((v) => v.id === id);
+    if (!vehicle) return;
+    try {
+      // Backend expects: priceTax, weekPriceTax, monthPriceTax, weekendPriceTax, selectedVehicles
+      await profitApi.upload({
+        priceTax: vehicle.profit1_2,
+        weekPriceTax: vehicle.profit3_7,
+        monthPriceTax: vehicle.profit8_30,
+        weekendPriceTax: vehicle.profitWeekend,
+        selectedVehicles: String(vehicle.id),
+      });
+      setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, isSaved: true } : v)));
+      toast.success("Profit margin saved!");
+    } catch (e: any) {
+      console.warn("Failed to save row:", e.message);
+      toast.error("Failed to save. Please try again.");
+    }
   };
 
-  const handleGlobalSubmit = (percentages: { days1_2: string; days3_7: string; days8_30: string; weekend: string }) => {
+  const handleGlobalSubmit = async (percentages: { days1_2: string; days3_7: string; days8_30: string; weekend: string }) => {
     if (filteredVehicles.length === 0) return;
 
     const idsToUpdate = new Set(filteredVehicles.map((v) => v.id));
+    const updatedVehicles = vehicles.map((v) => {
+      if (idsToUpdate.has(v.id)) {
+        return {
+          ...v,
+          profit1_2: percentages.days1_2 ? parseInt(percentages.days1_2) : v.profit1_2,
+          profit3_7: percentages.days3_7 ? parseInt(percentages.days3_7) : v.profit3_7,
+          profit8_30: percentages.days8_30 ? parseInt(percentages.days8_30) : v.profit8_30,
+          profitWeekend: percentages.weekend ? parseInt(percentages.weekend) : v.profitWeekend,
+          isSaved: true,
+        };
+      }
+      return v;
+    });
 
-    setVehicles((prev) =>
-      prev.map((v) => {
-        if (idsToUpdate.has(v.id)) {
-          return {
-            ...v,
-            profit1_2: percentages.days1_2 ? parseInt(percentages.days1_2) : v.profit1_2,
-            profit3_7: percentages.days3_7 ? parseInt(percentages.days3_7) : v.profit3_7,
-            profit8_30: percentages.days8_30 ? parseInt(percentages.days8_30) : v.profit8_30,
-            profitWeekend: percentages.weekend ? parseInt(percentages.weekend) : v.profitWeekend,
-            isSaved: true,
-          };
-        }
-        return v;
-      })
-    );
+    const first = updatedVehicles.find(v => idsToUpdate.has(v.id));
+    if (!first) return;
+
+    try {
+      await profitApi.upload({
+        priceTax: first.profit1_2,
+        weekPriceTax: first.profit3_7,
+        monthPriceTax: first.profit8_30,
+        weekendPriceTax: first.profitWeekend,
+        selectedVehicles: [...idsToUpdate].join(','),
+      });
+      toast.success(`Profit margins updated for ${idsToUpdate.size} vehicles!`);
+    } catch (e: any) {
+      console.warn("Failed to upload global profit:", e.message);
+      toast.error("Failed to update margins. Please try again.");
+    }
+    setVehicles(updatedVehicles);
   };
 
   const clearFilters = () => {
     setSearchQuery("");
-    setSelectedCountry("All Countries");
-    setSelectedSupplier("All Suppliers");
-    setSelectedBranch("All Branches");
-    setSelectedVehicle("All Vehicles");
+    setSelectedCountry("");
+    setSelectedSupplier("");
+    setSelectedBranch("");
+    setSelectedVehicle("");
   };
 
   return (
     <SectionLayout>
       {/* Page Header */}
-<PageHeader
-  title="Profit Margins"
-  description="Manage vehicle pricing margins"
-  showAction={false}  // ← كده الزرار هيختفي
-/>
+      <PageHeader
+        title="Profit Margins"
+        description="Manage vehicle pricing margins"
+        showAction={false}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -146,7 +277,10 @@ export default function ProfitMarginsPage() {
         suppliers={suppliers}
         branches={branches}
         vehiclesList={vehiclesList}
+        showNoProfitOnly={showNoProfitOnly}
+        onToggleNoProfit={setShowNoProfitOnly}
         onClearFilters={clearFilters}
+        onSearchClick={fetchData}
       />
 
       {/* Profit Percentage Form */}

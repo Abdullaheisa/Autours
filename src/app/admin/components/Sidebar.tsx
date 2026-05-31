@@ -7,6 +7,11 @@ import {
   Mail, Palette, LogOut, ChevronLeft, ChevronRight, BarChart3, Gift
 } from "lucide-react";
 import { sidebarItems as defaultSidebarItems } from "@/lib/data";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import Image from "next/image";
+import { BACKEND_URL } from "@/config/api";
+import { getLogoUrl } from "@/utils/getImageUrl";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, UserCircle, Building2, BookOpen, TrendingUp, Car, Upload,
@@ -26,6 +31,13 @@ interface SidebarProps {
 export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClose, items }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const resolvedItems = items ?? defaultSidebarItems;
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const avatarUrl = user?.avatar ? getLogoUrl(user.avatar) : null;
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "AU";
 
   return (
     <>
@@ -40,12 +52,18 @@ export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClo
       `}>
         <div className="p-6 border-b border-gray-100">
           <div className={`flex items-center gap-3 ${isCollapsed ? "lg:justify-center" : ""}`}>
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-              <Car className="text-gray-900" size={22} />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-primary/20 shrink-0">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={user?.name || "User"} width={40} height={40} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold text-sm">
+                  {initials}
+                </div>
+              )}
             </div>
             <div className={`${isCollapsed ? "lg:hidden" : "block"}`}>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Autours</h1>
-              <p className="text-xs text-gray-500">admin@autours.net</p>
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">{user?.name || "Autours"}</h1>
+              <p className="text-xs text-gray-500">{user?.email || "admin@autours.net"}</p>
             </div>
           </div>
         </div>

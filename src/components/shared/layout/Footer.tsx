@@ -2,26 +2,26 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
-  Facebook, Instagram, Linkedin, Twitter, Mail 
+  Facebook, Instagram, Linkedin, Mail 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { assets } from '@/config/assets';
 import { countries } from '@/data/countries';
 
-// Custom X icon (formerly Twitter)
 const XIcon = ({ size = 18 }: { size?: number }) => (
   <svg 
     width={size} 
     height={size} 
     viewBox="0 0 24 24" 
     fill="currentColor"
+    aria-hidden="true"
   >
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
 );
 
-// Footer links
 const footerLinks = {
   Company: [
     { name: 'About us', href: '/about-us' },
@@ -64,23 +64,23 @@ export default function Footer() {
     <footer className="bg-primary pt-10 pb-6 text-black border-t border-black/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Logo Section */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="mb-6 border-b border-black/10 pb-4"
         >
-          <Link href="/" className="inline-block group">
-            <img 
+          <Link href="/" aria-label="Autours Home" className="inline-block group focus:outline-none focus:ring-2 focus:ring-black rounded-lg">
+            <Image 
               src={assets.logoFooter} 
-              alt="Autours" 
+              alt="Autours Logo"
+              width={240}
+              height={96}
               className="h-16 md:h-24 w-auto object-contain transition-transform group-hover:scale-105" 
             />
           </Link>
         </motion.div>
 
-        {/* Links Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 mb-8">
           {Object.entries(footerLinks).map(([category, links], idx) => (
             <motion.div 
@@ -91,16 +91,16 @@ export default function Footer() {
               transition={{ delay: idx * 0.05 }}
               className="space-y-2"
             >
-              <h4 className="text-base font-black text-black">
+              <h2 className="text-base font-black text-black">
                 {category}
-              </h4>
+              </h2>
               <ul className="space-y-0.5">
                 {links.map((link) => (
                   <li key={link.name}>
                     <Link 
                       href={link.href}
                       onClick={(e) => scrollToSection(e, link.href)}
-                      className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all"
+                      className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-black rounded-sm"
                     >
                       {link.name}
                     </Link>
@@ -110,7 +110,6 @@ export default function Footer() {
             </motion.div>
           ))}
 
-          {/* Location Category: Dynamic Countries Selector */}
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -118,15 +117,15 @@ export default function Footer() {
             transition={{ delay: 0.15 }}
             className="space-y-2"
           >
-            <h4 className="text-base font-black text-black">
+            <h2 className="text-base font-black text-black">
               Location
-            </h4>
+            </h2>
             <ul className="space-y-0.5">
               {displayedCountries.map((country) => (
                 <li key={country.id}>
                   <Link 
                     href={`/countries/${country.id}`}
-                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all"
+                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-black rounded-sm"
                   >
                     {country.name} Car Rental
                   </Link>
@@ -136,7 +135,8 @@ export default function Footer() {
             {countries.length > 5 && (
               <button 
                 onClick={() => setShowAll(!showAll)}
-                className="text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block"
+                aria-expanded={showAll}
+                className="text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block focus:outline-none focus:underline"
               >
                 {showAll ? '- Show Less' : `+ Show ${countries.length - 5} More`}
               </button>
@@ -144,30 +144,28 @@ export default function Footer() {
           </motion.div>
         </div>
 
-        {/* Separator */}
         <div className="border-t-2 border-black mb-4" />
 
-        {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           
-          {/* Left: Copyright & Socials */}
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 w-full md:w-auto">
             <p className="text-[13px] font-bold text-black">
               Copyright © 2026.
             </p>
             <div className="flex gap-2">
               {[
-                { icon: <Facebook size={16} fill="currentColor" strokeWidth={0} />, href: '#' },
-                { icon: <Instagram size={16} />, href: '#' },
-                { icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} />, href: '#' },
-                { icon: <XIcon size={14} />, href: '#' },
-                { icon: <Mail size={16} />, href: 'mailto:info@autours.com' }
+                { name: 'Facebook', icon: <Facebook size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: '#' },
+                { name: 'Instagram', icon: <Instagram size={16} aria-hidden="true" />, href: '#' },
+                { name: 'LinkedIn', icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: '#' },
+                { name: 'X', icon: <XIcon size={14} />, href: '#' },
+                { name: 'Email', icon: <Mail size={16} aria-hidden="true" />, href: 'mailto:info@autours.com' }
               ].map((social, i) => (
                 <motion.a 
                   key={i} 
                   href={social.href}
+                  aria-label={`Follow us on ${social.name}`} // 🚀 التأكيد على تواجد الـ Aria-label
                   whileHover={{ y: -2 }}
-                  className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm"
+                  className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-black"
                 >
                   {social.icon}
                 </motion.a>
@@ -175,23 +173,19 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Right: Payment Methods */}
           <div className="flex items-center gap-4">
             <p className="text-[13px] font-black text-black">
               Payment Methods
             </p>
             <div className="flex items-center gap-2">
-              {/* Visa */}
-              <div className="h-8 w-12  rounded-sm flex items-center justify-center  p-1">
-                <img src={assets.payment.visa} alt="Visa" className="h-full w-full object-contain" />
+              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm">
+                <Image src={assets.payment.visa} alt="Visa Accepted" width={40} height={24} className="h-full w-full object-contain" />
               </div>
-              {/* Mastercard */}
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1">
-                <img src={assets.payment.mastercard} alt="Mastercard" className="h-full w-full object-contain" />
+              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm">
+                <Image src={assets.payment.mastercard} alt="Mastercard Accepted" width={40} height={24} className="h-full w-full object-contain" />
               </div>
-              {/* KNET */}
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center  p-0.5 overflow-hidden">
-                <img src={assets.payment.knet} alt="KNET" className="h-full w-full object-contain" />
+              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-0.5 overflow-hidden bg-white shadow-sm">
+                <Image src={assets.payment.knet} alt="KNET Accepted" width={40} height={24} className="h-full w-full object-contain" />
               </div>
             </div>
           </div>

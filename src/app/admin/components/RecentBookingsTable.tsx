@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowUpRight, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
-import { recentBookings } from "@/lib/data";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const statusConfig: Record<string, { label: string; color: string; bgColor: string; icon: React.ComponentType<{size?: number, className?: string}> }> = {
   completed: { label: "Completed", color: "text-emerald-700", bgColor: "bg-emerald-50", icon: CheckCircle2 },
@@ -11,6 +12,9 @@ const statusConfig: Record<string, { label: string; color: string; bgColor: stri
 };
 
 export default function RecentBookingsTable() {
+  const { rawData } = useSelector((state: RootState) => state.dashboard);
+  const bookings = rawData?.recentBookings || [];
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="p-4 sm:p-5 lg:p-6 border-b border-gray-100">
@@ -38,8 +42,8 @@ export default function RecentBookingsTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {recentBookings.map((booking) => {
-              const status = statusConfig[booking.status];
+            {bookings.map((booking: any) => {
+              const status = statusConfig[booking.status] || statusConfig.pending;
               const StatusIcon = status.icon;
               return (
                 <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors">

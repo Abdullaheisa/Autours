@@ -1,25 +1,96 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail, Phone, MapPin, Camera, Save, Building, Globe, Languages } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import ImageUploader from "@/components/ui/ImageUploader";
+import { authApi, uploadApi } from "@/services/api";
+import { getBackendBaseUrl } from "@/utils/getImageUrl";
+import toast from "react-hot-toast";
 
 export default function CompanyProfileSection() {
   const [formData, setFormData] = useState({
-    userName: "John Doe",
-    userEmail: "manager@company.com",
-    userPhone: "+971 50 987 6543",
-    companyName: "Premium Car Rental",
-    country: "United Arab Emirates",
-    city: "Dubai",
-    address: "Dubai Marina, Waterfront, Tower A",
+    userName: "",
+    userEmail: "",
+    userPhone: "",
+    companyName: "",
+    country: "",
+    city: "",
+    address: "",
     language: "English",
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logo, setLogo] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    authApi.getUser()
+      .then((res: any) => {
+        const data = res || res?.data || {};
+        setFormData({
+          userName: data.name || "",
+          userEmail: data.email || "",
+          userPhone: data.phone_num || data.phone || "",
+          companyName: data.company || data.company_name || "",
+          country: data.country || "",
+          city: data.city || "",
+          address: data.address || "",
+          language: data.language || "English",
+        });
+        setLogo(data.logo || null);
+      })
+      .catch((err) => {
+        console.warn("Using mock profile due to API error:", err.message);
+        setFormData({
+          userName: "",
+          userEmail: "",
+          userPhone: "",
+          companyName: "",
+          country: "",
+          city: "",
+          address: "",
+          language: "English",
+        });
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!formData.userName.trim()) {
+      toast.error("User Name is required.");
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const form = new FormData();
+      form.append("name", formData.userName);
+      form.append("email", formData.userEmail);
+      form.append("phone_num", formData.userPhone);
+      form.append("company", formData.companyName);
+      form.append("country", formData.country);
+      form.append("city", formData.city);
+      form.append("address", formData.address);
+      form.append("language", formData.language);
+      
+      if (logoFile) {
+        form.append("logo", logoFile);
+      }
+
+      await uploadApi.uploadProfile(form);
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      console.error("Failed to update profile", err);
+      toast.error("Failed to update profile. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -82,7 +153,20 @@ export default function CompanyProfileSection() {
 
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Company Logo</h3>
-            <ImageUploader onChange={(url) => console.log(url)} />
+            <ImageUploader 
+              onChange={(url) => {
+                setLogo(url);
+              }} 
+              onFileChange={(file) => {
+                setLogoFile(file);
+              }}
+            />
+            {logo && typeof logo === 'string' && !logo.startsWith('blob:') && (
+              <div className="mt-4">
+                <p className="text-xs text-gray-500 mb-2">Current Logo:</p>
+                <img src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${getBackendBaseUrl()}/img/${logo}`} alt="Current Logo" className="w-20 h-20 object-contain bg-gray-50 border border-gray-100 rounded-xl" />
+              </div>
+            )}
             <p className="text-xs text-gray-400 mt-3 text-center">Click or drag to upload your company logo</p>
           </div>
         </div>
@@ -162,9 +246,13 @@ export default function CompanyProfileSection() {
             </div>
 
             <div className="mt-8">
-              <button className="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-primary-200">
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-primary-200"
+              >
                 <Save size={20} />
-                Save Profile Changes
+                {isSaving ? "Saving..." : "Save Profile Changes"}
               </button>
             </div>
           </div>

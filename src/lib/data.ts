@@ -183,8 +183,8 @@ export const specsData: Specification[] = [
   { id: 2, name: "Doors", key: "doors", options: ["4", "5", "2"], icon: "DoorOpen" },
   { id: 3, name: "Fuel", key: "fuel", options: ["Petrol", "Gas", "Electric", "Hybrid Petrol & Gas", "Hybrid Gas & Petrol"], icon: "Fuel" },
   { id: 4, name: "Number of seats", key: "seats", options: ["4", "5", "7"], icon: "Users" },
-  { id: 5, name: "Suitcase", key: "suitcase", options: ["Medium", "Small", "Large"], icon: "Luggage" },
-  { id: 6, name: "Transmission", key: "transmission", options: ["Automatic", "Manual"], icon: "Settings2" },
+  { id: 5, name: "Suitcase", key: "suitcase", options: ["large", "Medium", "Small"], icon: "Luggage" },
+  { id: 6, name: "Transmission", key: "transmission", options: ["Automatic Transmission", "Manual Transmission"], icon: "Settings2" },
 ];
 
 // ========== Memberships ==========

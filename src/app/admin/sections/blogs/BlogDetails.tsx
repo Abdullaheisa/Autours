@@ -97,7 +97,7 @@ export default function BlogDetails({ blog, onBack, onEdit }: BlogDetailsProps) 
               <Eye size={16} className="text-gray-400" />
               <div>
                 <p className="text-xs text-gray-500">Views</p>
-                <p className="text-sm font-medium text-gray-900">1,245</p>
+                <p className="text-sm font-medium text-gray-900">{blog.views?.toLocaleString() || '0'}</p>
               </div>
             </div>
           </div>
@@ -134,11 +134,15 @@ export default function BlogDetails({ blog, onBack, onEdit }: BlogDetailsProps) 
                 <Tag size={16} className="text-gray-400" /> Related Tags
               </h4>
               <div className="flex flex-wrap gap-2">
-                {["Car Rental", "UAE", "Dubai", "Travel Tips", "Savings"].map((tag) => (
-                  <span key={tag} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-medium rounded-lg cursor-pointer transition-colors">
-                    #{tag}
-                  </span>
-                ))}
+                {blog.tags ? (
+                  blog.tags.split(',').map((tag) => tag.trim()).filter(Boolean).map((tag) => (
+                    <span key={tag} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-medium rounded-lg cursor-pointer transition-colors">
+                      #{tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-gray-400">No tags added yet.</span>
+                )}
               </div>
             </div>
           </div>

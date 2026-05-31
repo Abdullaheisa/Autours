@@ -15,7 +15,7 @@
 
 import { cars } from '@/data/cars';
 import { SupplierComparison } from '@/data/supplierAnalytics';
-import { apiClient } from '@/services/api/apiClient';
+import { apiClient } from '@/services/api/axiosClient';
 
 // ── Environment ───────────────────────────────────────────────────────────────
 const USE_REAL_API = process.env.NEXT_PUBLIC_USE_REAL_API === 'true';

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
@@ -16,15 +17,15 @@ export default function Navbar() {
   const { isMobileMenuOpen } = useSelector((state: RootState) => state.ui);
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
-  // Guard against SSR/client hydration mismatch:
-  // Both server and first client render must agree on href="/login".
-  // After mount, the client updates to the correct role-based route.
+  // Guard against SSR/client hydration mismatch
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
   const getManageHref = () => {
     if (!mounted || !isAuthenticated) return '/login';
-    return user?.role === 'admin' ? '/admin' : '/company';
+    if (user?.role === 'admin') return '/admin';
+    if (user?.role === 'customer') return '/profile';
+    return '/company';
   };
 
   const menuVariants = {
@@ -51,10 +52,18 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-20">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center group transition-transform active:scale-95 shrink-0">
-            <img
+          <Link 
+            href="/" 
+            aria-label="Autours Homepage" // 🚀 حل مشكلة الـ Accessibility للرابط
+            className="flex items-center group transition-transform active:scale-95 shrink-0 focus:outline-none focus:ring-2 focus:ring-black rounded-lg"
+          >
+            {/* 🚀 استخدام next/image و priority للتحميل الفوري كأول عنصر */}
+            <Image
               src={assets.logo}
-              alt={siteConfig.name}
+              alt={`${siteConfig.name} Logo`}
+              width={180}
+              height={48}
+              priority
               className="h-12 sm:h-10 md:h-12 w-auto object-contain transition-all"
             />
           </Link>
@@ -71,9 +80,9 @@ export default function Navbar() {
               {/* Manage Booking Button */}
               <Link
                 href={getManageHref()}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-black"
               >
-                <LayoutDashboard size={14} />
+                <LayoutDashboard size={14} aria-hidden="true" />
                 <span>Manage Booking</span>
               </Link>
 
@@ -86,10 +95,12 @@ export default function Navbar() {
             {/* Mobile hamburger */}
             <button
               onClick={() => dispatch(toggleMobileMenu())}
-              className="lg:hidden p-2 bg-black/10 text-gray-900 rounded-xl transition-all active:scale-90"
+              aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} // 🚀 حل مشكلة الزرار المجهول للمكفوفين
+              aria-expanded={isMobileMenuOpen}
+              className="lg:hidden p-2 bg-black/10 text-gray-900 rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-black"
             >
               <motion.div animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}>
-                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                {isMobileMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
               </motion.div>
             </button>
           </div>
@@ -114,9 +125,9 @@ export default function Navbar() {
               <Link
                 href={getManageHref()}
                 onClick={() => dispatch(toggleMobileMenu())}
-                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-gray-900 bg-white border-2 border-white rounded-xl shadow-sm active:scale-95 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-gray-900 bg-white border-2 border-white rounded-xl shadow-sm active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-black"
               >
-                <LayoutDashboard size={16} />
+                <LayoutDashboard size={16} aria-hidden="true" />
                 Manage Booking
               </Link>
             </motion.div>

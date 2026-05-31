@@ -11,45 +11,114 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { 
   fetchCategories, 
-  saveLocalCategory, 
-  deleteLocalCategory 
+  createCategory,
+  updateCategory,
+  deleteCategory as deleteCategoryThunk
 } from "@/store/slices/categoriesSlice";
+import toast from "react-hot-toast";
+import { BACKEND_URL } from "@/config/api";
 
 export default function CategoriesSection() {
   const dispatch = useDispatch<AppDispatch>();
   const { items: categories, loading, error } = useSelector((state: RootState) => state.categories);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<any>({ name: "", active: true, image: null });
+  
+  const [currentCategory, setCurrentCategory] = useState<{
+    id?: number;
+    name: string;
+    active: boolean;
+    existingPhotoUrl: string; 
+    photoFile: File | null;   
+  }>({ 
+    name: "", 
+    active: true, 
+    existingPhotoUrl: "", 
+    photoFile: null 
+  });
+
+
 
   useEffect(() => {
-    if (categories.length === 0) dispatch(fetchCategories());
-  }, [dispatch, categories.length]);
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   const totalCategories = categories.length;
   const activeCategories = categories.filter(c => c.active).length;
   const totalVehicles = categories.reduce((sum, c) => sum + c.vehicles, 0);
 
   const handleEdit = (category: any) => {
-    setCurrentCategory(category);
-    setIsEditing(true);
+    const rawPhotoPath = category.photo || category.image || category.image_path || "";
+    const cleanName = rawPhotoPath.replace(/^img\/categories\//, '').replace(/^categories\//, '').replace(/^\//, '');
+    const fullPhotoUrl = rawPhotoPath.startsWith("http") 
+        ? rawPhotoPath 
+        : (rawPhotoPath ? `${BACKEND_URL}/img/categories/${cleanName}` : "");
+
+    setCurrentCategory({ 
+      id: category.id, 
+      name: category.name,
+      active: category.active !== undefined ? category.active : true,
+      existingPhotoUrl: fullPhotoUrl,
+      photoFile: null 
+    });
+    
+    setIsEditing(true); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this category?")) {
-      dispatch(deleteLocalCategory(id));
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium text-gray-800">Delete this category?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const result = await dispatch(deleteCategoryThunk(id));
+              if (deleteCategoryThunk.fulfilled.match(result)) {
+                toast.success("Category deleted successfully!");
+              } else {
+                toast.error("Failed to delete category.");
+              }
+            }}
+            className="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700"
+          >Delete</button>
+          <button onClick={() => toast.dismiss(t.id)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200">Cancel</button>
+        </div>
+      </div>
+    ), { duration: 6000 });
+  };
+
+  // خلينا نسخة واحدة بس نظيفة من الـ handleSubmit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const payloadData = {
+      name: currentCategory.name,
+      photoFile: currentCategory.photoFile 
+    };
+
+    if (isEditing && currentCategory.id) {
+      const result = await dispatch(updateCategory({ id: currentCategory.id, data: payloadData }));
+      if (updateCategory.fulfilled.match(result)) {
+        toast.success("Category updated successfully!");
+        resetForm();
+      } else {
+        toast.error("Failed to update category.");
+      }
+    } else {
+      const result = await dispatch(createCategory(payloadData));
+      if (createCategory.fulfilled.match(result)) {
+        toast.success("Category created successfully!");
+        resetForm();
+      } else {
+        toast.error("Failed to create category.");
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch(saveLocalCategory(currentCategory));
-    resetForm();
-  };
-
   const resetForm = () => {
-    setCurrentCategory({ name: "", active: true, image: null });
+    setCurrentCategory({ name: "", active: true, existingPhotoUrl: "", photoFile: null });
     setIsEditing(false);
   };
 
@@ -71,11 +140,17 @@ export default function CategoriesSection() {
           {isEditing ? "Edit Category" : "Add New Category"}
         </h3>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          <div className="md:col-span-1">
+<div className="md:col-span-1">
             <ImageUploader 
+              // 🔥 السطر السحري: لما بتدوس كنسل، الكي بيتغير فبيمسح الصورة من الذاكرة تماماً 🔥
+              key={isEditing ? `edit-${currentCategory.id}` : 'new-category'} 
+              
               label="Category Image"
-              value={currentCategory.image}
-              onChange={(val) => setCurrentCategory({ ...currentCategory, image: val })}
+              value={currentCategory.existingPhotoUrl || null}
+              onChange={(val) => {
+                if (!val) setCurrentCategory(prev => ({ ...prev, existingPhotoUrl: "", photoFile: null }));
+              }}
+              onFileChange={(file) => setCurrentCategory(prev => ({ ...prev, photoFile: file }))}
             />
           </div>
           <div className="md:col-span-1">

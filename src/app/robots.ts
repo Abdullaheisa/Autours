@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin/', '/company/', '/api/'],
+      disallow: ['/admin/', '/company/', '/api/', '/profile/'],
     },
     sitemap: 'https://autours.net/sitemap.xml',
   };

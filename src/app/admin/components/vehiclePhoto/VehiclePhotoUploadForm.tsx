@@ -1,17 +1,38 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, X, ImagePlus, Check } from "lucide-react";
+import { VehiclePhoto } from "@/lib/data";
+import { getVehicleImageUrl } from "@/utils/getImageUrl";
 
 interface VehiclePhotoUploadFormProps {
   onSubmit: (vehicleName: string, files: File[]) => void;
+  editingVehicle?: VehiclePhoto | null;
+  onCancelEdit?: () => void;
+  onUpdate?: (id: number, vehicleName: string, file: File | null) => void;
 }
 
-export default function VehiclePhotoUploadForm({ onSubmit }: VehiclePhotoUploadFormProps) {
+export default function VehiclePhotoUploadForm({
+  onSubmit,
+  editingVehicle,
+  onCancelEdit,
+  onUpdate,
+}: VehiclePhotoUploadFormProps) {
   const [vehicleName, setVehicleName] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync state when editingVehicle changes
+  useEffect(() => {
+    if (editingVehicle) {
+      setVehicleName(editingVehicle.name);
+      setFiles([]); // Clear newly uploaded files for edit mode
+    } else {
+      setVehicleName("");
+      setFiles([]);
+    }
+  }, [editingVehicle]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -34,9 +55,9 @@ export default function VehiclePhotoUploadForm({ onSubmit }: VehiclePhotoUploadF
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setFiles((prev) => [...prev, ...Array.from(files)]);
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      setFiles((prev) => [...prev, ...Array.from(selectedFiles)]);
     }
   };
 
@@ -45,18 +66,28 @@ export default function VehiclePhotoUploadForm({ onSubmit }: VehiclePhotoUploadF
   };
 
   const handleSubmit = () => {
-    if (vehicleName.trim() && files.length > 0) {
-      onSubmit(vehicleName, files);
-      setVehicleName("");
-      setFiles([]);
+    if (editingVehicle && onUpdate) {
+      if (vehicleName.trim()) {
+        onUpdate(editingVehicle.id, vehicleName.trim(), files[0] || null);
+      }
+    } else {
+      if (vehicleName.trim() && files.length > 0) {
+        onSubmit(vehicleName.trim(), files);
+      }
     }
   };
+
+  const isFormValid = editingVehicle 
+    ? vehicleName.trim() !== "" 
+    : (vehicleName.trim() !== "" && files.length > 0);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 lg:p-6">
       <div className="flex items-center gap-2 mb-5">
         <ImagePlus size={20} className="text-primary-600" />
-        <h3 className="text-base sm:text-lg font-bold text-gray-900">Upload Vehicle Photos</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-900">
+          {editingVehicle ? "Edit Vehicle Photo" : "Upload Vehicle Photos"}
+        </h3>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -72,18 +103,43 @@ export default function VehiclePhotoUploadForm({ onSubmit }: VehiclePhotoUploadF
           />
         </div>
 
-        {/* Submit Button */}
-        <div className="flex items-end">
+        {/* Action Buttons */}
+        <div className="flex items-end gap-3">
           <button
             onClick={handleSubmit}
-            disabled={!vehicleName.trim() || files.length === 0}
-            className="w-full sm:w-auto bg-primary-600 hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-primary-200 flex items-center justify-center gap-2"
+            disabled={!isFormValid}
+            className="flex-1 sm:flex-none bg-primary-600 hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-primary-200 flex items-center justify-center gap-2"
           >
             <Check size={16} />
-            Submit
+            {editingVehicle ? "Update" : "Submit"}
           </button>
+          
+          {editingVehicle && onCancelEdit && (
+            <button
+              onClick={onCancelEdit}
+              className="flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+            >
+              <X size={16} />
+              Cancel
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Edit Mode Existing Image Preview */}
+      {editingVehicle && !files.length && (
+        <div className="mt-4">
+          <p className="text-xs font-bold text-gray-400 uppercase mb-2">Current Photo</p>
+          <div className="w-28 h-20 rounded-lg overflow-hidden border border-gray-200">
+            <img 
+              src={getVehicleImageUrl(editingVehicle.image)} 
+              alt={editingVehicle.name} 
+              className="w-full h-full object-cover" 
+            />
+          </div>
+          <p className="text-[10px] text-gray-400 mt-1">Upload a new file below only if you want to replace it.</p>
+        </div>
+      )}
 
       {/* Drop Zone */}
       <div
@@ -101,16 +157,18 @@ export default function VehiclePhotoUploadForm({ onSubmit }: VehiclePhotoUploadF
         <input
           ref={inputRef}
           type="file"
-          multiple
           accept="image/*"
           onChange={handleFileChange}
           className="hidden"
+          multiple={!editingVehicle}
         />
         <Upload size={32} className={`mx-auto mb-3 transition-colors ${dragActive ? "text-primary-500" : "text-gray-300"}`} />
         <p className="text-sm font-medium text-gray-600">
-          Drop photos here or <span className="text-primary-600">click to browse</span>
+          {editingVehicle 
+            ? "Drop a new photo here or click to replace current" 
+            : "Drop photos here or click to browse"}
         </p>
-        <p className="text-xs text-gray-400 mt-1">Supports JPG, PNG, WebP (max 5MB each)</p>
+        <p className="text-xs text-gray-400 mt-1">Supports JPG, PNG, WebP (max 5MB)</p>
       </div>
 
       {/* File List */}

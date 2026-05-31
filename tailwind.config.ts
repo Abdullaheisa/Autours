@@ -22,13 +22,16 @@ const config: Config = {
         "secondary": "var(--secondary-color)",
       },
       fontFamily: {
-        sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
+        // 🚀 تم تغيير الخط الأساسي لـ Hubot Sans
+        sans: ["var(--font-hubot)", "system-ui", "sans-serif"],
         title: ["var(--title-font)", "Outfit", "system-ui", "sans-serif"],
-        body: ["var(--font-manrope)", "system-ui", "sans-serif"],
+        body: ["var(--font-hubot)", "system-ui", "sans-serif"],
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };
 
 export default config;

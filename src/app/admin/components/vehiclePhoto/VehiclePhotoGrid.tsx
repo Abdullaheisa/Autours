@@ -6,12 +6,13 @@ import { VehiclePhoto } from "@/lib/data";
 import VehiclePhotoCard from "./VehiclePhotoCard";
 import EmptyState from "@/components/ui/EmptyState";
 
-interface VehiclePhotoGridProps {
+export interface VehiclePhotoGridProps {
   vehicles: VehiclePhoto[];
   onDelete: (id: number) => void;
+  onEdit?: (vehicle: VehiclePhoto) => void;
 }
 
-export default function VehiclePhotoGrid({ vehicles, onDelete }: VehiclePhotoGridProps) {
+export default function VehiclePhotoGrid({ vehicles, onDelete, onEdit }: VehiclePhotoGridProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -138,6 +139,7 @@ export default function VehiclePhotoGrid({ vehicles, onDelete }: VehiclePhotoGri
               key={vehicle.id}
               vehicle={vehicle}
               onDelete={onDelete}
+              onEdit={onEdit}
             />
           ))}
         </div>

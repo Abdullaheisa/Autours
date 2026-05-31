@@ -30,6 +30,12 @@ export default function ProfitPercentageForm({ onSubmit }: ProfitPercentageFormP
 
   const handleSubmit = () => {
     onSubmit(percentages);
+    setPercentages({
+      days1_2: "",
+      days3_7: "",
+      days8_30: "",
+      weekend: "",
+    });
   };
 
   const fields = [

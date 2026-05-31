@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, Check, Save, ChevronLeft, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -16,6 +16,7 @@ export interface VehicleProfit {
   profit8_30: number;
   profitWeekend: number;
   isSaved: boolean;
+  hasMargin?: boolean;
 }
 
 interface VehicleProfitTableProps {
@@ -36,6 +37,15 @@ export default function VehicleProfitTable({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Refs for double scrollbar synchronization
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+
+  // Reset page when vehicles array changes
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [vehicles]);
+
   // Filter by search
   const filteredVehicles = useMemo(() => {
     if (!searchQuery) return vehicles;
@@ -55,6 +65,40 @@ export default function VehicleProfitTable({
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredVehicles.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredVehicles, currentPage]);
+
+  // Synchronize scrolling of top mirror scrollbar with main table scrollbar
+  useEffect(() => {
+    const topScroll = topScrollRef.current;
+    const tableScroll = tableScrollRef.current;
+    if (!topScroll || !tableScroll) return;
+
+    let isSyncingTop = false;
+    let isSyncingTable = false;
+
+    const handleTopScroll = () => {
+      if (!isSyncingTable) {
+        isSyncingTop = true;
+        tableScroll.scrollLeft = topScroll.scrollLeft;
+      }
+      isSyncingTable = false;
+    };
+
+    const handleTableScroll = () => {
+      if (!isSyncingTop) {
+        isSyncingTable = true;
+        topScroll.scrollLeft = tableScroll.scrollLeft;
+      }
+      isSyncingTop = false;
+    };
+
+    topScroll.addEventListener("scroll", handleTopScroll);
+    tableScroll.addEventListener("scroll", handleTableScroll);
+
+    return () => {
+      topScroll.removeEventListener("scroll", handleTopScroll);
+      tableScroll.removeEventListener("scroll", handleTableScroll);
+    };
+  }, [paginatedVehicles]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -109,7 +153,11 @@ export default function VehicleProfitTable({
         />
       ) : (
         <>
-          <div className="overflow-x-auto">
+          {/* Top Mirror Scrollbar */}
+          <div ref={topScrollRef} className="overflow-x-auto overflow-y-hidden border-b border-gray-100" style={{ height: '12px' }}>
+            <div style={{ width: '900px', height: '1px' }}></div>
+          </div>
+          <div ref={tableScrollRef} className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="bg-gray-50/50">
@@ -119,7 +167,7 @@ export default function VehicleProfitTable({
                   <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 hidden lg:table-cell">Branch</th>
                   <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 text-center">1-2 days</th>
                   <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 text-center">3-7 days</th>
-                  <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 text-center">4-30 days</th>
+                  <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 text-center">8-30 days</th>
                   <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 text-center">Weekend</th>
                   <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 sm:px-5 py-3 w-16 text-center">Status</th>
                 </tr>
@@ -130,7 +178,7 @@ export default function VehicleProfitTable({
                     <td className="px-4 sm:px-5 py-3">
                       <div className="w-20 h-14 rounded-lg overflow-hidden bg-gray-100">
                         <img
-                          src={vehicle.image}
+                          src={vehicle.image || undefined}
                           alt={vehicle.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           loading="lazy"
@@ -138,8 +186,17 @@ export default function VehicleProfitTable({
                       </div>
                     </td>
                     <td className="px-4 sm:px-5 py-3">
-                      <p className="text-sm font-semibold text-gray-900">{vehicle.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{vehicle.supplier}</p>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{vehicle.name}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{vehicle.supplier}</p>
+                        </div>
+                        {vehicle.hasMargin === false && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 animate-pulse shrink-0">
+                            New / No Margin
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 sm:px-5 py-3 hidden md:table-cell">
                       <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium">

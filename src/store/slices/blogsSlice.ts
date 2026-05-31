@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { blogApi } from "@/services/api";
+import { getBlogImageUrl } from "@/utils/getImageUrl";
 
 export type BlogStatus = "published" | "draft" | "scheduled";
 
@@ -19,7 +20,59 @@ export interface Blog {
   publishDate?: string;
   publishTime?: string;
   views?: number;
+  tags?: string;
 }
+
+const mapApiBlog = (raw: any): Blog => {
+  const created = raw.created_at ? new Date(raw.created_at) : new Date();
+  const imageRaw = raw.image || '';
+  const image = imageRaw ? getBlogImageUrl(imageRaw) : 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=250&fit=crop';
+  const author = raw.author || 'Unknown';
+
+  // Backend returns: { ..., blog_category_id: 1, category: { id: 1, name: "..." } }
+  const categoryName =
+    raw.category?.name ||
+    raw.category?.title ||
+    raw.blog_category?.name ||
+    raw.blog_category?.title ||
+    raw.category_name ||
+    (typeof raw.category === 'string' ? raw.category : null) ||
+    'Uncategorized';
+
+  let status: BlogStatus = 'draft';
+  if (raw.is_published) {
+    status = 'published';
+  } else {
+    const pubAt = raw.published_at || raw.publish_at || raw.scheduled_at;
+    if (pubAt) {
+      const pubDate = new Date(pubAt);
+      if (pubDate > new Date()) {
+        status = 'scheduled';
+      } else {
+        status = 'published'; // Time has passed!
+      }
+    }
+  }
+
+  return {
+    id: raw.id,
+    title: raw.title || '',
+    slug: raw.slug,
+    excerpt: raw.meta_description || raw.excerpt || '',
+    content: raw.content,
+    image,
+    author,
+    authorAvatar: author.charAt(0).toUpperCase(),
+    category: categoryName,
+    status,
+    date: created.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    time: created.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    publishDate: raw.published_at || raw.publish_at || raw.scheduled_at,
+    publishTime: raw.publish_time,
+    views: raw.views ?? 0,
+    tags: raw.tags || '',
+  };
+};
 
 interface BlogsState {
   items: Blog[];
@@ -39,23 +92,66 @@ const initialState: BlogsState = {
 
 export const fetchBlogs = createAsyncThunk("blogs/fetchAll", async (_, { rejectWithValue }) => {
   try {
-    return await blogApi.getAll() as Blog[];
+    const response: any = await blogApi.getAll();
+    // apiClient unwraps axios response.data, so response = { success, message, data: { data: [...], ... } }
+    const paginated = response?.data;
+    const list = Array.isArray(paginated?.data) ? paginated.data
+      : Array.isArray(paginated) ? paginated
+      : Array.isArray(response) ? response
+      : [];
+    return list.map(mapApiBlog);
   } catch (err: any) {
     return rejectWithValue(err.message);
   }
 });
 
-export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<Blog>, { rejectWithValue }) => {
+export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<Blog> & { imageFile?: File }, { rejectWithValue }) => {
   try {
-    return await blogApi.create(data) as Blog;
+    const payload = new FormData();
+    if (data.title) payload.append('title', data.title);
+    if (data.author) payload.append('author', data.author);
+    if (data.category) payload.append('blog_category_id', String(data.category));
+    payload.append('content', data.content || ' '); // content is required by backend
+    if (data.excerpt) payload.append('meta_description', data.excerpt);
+    payload.append('is_published', data.status === 'published' ? '1' : '0');
+    if (data.status === 'scheduled' && data.publishDate && data.publishTime) {
+      payload.append('published_at', `${data.publishDate} ${data.publishTime}`);
+    } else {
+      payload.append('published_at', '');
+    }
+    if (data.tags) payload.append('tags', data.tags);
+    if (data.imageFile) payload.append('image', data.imageFile);
+
+    const response: any = await blogApi.create(payload);
+    // response = { success, message, data: {...blog} }
+    return mapApiBlog(response?.data || response);
   } catch (err: any) {
     return rejectWithValue(err.message);
   }
 });
 
-export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: { id: number; data: Partial<Blog> }, { rejectWithValue }) => {
+export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: { id: number; data: Partial<Blog> & { imageFile?: File } }, { rejectWithValue }) => {
   try {
-    return await blogApi.update(id, data) as Blog;
+    const payload = new FormData();
+    payload.append('_method', 'PUT'); // Laravel requires this for FormData PUT requests
+    if (data.title) payload.append('title', data.title);
+    if (data.author) payload.append('author', data.author);
+    if (data.category) payload.append('blog_category_id', String(data.category));
+    if (data.content) payload.append('content', data.content);
+    if (data.excerpt) payload.append('meta_description', data.excerpt);
+    if (data.status) {
+      payload.append('is_published', data.status === 'published' ? '1' : '0');
+      if (data.status === 'scheduled' && data.publishDate && data.publishTime) {
+        payload.append('published_at', `${data.publishDate} ${data.publishTime}`);
+      } else {
+        payload.append('published_at', '');
+      }
+    }
+    if (data.tags !== undefined) payload.append('tags', data.tags);
+    if (data.imageFile) payload.append('image', data.imageFile);
+
+    const response: any = await blogApi.update(id, payload);
+    return mapApiBlog(response?.data || response);
   } catch (err: any) {
     return rejectWithValue(err.message);
   }

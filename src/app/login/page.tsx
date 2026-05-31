@@ -1,32 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loginThunk } from '@/store/slices/authSlice';
+import { getPostLoginPath } from '@/utils/auth';
 import { AppDispatch, RootState } from '@/store';
 import Link from 'next/link';
-import { Mail, Lock, Loader2, ArrowRight, Car } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, Car, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRegistered = searchParams.get('registered') === 'true';
   const { loading, error } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('rememberedEmail');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberMe(true);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await dispatch(loginThunk({ email, password }));
 
     if (loginThunk.fulfilled.match(result)) {
-      const user = result.payload.user;
-      if (user.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/company');
+      toast.success('Login successful!');
+      if (typeof window !== 'undefined') {
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
       }
+      router.push(getPostLoginPath(result.payload.user.role));
+    } else {
+      toast.error(result.payload as string || 'Login failed');
     }
   };
 
@@ -82,19 +103,31 @@ export default function LoginPage() {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 text-gray-900 text-sm font-bold rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
+                  className="block w-full pl-11 pr-12 py-4 bg-gray-50 border border-gray-100 text-gray-900 text-sm font-bold rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
             {error && (
               <div className="p-4 bg-red-50 rounded-xl border border-red-100">
                 <p className="text-xs text-red-600 font-bold text-center">{error}</p>
+              </div>
+            )}
+            {isRegistered && (
+              <div className="p-4 bg-green-50 rounded-xl border border-green-100">
+                <p className="text-xs text-green-600 font-bold text-center">Registration successful! Please login.</p>
               </div>
             )}
 
@@ -104,7 +137,9 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-xs font-bold text-gray-500">
                   Remember me

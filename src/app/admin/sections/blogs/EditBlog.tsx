@@ -3,15 +3,20 @@
 import { useState, useEffect } from "react";
 import { Save, Image as ImageIcon, ChevronDown, ArrowLeft, X, CalendarClock, Clock } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
-import { Blog, BlogStatus } from "@/hooks/useBlogs";
+import RichTextEditor from "@/components/shared/RichTextEditor";
+import { BlogCategory } from "@/store/slices/blogCategoriesSlice";
+import { Blog, BlogStatus } from "@/store/slices/blogsSlice";
+import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
+// 🎨 تعديل نوع Blog ليشمل imageFile
 interface EditBlogProps {
-  blog: Blog | null;
+  blog: (Blog & { imageFile?: File | null }) | null;
   onBack: () => void;
-  onSave: (data: Partial<Blog> & { id?: number }) => void;
+  onSave: (data: Partial<Blog> & { id?: number; imageFile?: File | null }) => void;
+  blogCategories: BlogCategory[];
 }
-
-const categories = ["Money Saving Tips", "Best Agencies", "Country Travel Guides"];
 
 const statusOptions: { value: BlogStatus; label: string; desc: string; color: string }[] = [
   { value: "published", label: "Published", desc: "Visible to everyone immediately", color: "emerald" },
@@ -19,19 +24,23 @@ const statusOptions: { value: BlogStatus; label: string; desc: string; color: st
   { value: "scheduled", label: "Scheduled", desc: "Publish at a specific date & time", color: "purple" },
 ];
 
-export default function EditBlog({ blog, onBack, onSave }: EditBlogProps) {
+export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditBlogProps) {
+  const { user } = useSelector((state: RootState) => state.auth);
   const isEditing = !!blog;
 
   const [title, setTitle] = useState(blog?.title || "");
   const [slug, setSlug] = useState("");
   const [author, setAuthor] = useState(blog?.author || "");
-  const [category, setCategory] = useState(blog?.category || "");
+  // Store category as ID (string) for submission - find matching ID if editing
+  const [category, setCategory] = useState<string>("");
   const [content, setContent] = useState(blog?.content || "");
   const [metaDescription, setMetaDescription] = useState(blog?.excerpt || "");
   const [status, setStatus] = useState<BlogStatus>(blog?.status || "published");
   const [publishDate, setPublishDate] = useState(blog?.publishDate || "");
   const [publishTime, setPublishTime] = useState(blog?.publishTime || "");
   const [previewImage, setPreviewImage] = useState<string | null>(blog?.image || null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [tags, setTags] = useState(blog?.tags || "");
   const [loading, setLoading] = useState(false);
 
   // Auto-generate slug from title
@@ -47,35 +56,54 @@ export default function EditBlog({ blog, onBack, onSave }: EditBlogProps) {
     }
   }, [status]);
 
+  // When editing, pre-select the category ID from the blog's category name
+  useEffect(() => {
+    if (blog?.category && blogCategories.length > 0 && !category) {
+      // blog.category is the name (from mapApiBlog), find the matching ID
+      const match = blogCategories.find(
+        (c) => c.name === blog.category || String(c.id) === String(blog.category)
+      );
+      if (match) setCategory(String(match.id));
+    }
+  }, [blog, blogCategories, category]);
+
+  // Pre-fill author when creating a new article and user name becomes available
+  useEffect(() => {
+    if (!blog && !author && user?.name) {
+      setAuthor(user.name);
+    }
+  }, [blog, user, author]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPreviewImage(reader.result as string);
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() || !author.trim() || !category) {
-      alert("Please fill in all required fields.");
+      toast.error("Please fill in all required fields (Title, Author, Category).");
       return;
     }
     if (status === "scheduled" && (!publishDate || !publishTime)) {
-      alert("Please set a publish date and time for scheduled posts.");
+      toast.error("Please set a publish date and time for scheduled posts.");
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      onSave({
-        ...(blog?.id ? { id: blog.id } : {}),
-        title, excerpt: metaDescription, content, author, category,
-        status, publishDate: status === "scheduled" ? publishDate : undefined,
-        publishTime: status === "scheduled" ? publishTime : undefined,
-        image: previewImage || undefined,
-      });
-      setLoading(false);
-      onBack();
-    }, 500);
+    await onSave({
+      ...(blog?.id ? { id: blog.id } : {}),
+      title, excerpt: metaDescription, content, author,
+      category, // this is the category ID
+      status, publishDate: status === "scheduled" ? publishDate : undefined,
+      publishTime: status === "scheduled" ? publishTime : undefined,
+      imageFile: imageFile || undefined,
+      tags,
+    });
+    setLoading(false);
+    onBack();
   };
 
   return (
@@ -137,7 +165,7 @@ export default function EditBlog({ blog, onBack, onSave }: EditBlogProps) {
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer bg-white transition-all"
                   >
                     <option value="">Select a category</option>
-                    {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {blogCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                 </div>
@@ -147,27 +175,37 @@ export default function EditBlog({ blog, onBack, onSave }: EditBlogProps) {
             {/* Content Editor */}
             <div>
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Content <span className="text-red-500">*</span></label>
-              <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200 flex-wrap">
-                  <select className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 cursor-pointer font-medium">
-                    <option>Paragraph</option><option>Heading 1</option><option>Heading 2</option>
-                  </select>
-                  <div className="w-px h-5 bg-gray-300" />
-                  <div className="flex items-center gap-1">
-                    {["B", "I", "U"].map((f) => (
-                      <button key={f} className={`p-2 hover:bg-gray-200 rounded-lg text-gray-600 text-xs transition-colors font-${f === "B" ? "bold" : f === "I" ? "medium italic" : "normal underline"}`}>{f}</button>
-                    ))}
-                  </div>
-                  <div className="w-px h-5 bg-gray-300" />
-                  <button className="p-2 hover:bg-gray-200 rounded-lg text-xs transition-colors">🔗</button>
-                  <button className="p-2 hover:bg-gray-200 rounded-lg text-xs transition-colors">🖼️</button>
+              <RichTextEditor
+                value={content}
+                onChange={setContent}
+                placeholder="Write your article content here..."
+                minHeight={280}
+              />
+            </div>
+
+            {/* Dynamic Tags Input */}
+            <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-3">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
+                Related Tags (separated by commas)
+              </label>
+              <input
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white"
+                placeholder="e.g. Car Rental, UAE, Dubai, Travel Tips"
+              />
+              <p className="text-[10px] text-gray-400 font-medium">
+                Type tags separated by commas. These tags help improve search engine visibility (SEO) on the public blog page.
+              </p>
+              {tags.trim() && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {tags.split(',').map((t) => t.trim()).filter(Boolean).map((t, idx) => (
+                    <span key={idx} className="px-2.5 py-1 bg-primary-100 text-primary-800 text-xs font-bold rounded-lg border border-primary-200 shadow-sm animate-fade-in transition-all">
+                      #{t}
+                    </span>
+                  ))}
                 </div>
-                <textarea
-                  value={content} onChange={(e) => setContent(e.target.value)}
-                  className="w-full px-5 py-4 text-sm text-gray-900 focus:outline-none resize-none min-h-[280px]"
-                  placeholder="Write your article content here..."
-                />
-              </div>
+              )}
             </div>
           </div>
 

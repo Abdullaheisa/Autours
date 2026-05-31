@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar, Header } from "@/app/admin/components";
 import { DashboardOverviewPage, CompaniesPage, BlogsPage, BookingsCalendarPage, SupplierIntelligencePage } from "@/app/admin/pages";
 import { features } from "@/config/features";
@@ -22,6 +22,7 @@ import SubscribersSection from "@/app/admin/sections/subscribers/SubscribersSect
 import ContestPopupControlPage from "@/app/admin/sections/contest-control/ContestPopupControlPage";
 import BackgroundSettingsSection from "@/app/admin/sections/background-settings/BackgroundSettingsSection";
 import LogoutSection from "@/app/admin/sections/logout/LogoutSection";
+import NotificationsSection from "@/app/admin/sections/notifications/NotificationsSection";
 import { sidebarItems } from "@/lib/data";
 
 const pageTitles: Record<string, string> = {
@@ -46,6 +47,7 @@ const pageTitles: Record<string, string> = {
   "contest-popup": "Contest Campaign Control",
   background: "Background Settings",
   logout: "Sign Out",
+  notifications: "Notifications Workspace",
 };
 
 /**
@@ -61,6 +63,29 @@ const sidebarFeatureMap: Record<string, keyof typeof features> = {
 export default function AdminDashboard() {
   const [activeItem, setActiveItem] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab && pageTitles[tab]) {
+        setActiveItem(tab);
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const tabId = (e as CustomEvent).detail;
+      if (tabId && pageTitles[tabId]) {
+        setActiveItem(tabId);
+      }
+    };
+    window.addEventListener("switch-dashboard-tab", handleSwitchTab);
+    return () => window.removeEventListener("switch-dashboard-tab", handleSwitchTab);
+  }, []);
 
   // 🚩 Filter sidebar items: hide any item whose feature flag is disabled
   const visibleSidebarItems = sidebarItems.filter((item) => {
@@ -89,6 +114,7 @@ export default function AdminDashboard() {
       case "contest-popup": return <ContestPopupControlPage />;
       case "background":  return <BackgroundSettingsSection />;
       case "logout":      return <LogoutSection />;
+      case "notifications": return <NotificationsSection />;
 
       // 🚩 Feature-flagged modules — fall back to dashboard if disabled
       case "supplier-intelligence":

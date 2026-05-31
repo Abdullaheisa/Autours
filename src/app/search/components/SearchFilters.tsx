@@ -8,12 +8,10 @@ import { RootState, AppDispatch } from '@/store';
 import {
   setFilterParams,
   toggleFilterParam,
-  resetFilters,
-  fetchVehicles
+  resetFilters
 } from '@/store/slices/searchSlice';
 import { filterOptions } from '@/data/filterOptions';
 import { formatPrice } from '@/utils/currency';
-import type { Currency } from '@/types';
 
 interface SearchFiltersProps {
   onFilterChange?: () => void;
@@ -22,10 +20,16 @@ interface SearchFiltersProps {
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { filterParams, minPrice, maxPrice, searchParams, filteredSuppliers, filteredCategories } = useSelector((state: RootState) => state.search);
-  const { code: currencyCode, rate: currencyRate } = useSelector((state: RootState) => state.currency);
+  const { filterParams, minPrice, maxPrice, filteredSuppliers } = useSelector((state: RootState) => state.search);
+  const { code: currencyCode } = useSelector((state: RootState) => state.currency);
 
-  // Trigger API fetch when filters change (skip first run to avoid double-fetch on mount)
+  // 🔥 حارس الـ Hydration لمنع تعارض النصوص بين السيرفر والمتصفح
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // مراقبة الفلاتر لإطلاق دالة التحديث عند أي تغيير
   const isInitialMount = useRef(true);
   useEffect(() => {
     if (isInitialMount.current) {
@@ -40,6 +44,8 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
     dispatch(resetFilters());
   };
 
+  const displayCurrency = isMounted ? currencyCode : 'AED';
+
   return (
     <>
       {/* Desktop/Tablet Sidebar - visible on md and above */}
@@ -48,9 +54,8 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           filterParams={filterParams}
           minPrice={minPrice}
           maxPrice={maxPrice}
-          currencyCode={currencyCode}
+          currencyCode={displayCurrency}
           filteredSuppliers={filteredSuppliers}
-          filteredCategories={filteredCategories}
           onClearAll={handleClearAll}
         />
       </div>
@@ -116,9 +121,8 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
                     filterParams={filterParams}
                     minPrice={minPrice}
                     maxPrice={maxPrice}
-                    currencyCode={currencyCode}
+                    currencyCode={displayCurrency}
                     filteredSuppliers={filteredSuppliers}
-                    filteredCategories={filteredCategories}
                     onClearAll={handleClearAll}
                   />
                 </div>
@@ -141,14 +145,13 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   );
 }
 
-// Filters Content - reused for both desktop and mobile
+// Content component - reused for both desktop and mobile layouts
 function FiltersContent({
   filterParams,
   minPrice,
   maxPrice,
   currencyCode,
   filteredSuppliers,
-  filteredCategories,
   onClearAll
 }: any) {
   const dispatch = useDispatch<AppDispatch>();
@@ -163,7 +166,7 @@ function FiltersContent({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="bg-yellow-50 px-5 py-3.5 border-b border-yellow-100 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={14} className="text-yellow-700" />
@@ -178,7 +181,7 @@ function FiltersContent({
       </div>
 
       <div className="divide-y divide-gray-100">
-        {/* Price Range - Simple & Clean */}
+        {/* 1. Price Range Slider */}
         <FilterSection title="Price Range" expanded>
           <div className="pt-2 pb-5 px-1">
             <SimplePriceRange
@@ -194,7 +197,7 @@ function FiltersContent({
           </div>
         </FilterSection>
 
-        {/* Location Types */}
+        {/* 2. Location Types */}
         <FilterSection title="Location Types" expanded>
           {filterOptions.locationTypes.map(opt => (
             <FilterOption
@@ -206,104 +209,29 @@ function FiltersContent({
           ))}
         </FilterSection>
 
-        {/* Categories */}
-        <FilterSection title="Categories" expanded>
-          {filteredCategories && filteredCategories.length > 0
-            ? filteredCategories.map((cat: any) => (
-              <FilterOption
-                key={cat.id}
-                label={`${cat.name} (${cat.vehicle_count})`}
-                checked={isChecked('category', String(cat.id))}
-                onToggle={() => handleToggle('category', String(cat.id))}
-              />
-            ))
-            : <div className="text-xs text-gray-500 px-2 py-1">No categories available</div>
-          }
-        </FilterSection>
-
-        {/* Suppliers */}
-        <FilterSection title="Suppliers">
+        {/* 3. Car Suppliers */}
+        <FilterSection title="Suppliers" expanded>
           {filteredSuppliers && filteredSuppliers.length > 0
             ? filteredSuppliers.map((sup: any) => (
-              <FilterOption
-                key={sup.id}
-                label={`${sup.name} (${sup.vehicle_count})`}
-                checked={isChecked('supplier', String(sup.id))}
-                onToggle={() => handleToggle('supplier', String(sup.id))}
-              />
-            ))
+                <FilterOption
+                  key={sup.id}
+                  label={`${sup.name} (${sup.vehicle_count})`}
+                  checked={isChecked('supplier', String(sup.id))}
+                  onToggle={() => handleToggle('supplier', String(sup.id))}
+                />
+              ))
             : filterOptions.suppliers.map(opt => (
-              <FilterOption
-                key={opt.value}
-                label={opt.label}
-                checked={isChecked('supplier', opt.value)}
-                onToggle={() => handleToggle('supplier', opt.value)}
-              />
-            ))
+                <FilterOption
+                  key={opt.value}
+                  label={opt.label}
+                  checked={isChecked('supplier', opt.value)}
+                  onToggle={() => handleToggle('supplier', opt.value)}
+                />
+              ))
           }
         </FilterSection>
 
-        {/* Payment Types */}
-        <FilterSection title="Payment Types">
-          {filterOptions.paymentTypes.map(opt => (
-            <FilterOption
-              key={opt.value}
-              label={opt.label}
-              checked={isChecked('paymentType', opt.value)}
-              onToggle={() => handleToggle('paymentType', opt.value)}
-            />
-          ))}
-        </FilterSection>
-
-        {/* Number of seats */}
-        <FilterSection title="Number of seats">
-          {filterOptions.seats.map(opt => (
-            <FilterOption
-              key={opt.value}
-              label={opt.label}
-              checked={isChecked('seats', opt.value)}
-              onToggle={() => handleToggle('seats', opt.value)}
-            />
-          ))}
-        </FilterSection>
-
-        {/* Fuel */}
-        <FilterSection title="Fuel">
-          {filterOptions.fuel.map(opt => (
-            <FilterOption
-              key={opt.value}
-              label={opt.label}
-              checked={isChecked('fuelType', opt.value)}
-              onToggle={() => handleToggle('fuelType', opt.value)}
-            />
-          ))}
-        </FilterSection>
-
-        {/* Suitcase */}
-        <FilterSection title="Suitcase">
-          {filterOptions.suitcases.map(opt => (
-            <FilterOption
-              key={opt.value}
-              label={opt.label}
-              checked={isChecked('suitcases', opt.value)}
-              onToggle={() => handleToggle('suitcases', opt.value)}
-            />
-          ))}
-        </FilterSection>
-
-        {/* Air Conditioner */}
-        <FilterSection title="Air Conditioner">
-          {filterOptions.airConditioning.map(opt => (
-            <FilterOption
-              key={opt.value}
-              label={opt.label}
-              checked={filterParams.airConditioning === opt.value}
-              onToggle={() => dispatch(setFilterParams({ airConditioning: filterParams.airConditioning === opt.value ? null : opt.value }))}
-            />
-          ))}
-        </FilterSection>
-
-        {/* Transmission */}
+        {/* 4. Transmission Filter */}
         <FilterSection title="Transmission">
           {filterOptions.transmission.map(opt => (
             <FilterOption
@@ -315,7 +243,67 @@ function FiltersContent({
           ))}
         </FilterSection>
 
-        {/* Doors */}
+        {/* 5. Fuel Type Filter */}
+        <FilterSection title="Fuel">
+          {filterOptions.fuel.map(opt => (
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
+              checked={isChecked('fuelType', opt.value)}
+              onToggle={() => handleToggle('fuelType', opt.value)}
+            />
+          ))}
+        </FilterSection>
+
+        {/* 6. Air Conditioner */}
+        <FilterSection title="Air Conditioner">
+          {filterOptions.airConditioning.map(opt => (
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
+              checked={filterParams.airConditioning === opt.value}
+              onToggle={() => dispatch(setFilterParams({ airConditioning: filterParams.airConditioning === opt.value ? null : opt.value }))}
+            />
+          ))}
+        </FilterSection>
+
+        {/* 7. Number of seats */}
+        <FilterSection title="Number of seats">
+          {filterOptions.seats.map(opt => (
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
+              checked={isChecked('seats', opt.value)}
+              onToggle={() => handleToggle('seats', opt.value)}
+            />
+          ))}
+        </FilterSection>
+
+        {/* 8. Suitcases */}
+        <FilterSection title="Suitcases">
+          {filterOptions.suitcases.map(opt => (
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
+              checked={isChecked('suitcases', opt.value)}
+              onToggle={() => handleToggle('suitcases', opt.value)}
+            />
+          ))}
+        </FilterSection>
+
+        {/* 9. Payment Types */}
+        <FilterSection title="Payment Types">
+          {filterOptions.paymentTypes.map(opt => (
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
+              checked={isChecked('paymentType', opt.value)}
+              onToggle={() => handleToggle('paymentType', opt.value)}
+            />
+          ))}
+        </FilterSection>
+
+        {/* 10. Doors Filter */}
         <FilterSection title="Doors">
           {filterOptions.doors.map(opt => (
             <FilterOption
@@ -332,7 +320,7 @@ function FiltersContent({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SIMPLE & CLEAN PRICE RANGE SLIDER
+// PRICE RANGE SLIDER COMPONENT
 // ═══════════════════════════════════════════════════════════════
 function SimplePriceRange({
   minPrice,
@@ -341,14 +329,7 @@ function SimplePriceRange({
   currentMax,
   currencyCode,
   onChange
-}: {
-  minPrice: number;
-  maxPrice: number;
-  currentMin: number;
-  currentMax: number;
-  currencyCode: Currency;
-  onChange: (min: number, max: number) => void;
-}) {
+}: any) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
@@ -371,10 +352,8 @@ function SimplePriceRange({
 
   useEffect(() => {
     if (!dragging) return;
-
     const handleMouseMove = (e: MouseEvent) => {
       const newValue = getValueFromPosition(e.clientX);
-
       if (dragging === 'min') {
         const clampedMin = Math.max(minPrice, Math.min(newValue, currentMax - 10));
         onChange(clampedMin, currentMax);
@@ -383,28 +362,22 @@ function SimplePriceRange({
         onChange(currentMin, clampedMax);
       }
     };
-
-    const handleMouseUp = () => {
-      setDragging(null);
-    };
+    const handleMouseUp = () => setDragging(null);
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [dragging, currentMin, currentMax, minPrice, maxPrice, onChange, getValueFromPosition]);
 
-  // Touch support
+  // Touch Support for Mobile
   useEffect(() => {
     if (!dragging) return;
-
     const handleTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0];
       const newValue = getValueFromPosition(touch.clientX);
-
       if (dragging === 'min') {
         const clampedMin = Math.max(minPrice, Math.min(newValue, currentMax - 10));
         onChange(clampedMin, currentMax);
@@ -413,14 +386,10 @@ function SimplePriceRange({
         onChange(currentMin, clampedMax);
       }
     };
-
-    const handleTouchEnd = () => {
-      setDragging(null);
-    };
+    const handleTouchEnd = () => setDragging(null);
 
     document.addEventListener('touchmove', handleTouchMove);
     document.addEventListener('touchend', handleTouchEnd);
-
     return () => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
@@ -429,96 +398,37 @@ function SimplePriceRange({
 
   return (
     <div className="relative px-2 pt-8 pb-2 select-none">
-      {/* Floating Price Labels - Small & Clean */}
+      {/* Floating Price Labels */}
       <div className="relative h-7 mb-1">
-        {/* Min Label */}
-        <div
-          className="absolute top-0 -translate-x-1/2 z-10"
-          style={{ left: `${minPct}%` }}
-        >
-          <div className={`
-            px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm
-            transition-colors duration-150
-            ${dragging === 'min' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border border-gray-200'}
-          `}>
+        <div className="absolute top-0 -translate-x-1/2 z-10" style={{ left: `${minPct}%` }}>
+          <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm border transition-colors ${dragging === 'min' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200'}`}>
             {formatPrice(currentMin, currencyCode)}
           </div>
         </div>
-
-        {/* Max Label */}
-        <div
-          className="absolute top-0 -translate-x-1/2 z-10"
-          style={{ left: `${maxPct}%` }}
-        >
-          <div className={`
-            px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm
-            transition-colors duration-150
-            ${dragging === 'max' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border border-gray-200'}
-          `}>
+        <div className="absolute top-0 -translate-x-1/2 z-10" style={{ left: `${maxPct}%` }}>
+          <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm border transition-colors ${dragging === 'max' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200'}`}>
             {formatPrice(currentMax, currencyCode)}
           </div>
         </div>
       </div>
 
       {/* Track */}
-      <div
-        ref={trackRef}
-        className="relative h-10 flex items-center cursor-pointer"
-      >
-        {/* Background Track */}
+      <div ref={trackRef} className="relative h-10 flex items-center cursor-pointer">
         <div className="absolute inset-x-0 h-1.5 bg-gray-200 rounded-full">
-          {/* Active Track */}
-          <div
-            className="absolute h-full rounded-full bg-primary"
-            style={{
-              left: `${minPct}%`,
-              width: `${maxPct - minPct}%`,
-            }}
-          />
+          <div className="absolute h-full rounded-full bg-primary" style={{ left: `${minPct}%`, width: `${maxPct - minPct}%` }} />
         </div>
 
         {/* Min Thumb */}
-        <div
-          className="absolute w-5 h-5 -ml-2.5 cursor-grab active:cursor-grabbing z-20"
-          style={{ left: `${minPct}%` }}
-          onMouseDown={handleMouseDown('min')}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            setDragging('min');
-          }}
-        >
-          <div className={`
-            w-full h-full rounded-full border-2 shadow-md
-            transition-all duration-150
-            ${dragging === 'min'
-              ? 'bg-primary border-primary scale-110'
-              : 'bg-white border-gray-300 hover:border-primary'
-            }
-          `} />
+        <div className="absolute w-5 h-5 -ml-2.5 cursor-grab active:cursor-grabbing z-20" style={{ left: `${minPct}%` }} onMouseDown={handleMouseDown('min')} onTouchStart={(e) => { e.preventDefault(); setDragging('min'); }}>
+          <div className={`w-full h-full rounded-full border-2 shadow-md transition-all ${dragging === 'min' ? 'bg-primary border-primary scale-110' : 'bg-white border-gray-300 hover:border-primary'}`} />
         </div>
 
         {/* Max Thumb */}
-        <div
-          className="absolute w-5 h-5 -ml-2.5 cursor-grab active:cursor-grabbing z-20"
-          style={{ left: `${maxPct}%` }}
-          onMouseDown={handleMouseDown('max')}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            setDragging('max');
-          }}
-        >
-          <div className={`
-            w-full h-full rounded-full border-2 shadow-md
-            transition-all duration-150
-            ${dragging === 'max'
-              ? 'bg-primary border-primary scale-110'
-              : 'bg-white border-gray-300 hover:border-primary'
-            }
-          `} />
+        <div className="absolute w-5 h-5 -ml-2.5 cursor-grab active:cursor-grabbing z-20" style={{ left: `${maxPct}%` }} onMouseDown={handleMouseDown('max')} onTouchStart={(e) => { e.preventDefault(); setDragging('max'); }}>
+          <div className={`w-full h-full rounded-full border-2 shadow-md transition-all ${dragging === 'max' ? 'bg-primary border-primary scale-110' : 'bg-white border-gray-300 hover:border-primary'}`} />
         </div>
       </div>
 
-      {/* Min/Max Labels */}
       <div className="flex justify-between mt-1 px-1">
         <span className="text-[11px] text-gray-400">{formatPrice(minPrice, currencyCode)}</span>
         <span className="text-[11px] text-gray-400">{formatPrice(maxPrice, currencyCode)}</span>
@@ -527,28 +437,18 @@ function SimplePriceRange({
   );
 }
 
-// Accordion section with animation
+// Accordion Component with Smooth Animation
 function FilterSection({ title, children, badge, expanded = false }: any) {
   const [isOpen, setIsOpen] = useState(expanded);
   return (
     <div className="px-4 py-3.5 hover:bg-gray-50/50 transition-colors">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between group"
-      >
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between group">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-gray-800 group-hover:text-primary transition-colors">{title}</span>
-          {badge && (
-            <span className="bg-primary/10 text-primary-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
-              {badge}
-            </span>
-          )}
+          <span className="text-[13px] font-bold text-gray-800 group-hover:text-yellow-600 transition-colors">{title}</span>
+          {badge && <span className="bg-primary/10 text-primary-700 text-[9px] font-bold px-2 py-0.5 rounded-full">{badge}</span>}
         </div>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-        >
-          <ChevronDown size={16} className={`text-gray-400 transition-colors ${isOpen ? 'text-primary' : ''}`} />
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={16} className={`text-gray-400 ${isOpen ? 'text-yellow-500' : ''}`} />
         </motion.div>
       </button>
 
@@ -558,12 +458,10 @@ function FilterSection({ title, children, badge, expanded = false }: any) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="pt-3 space-y-1.5">
-              {children}
-            </div>
+            <div className="pt-3 space-y-1.5">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -571,7 +469,7 @@ function FilterSection({ title, children, badge, expanded = false }: any) {
   );
 }
 
-// Animated checkbox
+// Checkbox Option with Micro-Animations
 function FilterOption({ label, checked, onToggle }: { label: string; checked: boolean; onToggle: () => void }) {
   return (
     <label
@@ -582,48 +480,23 @@ function FilterOption({ label, checked, onToggle }: { label: string; checked: bo
       }}
     >
       <span className="text-[13px] font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{label}</span>
-
       <div className="relative w-5 h-5">
-        {/* Background/unchecked state */}
         <motion.div
-          className="absolute inset-0 rounded-md border-2 border-gray-200 bg-white"
+          className="absolute inset-0 rounded-md border-2 bg-white"
           animate={{
             borderColor: checked ? "#f4d849" : "#E5E7EB",
             backgroundColor: checked ? "#f4d849" : "#FFFFFF",
           }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
         />
-
-        {/* Check mark with animation */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center"
           initial={false}
-          animate={{
-            scale: checked ? 1 : 0,
-            opacity: checked ? 1 : 0,
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 30,
-            duration: 0.2
-          }}
+          animate={{ scale: checked ? 1 : 0, opacity: checked ? 1 : 0 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
         >
           <Check size={12} className="text-gray-900" strokeWidth={3} />
         </motion.div>
-
-        {/* Ripple effect on click */}
-        <AnimatePresence>
-          {checked && (
-            <motion.div
-              className="absolute inset-0 rounded-md bg-primary/30"
-              initial={{ scale: 0, opacity: 1 }}
-              animate={{ scale: 2, opacity: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-            />
-          )}
-        </AnimatePresence>
       </div>
     </label>
   );

@@ -6,8 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
 import { loginThunk, clearError } from '@/store/slices/authSlice';
 import { features } from '@/config/features';
-import { Mail, Lock, AlertCircle, RefreshCw, KeyRound, X, UserPlus } from 'lucide-react';
+import { Mail, Lock, AlertCircle, RefreshCw, KeyRound, X, UserPlus, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function GlobalLoginGate() {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,6 +17,7 @@ export default function GlobalLoginGate() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   // `dismissed` resets on every page load (component state, NOT localStorage)
   // so the popup re-appears on every refresh of the homepage.
   const [dismissed, setDismissed] = useState(false);
@@ -28,10 +30,10 @@ export default function GlobalLoginGate() {
   useEffect(() => {
     const shouldLock = mounted && shouldShow;
     document.body.style.overflow = shouldLock ? 'hidden' : '';
-    document.body.style.height  = shouldLock ? '100vh'  : '';
+    document.body.style.height = shouldLock ? '100vh' : '';
     return () => {
       document.body.style.overflow = '';
-      document.body.style.height   = '';
+      document.body.style.height = '';
     };
   });
 
@@ -39,20 +41,30 @@ export default function GlobalLoginGate() {
     e.preventDefault();
     if (!email || !password) return;
     dispatch(loginThunk({ email, password })).then((result: any) => {
-      if (result.meta.requestStatus === 'fulfilled') setDismissed(true);
+      if (result.meta.requestStatus === 'fulfilled') {
+        toast.success('Login successful!');
+        setDismissed(true);
+      } else {
+        toast.error(result.payload as string || 'Login failed');
+      }
     });
   };
 
   const handleQuickLogin = (role: 'admin' | 'supplier') => {
     dispatch(clearError());
     const credentials = {
-      email:    role === 'admin' ? 'admin@autours.net' : 'supplier@autours.net',
+      email: role === 'admin' ? 'admin@autours.net' : 'supplier@autours.net',
       password: 'password',
     };
     setEmail(credentials.email);
     setPassword(credentials.password);
     dispatch(loginThunk(credentials)).then((result: any) => {
-      if (result.meta.requestStatus === 'fulfilled') setDismissed(true);
+      if (result.meta.requestStatus === 'fulfilled') {
+        toast.success('Login successful!');
+        setDismissed(true);
+      } else {
+        toast.error(result.payload as string || 'Login failed');
+      }
     });
   };
 
@@ -126,11 +138,18 @@ export default function GlobalLoginGate() {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={17} />
               <input
-                type="password" required value={password}
+                type={showPassword ? "text" : "password"} required value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-medium text-gray-800"
+                className="w-full pl-11 pr-12 py-3 text-sm border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-medium text-gray-800"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
           </div>
 

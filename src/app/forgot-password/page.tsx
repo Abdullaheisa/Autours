@@ -6,6 +6,7 @@ import { resetPasswordThunk } from '@/store/slices/authSlice';
 import { RootState, AppDispatch } from '@/store';
 import Link from 'next/link';
 import { Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 
@@ -18,9 +19,14 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await dispatch(resetPasswordThunk(email));
+    const result = await dispatch(resetPasswordThunk(email));
     setLoading(false);
-    setIsSent(true);
+    
+    if (resetPasswordThunk.fulfilled.match(result)) {
+      setIsSent(true);
+    } else {
+      toast.error(result.payload as string || 'Failed to send reset email');
+    }
   };
 
   return (
@@ -29,7 +35,7 @@ export default function ForgotPasswordPage() {
       <main className="flex-1 flex items-center justify-center p-4 py-20">
         <div className="w-full max-w-md bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-8 sm:p-12 overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-          
+
           <Link href="/login" className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-primary mb-8 transition-colors">
             <ArrowLeft size={14} /> Back to Login
           </Link>
@@ -48,8 +54,8 @@ export default function ForgotPasswordPage() {
                     <div className="absolute inset-y-0 left-4 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
                       <Mail size={18} />
                     </div>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -59,7 +65,7 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full h-14 bg-primary hover:bg-primary-hover text-gray-900 font-black rounded-2xl transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
@@ -77,7 +83,7 @@ export default function ForgotPasswordPage() {
               <p className="text-sm font-bold text-gray-500 leading-relaxed mb-8">
                 If an account exists for <span className="text-gray-900">{email}</span>, you will receive password reset instructions shortly.
               </p>
-              <button 
+              <button
                 onClick={() => setIsSent(false)}
                 className="text-sm font-black text-primary hover:underline"
               >

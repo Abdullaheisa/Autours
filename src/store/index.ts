@@ -13,6 +13,7 @@ import searchReducer from "./slices/searchSlice";
 import dashboardReducer from "./slices/dashboardSlice";
 import supplierAnalyticsReducer from "./slices/supplierAnalyticsSlice";
 import contestReducer from "./slices/contestSlice";
+import blogCategoriesReducer from "./slices/blogCategoriesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +31,7 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     supplierAnalytics: supplierAnalyticsReducer,
     contest: contestReducer,
+    blogCategories: blogCategoriesReducer,
   },
 });
 

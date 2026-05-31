@@ -1,9 +1,12 @@
 "use client";
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { monthlyBookings } from "@/lib/data";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function MonthlyBookingsChart() {
+  const { rawData } = useSelector((state: RootState) => state.dashboard);
+  const data = rawData?.monthlyBookings || [];
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
@@ -15,7 +18,7 @@ export default function MonthlyBookingsChart() {
       </div>
       <div className="h-[250px] sm:h-[300px] lg:h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={monthlyBookings} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>
               <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>

@@ -7,11 +7,12 @@ import SectionLayout from "@/components/shared/SectionLayout";
 import StatsCard from "@/components/ui/StatsCard";
 import FilterBar from "@/components/shared/FilterBar";
 import EmptyState from "@/components/ui/EmptyState";
+import Pagination from "@/components/ui/Pagination";
 import CompanyDetails from "./CompanyDetails";
 import CompanyCard from "./CompanyCard";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "@/store";
-import { fetchCompanies, setSelected as setSelectedCompanyAction } from "@/store/slices/companiesSlice";
+import { companyApi } from "@/services/api";
+import { getLogoUrl } from "@/utils/getImageUrl";
+import toast from "react-hot-toast";
 
 const countries = ["All", "Jordan", "Kuwait", "Morocco", "United Arab Emirates", "Saudi Arabia", "Egypt", "Qatar"];
 const statuses = ["All", "active", "pending", "suspended"];
@@ -29,18 +30,62 @@ const statusDotMap: Record<string, string> = {
 };
 
 export default function CompaniesSection() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { items: companiesData, selected: selectedCompany, loading, error } = useSelector((state: RootState) => state.companies);
+  const [companiesData, setCompaniesData] = useState<any[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
-    if (companiesData.length === 0) dispatch(fetchCompanies());
-  }, [dispatch, companiesData.length]);
+    fetchData();
+  }, []);
 
-  const setSelectedCompany = (company: any) => dispatch(setSelectedCompanyAction(company));
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res: any = await companyApi.getAll();
+      const rawData = Array.isArray(res) ? res : (res?.data || []);
+      
+      const mapped = rawData.map((user: any) => {
+        const role = user.role || 'supplier';
+        let status = 'active';
+        if (role === 'under_review') status = 'pending';
+        else if (role === 'suspended') status = 'suspended';
+        else if (role === 'inactive') status = 'inactive';
+        
+        return {
+          id: user.id,
+          name: user.company || user.email || user.name || 'Unknown',
+          branchName: user.name || '',
+          country: user.country || '',
+          address: user.address || user.adresse || '',
+          email: user.email || '',
+          phone: user.phone_num || user.phone || '',
+          parentCompany: user.parent_company || user.parentCompany || null,
+          role,
+          vehicles: user.vehicles_count ?? user.vehicles ?? 0,
+          bookings: user.rentals_count ?? user.bookings_count ?? user.bookings ?? 0,
+          revenue: user.revenue ?? 0,
+          rating: user.rating ?? 0,
+          status,
+          since: user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A',
+          image: getLogoUrl(user.logo),
+          description: user.description,
+        };
+      });
+      
+      setCompaniesData(mapped);
+    } catch (err: any) {
+      console.error("Failed to fetch companies:", err);
+      toast.error("Failed to load companies");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCompanies = useMemo(() => {
     return companiesData.filter((company) => {
@@ -53,7 +98,9 @@ export default function CompaniesSection() {
     });
   }, [companiesData, searchQuery, selectedCountry, selectedStatus]);
 
-  const clearFilters = () => { setSelectedCountry("All"); setSelectedStatus("All"); setSearchQuery(""); };
+  const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const clearFilters = () => { setSelectedCountry("All"); setSelectedStatus("All"); setSearchQuery(""); setCurrentPage(1); };
 
   if (selectedCompany) {
     return (
@@ -88,24 +135,29 @@ export default function CompaniesSection() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          Showing <span className="font-semibold text-gray-900">{filteredCompanies.length}</span> of <span className="font-semibold text-gray-900">{companiesData.length}</span> companies
+          Showing <span className="font-semibold text-gray-900">{paginatedCompanies.length}</span> of <span className="font-semibold text-gray-900">{filteredCompanies.length}</span> companies
         </p>
       </div>
 
-      {filteredCompanies.length === 0 ? (
+      {loading ? (
+        <div className="py-20 flex justify-center"><div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div></div>
+      ) : filteredCompanies.length === 0 ? (
         <EmptyState onAction={clearFilters} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filteredCompanies.map((company) => (
-            <CompanyCard 
-              key={company.id} 
-              company={company} 
-              onView={setSelectedCompany} 
-              statusColorMap={statusColorMap}
-              statusDotMap={statusDotMap}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-6">
+            {paginatedCompanies.map((company) => (
+              <CompanyCard 
+                key={company.id} 
+                company={company} 
+                onView={setSelectedCompany} 
+                statusColorMap={statusColorMap}
+                statusDotMap={statusDotMap}
+              />
+            ))}
+          </div>
+          <Pagination currentPage={currentPage} totalPages={Math.ceil(filteredCompanies.length / itemsPerPage)} onPageChange={setCurrentPage} />
+        </>
       )}
     </SectionLayout>
   );

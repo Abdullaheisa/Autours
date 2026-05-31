@@ -4,6 +4,9 @@ import { useState } from "react";
 import { CreditCard, DollarSign, Wallet } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
+import { paymentMethodApi } from "@/services/api";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 const initialMethods = [
   { 
@@ -33,13 +36,55 @@ const icons: Record<number, React.ReactNode> = {
 };
 
 export default function PaymentMethodsSection() {
-  const [methods, setMethods] = useState(initialMethods);
+  const [methods, setMethods] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const fetchPaymentMethods = () => {
+    setIsLoading(true);
+    paymentMethodApi.getAll().then((res: any) => {
+      const data = res?.data || res || [];
+      if (Array.isArray(data)) {
+        setMethods(data.map((m: any) => ({
+          id: m.id,
+          name: m.name || "Method",
+          description: m.description || "",
+          active: m.activation ?? false
+        })));
+      } else {
+        setMethods(initialMethods);
+      }
+    }).catch((err) => {
+      console.error(err);
+      setMethods(initialMethods);
+    }).finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, []);
 
   const handleSelect = (selectedId: number) => {
-    setMethods(methods.map(m => ({
-      ...m,
-      active: m.id === selectedId
-    })));
+    const target = methods.find(m => m.id === selectedId);
+    if (!target) return;
+
+    setIsSaving(true);
+    paymentMethodApi.store({ selectedMethodId: selectedId })
+      .then((res: any) => {
+        if (res?.success) {
+          toast.success(res.message || "Payment method updated!");
+        } else {
+          toast.error(res?.message || "Failed to update payment method.");
+        }
+        fetchPaymentMethods();
+      })
+      .catch((err: any) => {
+        console.error(err);
+        const errMsg = err?.response?.data?.message || "Failed to update payment method.";
+        toast.error(errMsg);
+        fetchPaymentMethods();
+      })
+      .finally(() => setIsSaving(false));
   };
 
   return (
@@ -51,64 +96,66 @@ export default function PaymentMethodsSection() {
       />
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mt-6">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-8 py-4">Method Name</th>
-                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-8 py-4">Description</th>
-                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-8 py-4">Activation</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {methods.map((method) => (
-                <tr 
-                  key={method.id} 
-                  className={`transition-colors cursor-pointer ${
-                    method.active 
-                      ? 'bg-primary-50/40' 
-                      : 'hover:bg-gray-50/50'
-                  }`}
-                  onClick={() => handleSelect(method.id)}
-                >
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                        method.active 
-                          ? 'bg-primary-100 text-primary-600' 
-                          : 'bg-gray-100 text-gray-400'
-                      }`}>
-                        {icons[method.id]}
-                      </div>
-                      <span className={`font-bold text-sm ${method.active ? 'text-primary-700' : 'text-gray-900'}`}>
-                        {method.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5 text-sm text-gray-500">{method.description}</td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center justify-center">
-                      <div 
-                        className={`
-                          w-5 h-5 rounded border-2 flex items-center justify-center transition-all cursor-pointer
-                          ${method.active 
-                            ? 'border-primary-500 bg-primary-500' 
-                            : 'border-gray-300 bg-white hover:border-gray-400'
-                          }
-                        `}
-                      >
-                        {method.active && (
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                  </td>
+        <div className="overflow-x-auto" style={{ transform: "rotateX(180deg)" }}>
+          <div style={{ transform: "rotateX(180deg)" }}>
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-8 py-4">Method Name</th>
+                  <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-8 py-4">Description</th>
+                  <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-8 py-4">Activation</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {methods.map((method) => (
+                  <tr 
+                    key={method.id} 
+                    className={`transition-colors cursor-pointer ${
+                      method.active 
+                        ? 'bg-primary-50/40' 
+                        : 'hover:bg-gray-50/50'
+                    }`}
+                    onClick={() => handleSelect(method.id)}
+                  >
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                          method.active 
+                            ? 'bg-primary-100 text-primary-600' 
+                            : 'bg-gray-100 text-gray-400'
+                        }`}>
+                          {icons[method.id]}
+                        </div>
+                        <span className={`font-bold text-sm ${method.active ? 'text-primary-700' : 'text-gray-900'}`}>
+                          {method.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-sm text-gray-500">{method.description}</td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center justify-center">
+                        <div 
+                          className={`
+                            w-5 h-5 rounded border-2 flex items-center justify-center transition-all cursor-pointer
+                            ${method.active 
+                              ? 'border-primary-500 bg-primary-500' 
+                              : 'border-gray-300 bg-white hover:border-gray-400'
+                            }
+                          `}
+                        >
+                          {method.active && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </SectionLayout>

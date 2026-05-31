@@ -12,8 +12,14 @@ interface CompanyCardProps {
 export default function CompanyCard({ company, onView, statusColorMap, statusDotMap }: CompanyCardProps) {
   return (
     <div className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all duration-300 overflow-hidden">
-      <div className="relative h-32 overflow-hidden">
-        <img src={company.image} alt={company.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+      <div className="relative h-32 overflow-hidden bg-slate-200 flex items-center justify-center">
+        {company.image ? (
+          <img src={company.image} alt={company.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-400 font-semibold text-xl uppercase group-hover:scale-105 transition-transform duration-500">
+            {company.name?.slice(0, 2)}
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute top-2.5 left-2.5">
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border backdrop-blur-sm bg-white/90 ${statusColorMap[company.status] || "bg-gray-50 text-gray-700 border-gray-200"}`}>

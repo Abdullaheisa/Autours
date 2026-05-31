@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Hubot_Sans } from "next/font/google";
+import { Toaster } from 'react-hot-toast';
 import "./globals.css";
 import StoreProvider from "@/components/shared/StoreProvider";
 import RootLayoutContent from "@/components/shared/layout/RootLayoutContent";
 import { siteConfig } from "@/config/site";
 
-const manrope = Manrope({
+// 🚀 تجهيز خط Hubot Sans من جوجل مباشرة
+const hubotSans = Hubot_Sans({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-hubot",
   display: "swap",
 });
 
@@ -21,6 +23,7 @@ export const metadata: Metadata = {
   keywords: ["car rental", "marketplace", "luxury cars", "middle east", "rent a car"],
   authors: [{ name: "Autours Team" }],
   creator: "Autours",
+  robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -59,13 +62,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="stylesheet" href="https://unpkg.com/@github/hubot-sans@latest/dist/hubot-sans.css" />
-      </head>
-      <body className={`${manrope.variable} antialiased font-sans`}>
+      <body className={`${hubotSans.variable} antialiased font-sans`}>
         <StoreProvider>
           <RootLayoutContent>{children}</RootLayoutContent>
         </StoreProvider>
+        <Toaster position="top-center" />
       </body>
     </html>
   );

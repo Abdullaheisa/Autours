@@ -1,20 +1,19 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
+import dynamic from 'next/dynamic';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import HeroSearch from '@/components/sections/HeroSearch';
-import PartnersBanner from '@/components/sections/PartnersBanner';
-import Features from '@/components/sections/Features';
-import Locations from '@/components/sections/Locations';
-import Fleet from '@/components/sections/Fleet';
-import DynamicBanners from '@/components/sections/DynamicBanners';
-import FAQ from '@/components/sections/FAQ';
-import Contact from '@/components/sections/Contact';
 import SectionDivider from '@/components/sections/SectionDivider';
 import { siteConfig } from '@/config/site';
+
+// 🚀 السحر هنا: تحميل الكومبوننتس اللي تحت الـ Fold "على الطلب" (Lazy Loading)
+// ده هيقلل حجم الجافاسكريبت اللي بيتحمل في البداية لأكثر من 60%
+const PartnersBanner = dynamic(() => import('@/components/sections/PartnersBanner'));
+const Features = dynamic(() => import('@/components/sections/Features'));
+const Locations = dynamic(() => import('@/components/sections/Locations'));
+const Fleet = dynamic(() => import('@/components/sections/Fleet'));
+const DynamicBanners = dynamic(() => import('@/components/sections/DynamicBanners'));
+const FAQ = dynamic(() => import('@/components/sections/FAQ'));
+const Contact = dynamic(() => import('@/components/sections/Contact'));
 
 export default function HomePage() {
   const jsonLd = {
@@ -40,19 +39,28 @@ export default function HomePage() {
       <Navbar />
 
       <main>
+        {/* الكومبوننتس الأساسية اللي بتظهر أول حاجة بتتحمل طبيعي */}
         <HeroSearch />
+        
         <SectionDivider />
         <PartnersBanner />
+        
+        {/* باقي الكومبوننتس هتتحمل في الخلفية بدون ما تجمد المتصفح */}
         <Features />
         <SectionDivider />
+        
         <Locations />
         <SectionDivider />
+        
         <Fleet />
         <SectionDivider />
+        
         <DynamicBanners />
         <SectionDivider />
+        
         <FAQ />
         <SectionDivider />
+        
         <Contact />
       </main>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CompanySidebar from "./components/CompanySidebar";
 import CompanyHeader from "./components/CompanyHeader";
 
@@ -18,6 +18,9 @@ import CompanyRentalsSection from "./sections/rentals/CompanyRentalsSection";
 import CompanyRentalTermsSection from "./sections/rental-terms/CompanyRentalTermsSection";
 import PromosSection from "./sections/promos/PromosSection";
 import CompanyRentalReviewsSection from "./sections/rental-reviews/CompanyRentalReviewsSection";
+import CompanyBulkUploadSection from "./sections/bulk-upload/CompanyBulkUploadSection";
+import EditVehicleSection from "./sections/create-vehicle/EditVehicleSection";
+import NotificationsSection from "@/app/admin/sections/notifications/NotificationsSection";
 
 const pageTitles: Record<string, string> = {
   dashboard: "Dashboard",
@@ -33,11 +36,44 @@ const pageTitles: Record<string, string> = {
   "rental-terms": "Rental Terms",
   promos: "Promos",
   "rental-reviews": "Rental Reviews",
+  "bulk-upload": "Bulk Upload",
+  "edit-vehicle": "Edit Vehicle",
+  notifications: "Notifications Workspace",
 };
 
 export default function CompanyDashboard() {
   const [activeItem, setActiveItem] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [editVehicleId, setEditVehicleId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab && pageTitles[tab]) {
+        setActiveItem(tab);
+        // Clear query parameters to keep the URL clean
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const tabId = (e as CustomEvent).detail;
+      if (tabId && pageTitles[tabId]) {
+        setActiveItem(tabId);
+      }
+    };
+    window.addEventListener("switch-dashboard-tab", handleSwitchTab);
+    return () => window.removeEventListener("switch-dashboard-tab", handleSwitchTab);
+  }, []);
+
+  const handleEditVehicle = (id: number) => {
+    setEditVehicleId(id);
+    setActiveItem("edit-vehicle");
+  };
 
   const renderContent = () => {
     switch (activeItem) {
@@ -46,13 +82,16 @@ export default function CompanyDashboard() {
       case "branches":        return <BranchesSection />;
       case "payment-methods": return <PaymentMethodsSection />;
       case "create-vehicle":  return <CreateVehicleSection />;
+      case "edit-vehicle":    return <EditVehicleSection vehicleId={editVehicleId!} onBack={() => setActiveItem("vehicles")} />;
       case "price-list":      return <PriceListSection />;
-      case "vehicles":        return <MyVehiclesSection />;
+      case "vehicles":        return <MyVehiclesSection onEditVehicle={handleEditVehicle} onAddVehicle={() => setActiveItem("create-vehicle")} />;
       case "membership":      return <CompanyMembershipSection />;
       case "rentals":         return <CompanyRentalsSection />;
       case "rental-terms":    return <CompanyRentalTermsSection />;
       case "promos":          return <PromosSection />;
       case "rental-reviews":  return <CompanyRentalReviewsSection />;
+      case "bulk-upload":     return <CompanyBulkUploadSection />;
+      case "notifications":   return <NotificationsSection />;
       case "dashboard":
       default:                return <CompanyDashboardOverview />;
     }

@@ -1,18 +1,14 @@
-"use client";
+import type { Metadata } from 'next';
+import CompanyLayoutClient from './CompanyLayoutClient';
 
-import { SearchProvider } from "./context/SearchContext";
-import AuthGuard from '@/components/shared/auth/AuthGuard';
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function CompanyLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AuthGuard allowedRoles={['admin', 'supplier']}>
-      <SearchProvider>
-        {children}
-      </SearchProvider>
-    </AuthGuard>
-  );
+  return <CompanyLayoutClient>{children}</CompanyLayoutClient>;
 }

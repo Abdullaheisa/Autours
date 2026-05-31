@@ -1,21 +1,27 @@
 "use client";
 
 import { X, Upload, Image as ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ImageUploaderProps {
   label?: string;
   value?: string | null;
   onChange: (value: string | null) => void;
+  onFileChange?: (file: File | null) => void;
   className?: string;
 }
 
-export default function ImageUploader({ label, value, onChange, className = "" }: ImageUploaderProps) {
+export default function ImageUploader({ label, value, onChange, onFileChange, className = "" }: ImageUploaderProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(value || null);
+
+  useEffect(() => {
+    setPreviewImage(value || null);
+  }, [value]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (onFileChange) onFileChange(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
@@ -29,6 +35,7 @@ export default function ImageUploader({ label, value, onChange, className = "" }
   const handleClear = () => {
     setPreviewImage(null);
     onChange(null);
+    if (onFileChange) onFileChange(null);
   };
 
   return (

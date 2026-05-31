@@ -20,9 +20,26 @@ export interface Blog {
   image: string;
   publishDate?: string;
   publishTime?: string;
+  views?: number;
+  tags?: string;
 }
 
 function mapApiBlog(raw: any): Blog {
+  let status: BlogStatus = 'draft';
+  if (raw.is_published) {
+    status = 'published';
+  } else {
+    const pubAt = raw.published_at || raw.publish_at || raw.scheduled_at;
+    if (pubAt) {
+      const pubDate = new Date(pubAt);
+      if (pubDate > new Date()) {
+        status = 'scheduled';
+      } else {
+        status = 'published'; // Time has passed!
+      }
+    }
+  }
+
   return {
     id: raw.id,
     title: raw.title || '',
@@ -32,12 +49,14 @@ function mapApiBlog(raw: any): Blog {
     author: raw.author || 'Autours',
     authorAvatar: (raw.author || 'A')[0].toUpperCase(),
     category: raw.blog_category?.title || raw.category || '',
-    status: raw.is_published ? 'published' : 'draft',
+    status,
     date: raw.created_at ? new Date(raw.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
     time: raw.created_at ? new Date(raw.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
     image: raw.image || '',
-    publishDate: raw.publishDate,
-    publishTime: raw.publishTime,
+    publishDate: raw.published_at || raw.publish_at || raw.scheduled_at,
+    publishTime: raw.publish_time,
+    views: raw.views ?? 0,
+    tags: raw.tags || '',
   };
 }
 

@@ -34,8 +34,9 @@ export default function StatsCard({ label, value, icon, change, trend = "up", co
           <div className={colors.text}>{icon}</div>
         </div>
         <div className="flex-1">
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <div className="flex items-center gap-2">
+          <h3 className="text-2xl font-bold text-gray-900 mt-4 mb-1">
+          {Number.isNaN(Number(value)) ? 0 : value}
+        </h3>  <div className="flex items-center gap-2">
             <p className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</p>
             {change && (
               <span className={`inline-flex items-center gap-0.5 text-[10px] font-medium ${trend === "up" ? "text-emerald-600" : "text-red-600"}`}>

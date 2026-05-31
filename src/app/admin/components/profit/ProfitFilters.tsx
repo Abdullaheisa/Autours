@@ -3,11 +3,16 @@
 import { useState } from "react";
 import { Search, ChevronDown, X, Filter, MapPin, Building2, Store, Car } from "lucide-react";
 
+export interface FilterItem {
+  id: string;
+  name: string;
+}
+
 interface FilterOption {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: string;
-  options: string[];
+  options: FilterItem[];
   onChange: (value: string) => void;
 }
 
@@ -22,11 +27,14 @@ interface ProfitFiltersProps {
   onBranchChange: (value: string) => void;
   selectedVehicle: string;
   onVehicleChange: (value: string) => void;
-  countries: string[];
-  suppliers: string[];
-  branches: string[];
-  vehiclesList: string[];
+  countries: FilterItem[];
+  suppliers: FilterItem[];
+  branches: FilterItem[];
+  vehiclesList: FilterItem[];
+  showNoProfitOnly: boolean;
+  onToggleNoProfit: (val: boolean) => void;
   onClearFilters: () => void;
+  onSearchClick: () => void;
 }
 
 export default function ProfitFilters({
@@ -44,16 +52,20 @@ export default function ProfitFilters({
   suppliers,
   branches,
   vehiclesList,
+  showNoProfitOnly,
+  onToggleNoProfit,
   onClearFilters,
+  onSearchClick,
 }: ProfitFiltersProps) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const activeFiltersCount = [
-    selectedCountry !== countries[0],
-    selectedSupplier !== suppliers[0],
-    selectedBranch !== branches[0],
-    selectedVehicle !== vehiclesList[0],
+    selectedCountry !== "",
+    selectedSupplier !== "",
+    selectedBranch !== "",
+    selectedVehicle !== "",
     searchQuery !== "",
+    showNoProfitOnly === true,
   ].filter(Boolean).length;
 
   const filterConfigs: FilterOption[] = [
@@ -85,16 +97,30 @@ export default function ProfitFilters({
               onChange={(e) => filter.onChange(e.target.value)}
               className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer"
             >
+              <option value="">All {filter.label}s</option>
               {filter.options.map((o) => (
-                <option key={o} value={o}>{o}</option>
+                <option key={o.id} value={o.id}>{o.name}</option>
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
           </div>
         ))}
 
+        <div className="flex items-center gap-2 px-1">
+          <input
+            type="checkbox"
+            id="noProfitDesktop"
+            checked={showNoProfitOnly}
+            onChange={(e) => onToggleNoProfit(e.target.checked)}
+            className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+          />
+          <label htmlFor="noProfitDesktop" className="text-sm text-gray-700 select-none cursor-pointer">
+            Without Profit Margin
+          </label>
+        </div>
+
         <button
-          onClick={() => onSearchChange(searchQuery)}
+          onClick={onSearchClick}
           className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary-200 flex items-center justify-center gap-2"
         >
           <Search size={16} />
@@ -122,15 +148,30 @@ export default function ProfitFilters({
                   onChange={(e) => filter.onChange(e.target.value)}
                   className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer"
                 >
+                  <option value="">All {filter.label}s</option>
                   {filter.options.map((o) => (
-                    <option key={o} value={o}>{o}</option>
+                    <option key={o.id} value={o.id}>{o.name}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
               </div>
             ))}
+
+            <div className="flex items-center gap-2 px-1">
+              <input
+                type="checkbox"
+                id="noProfitMobile"
+                checked={showNoProfitOnly}
+                onChange={(e) => onToggleNoProfit(e.target.checked)}
+                className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+              />
+              <label htmlFor="noProfitMobile" className="text-sm text-gray-700 select-none cursor-pointer">
+                Without Profit Margin
+              </label>
+            </div>
+
             <button
-              onClick={() => onSearchChange(searchQuery)}
+              onClick={onSearchClick}
               className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary-200 flex items-center justify-center gap-2"
             >
               <Search size={16} />
@@ -144,7 +185,10 @@ export default function ProfitFilters({
       {activeFiltersCount > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100">
           <button
-            onClick={onClearFilters}
+            onClick={() => {
+              onClearFilters();
+              onToggleNoProfit(false);
+            }}
             className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
           >
             <X size={14} />

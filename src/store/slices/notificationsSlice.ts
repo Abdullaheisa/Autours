@@ -9,15 +9,48 @@ interface NotificationsState {
 }
 
 const initialState: NotificationsState = {
-  items: [
-    { id: "1", title: "New Booking", message: "Ahmed Hassan booked a Toyota Camry for 7 days", type: "booking", timestamp: "2 mins ago", isRead: false },
-    { id: "2", title: "New Booking", message: "Sara Khalid booked a BMW X5 in Dubai", type: "booking", timestamp: "15 mins ago", isRead: false },
-    { id: "3", title: "Blog Interaction", message: "Your post 'Daily vs Monthly...' received 5 new comments", type: "blog", timestamp: "1 hour ago", isRead: false },
-    { id: "4", title: "Blog Scheduled", message: "Post 'Best Car Rental in Dubai' is scheduled for May 10", type: "blog", timestamp: "3 hours ago", isRead: true },
-    { id: "5", title: "System Update", message: "Dashboard has been updated to v2.0", type: "system", timestamp: "1 day ago", isRead: true },
-  ],
+  items: [],
   loading: false,
   error: null,
+};
+
+const getReadIds = (): string[] => {
+  if (typeof window !== "undefined") {
+    try {
+      return JSON.parse(localStorage.getItem("read_notif_ids") || "[]");
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const saveReadId = (id: string) => {
+  if (typeof window !== "undefined") {
+    try {
+      const readIds = getReadIds();
+      if (!readIds.includes(id)) {
+        readIds.push(id);
+        localStorage.setItem("read_notif_ids", JSON.stringify(readIds));
+      }
+    } catch (e) {
+      console.error("Failed to save read notification ID:", e);
+    }
+  }
+};
+
+const saveAllReadIds = (ids: string[]) => {
+  if (typeof window !== "undefined") {
+    try {
+      const readIds = getReadIds();
+      ids.forEach(id => {
+        if (!readIds.includes(id)) readIds.push(id);
+      });
+      localStorage.setItem("read_notif_ids", JSON.stringify(readIds));
+    } catch (e) {
+      console.error("Failed to save all read notification IDs:", e);
+    }
+  }
 };
 
 export const fetchNotifications = createAsyncThunk("notifications/fetchAll", async (_, { rejectWithValue }) => {
@@ -28,10 +61,21 @@ export const fetchNotifications = createAsyncThunk("notifications/fetchAll", asy
   }
 });
 
-export const markNotificationRead = createAsyncThunk("notifications/markRead", async (id: string, { rejectWithValue }) => {
+export const markNotificationRead = createAsyncThunk("notifications/markRead", async (id: string, { rejectWithValue, dispatch }) => {
   try {
     await notificationApi.markRead(id);
+    dispatch(markLocalRead(id));
     return id;
+  } catch (err: any) {
+    return rejectWithValue(err.message);
+  }
+});
+
+export const markAllNotificationsRead = createAsyncThunk("notifications/markAllRead", async (_, { rejectWithValue, dispatch }) => {
+  try {
+    await notificationApi.markAllRead();
+    dispatch(markAllLocalRead());
+    return true;
   } catch (err: any) {
     return rejectWithValue(err.message);
   }
@@ -47,22 +91,28 @@ const notificationsSlice = createSlice({
     markLocalRead: (state, action: PayloadAction<string>) => {
       const n = state.items.find(notif => notif.id === action.payload);
       if (n) n.isRead = true;
+      saveReadId(action.payload);
     },
     markAllLocalRead: (state) => {
       state.items.forEach(n => n.isRead = true);
+      saveAllReadIds(state.items.map(n => n.id));
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchNotifications.pending, (state) => { state.loading = true; })
-      .addCase(fetchNotifications.fulfilled, (state, action) => { state.loading = false; state.items = action.payload; })
-      .addCase(fetchNotifications.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; })
-      .addCase(markNotificationRead.fulfilled, (state, action) => {
-        const n = state.items.find(notif => notif.id === action.payload);
-        if (n) n.isRead = true;
-      });
+      .addCase(fetchNotifications.fulfilled, (state, action) => {
+        state.loading = false;
+        const readIds = getReadIds();
+        state.items = (action.payload || []).map(notif => ({
+          ...notif,
+          isRead: notif.isRead || readIds.includes(notif.id)
+        }));
+      })
+      .addCase(fetchNotifications.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
   },
 });
 
 export const { addLocalNotification, markLocalRead, markAllLocalRead } = notificationsSlice.actions;
 export default notificationsSlice.reducer;
+

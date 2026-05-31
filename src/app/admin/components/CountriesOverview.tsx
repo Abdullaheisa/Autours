@@ -1,13 +1,16 @@
 "use client";
 
 import { MapPin, TrendingUp, Car, DollarSign } from "lucide-react";
-import { bookingsByCountry } from "@/lib/data";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function CountriesOverview() {
-  const totalBookings = bookingsByCountry.reduce((sum, c) => sum + c.bookings, 0);
-  const totalRevenue = bookingsByCountry.reduce((sum, c) => sum + c.revenue, 0);
-  const totalVehicles = bookingsByCountry.reduce((sum, c) => sum + c.vehicles, 0);
-  const topCountry = bookingsByCountry.reduce((max, c) => c.bookings > max.bookings ? c : max, bookingsByCountry[0]);
+  const { rawData } = useSelector((state: RootState) => state.dashboard);
+  const data = rawData?.bookingsByCountry || [];
+  const totalBookings = data.reduce((sum: any, c: any) => sum + c.bookings, 0);
+  const totalRevenue = data.reduce((sum: any, c: any) => sum + c.revenue, 0);
+  const totalVehicles = data.reduce((sum: any, c: any) => sum + c.vehicles, 0);
+  const topCountry = data.reduce((max: any, c: any) => c.bookings > max.bookings ? c : max, data[0] || { country: "N/A" });
 
   const stats = [
     { label: "Total Bookings", value: totalBookings.toLocaleString(), icon: TrendingUp, color: "text-blue-600", bgColor: "bg-blue-50" },
@@ -36,8 +39,8 @@ export default function CountriesOverview() {
       </div>
       <div className="space-y-2.5 sm:space-y-3">
         <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Bookings by Country</h4>
-        {bookingsByCountry.map((country, index) => {
-          const percentage = (country.bookings / totalBookings) * 100;
+        {data.map((country: any, index: number) => {
+          const percentage = totalBookings > 0 ? (country.bookings / totalBookings) * 100 : 0;
           const colors = ["bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-red-500", "bg-purple-500", "bg-pink-500", "bg-cyan-500", "bg-lime-500", "bg-orange-500"];
           return (
             <div key={index} className="space-y-1">

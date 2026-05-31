@@ -15,14 +15,11 @@ import EditBlog from "./EditBlog";
 import BlogCard from "./BlogCard";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { 
-  fetchBlogs, 
-  saveLocalBlog, 
-  deleteLocalBlog 
-} from "@/store/slices/blogsSlice";
+import { fetchBlogs, createBlog, updateBlog, deleteBlog as deleteBlogThunk } from "@/store/slices/blogsSlice";
+import { fetchBlogCategories } from "@/store/slices/blogCategoriesSlice";
 import { Blog } from "@/store/slices/blogsSlice";
+import toast from "react-hot-toast";
 
-const categories = ["All Categories", "Money Saving Tips", "Best Agencies", "Country Travel Guides"];
 const statuses = ["All", "published", "draft", "scheduled"];
 
 const categoryColors: Record<string, string> = {
@@ -34,6 +31,7 @@ const categoryColors: Record<string, string> = {
 export default function BlogsSection() {
   const dispatch = useDispatch<AppDispatch>();
   const { items: blogs, loading, error } = useSelector((state: RootState) => state.blogs);
+  const { items: blogCategories } = useSelector((state: RootState) => state.blogCategories);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -44,18 +42,42 @@ export default function BlogsSection() {
   const itemsPerPage = 8;
 
   useEffect(() => {
-    if (blogs.length === 0) dispatch(fetchBlogs());
-  }, [dispatch, blogs.length]);
+    dispatch(fetchBlogs());
+    dispatch(fetchBlogCategories());
+  }, [dispatch]);
 
-  const saveBlog = (data: Partial<Blog> & { id?: number }) => dispatch(saveLocalBlog(data));
-  const deleteBlog = (id: number) => dispatch(deleteLocalBlog(id));
+  const saveBlog = async (data: Partial<Blog> & { id?: number }) => {
+    if (data.id) {
+      const result = await dispatch(updateBlog({ id: data.id, data }));
+      if (updateBlog.fulfilled.match(result)) {
+        toast.success("Article updated successfully!");
+      } else {
+        toast.error("Failed to update article. Please try again.");
+      }
+    } else {
+      const result = await dispatch(createBlog(data));
+      if (createBlog.fulfilled.match(result)) {
+        toast.success("Article created successfully!");
+      } else {
+        toast.error("Failed to create article. Please try again.");
+      }
+    }
+  };
+  const deleteBlog = async (id: number) => {
+    const result = await dispatch(deleteBlogThunk(id));
+    if (deleteBlogThunk.fulfilled.match(result)) {
+      toast.success("Article deleted successfully!");
+    } else {
+      toast.error("Failed to delete article.");
+    }
+  };
 
   const filtered = useMemo(() => {
     return blogs.filter((b) => {
       const matchSearch = !searchQuery ||
         b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.author.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchCat = selectedCategory === "All Categories" || b.category === selectedCategory;
+      const matchCat = selectedCategory === "All Categories" || b.category === selectedCategory || b.category?.toString() === selectedCategory;
       const matchStatus = selectedStatus === "All" || b.status === selectedStatus;
       return matchSearch && matchCat && matchStatus;
     });
@@ -74,11 +96,25 @@ export default function BlogsSection() {
   const handleAddNew = () => { setSelectedBlog(null); setView("edit"); };
   const handleBack = () => { setSelectedBlog(null); setView("list"); };
   const handleDelete = (id: number) => {
-    if (confirm("Delete this article?")) deleteBlog(id);
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium text-gray-800">Delete this article?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { toast.dismiss(t.id); deleteBlog(id); }}
+            className="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700"
+          >Delete</button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200"
+          >Cancel</button>
+        </div>
+      </div>
+    ), { duration: 6000 });
   };
 
   if (view === "details" && selectedBlog) return <BlogDetails blog={selectedBlog} onBack={handleBack} onEdit={() => handleEdit(selectedBlog)} />;
-  if (view === "edit") return <EditBlog blog={selectedBlog} onBack={handleBack} onSave={saveBlog} />;
+  if (view === "edit") return <EditBlog blog={selectedBlog} onBack={handleBack} onSave={saveBlog} blogCategories={blogCategories} />;
 
   const counts = {
     published: blogs.filter((b) => b.status === "published").length,
@@ -130,7 +166,7 @@ export default function BlogsSection() {
         filters={[
           {
             label: "Category", value: selectedCategory,
-            options: categories.map((c) => ({ value: c, label: c })),
+            options: ["All Categories", ...blogCategories.map(c => c.name)].map((c) => ({ value: c, label: c })),
             onChange: (v) => { setSelectedCategory(v); setCurrentPage(1); },
           },
         ]}

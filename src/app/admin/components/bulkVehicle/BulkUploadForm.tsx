@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, FileSpreadsheet, Building2, Store, ChevronDown } from "lucide-react";
 
 interface BulkUploadFormProps {
@@ -15,6 +15,12 @@ export default function BulkUploadForm({ suppliers, branches, onUpload }: BulkUp
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (suppliers.length === 1) {
+      setSelectedSupplier(suppliers[0]);
+    }
+  }, [suppliers]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -67,8 +73,8 @@ export default function BulkUploadForm({ suppliers, branches, onUpload }: BulkUp
               className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer"
             >
               <option value="">Select Supplier...</option>
-              {suppliers.map((s) => (
-                <option key={s} value={s}>{s}</option>
+              {suppliers.map((s, i) => (
+                <option key={`${s}-${i}`} value={s}>{s}</option>
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
@@ -86,8 +92,8 @@ export default function BulkUploadForm({ suppliers, branches, onUpload }: BulkUp
               className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer"
             >
               <option value="">Select Branch...</option>
-              {branches.map((b) => (
-                <option key={b} value={b}>{b}</option>
+              {branches.map((b, i) => (
+                <option key={`${b}-${i}`} value={b}>{b}</option>
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />

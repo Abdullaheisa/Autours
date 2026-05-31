@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const BACKEND_URL = 'https://www.autours.net';
+import { BACKEND_URL } from '@/config/api';
 
 export async function GET() {
   try {

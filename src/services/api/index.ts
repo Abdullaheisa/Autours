@@ -1,4 +1,4 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "./axiosClient";
 
 // Blog API - uses /api/blogs endpoints
 export const blogApi = {
@@ -6,9 +6,9 @@ export const blogApi = {
   getPublished: () => apiClient.get("/api/blogs/published"),
   getById: (id: number) => apiClient.get(`/api/blogs/${id}`),
   getBySlug: (slug: string) => apiClient.get(`/api/blogs/slug/${slug}`),
-  create: (data: unknown) => apiClient.post("/api/blogs-admin-store", data),
-  update: (id: number, data: unknown) => apiClient.post(`/api/blogs-admin-update/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/api/blogs-admin-delete/${id}`),
+  create: (data: unknown) => apiClient.post("/api/blogs", data),
+  update: (id: number, data: unknown) => apiClient.post(`/api/blogs/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/api/blogs/${id}`),
   togglePublish: (id: number) => apiClient.patch(`/api/blogs/${id}/toggle-publish`, {}),
 };
 
@@ -26,7 +26,7 @@ export const blogCategoryApi = {
 
 // Company API
 export const companyApi = {
-  getAll: () => apiClient.get("/get/companies"),
+  getAll: () => apiClient.get("/api/admin/get/companies"),
   getSuppliers: () => apiClient.get("/get/suppliers"),
   assignParent: (data: unknown) => apiClient.post("/assign-parent", data),
 };
@@ -34,9 +34,9 @@ export const companyApi = {
 // Category API
 export const categoryApi = {
   getAll: () => apiClient.get("/get/categories"),
-  create: (data: unknown) => apiClient.post("/post/categories", data),
-  update: (id: number, data: unknown) => apiClient.post("/update/categories", data),
-  delete: (id: number) => apiClient.post("/delete/categories", { id }),
+  create: (data: unknown) => apiClient.post("/api/admin/post/categories", data),
+  update: (id: number, data: unknown) => apiClient.post(`/api/admin/update/categories`, data),
+  delete: (id: number) => apiClient.post("/api/admin/delete/categories", { id }),
 };
 
 // Notification API
@@ -48,38 +48,38 @@ export const notificationApi = {
 
 // Banner / Background Settings API
 export const bannerApi = {
-  getAll: () => apiClient.get("/api/background-settings"),
-  create: (data: unknown) => apiClient.post("/api/background-settings", data),
-  update: (id: number, data: unknown) => apiClient.post(`/api/background-settings/${id}`, data),
-  toggleVisibility: (id: number, isVisible: boolean) => apiClient.post(`/api/background-settings/${id}`, { is_visible: isVisible }),
-  delete: (id: number) => apiClient.delete(`/api/background-settings/${id}`),
-  reset: (id: number) => apiClient.post(`/api/background-settings/${id}/reset`, {}),
+  getAll: () => apiClient.get("/api/admin/background-settings"),
+  create: (data: unknown) => apiClient.post("/api/admin/background-settings", data),
+  update: (id: number, data: unknown) => apiClient.post(`/api/admin/background-settings/${id}`, data),
+  toggleVisibility: (id: number, isActive: boolean) => apiClient.post(`/api/admin/background-settings/${id}`, { is_active: isActive }),
+  delete: (id: number) => apiClient.delete(`/api/admin/background-settings/${id}`),
+  reset: (id: number) => apiClient.post(`/api/admin/background-settings/${id}/reset`, {}),
 };
 
 // Specifications API
 export const specificationApi = {
   getAll: () => apiClient.get("/get/specifications"),
-  create: (data: unknown) => apiClient.post("/post/specifications", data),
-  update: (data: unknown) => apiClient.post("/specifications/update", data),
-  delete: (id: number) => apiClient.post("/delete/specifications", { id }),
+  create: (data: unknown) => apiClient.post("/api/admin/post/specifications", data),
+  update: (data: unknown) => apiClient.post("/api/admin/specifications/update", data),
+  delete: (id: number) => apiClient.post("/api/admin/delete/specifications", { id }),
 };
 
 // Included (What's Included) API
 export const includedApi = {
   getAll: () => apiClient.get("/get/included"),
-  create: (data: unknown) => apiClient.post("/post/included", data),
-  delete: (id: number) => apiClient.post("/delete/included", { id }),
+  create: (data: unknown) => apiClient.post("/api/admin/post/included", data),
+  delete: (id: number) => apiClient.post("/api/admin/delete/included", { id }),
 };
 
 // Rental Terms API
 export const rentalTermsApi = {
-  getAll: () => apiClient.get("/get/rental-terms"),
+  getAll: () => apiClient.get("/api/supplier/get/rental-terms"),
   create: (data: unknown) => apiClient.post("/post/rental-terms", data),
   show: (id: number) => apiClient.post("/show/rental-terms", { id }),
   update: (data: unknown) => apiClient.post("/edit/rental-terms", data),
-  delete: (id: number) => apiClient.post("/delete/rental-terms", { id }),
-  updateStatus: (data: unknown) => apiClient.post("/update/rental-terms/status", data),
-  selectForSupplier: (data: unknown) => apiClient.post("/select-rental-terms", data),
+  delete: (id: number) => apiClient.post("/api/admin/delete/rental-terms", { id }),
+  updateStatus: (data: unknown) => apiClient.post("/api/admin/update/rental-terms/status", data),
+  selectForSupplier: (data: unknown) => apiClient.post("/api/supplier/select-rental-terms", data),
 };
 
 // Fuel Policies API
@@ -94,21 +94,21 @@ export const locationTypeApi = {
 
 // Customers API
 export const customerApi = {
-  getAll: () => apiClient.get("/get/customers"),
-  delete: (data: unknown) => apiClient.post("/delete/customers", data),
+  getAll: () => apiClient.get("/api/admin/get/customers"),
+  delete: (data: unknown) => apiClient.post("/api/admin/delete/customers", data),
 };
 
 // Subscribers API
 export const subscriberApi = {
-  getAll: () => apiClient.get("/get/subscribers"),
-  delete: (id: number) => apiClient.post("/delete/subscribers", { id }),
+  getAll: () => apiClient.get("/api/admin/get/subscribers"),
+  delete: (id: number) => apiClient.post("/api/admin/delete/subscribers", { id }),
   sendEmail: (data: unknown) => apiClient.post("/send-email", data),
 };
 
 // Rentals API
 export const rentalApi = {
-  getAll: () => apiClient.get("/get/rentals"),
-  getAdmin: () => apiClient.get("/get/rentals/admin"),
+  getAll: (params?: any) => apiClient.get("/get/rentals", { params }),
+  getAdmin: (params?: any) => apiClient.get("/api/admin/get/rentals/admin", { params }),
   getDetails: (id: number) => apiClient.get(`/booking/${id}`),
   accept: (data: unknown) => apiClient.post("/accept/rentals", data),
   delete: (data: unknown) => apiClient.post("/delete/rentals", data),
@@ -126,29 +126,39 @@ export const bookingApi = {
 
 // Membership / Requests API
 export const membershipApi = {
-  getRequests: () => apiClient.get("/get/requests"),
-  accept: (data: unknown) => apiClient.post("/accept/requests", data),
-  delete: (data: unknown) => apiClient.post("/delete/requests", data),
+  getRequests: () => apiClient.get("/api/admin/get/requests"),
+  accept: (data: unknown) => apiClient.post("/api/admin/accept/requests", data),
+  delete: (data: unknown) => apiClient.post("/api/admin/delete/requests", data),
   submit: (data: unknown) => apiClient.post("/post/request", data),
 };
 
 // Photos API
 export const photoApi = {
   getAll: () => apiClient.get("/get/photos"),
-  upload: (data: unknown) => apiClient.post("/post/photos", data),
-  delete: (data: unknown) => apiClient.post("/delete/photos", data),
+  upload: (data: unknown) => apiClient.post("/api/admin/post/photos", data),
+  delete: (data: unknown) => apiClient.post("/api/admin/delete/photos", data),
 };
 
 // Profit API
 export const profitApi = {
-  getAll: () => apiClient.get("/get/profit"),
-  upload: (data: unknown) => apiClient.post("/profit/upload", data),
+  getAll: (params?: any) => apiClient.get("/get/profit", { params }),
+  upload: (data: unknown) => apiClient.post("/api/admin/profit/upload", data),
+  getCountries: () => apiClient.get("/get/countries"),
+  getSuppliers: (country?: string) => apiClient.get("/get/suppliers", { params: { country } }),
+  getBranches: (company_id?: string) => apiClient.get("/get/branches", { params: { company_id } }),
+  getVehicles: (supplier?: string, branch_id?: string) => apiClient.get("/get/vehicles", { params: { supplier, branch_id } }),
+};
+
+// Rate API
+export const rateApi = {
+  getQuestions: (id: number) => apiClient.get("/get/rating/questions", { params: { id } }),
+  submit: (data: unknown) => apiClient.post("/rating", data),
 };
 
 // Dashboard API
 export const dashboardApi = {
-  getAdmin: () => apiClient.get("/dashboard"),
-  getSupplier: () => apiClient.get("/supplier-dashboard"),
+  getAdmin: () => apiClient.get("/api/admin/dashboard"),
+  getSupplier: () => apiClient.get("/api/supplier/dashboard"),
 };
 
 // Reference Data API
@@ -165,30 +175,30 @@ export const referenceApi = {
 
 // Auth API
 export const authApi = {
-  login: (data: { email: string; password: string }) => apiClient.post("/login", data),
-  logout: () => apiClient.get("/logout"),
-  register: (data: unknown) => apiClient.post("/post/user/data", data),
+  login: (data: { email: string; password: string }) => apiClient.post("/api/auth/login", data),
+  logout: () => apiClient.post("/api/auth/logout", {}),
+  register: (data: unknown) => apiClient.post("/api/auth/register", data),
   forgotPassword: (data: unknown) => apiClient.post("/forget-password", data),
   validateResetKey: (data: unknown) => apiClient.post("/validate-forget-password-key", data),
   saveNewPassword: (data: unknown) => apiClient.post("/save-new-password", data),
-  getUser: () => apiClient.get("/get/user/data"),
-  getUserRole: () => apiClient.get("/get/user/role"),
-  getProfile: () => apiClient.get("/my-current-user-profile"),
+  getUser: () => apiClient.get("/api/get/user/data"),
+  getUserRole: () => apiClient.get("/api/get/user/role"),
+  getProfile: () => apiClient.get("/api/my-current-user-profile"),
 };
 
 // Branches API
 export const branchApi = {
-  getAll: () => apiClient.get("/get/branches"),
-  create: (data: unknown) => apiClient.post("/upload/branch", data),
+  getAll: () => apiClient.get("/api/supplier/get/branches"),
+  create: (data: unknown) => apiClient.post("/api/supplier/upload/branch", data),
   getById: (id: number) => apiClient.get(`/branches/edit/${id}`),
   update: (data: unknown) => apiClient.post("/branches/update", data),
-  delete: (data: unknown) => apiClient.post("/delete/branches", data),
+  delete: (data: unknown) => apiClient.post("/api/supplier/delete/branches", data),
 };
 
 // Vehicle Management API (Supplier)
 export const vehicleManagementApi = {
   create: (data: unknown) => apiClient.post("/post/vehicles", data),
-  getForEdit: (id: number) => apiClient.get(`/edit/vehicles/${id}`),
+  getForEdit: (id: number) => apiClient.get(`/api/supplier/edit/vehicles/${id}`),
   updatePrice: (data: unknown) => apiClient.post("/edit-vehicle-price", data),
   toggleActivation: (data: unknown) => apiClient.post("/update/vehicles/activation", data),
   delete: (id: number) => apiClient.post(`/delete/vehicles/${id}`, {}),
@@ -198,15 +208,15 @@ export const vehicleManagementApi = {
 
 // Payment Methods API
 export const paymentMethodApi = {
-  getAll: () => apiClient.get("/get/payment_methods"),
-  store: (data: unknown) => apiClient.post("/payment_methods", data),
+  getAll: () => apiClient.get("/api/supplier/get/payment_methods"),
+  store: (data: unknown) => apiClient.post("/api/supplier/payment_methods", data),
 };
 
 // Promos API
 export const promoApi = {
-  getAll: () => apiClient.get("/promo"),
-  create: (data: unknown) => apiClient.post("/promo", data),
-  delete: (id: number) => apiClient.delete(`/promo/${id}`),
+  getAll: () => apiClient.get("/api/supplier/promo"),
+  create: (data: unknown) => apiClient.post("/api/supplier/promo", data),
+  delete: (id: number) => apiClient.delete(`/api/supplier/promo/${id}`),
 };
 
 // Rating API
@@ -218,4 +228,15 @@ export const ratingApi = {
 // Upload API
 export const uploadApi = {
   uploadProfile: (data: unknown) => apiClient.post("/upload", data),
+};
+
+// Supplier Specific API
+export const supplierApi = {
+  getProfile: () => apiClient.get("/api/external/supplier/profile"),
+  getRentals: (params?: any) => apiClient.get("/api/external/supplier/rentals", { params }),
+  getIncluded: () => apiClient.get("/api/external/supplier/included"),
+  getCategories: () => apiClient.get("/api/external/supplier/categories"),
+  getFuelPolicies: () => apiClient.get("/api/external/supplier/fuel-policies"),
+  getLocationTypes: () => apiClient.get("/api/external/supplier/location-types"),
+  getBranches: () => apiClient.get("/api/external/supplier/branches"),
 };

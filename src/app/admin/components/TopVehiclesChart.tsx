@@ -1,12 +1,15 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { vehicles } from "@/lib/data";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1"];
 
 export default function TopVehiclesChart() {
-  const topVehicles = [...vehicles].sort((a, b) => b.bookings - a.bookings).slice(0, 8);
+  const { rawData } = useSelector((state: RootState) => state.dashboard);
+  const vehiclesData = rawData?.topVehicles || [];
+  const topVehicles = [...vehiclesData].sort((a: any, b: any) => b.bookings - a.bookings).slice(0, 8);
 
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 shadow-sm">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -8,6 +8,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { assets } from '@/config/assets';
+import { referenceApi } from '@/services/api';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -28,6 +29,26 @@ export default function Fleet() {
   const { currentLanguage } = useSelector((state: RootState) => state.ui);
   const isRTL = currentLanguage === 'ar';
   const swiperRef = useRef<any>(null);
+  const [backgrounds, setBackgrounds] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    referenceApi.getBackgrounds()
+      .then((res: any) => {
+        if (res?.status && res?.data) {
+          setBackgrounds(res.data);
+        } else if (typeof res === 'object') {
+          setBackgrounds(res);
+        }
+      })
+      .catch(() => {/* silently fallback to active */})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const showFleet = backgrounds['our_fleet'] !== undefined && backgrounds['our_fleet'] !== '';
+
+  if (loading) return null;
+  if (!showFleet) return null;
 
   return (
     <section id="fleet" className="relative overflow-hidden py-8">

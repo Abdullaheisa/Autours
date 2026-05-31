@@ -118,6 +118,62 @@ h1, h2, h3, h4, h5, h6, .section-title, .btn-primary {
   background: #d1d5db;
 }
 
+/* Rich text editor */
+.rich-text-editor__body:empty::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.rich-text-editor__body b,
+.rich-text-editor__body strong {
+  font-weight: 700;
+}
+
+.rich-text-editor__body i,
+.rich-text-editor__body em {
+  font-style: italic;
+}
+
+.rich-text-editor__body u {
+  text-decoration: underline;
+}
+
+.rich-text-editor__body h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0.5rem 0;
+}
+
+.rich-text-editor__body h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+.rich-text-editor__body h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0.35rem 0;
+}
+
+.rich-text-editor__body ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.rich-text-editor__body ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.rich-text-editor__body a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
 /* no-scrollbar: hide scrollbar but allow scrolling */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

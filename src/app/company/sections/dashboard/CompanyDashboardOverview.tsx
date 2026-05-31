@@ -4,51 +4,88 @@ import { useMemo } from "react";
 import { Building2, CalendarCheck, DollarSign, Car, TrendingUp } from "lucide-react";
 import StatsGrid from "@/app/company/components/StatsGrid";
 import { CompanyRecentBookingsTable, CompanyMonthlyBookingsChart, CompanyVehicleCards } from "@/app/company/components/CompanyDashboardComponents";
+import { useState, useEffect } from "react";
+import { dashboardApi } from "@/services/api";
 import { companies, recentBookings, vehiclesPhotos } from "@/lib/data";
 
 const LOGGED_IN_COMPANY = "MAHD Rent";
 
 export default function CompanyDashboardOverview() {
-  const companyStats = useMemo(() => {
-    const company = companies.find(c => c.name === LOGGED_IN_COMPANY);
-    const bookings = recentBookings.filter(b => b.company === LOGGED_IN_COMPANY);
-    const vehicles = vehiclesPhotos.filter(v => v.id <= 12); // Mocking company vehicles
+  const [statsData, setStatsData] = useState<any>(null);
 
+  useEffect(() => {
+    dashboardApi.getSupplier().then((res: any) => {
+      const charts = res?.data || {};
+      const supplierRevenue = charts.supplierRevenue || [];
+      const NumberOfActiveVehicles = charts.NumberOfActiveVehicles || {};
+      const numberOfRentalsMonthly = charts.numberOfRentalsMonthly || {};
+      
+      const totalEarnings = charts.real_total_earnings !== undefined ? Number(charts.real_total_earnings) : supplierRevenue.reduce((acc: number, curr: any) => acc + Number(curr.profit || 0), 0);
+      const totalRentals = charts.real_total_rentals !== undefined ? Number(charts.real_total_rentals) : (numberOfRentalsMonthly.done || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0);
+      const totalVehicles = charts.real_total_vehicles !== undefined ? Number(charts.real_total_vehicles) : ((NumberOfActiveVehicles.currentYear?.[0]?.count) || 
+                            (NumberOfActiveVehicles.monthly || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0) || 0);
+      const rating = charts.real_avg_rating !== undefined ? String(charts.real_avg_rating) : "4.8";
+
+      setStatsData({
+        totalEarnings: totalEarnings.toLocaleString(),
+        totalRentals: totalRentals.toLocaleString(),
+        totalVehicles: totalVehicles.toLocaleString(),
+        rating: rating,
+        customerTransactions: charts.customerTransactions || [],
+        numberOfRentalsMonthly: numberOfRentalsMonthly,
+        latestVehicles: charts.latestVehicles || []
+      });
+    }).catch((err) => {
+      console.warn("Using mock data due to API error:", err.message);
+      setStatsData({
+        totalEarnings: "12,450",
+        totalRentals: "142",
+        totalVehicles: "38",
+        rating: "4.8",
+        customerTransactions: [],
+        numberOfRentalsMonthly: null,
+        latestVehicles: []
+      });
+    });
+  }, []);
+
+  const companyStats = useMemo(() => {
+    const data = statsData || {};
     return [
       { 
         label: "Total Earnings", 
-        value: company ? `$${(company.revenue / 1000).toFixed(1)}K` : "$0", 
+        value: data.totalEarnings ? `$${data.totalEarnings}` : "$0", 
         icon: <DollarSign size={20} />, 
-        change: "+12%", 
+        change: "+0%", 
         trend: "up" as const, 
         color: "emerald" as const 
       },
       { 
         label: "Total Rentals", 
-        value: bookings.length * 12, // Mocking multiplier
+        value: data.totalRentals || 0,
         icon: <CalendarCheck size={20} />, 
-        change: "+8%", 
+        change: "+0%", 
         trend: "up" as const, 
         color: "blue" as const 
       },
       { 
         label: "My Vehicles", 
-        value: 18, // Mocking
+        value: data.totalVehicles || 0,
         icon: <Car size={20} />, 
-        change: "+2", 
+        change: "+0", 
         trend: "up" as const, 
         color: "purple" as const 
       },
       { 
         label: "Avg. Rating", 
-        value: company?.rating || "0.0", 
+        value: data.rating || "0.0", 
         icon: <Building2 size={20} />, 
-        change: "+0.2", 
+        change: "+0.0", 
         trend: "up" as const, 
         color: "amber" as const 
       },
     ];
-  }, []);
+  }, [statsData]);
 
   return (
     <div className="space-y-6">
@@ -56,31 +93,41 @@ export default function CompanyDashboardOverview() {
       
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
-          <CompanyMonthlyBookingsChart />
+          <CompanyMonthlyBookingsChart data={statsData?.numberOfRentalsMonthly} />
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Earnings History</h3>
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
-                    <TrendingUp size={16} />
+            {(!statsData || !statsData.customerTransactions || statsData.customerTransactions.length === 0) ? (
+              <div className="text-center py-8 text-gray-400 text-sm">No recent transactions</div>
+            ) : (
+              statsData.customerTransactions.slice(0, 5).map((rental: any) => (
+                <div key={rental.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100/60 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+                      <TrendingUp size={16} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {rental.order_number ? `Booking ${rental.order_number}` : "Payment Received"}
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        {rental.created_at ? new Date(rental.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "Recently"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">Payment Received</p>
-                    <p className="text-[10px] text-gray-500">May {10-i}, 2024</p>
-                  </div>
+                  <span className="text-sm font-bold text-emerald-600">
+                    +${parseFloat(rental.price || 0).toFixed(2)}
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-emerald-600">+$450.00</span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <CompanyRecentBookingsTable />
+        <CompanyRecentBookingsTable bookings={statsData?.customerTransactions} />
       </div>
 
       <div>
@@ -88,7 +135,7 @@ export default function CompanyDashboardOverview() {
           <h3 className="text-lg font-bold text-gray-900">Featured Vehicles</h3>
           <button className="text-sm text-primary-600 font-medium">View Fleet</button>
         </div>
-        <CompanyVehicleCards />
+        <CompanyVehicleCards vehicles={statsData?.latestVehicles} />
       </div>
     </div>
   );

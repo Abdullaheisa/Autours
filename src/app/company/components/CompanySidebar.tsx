@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store";
+import { logout, updateUser } from "@/store/slices/authSlice";
+import { authApi } from "@/services/api";
+import { normalizeAuthRole } from "@/utils/auth";
 import {
   LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
   Tag, Crown, CalendarCheck, FileText, Star, Ticket,
   CreditCard, LogOut, ChevronLeft, ChevronRight, Calendar
 } from "lucide-react";
+
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import Image from "next/image";
+import { getUserImageUrl } from "@/utils/getImageUrl";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
@@ -23,6 +33,7 @@ const companySidebarItems = [
   { id: "create-vehicle", label: "Create Vehicle", icon: "PlusCircle" },
   { id: "price-list", label: "Price List", icon: "Tag" },
   { id: "vehicles", label: "My Vehicles", icon: "Car" },
+  { id: "bulk-upload", label: "Bulk Upload", icon: "FileText" },
   { id: "membership", label: "Membership", icon: "Crown" },
   { id: "rentals", label: "Rentals", icon: "CalendarCheck" },
   { id: "rental-terms", label: "Rental Terms", icon: "FileText" },
@@ -40,6 +51,37 @@ interface CompanySidebarProps {
 
 export default function CompanySidebar({ activeItem, onItemClick, isOpen = false, onClose }: CompanySidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (user) {
+      authApi.getUser()
+        .then((res: any) => {
+          if (res) {
+            console.log("USER DATA FROM API (SIDEBAR):", res);
+            dispatch(updateUser({
+              id: res.id?.toString() || '1',
+              name: res.user_name || res.name || '',
+              email: res.email || '',
+              role: normalizeAuthRole(res.role || 'supplier'),
+              status: res.role || 'supplier',
+              avatar: res.logo || res.company_logo || res.photo || res.avatar || undefined,
+              logo: res.logo || res.company_logo || res.photo || res.avatar || undefined,
+            }));
+          }
+        })
+        .catch((err) => console.warn("Failed to refresh user profile in sidebar:", err));
+    }
+  }, [dispatch]);
+
+  console.log("REDUX USER DATA (SIDEBAR):", user);
+  const userAvatar = user?.logo || (user as any)?.company_logo || (user as any)?.photo || user?.avatar;
+  const avatarUrl = userAvatar ? getUserImageUrl(userAvatar) : null;
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "CO";
 
   return (
     <>
@@ -53,14 +95,22 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
         ${isCollapsed ? "lg:w-20 w-72" : "w-72"}
       `}>
         <div className="p-6 border-b border-gray-100">
-          <div className={`flex items-center gap-3 ${isCollapsed ? "lg:justify-center" : ""}`}>
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-              <Car className="text-gray-900" size={22} />
+          <div className={`flex ${isCollapsed ? "flex-col lg:justify-center lg:items-center" : "flex-col items-center text-center"} gap-3`}>
+            <div className={`${isCollapsed ? "w-10 h-10" : "w-16 h-16"} rounded-full overflow-hidden shadow-lg shadow-primary/20 shrink-0 relative bg-gray-50 flex items-center justify-center border border-gray-100 transition-all duration-300`}>
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={user?.name || "Company"} width={isCollapsed ? 40 : 64} height={isCollapsed ? 40 : 64} className="w-full h-full object-cover" />
+              ) : (
+                <div className={`w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold ${isCollapsed ? "text-sm" : "text-lg"}`}>
+                  {initials}
+                </div>
+              )}
             </div>
-            <div className={`${isCollapsed ? "lg:hidden" : "block"}`}>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Autours</h1>
-              <p className="text-xs text-gray-500">company@autours.net</p>
-            </div>
+            {!isCollapsed && (
+              <div className="mt-1">
+                <h1 className="text-base font-bold text-gray-900 tracking-tight leading-snug">{user?.name || "Autours"}</h1>
+                <p className="text-xs text-gray-500 mt-0.5">{user?.email || "company@autours.net"}</p>
+              </div>
+            )}
           </div>
         </div>
         <button
@@ -78,9 +128,16 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
               return (
                 <li key={item.id}>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (isLogout) {
-                        window.location.href = "/";
+                        try {
+                          await authApi.logout();
+                        } catch (e) {
+                          console.error("Logout API failed:", e);
+                        } finally {
+                          dispatch(logout()); // Safe clear of state, token, user
+                          window.location.href = "/login";
+                        }
                         return;
                       }
                       onItemClick(item.id);

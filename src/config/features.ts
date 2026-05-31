@@ -27,7 +27,7 @@ export const features = {
   // ── Global UI Features ────────────────────────────────────────────────────
 
   /** Contest promotional popup — shows on homepage only */
-  contestPopup: false,
+  contestPopup: true,
 
   /** Contest control page in admin dashboard */
   contestControl: true,

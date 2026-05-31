@@ -1,11 +1,10 @@
-'use client';
+import type { Metadata } from 'next';
+import AdminLayoutClient from './AdminLayoutClient';
 
-import AuthGuard from '@/components/shared/auth/AuthGuard';
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthGuard allowedRoles={['admin']}>
-      {children}
-    </AuthGuard>
-  );
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }

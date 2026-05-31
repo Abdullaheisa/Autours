@@ -20,7 +20,7 @@ import { ContestSettingsDTO, ContestRegistrationDTO, RegisterUserPayload } from 
 import { ContestMapper } from './contest.mapper';
 import { ContestStorage } from './contest.storage';
 import { mockContestRegistrations } from '@/data/mockContestRegistrations';
-import { apiClient } from '@/services/api/apiClient';
+import { apiClient } from '@/services/api/axiosClient';
 
 // ── Environment ───────────────────────────────────────────────────────────────
 const USE_REAL_API = process.env.NEXT_PUBLIC_USE_REAL_API === 'true';

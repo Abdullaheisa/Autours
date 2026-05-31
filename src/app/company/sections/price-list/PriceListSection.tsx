@@ -1,29 +1,127 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Info, MapPin, CheckCircle2, XCircle, Save, RotateCcw } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, CheckCircle2, XCircle, Save, Loader2, DollarSign } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
-import { vehiclesPhotos } from "@/lib/data";
+import { supplierApi } from "@/services/api/supplierApi";
 import { useSearch } from "../../context/SearchContext";
+import { getVehicleImageUrl } from "@/utils/getImageUrl";
+import toast from "react-hot-toast";
 
 export default function PriceListSection() {
   const { searchQuery } = useSearch();
   const [localSearch, setLocalSearch] = useState("");
-  const [activeItems, setActiveItems] = useState<Record<number, boolean>>(
-    Object.fromEntries(vehiclesPhotos.map(v => [v.id, true]))
-  );
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeItems, setActiveItems] = useState<Record<number, boolean>>({});
+  const [prices, setPrices] = useState<Record<number, { price: string; week_price: string; month_price: string }>>({});
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [localSearch, searchQuery]);
+
+  const fetchVehicles = async () => {
+    setIsLoading(true);
+    try {
+      const res: any = await supplierApi.getVehicles(1, 200);
+      const list = res?.data?.data || res?.data || res || [];
+      if (Array.isArray(list)) {
+        setVehicles(list);
+        const activeMap: Record<number, boolean> = {};
+        const priceMap: Record<number, any> = {};
+        list.forEach((v: any) => {
+          activeMap[v.id] = !!v.activation;
+          priceMap[v.id] = {
+            price: v.price?.toString() || "0",
+            week_price: v.week_price?.toString() || "0",
+            month_price: v.month_price?.toString() || "0"
+          };
+        });
+        setActiveItems(activeMap);
+        setPrices(priceMap);
+      }
+    } catch (err: any) {
+      console.warn("Failed to fetch vehicles:", err.message);
+      toast.error("Failed to load vehicle pricing data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
 
   const filteredVehicles = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();
-    return vehiclesPhotos.filter(v => 
-      v.name.toLowerCase().includes(query) || 
-      v.category.toLowerCase().includes(query)
-    );
-  }, [searchQuery, localSearch]);
+    return vehicles.filter(v => {
+      const catName = typeof v.category === 'object' ? v.category?.name : v.category;
+      return v.name?.toLowerCase().includes(query) || String(catName || '').toLowerCase().includes(query);
+    });
+  }, [vehicles, searchQuery, localSearch]);
 
-  const toggleStatus = (id: number) => {
-    setActiveItems(prev => ({ ...prev, [id]: !prev[id] }));
+  const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
+  const paginatedVehicles = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredVehicles.slice(start, start + itemsPerPage);
+  }, [filteredVehicles, currentPage]);
+
+  const toggleStatus = async (id: number) => {
+    const nextStatus = !activeItems[id];
+    setTogglingId(id);
+    try {
+      const res: any = await supplierApi.toggleVehicleActivation(id, nextStatus);
+      if (res?.status || res?.data) {
+        setActiveItems(prev => ({ ...prev, [id]: nextStatus }));
+        toast.success(`Vehicle activation set to ${nextStatus ? 'Active' : 'Inactive'}`);
+      } else {
+        toast.error("Failed to toggle vehicle status.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || err.message || "Failed to update vehicle status.");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handlePriceChange = (id: number, field: string, value: string) => {
+    setPrices(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  };
+
+  const handleSave = async (id: number) => {
+    const p = prices[id];
+    setSavingId(id);
+    try {
+      const res: any = await supplierApi.updateVehiclePrice(id, { 
+        price: parseFloat(p.price) || 0,
+        week_price: parseFloat(p.week_price) || 0,
+        month_price: parseFloat(p.month_price) || 0
+      });
+      if (res?.status || res?.data) {
+        toast.success("Pricing tiers updated successfully!");
+      } else {
+        toast.error("Failed to update pricing tiers.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || err.message || "Failed to update pricing.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const resolveImageUrl = (v: any) => {
+    let img = v.image || v.photo || v.car_photo || v.cover_image;
+    if (Array.isArray(img)) img = img[0];
+    if (img && typeof img === 'object') img = img.photo || img.url || img.path || img.image || '';
+    if (!img || typeof img !== 'string') return undefined;
+    return getVehicleImageUrl(img);
   };
 
   return (
@@ -34,104 +132,207 @@ export default function PriceListSection() {
         showAction={false} 
       />
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 mt-4">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 mt-6">
+        <div className="relative group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
           <input 
             type="text" 
-            placeholder="Search by vehicle name or branch..." 
+            placeholder="Search by vehicle name or brand..." 
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" 
+            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none" 
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1000px]">
-            <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Vehicle & Status</th>
-                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">1-2 Days</th>
-                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">3-7 Days</th>
-                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">8-30 Days</th>
-                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Location</th>
-                <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredVehicles.map((vehicle) => {
-                const isActive = activeItems[vehicle.id];
-                return (
-                  <tr key={vehicle.id} className="hover:bg-gray-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-10 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 shrink-0">
-                          {vehicle.image && <img src={vehicle.image} alt="" className="w-full h-full object-cover" />}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm">{vehicle.name}</p>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            {isActive ? (
-                              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase">
-                                <CheckCircle2 size={10} /> Active
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1 text-[10px] font-bold text-red-500 uppercase">
-                                <XCircle size={10} /> Inactive
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <input type="text" defaultValue="20.00" className="w-20 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
-                        <span className="text-[10px] font-bold text-gray-400">AED</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <input type="text" defaultValue="15.00" className="w-20 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
-                        <span className="text-[10px] font-bold text-gray-400">AED</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <input type="text" defaultValue="10.00" className="w-20 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
-                        <span className="text-[10px] font-bold text-gray-400">AED</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-900">Muscat Int. Airport</span>
-                        <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-1">
-                          <MapPin size={10} /> Muscat
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => toggleStatus(vehicle.id)}
-                          className={`p-2 rounded-xl border transition-all ${isActive ? 'text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100' : 'text-red-500 bg-red-50 border-red-100 hover:bg-red-100'}`}
-                        >
-                          {isActive ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-                        </button>
-                        <button className="p-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-100 transition-all active:scale-95">
-                          <Save size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
+          <Loader2 size={32} className="animate-spin text-primary" />
+          <span className="text-sm font-medium">Loading price lists...</span>
         </div>
-      </div>
+      ) : filteredVehicles.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-12 text-center">
+          <DollarSign size={48} className="text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-900 mb-2">No Vehicles Found</h3>
+          <p className="text-sm text-gray-500 max-w-sm mx-auto">
+            Add vehicles to your fleet to configure their daily, weekly, and monthly pricing rates.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
+          <div className="overflow-x-auto" style={{ transform: "rotateX(180deg)" }}>
+            <div style={{ transform: "rotateX(180deg)" }}>
+              <table className="w-full min-w-[1000px]">
+                <thead>
+                  <tr className="bg-gray-50/50 border-b border-gray-100">
+                    <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Vehicle & Status</th>
+                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[160px]">Daily Rate (1-2 Days)</th>
+                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[160px]">Weekly Rate (3-7 Days)</th>
+                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[160px]">Monthly Rate (8-30 Days)</th>
+                    <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Location</th>
+                    <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[150px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedVehicles.map((vehicle) => {
+                    const isActive = activeItems[vehicle.id];
+                    const isSaving = savingId === vehicle.id;
+                    const isToggling = togglingId === vehicle.id;
+
+                    return (
+                      <tr key={vehicle.id} className="hover:bg-gray-50/30 transition-colors group animate-in fade-in duration-300">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-10 rounded-xl overflow-hidden border border-gray-150 shadow-sm bg-gray-50 shrink-0">
+                              {resolveImageUrl(vehicle) ? (
+                                <img src={resolveImageUrl(vehicle) as string} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-all duration-350" />
+                              ) : (
+                                <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300 font-bold text-xs">NO IMG</div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 text-sm leading-tight">{vehicle.name}</p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                {isActive ? (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                    <CheckCircle2 size={10} /> Active
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-red-50 text-red-600 border border-red-100">
+                                    <XCircle size={10} /> Inactive
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <input 
+                              type="number" 
+                              min="0"
+                              value={prices[vehicle.id]?.price || "0"} 
+                              onChange={(e) => handlePriceChange(vehicle.id, 'price', e.target.value)} 
+                              className="w-24 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                            />
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">AED</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <input 
+                              type="number" 
+                              min="0"
+                              value={prices[vehicle.id]?.week_price || "0"} 
+                              onChange={(e) => handlePriceChange(vehicle.id, 'week_price', e.target.value)} 
+                              className="w-24 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                            />
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">AED</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <input 
+                              type="number" 
+                              min="0"
+                              value={prices[vehicle.id]?.month_price || "0"} 
+                              onChange={(e) => handlePriceChange(vehicle.id, 'month_price', e.target.value)} 
+                              className="w-24 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                            />
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">AED</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-gray-900">
+                              {typeof vehicle.pickup_loc === 'object' ? (vehicle.pickup_loc?.adresse || vehicle.pickup_loc?.name) : vehicle.pickup_loc || "All Branches"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              type="button"
+                              onClick={() => toggleStatus(vehicle.id)}
+                              disabled={isToggling}
+                              className={`p-2.5 rounded-xl border transition-all ${
+                                isActive 
+                                  ? 'text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100' 
+                                  : 'text-red-500 bg-red-50 border-red-100 hover:bg-red-100'
+                              }`}
+                              title={isActive ? "Set Inactive" : "Set Active"}
+                            >
+                              {isToggling ? (
+                                <Loader2 size={16} className="animate-spin" />
+                              ) : isActive ? (
+                                <CheckCircle2 size={16} />
+                              ) : (
+                                <XCircle size={16} />
+                              )}
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => handleSave(vehicle.id)}
+                              disabled={isSaving}
+                              className="p-2.5 bg-primary hover:bg-primary/95 text-black font-bold rounded-xl transition-all shadow-md shadow-primary/10 active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center"
+                              title="Save Pricing"
+                            >
+                              {isSaving ? (
+                                <Loader2 size={16} className="animate-spin" />
+                              ) : (
+                                <Save size={16} />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Pagination Footer */}
+          {filteredVehicles.length > 0 && totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 px-6 py-4 bg-gray-50/30">
+              <span className="text-xs font-bold text-gray-500">
+                Showing {Math.min(filteredVehicles.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
+                {Math.min(filteredVehicles.length, currentPage * itemsPerPage)} of {filteredVehicles.length} vehicles
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-40 disabled:hover:bg-white"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${
+                      currentPage === page
+                        ? "bg-primary text-black shadow-sm"
+                        : "border border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-40 disabled:hover:bg-white"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </SectionLayout>
   );
 }

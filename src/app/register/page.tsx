@@ -1,10 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { User, Mail, Globe, Phone, Lock, ArrowRight, CheckCircle2, ChevronDown, Car } from 'lucide-react';
+import { User, Mail, Globe, Phone, Lock, ArrowRight, CheckCircle2, ChevronDown, Car, Loader2, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { worldCountries } from '@/data/worldCountries';
+import { AppDispatch, RootState } from '@/store';
+import { registerThunk } from '@/store/slices/authSlice';
+import { getPostLoginPath } from '@/utils/auth';
 
 const benefits = [
   "No financial risk at all. The customers pay directly to you upon arrival.",
@@ -41,12 +47,39 @@ function InputField({
 }
 
 export default function RegisterPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [country, setCountry] = useState('');
   const [phoneCode, setPhoneCode] = useState('+20');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const countryName = worldCountries.find((c) => c.iso === country)?.name || country;
+    const result = await dispatch(
+      registerThunk({
+        fullName,
+        email,
+        password,
+        phone: `${phoneCode}${phone}`,
+        country: countryName,
+        supplier: 1,
+      })
+    );
+
+    if (registerThunk.fulfilled.match(result)) {
+      toast.success('Registration successful! Please login.');
+      router.push('/login?registered=true');
+    } else {
+      toast.error(result.payload as string || 'Registration failed');
+    }
+  };
 
   const inputClass =
     'w-full h-14 bg-gray-50 border border-gray-200 focus:border-[#EFBA07] focus:bg-white rounded-2xl pl-12 pr-4 text-sm font-bold outline-none transition-all duration-200 focus:ring-4 focus:ring-yellow-400/10 text-gray-800';
@@ -143,7 +176,7 @@ export default function RegisterPage() {
             <div className="h-1 w-12 bg-[#EFBA07] mt-3 rounded-full" />
           </div>
 
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InputField icon={<User size={17} />} label="Full Name">
                 <input
@@ -215,22 +248,42 @@ export default function RegisterPage() {
 
             <InputField icon={<Lock size={17} />} label="Password">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className={inputClass}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#EFBA07] transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </InputField>
+
+            {error && (
+              <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                <p className="text-xs text-red-600 font-bold text-center">{error}</p>
+              </div>
+            )}
 
             <div className="pt-4">
               <button
                 type="submit"
-                className="w-full h-14 bg-[#EFBA07] hover:bg-yellow-400 text-gray-900 font-black rounded-2xl shadow-lg shadow-yellow-400/25 flex items-center justify-center gap-3 transition-all duration-200 active:scale-[0.98] group text-sm uppercase tracking-widest"
+                disabled={loading}
+                className="w-full h-14 bg-[#EFBA07] hover:bg-yellow-400 disabled:opacity-60 text-gray-900 font-black rounded-2xl shadow-lg shadow-yellow-400/25 flex items-center justify-center gap-3 transition-all duration-200 active:scale-[0.98] group text-sm uppercase tracking-widest"
               >
-                Create Account
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-200" />
+                {loading ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  <>
+                    Create Account
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-200" />
+                  </>
+                )}
               </button>
             </div>
 

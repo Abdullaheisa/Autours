@@ -8,8 +8,14 @@ interface CompanyDetailsHeroProps {
 
 export default function CompanyDetailsHero({ company }: CompanyDetailsHeroProps) {
   return (
-    <div className="relative h-48 sm:h-64">
-      <img src={company.image} alt={company.name} className="w-full h-full object-cover" />
+    <div className="relative h-48 sm:h-64 bg-slate-200 flex items-center justify-center">
+      {company.image ? (
+        <img src={company.image} alt={company.name} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-400 font-semibold text-2xl uppercase">
+          {company.name?.slice(0, 2)}
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
         <div>

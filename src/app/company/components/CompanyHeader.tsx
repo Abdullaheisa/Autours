@@ -5,6 +5,11 @@ import { useState } from "react";
 import NotificationBell from "@/app/admin/components/notifications/NotificationBell";
 import { useSearch } from "../context/SearchContext";
 
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import Image from "next/image";
+import { getUserImageUrl } from "@/utils/getImageUrl";
+
 interface CompanyHeaderProps {
   title?: string;
   onMenuClick?: () => void;
@@ -13,6 +18,19 @@ interface CompanyHeaderProps {
 export default function CompanyHeader({ title = "Dashboard", onMenuClick }: CompanyHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const { searchQuery, setSearchQuery } = useSearch();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  console.log("REDUX USER DATA (HEADER):", user);
+  const userAvatar = user?.logo || (user as any)?.company_logo || (user as any)?.photo || user?.avatar;
+  const avatarUrl = userAvatar ? getUserImageUrl(userAvatar) : null;
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "CO";
+
+  const roleLabel = user?.role
+    ? user.role.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
+    : "Company Supplier";
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
@@ -65,11 +83,17 @@ export default function CompanyHeader({ title = "Dashboard", onMenuClick }: Comp
           {/* User Avatar */}
           <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-gray-200">
             <div className="text-right hidden md:block">
-              <p className="text-sm font-semibold text-gray-900">Company User</p>
-              <p className="text-xs text-gray-500">Branch Manager</p>
+              <p className="text-sm font-semibold text-gray-900">{user?.name || "Autours Supplier"}</p>
+              <p className="text-xs text-gray-500">{roleLabel}</p>
             </div>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-primary rounded-xl flex items-center justify-center text-gray-900 font-bold text-xs sm:text-sm shadow-lg shadow-primary/20">
-              CU
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/20 shrink-0 relative bg-gray-50 flex items-center justify-center border border-gray-100">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={user?.name || "Company"} width={36} height={36} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold text-xs sm:text-sm">
+                  {initials}
+                </div>
+              )}
             </div>
           </div>
         </div>

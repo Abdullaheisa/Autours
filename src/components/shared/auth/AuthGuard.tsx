@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { RootState } from '@/store';
 import { restoreAuth } from '@/store/slices/authSlice';
+import { isRoleAllowed } from '@/utils/auth';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -30,7 +31,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       return;
     }
 
-    if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    if (allowedRoles && user && !isRoleAllowed(user.role, allowedRoles)) {
       router.replace('/login');
     }
   }, [checked, isAuthenticated, user, allowedRoles, router]);
@@ -43,7 +44,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     );
   }
 
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && !isRoleAllowed(user.role, allowedRoles)) {
     return null;
   }
 

@@ -7,9 +7,9 @@ import {
   Vehicle,
 } from '@/types';
 
-// ─── Types ────────────────────────────────────────────
 export interface SearchParams {
   location: string;
+  locationLabel?: string;
   dateFrom: string | null;
   dateTo: string | null;
   startTime: string;
@@ -18,8 +18,8 @@ export interface SearchParams {
 
 export interface FilterParams {
   priceRange: [number, number] | null;
-  category: string[];
-  supplier: string[];
+  category: string[]; // بيخزن الـ IDs كـ نصوص مثل ["1", "2"]
+  supplier: string[]; // بيخزن الـ IDs كـ نصوص مثل ["5"]
   locationType: string[];
   seats: string[];
   doors: string[];
@@ -33,27 +33,21 @@ export interface FilterParams {
 }
 
 interface SearchState {
-  // Search parameters from hero / re-search form
   searchParams: SearchParams;
-
-  // Filter parameters for sidebar
   filterParams: FilterParams;
-
-  // API response data
-  vehicles: Vehicle[];
+  vehicles: Vehicle[]; // المصفوفة الأصلية اللي جاية من الباك إند بالكامل
   count: number;
   daysNumber: number;
   maxPrice: number;
   minPrice: number;
   filteredCategories: { id: number; name: string; vehicle_count: number; photo?: string }[];
   filteredSuppliers: { id: number; name: string; vehicle_count: number; logo?: string }[];
-
-  // UI state
   isSearching: boolean;
   isFiltering: boolean;
   searchError: string | null;
   filterError: string | null;
   hasSearched: boolean;
+  fetchedCurrency?: string;
 }
 
 const initialState: SearchState = {
@@ -91,30 +85,14 @@ const initialState: SearchState = {
   searchError: null,
   filterError: null,
   hasSearched: false,
+  fetchedCurrency: 'AED',
 };
 
-// ─── Async Thunks ─────────────────────────────────────
-
-/**
- * Initiate search from the hero section.
- * POSTs to /search/vehicles to save session on the backend.
- */
 export const initiateSearch = createAsyncThunk(
   'search/initiateSearch',
-  async (payload: SearchPayload, { rejectWithValue }) => {
-    try {
-      await vehicleApi.search(payload);
-      return payload;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Search failed');
-    }
-  }
+  async (payload: SearchPayload) => payload
 );
 
-/**
- * Fetch vehicles from /filter/vehicles.
- * Called on results page load and whenever filters change.
- */
 export const fetchVehicles = createAsyncThunk(
   'search/fetchVehicles',
   async (payload: FilterPayload, { rejectWithValue }) => {
@@ -126,8 +104,6 @@ export const fetchVehicles = createAsyncThunk(
     }
   }
 );
-
-// ─── Slice ────────────────────────────────────────────
 
 const searchSlice = createSlice({
   name: 'search',
@@ -160,13 +136,11 @@ const searchSlice = createSlice({
       state.searchError = null;
       state.filterError = null;
     },
-    applyLocalFilters: (state) => {
-      // This is a placeholder for local filtering logic if needed.
-      // Currently, filtering is handled by the fetchVehicles thunk.
+    applyLocalFilters: () => {
+      // الفلترة بالكامل اتقلت لصفحة الـ SearchPage عبر useMemo لأداء أسرع ومنع التضارب
     },
   },
   extraReducers: (builder) => {
-    // ── initiateSearch ──
     builder
       .addCase(initiateSearch.pending, (state) => {
         state.isSearching = true;
@@ -175,7 +149,6 @@ const searchSlice = createSlice({
       .addCase(initiateSearch.fulfilled, (state, action) => {
         state.isSearching = false;
         state.hasSearched = true;
-        // Save the search params from the payload
         state.searchParams.location = action.payload.pickupLoc;
         state.searchParams.dateFrom = action.payload.date_from;
         state.searchParams.dateTo = action.payload.date_to;
@@ -183,24 +156,40 @@ const searchSlice = createSlice({
       .addCase(initiateSearch.rejected, (state, action) => {
         state.isSearching = false;
         state.searchError = action.payload as string;
-      });
-
-    // ── fetchVehicles ──
-    builder
+      })
+      // تفعيل كود جلب البيانات وحل مشكلة الـ Hydration والإيرور (action: any)
       .addCase(fetchVehicles.pending, (state) => {
         state.isFiltering = true;
         state.filterError = null;
       })
-      .addCase(fetchVehicles.fulfilled, (state, action: PayloadAction<FilterResponse>) => {
+      .addCase(fetchVehicles.fulfilled, (state, action: any) => {
         state.isFiltering = false;
         state.hasSearched = true;
-        state.vehicles = action.payload.filteredVehicles;
+        state.vehicles = action.payload.filteredVehicles || [];
         state.count = action.payload.count;
         state.daysNumber = action.payload.daysNumber;
         state.maxPrice = action.payload.max;
         state.minPrice = action.payload.min;
-        state.filteredCategories = action.payload.filteredCategories || [];
-        state.filteredSuppliers = action.payload.filteredSuppliers || [];
+        state.fetchedCurrency = action.meta?.arg?.currency || 'AED';
+
+        const hasActiveFilters =
+          state.filterParams.category.length > 0 ||
+          state.filterParams.supplier.length > 0 ||
+          state.filterParams.locationType.length > 0 ||
+          state.filterParams.paymentType.length > 0 ||
+          state.filterParams.priceRange !== null ||
+          state.filterParams.seats.length > 0 ||
+          state.filterParams.doors.length > 0 ||
+          state.filterParams.transmission.length > 0 ||
+          state.filterParams.fuelType.length > 0 ||
+          state.filterParams.suitcases.length > 0 ||
+          state.filterParams.airConditioning !== null ||
+          state.filterParams.rating !== null;
+
+        if (!hasActiveFilters) {
+          state.filteredCategories = action.payload.filteredCategories || [];
+          state.filteredSuppliers = action.payload.filteredSuppliers || [];
+        }
       })
       .addCase(fetchVehicles.rejected, (state, action) => {
         state.isFiltering = false;

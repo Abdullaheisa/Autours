@@ -13,6 +13,7 @@ interface SearchSummaryProps {
 export default function SearchSummary({ onEditClick, hideEditButton, forceMobileLayout }: SearchSummaryProps) {
   const { searchParams, count, daysNumber } = useSelector((state: RootState) => state.search);
   const currencyCode = useSelector((state: RootState) => state.currency.code);
+  const locationText = searchParams.locationLabel || searchParams.location || '';
 
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -38,7 +39,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
           {/* Pickup Info */}
           <div className="flex-1 px-4 py-3 sm:border-r border-yellow-200">
             <p className="text-xs font-bold text-gray-800 truncate">
-              {searchParams.location || 'Select Location'}
+              {locationText || 'Select Location'}
             </p>
             <p className="text-[10px] text-gray-500 mt-0.5">
               {searchParams.dateFrom ? formatDisplayDate(searchParams.dateFrom) : '--'}
@@ -59,7 +60,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
           {/* Return Info */}
           <div className="flex-1 px-4 py-3 border-t sm:border-t-0 border-yellow-200">
             <p className="text-xs font-bold text-gray-800 truncate">
-              {searchParams.location || 'Select Location'}
+              {locationText || 'Select Location'}
             </p>
             <p className="text-[10px] text-gray-500 mt-0.5">
               {searchParams.dateTo ? formatDisplayDate(searchParams.dateTo) : '--'}
@@ -89,7 +90,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
           <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pick-up Location</h4>
           <div className="flex items-start gap-2 text-sm font-semibold text-gray-700">
             <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
-            <p>{searchParams.location || 'Not selected'}</p>
+            <p>{locationText || 'Not selected'}</p>
           </div>
           {searchParams.dateFrom && (
             <div className="flex items-center gap-5 text-xs font-semibold text-gray-500 pl-6">
@@ -112,7 +113,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
           <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Drop-off Location</h4>
           <div className="flex items-start gap-2 text-sm font-semibold text-gray-700">
             <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
-            <p>{searchParams.location || 'Not selected'}</p>
+            <p>{locationText || 'Not selected'}</p>
           </div>
           {searchParams.dateTo && (
             <div className="flex items-center gap-5 text-xs font-semibold text-gray-500 pl-6">

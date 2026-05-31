@@ -3,6 +3,10 @@
 import { Search, X, Menu } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/app/admin/components/notifications/NotificationBell";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import Image from "next/image";
+import { getLogoUrl } from "@/utils/getImageUrl";
 
 interface HeaderProps {
   title?: string;
@@ -12,6 +16,17 @@ interface HeaderProps {
 export default function Header({ title = "Dashboard", onMenuClick }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const avatarUrl = user?.avatar ? getLogoUrl(user.avatar) : null;
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "AU";
+
+  const roleLabel = user?.role
+    ? user.role.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
+    : "Administrator";
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
@@ -64,11 +79,17 @@ export default function Header({ title = "Dashboard", onMenuClick }: HeaderProps
           {/* User Avatar */}
           <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-gray-200">
             <div className="text-right hidden md:block">
-              <p className="text-sm font-semibold text-gray-900">Admin User</p>
-              <p className="text-xs text-gray-500">Super Admin</p>
+              <p className="text-sm font-semibold text-gray-900">{user?.name || "Autours"}</p>
+              <p className="text-xs text-gray-500">{roleLabel}</p>
             </div>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-primary rounded-xl flex items-center justify-center text-gray-900 font-bold text-xs sm:text-sm shadow-lg shadow-primary/20">
-              AU
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/20 shrink-0">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={user?.name || "User"} width={36} height={36} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold text-xs sm:text-sm">
+                  {initials}
+                </div>
+              )}
             </div>
           </div>
         </div>

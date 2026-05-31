@@ -42,8 +42,8 @@ export const filterOptions = {
     { label: '5 Doors', value: '5' }
   ],
   airConditioning: [
-    { label: 'Air Conditioning', value: 'Yes' },
-    { label: 'No Air Conditioning', value: 'No' }
+    { label: 'Air Conditioning', value: 'Air Conditioning' },
+    { label: 'No Air Conditioning', value: 'No Air Conditioning' }
   ],
   suitcases: [
     { label: 'Small', value: 'Small' },
