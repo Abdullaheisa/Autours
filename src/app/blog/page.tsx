@@ -6,6 +6,7 @@ import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import { siteConfig } from '@/config/site';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
+import { assets } from '@/config/assets';
 import { SERVER_API_BASE } from '@/config/api';
 
 interface PageProps {
@@ -93,7 +94,7 @@ export default async function BlogPage({ searchParams }: PageProps) {
       <section className="relative pt-20 pb-32 overflow-hidden bg-gray-900">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2000&auto=format&fit=crop"
+            src={assets.hero.background}
             alt="Autours Blog Hero Background"
             fill
             sizes="100vw"
