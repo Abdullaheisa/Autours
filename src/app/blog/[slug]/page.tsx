@@ -18,17 +18,19 @@ interface PageProps {
 
 
 
+export const revalidate = 3600;
+
 async function getBlogBySlugOrId(slug: string) {
   try {
     let res = await fetch(`${SERVER_API_BASE}/blogs/slug/${slug}`, {
       headers: { 'Accept': 'application/json' },
-      cache: 'no-store'
+      next: { revalidate: 3600 }
     });
 
     if (!res.ok) {
       res = await fetch(`${SERVER_API_BASE}/blogs/${slug}`, {
         headers: { 'Accept': 'application/json' },
-        cache: 'no-store'
+        next: { revalidate: 3600 }
       });
     }
 
@@ -44,7 +46,7 @@ async function getRelatedPosts() {
   try {
     const res = await fetch(`${SERVER_API_BASE}/blogs/published`, {
       headers: { 'Accept': 'application/json' },
-      cache: 'no-store'
+      next: { revalidate: 3600 }
     });
     if (!res.ok) return [];
     const json = await res.json();

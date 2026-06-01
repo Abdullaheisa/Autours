@@ -20,9 +20,11 @@ async function getBlogPosts(search?: string, categoryId?: string) {
     if (search && search.trim() !== '') queryPath += `&search=${encodeURIComponent(search.trim())}`;
     if (categoryId) queryPath += `&category_id=${categoryId}`;
 
+    const isSearch = (search && search.trim() !== '') || categoryId;
+
     const res = await fetch(queryPath, {
       headers: { 'Accept': 'application/json' },
-      cache: 'no-store',
+      ...(isSearch ? { cache: 'no-store' } : { next: { revalidate: 3600 } }),
     });
 
     if (!res.ok) return [];
@@ -39,6 +41,26 @@ export const metadata: Metadata = {
   description: 'Discover the latest travel tips, destination guides, and expert car rental insights from Autours. Stay informed and save more on your next trip.',
   alternates: {
     canonical: '/blog',
+  },
+  openGraph: {
+    title: 'Autours Blog | Travel Tips, Destination Guides, and Car Rental Insights',
+    description: 'Discover the latest travel tips, destination guides, and expert car rental insights from Autours. Stay informed and save more on your next trip.',
+    url: '/blog',
+    type: 'website',
+    images: [
+      {
+        url: `${siteConfig.url}/og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'Autours Blog',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Autours Blog | Travel Tips, Destination Guides, and Car Rental Insights',
+    description: 'Discover the latest travel tips, destination guides, and expert car rental insights from Autours. Stay informed and save more on your next trip.',
+    images: [`${siteConfig.url}/og-image.jpg`],
   },
 };
 
