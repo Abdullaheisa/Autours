@@ -26,7 +26,8 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
 
   useEffect(() => {
     // If no search, no category, and page is 1, use initial posts
-    if (!search && !category_id && pageParam === '1') {
+    // Skip this early return if the page param changes so we fetch new data
+    if (!search && !category_id && pageParam === '1' && initialPosts.length > 0) {
       setPosts(initialPosts);
       setPagination({
         current_page: initialPagination?.current_page || 1,
@@ -39,7 +40,8 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        let queryPath = `${CLIENT_API_BASE}/blogs/published?per_page=8&page=${pageParam}`;
+        // ALWAYS fetch all and fallback to slicing. The backend pagination might be unreliable.
+        let queryPath = `${CLIENT_API_BASE}/blogs/published?per_page=100`;
         if (search) queryPath += `&search=${encodeURIComponent(search)}`;
         if (category_id) queryPath += `&category_id=${category_id}`;
 
@@ -48,27 +50,20 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
         });
         if (res.ok) {
           const json = await res.json();
-          const meta = json?.data?.current_page ? json.data : (json?.current_page ? json : null);
-          const dataArray = json?.data?.data || json?.data || [];
+          // Extract array from nested response
+          let postsArray = [];
+          if (Array.isArray(json)) postsArray = json;
+          else if (Array.isArray(json?.data)) postsArray = json.data;
+          else if (Array.isArray(json?.data?.data)) postsArray = json.data.data;
 
-          if (meta) {
-             setPosts(Array.isArray(dataArray) ? dataArray : []);
-             setPagination({
-               current_page: meta.current_page || 1,
-               last_page: meta.last_page || Math.ceil((meta.total || dataArray.length) / 8) || 1,
-               total: meta.total || dataArray.length
-             });
-          } else {
-             // Fallback pagination if the API does not return proper pagination meta
-             const currentPage = parseInt(pageParam) || 1;
-             const isArray = Array.isArray(dataArray);
-             setPosts(isArray ? dataArray.slice((currentPage - 1) * 8, currentPage * 8) : []);
-             setPagination({
-               current_page: currentPage,
-               last_page: isArray ? Math.ceil(dataArray.length / 8) || 1 : 1,
-               total: isArray ? dataArray.length : 0
-             });
-          }
+          const currentPage = parseInt(pageParam) || 1;
+          // Force manual slice for strict 8 per page regardless of API metadata
+          setPosts(postsArray.slice((currentPage - 1) * 8, currentPage * 8));
+          setPagination({
+            current_page: currentPage,
+            last_page: Math.max(1, Math.ceil(postsArray.length / 8)),
+            total: postsArray.length
+          });
         }
       } catch (err) {
         console.error(err);
@@ -78,7 +73,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
     };
 
     fetchPosts();
-  }, [search, category_id, pageParam, initialPosts]);
+  }, [search, category_id, pageParam]); // Remove initialPosts from dependency array to prevent infinite loop/stale cache
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -140,8 +135,8 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
                   <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-sm">No Image</div>
                 )}
                 {/* Category Badge on Image */}
-                <div className="absolute top-3 left-3">
-                  <span className="bg-primary/90 backdrop-blur-sm text-gray-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">
+                <div className="absolute top-4 left-4 z-10">
+                  <span className="bg-primary text-gray-900 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg border border-primary-200">
                     {categoryTitle}
                   </span>
                 </div>

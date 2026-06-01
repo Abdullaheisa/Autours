@@ -33,14 +33,14 @@ export default function BlogCategories() {
   if (!categories || categories.length === 0) return null;
 
   return (
-    <div className="mt-20 border-t border-gray-100 pt-12">
-      <h3 className="text-2xl font-black text-gray-900 mb-8 text-center">Browse by Category</h3>
-      <div className="flex flex-wrap justify-center gap-4">
+    <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm mt-8">
+      <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Browse Categories</h2>
+      <div className="flex flex-wrap gap-2">
         {categories.map((cat: any) => (
           <Link
             key={cat.id}
             href={`/blog?category_id=${cat.id}`}
-            className="px-6 py-3 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-primary hover:shadow-md transition-all font-bold text-gray-700 hover:text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-xs font-bold text-gray-700 hover:text-primary-800"
           >
             {cat.title || cat.name}
           </Link>

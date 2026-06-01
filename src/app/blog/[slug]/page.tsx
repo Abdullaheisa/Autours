@@ -257,11 +257,11 @@ export default async function BlogPostDetail({ params }: PageProps) {
               </div>
             )}
 
-            <BlogCategories />
           </article>
 
           <aside className="lg:col-span-4 space-y-8">
             <BlogSearchSidebar />
+            <BlogCategories />
 
             <div className="p-6 border border-gray-100 rounded-2xl">
               <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Related Articles</h2>

@@ -14,8 +14,9 @@ import BlogCategories from '@/components/blog/BlogCategories';
 // This function fetches the initial (default) blog posts at build time (or via ISR)
 async function getInitialBlogPosts() {
   try {
-    // 🚀 Fetch exactly 8 posts for the first page to ensure fast LCP and accurate pagination
-    const queryPath = `${SERVER_API_BASE}/blogs/published?per_page=8&page=1`;
+    // We now fetch ALL posts on the server (up to 100) because the backend API
+    // does not reliably support pagination metadata. We will slice them on the frontend.
+    const queryPath = `${SERVER_API_BASE}/blogs/published?per_page=100`;
     const res = await fetch(queryPath, {
       headers: { 'Accept': 'application/json' },
       next: { revalidate: 3600 }, // Enable ISR
@@ -23,8 +24,20 @@ async function getInitialBlogPosts() {
 
     if (!res.ok) return null;
     const json = await res.json();
-    // Return the full pagination object so the client component knows total pages
-    return json?.data || null;
+
+    // Normalize response: API might return { data: { data: [...] } } or { data: [...] }
+    let postsArray = [];
+    if (Array.isArray(json)) postsArray = json;
+    else if (Array.isArray(json?.data)) postsArray = json.data;
+    else if (Array.isArray(json?.data?.data)) postsArray = json.data.data;
+
+    // Return sliced initial array and computed pagination for the client
+    return {
+       data: postsArray.slice(0, 8),
+       current_page: 1,
+       last_page: Math.max(1, Math.ceil(postsArray.length / 8)),
+       total: postsArray.length
+    };
   } catch {
     return null;
   }
