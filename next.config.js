@@ -4,6 +4,8 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    // 🚀 السطر السحري لضغط الصور وتقليل مساحتها لأقصى درجة
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
       { protocol: 'https', hostname: 'i.pravatar.cc', pathname: '/**' },
