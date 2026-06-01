@@ -17,8 +17,6 @@
   --card: #f9f9f9;
   --border: #e5e5e5;
 
-  --title-font: "Hubot Sans", "Outfit", Helvetica, Arial, sans-serif;
-  --font-family: var(--font-manrope);
 
   /* Primary Shades - Calculated from #f9d602 */
   --primary-50: #fefceb;
@@ -46,20 +44,17 @@
 
 @layer base {
   body {
-    @apply bg-[var(--background)] text-[var(--text)] transition-colors duration-300 antialiased;
-    font-family: var(--font-manrope);
+    @apply bg-[var(--background)] text-[var(--text)] transition-colors duration-300 antialiased font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--title-font);
-    @apply tracking-tight;
+    @apply tracking-tight font-sans;
   }
 }
 
 @layer components {
   /* Site-wide Button Styles */
   .btn-primary {
-    @apply bg-[var(--primary)] text-black font-black px-6 py-3 rounded-xl hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50 uppercase tracking-tighter;
-    font-family: var(--title-font);
+    @apply bg-[var(--primary)] text-black font-black px-6 py-3 rounded-xl hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50 uppercase tracking-tighter font-sans;
     box-shadow: 0 10px 15px -3px rgba(var(--primary-rgb), 0.2), 0 4px 6px -4px rgba(var(--primary-rgb), 0.2);
   }
 
@@ -72,28 +67,8 @@
   }
 
   .section-title {
-    @apply text-3xl md:text-4xl font-black tracking-tighter uppercase italic text-center mb-12;
-    font-family: var(--title-font);
+    @apply text-3xl md:text-4xl font-black tracking-tighter uppercase italic text-center mb-12 font-sans;
   }
-
-  /* Utility classes for consistency */
-  .text-title {
-    font-family: var(--title-font) !important;
-  }
-
-  .text-body {
-    font-family: var(--body-font) !important;
-  }
-}
-
-/* Global overrides for specific Tailwind font weight classes to use Hubot Sans */
-.font-bold, .font-black, .font-extrabold {
-  font-family: var(--title-font) !important;
-}
-
-/* Headings should always use title font regardless of weight */
-h1, h2, h3, h4, h5, h6, .section-title, .btn-primary {
-  font-family: var(--title-font) !important;
 }
 
 .scrollbar-hide::-webkit-scrollbar {

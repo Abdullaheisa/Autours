@@ -23,9 +23,9 @@ const config: Config = {
         "secondary": "var(--secondary-color)",
       },
       fontFamily: {
-        // 🚀 تم تغيير الخط الأساسي لـ Hubot Sans
+        // 🚀 تم تغيير الخط الأساسي لـ Hubot Sans ليكون الخط الوحيد في الموقع
         sans: ["var(--font-hubot)", "system-ui", "sans-serif"],
-        title: ["var(--title-font)", "Outfit", "system-ui", "sans-serif"],
+        title: ["var(--font-hubot)", "system-ui", "sans-serif"],
         body: ["var(--font-hubot)", "system-ui", "sans-serif"],
       },
     },

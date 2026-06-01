@@ -120,6 +120,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
   
   const viewsCount = post.views || post.views_count || post.view_count || 0;
   const blogImg = getBlogImageUrl(post.image);
+  const categoryTitle = post.blog_category?.title || 'Blog';
 
   const allPosts = await getRelatedPosts();
   const relatedPosts = allPosts.filter((p: Record<string, any>) => p.slug !== slug).slice(0, 3);
@@ -147,7 +148,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
   };
 
   return (
-    <main className="min-h-screen container bg-white">
+    <main className="min-h-screen bg-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -173,7 +174,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="mb-5">
           <Link href="/blog" className="inline-flex items-center gap-2 text-gray-700 font-bold text-sm uppercase tracking-wider hover:text-gray-900 transition-all focus:outline-none focus:underline">
             <ArrowLeft size={16} className="text-primary" aria-hidden="true" /> Back to Blog
@@ -183,9 +184,15 @@ export default async function BlogPostDetail({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           <article className="lg:col-span-8 space-y-6">
             <header className="space-y-4">
+              <div className="mb-2">
+                <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-gray-200">
+                  {categoryTitle}
+                </span>
+              </div>
               <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
                 {post.title}
               </h1>
+              <div className="w-16 h-1 bg-primary rounded-full mb-6"></div>
               
               <div className="flex flex-wrap items-center gap-6 text-gray-600 border-b border-gray-100 pb-5">
                 <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
