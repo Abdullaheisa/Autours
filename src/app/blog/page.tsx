@@ -94,11 +94,12 @@ export default async function BlogPage({ searchParams }: PageProps) {
           <Image
             src={assets.hero.background}
             alt="Autours Blog Hero Background"
-            width={1920}
-            height={1080}
-            quality={75}
+            fill
+            sizes="100vw"
+            quality={85}
             priority={true}
-            className="absolute inset-0 w-full h-full object-cover opacity-40"
+            fetchPriority="high"
+            className="absolute inset-0 object-cover opacity-40"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-900 to-gray-900" />
         </div>
@@ -158,8 +159,9 @@ export default async function BlogPage({ searchParams }: PageProps) {
                         width={600}
                         height={400}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        quality={75}
-                        priority={index === 0} 
+                        quality={80}
+                        priority={index === 0}
+                        fetchPriority={index === 0 ? "high" : "auto"}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
