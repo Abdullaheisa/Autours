@@ -3,6 +3,9 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    optimizeCss: true, // 🚀 يمنع الـ Render-blocking للـ CSS
+  },
   images: {
     // 🚀 السطر السحري لضغط الصور وتقليل مساحتها لأقصى درجة
     formats: ['image/avif', 'image/webp'],
@@ -13,6 +16,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'via.placeholder.com', pathname: '/**' },
       { protocol: 'http', hostname: '127.0.0.1', port: '8000', pathname: '/**' },
       { protocol: 'http', hostname: 'localhost', port: '8000', pathname: '/**' },
+      { protocol: 'https', hostname: 'flagcdn.com', pathname: '/**' },
     ],
   },
   // 🚀 إضافة الـ Rewrites لحل مشكلة الـ CORS

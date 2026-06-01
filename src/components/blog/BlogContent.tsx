@@ -85,7 +85,8 @@ function BlogListInner({ initialPosts }: { initialPosts: any[] }) {
                   width={600}
                   height={400}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  quality={80}
+                  quality={60}
+                  loading={index === 0 ? "eager" : "lazy"}
                   priority={index === 0}
                   fetchPriority={index === 0 ? "high" : "auto"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import Image from 'next/image';
 import { RootState, AppDispatch } from '@/store';
 import { setCurrency, fetchExchangeRates } from '@/store/slices/currencySlice';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -87,9 +88,11 @@ export default function CurrencySelector({
                   : 'border-gray-100 text-gray-500 hover:border-gray-200'
               }`}
             >
-              <img 
+              <Image
                 src={`https://flagcdn.com/w40/${curr.flag}.png`} 
                 alt={curr.code}
+                width={20}
+                height={15}
                 className="w-5 h-auto rounded-sm shadow-sm"
               />
               <div className="flex flex-col items-start min-w-0">
@@ -111,9 +114,11 @@ export default function CurrencySelector({
         className="flex items-center gap-2.5 px-3 py-2 bg-white hover:bg-gray-50 rounded-xl transition-all border border-gray-200 shadow-sm group min-w-[100px] justify-between"
       >
         <div className="flex items-center gap-2">
-          <img 
+          <Image
             src={`https://flagcdn.com/w40/${currentCurrency.flag}.png`} 
             alt={currentCurrency.code}
+            width={20}
+            height={15}
             className="w-5 h-auto rounded-sm"
           />
           <span className="text-xs font-black text-gray-900 tracking-tight">{currentCurrency.code}</span>
@@ -148,9 +153,11 @@ export default function CurrencySelector({
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-6 flex items-center justify-center overflow-hidden rounded shadow-sm border border-gray-100">
-                      <img 
+                      <Image
                         src={`https://flagcdn.com/w40/${curr.flag}.png`} 
                         alt={curr.code}
+                        width={32}
+                        height={24}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -205,9 +212,11 @@ function MobileDropdownCurrency({
         className="w-full flex items-center justify-between gap-2.5 px-4 py-3 bg-white hover:bg-gray-50 rounded-xl transition-all border border-gray-200 shadow-sm"
       >
         <div className="flex items-center gap-3">
-          <img 
+          <Image
             src={`https://flagcdn.com/w40/${currentCurrency.flag}.png`} 
             alt={currentCurrency.code}
+            width={24}
+            height={18}
             className="w-6 h-auto rounded-sm"
           />
           <div className="flex flex-col items-start">
@@ -248,9 +257,11 @@ function MobileDropdownCurrency({
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-6 flex items-center justify-center overflow-hidden rounded shadow-sm border border-gray-100">
-                      <img 
+                      <Image
                         src={`https://flagcdn.com/w40/${curr.flag}.png`} 
                         alt={curr.code}
+                        width={32}
+                        height={24}
                         className="w-full h-full object-cover"
                       />
                     </div>
