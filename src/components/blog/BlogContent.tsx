@@ -25,7 +25,8 @@ function BlogListInner({ initialPosts }: { initialPosts: any[] }) {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        let queryPath = `${CLIENT_API_BASE}/blogs/published?per_page=15`;
+        // 🚀 Remove pagination limits, fetch a large number or all available
+        let queryPath = `${CLIENT_API_BASE}/blogs/published?per_page=100`;
         if (search) queryPath += `&search=${encodeURIComponent(search)}`;
         if (category_id) queryPath += `&category_id=${category_id}`;
 
@@ -34,7 +35,8 @@ function BlogListInner({ initialPosts }: { initialPosts: any[] }) {
         });
         if (res.ok) {
           const json = await res.json();
-          setPosts((json?.data?.data || []).slice(0, 12));
+          // 🚀 Do not slice, show all fetched posts
+          setPosts(json?.data?.data || []);
         }
       } catch (err) {
         console.error(err);

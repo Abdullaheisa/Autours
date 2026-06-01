@@ -9,11 +9,13 @@ import { SERVER_API_BASE } from '@/config/api';
 // Use the new Client Components
 import BlogContent from '@/components/blog/BlogContent';
 import BlogSearchForm from '@/components/blog/BlogSearchForm';
+import BlogCategories from '@/components/blog/BlogCategories';
 
 // This function fetches the initial (default) blog posts at build time (or via ISR)
 async function getInitialBlogPosts() {
   try {
-    const queryPath = `${SERVER_API_BASE}/blogs/published?per_page=15`;
+    // 🚀 Fetch more posts initially
+    const queryPath = `${SERVER_API_BASE}/blogs/published?per_page=100`;
     const res = await fetch(queryPath, {
       headers: { 'Accept': 'application/json' },
       next: { revalidate: 3600 }, // Enable ISR
@@ -21,7 +23,7 @@ async function getInitialBlogPosts() {
 
     if (!res.ok) return [];
     const json = await res.json();
-    return (json?.data?.data || []).slice(0, 12);
+    return json?.data?.data || [];
   } catch {
     return [];
   }
@@ -109,6 +111,9 @@ export default async function BlogPage() {
       <section className="max-w-7xl mx-auto px-4 -mt-16 pb-20 relative z-20">
         {/* Client-side Blog Content wrapped in Suspense */}
         <BlogContent initialPosts={initialPosts} />
+
+        {/* 🚀 New Categories Section */}
+        <BlogCategories />
       </section>
 
       <Footer />

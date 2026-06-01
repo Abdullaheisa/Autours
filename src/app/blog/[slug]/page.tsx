@@ -189,10 +189,10 @@ export default async function BlogPostDetail({ params }: PageProps) {
                   {categoryTitle}
                 </span>
               </div>
-              <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight leading-tight">
                 {post.title}
               </h1>
-              <div className="w-16 h-1 bg-primary rounded-full mb-6"></div>
+              <div className="w-24 md:w-32 h-1.5 md:h-2 bg-primary rounded-full mb-6"></div>
               
               <div className="flex flex-wrap items-center gap-6 text-gray-600 border-b border-gray-100 pb-5">
                 <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
