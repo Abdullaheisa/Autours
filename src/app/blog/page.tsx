@@ -14,18 +14,19 @@ import BlogCategories from '@/components/blog/BlogCategories';
 // This function fetches the initial (default) blog posts at build time (or via ISR)
 async function getInitialBlogPosts() {
   try {
-    // 🚀 Fetch more posts initially
-    const queryPath = `${SERVER_API_BASE}/blogs/published?per_page=100`;
+    // 🚀 Fetch exactly 8 posts for the first page to ensure fast LCP and accurate pagination
+    const queryPath = `${SERVER_API_BASE}/blogs/published?per_page=8&page=1`;
     const res = await fetch(queryPath, {
       headers: { 'Accept': 'application/json' },
       next: { revalidate: 3600 }, // Enable ISR
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) return null;
     const json = await res.json();
-    return json?.data?.data || [];
+    // Return the full pagination object so the client component knows total pages
+    return json?.data || null;
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -60,7 +61,13 @@ export const metadata: Metadata = {
 
 export default async function BlogPage() {
   // Fetch initial posts without any search params so this page can be statically generated
-  const initialPosts = await getInitialBlogPosts();
+  const initialData = await getInitialBlogPosts();
+  const initialPosts = initialData?.data || [];
+  const initialPagination = {
+    current_page: initialData?.current_page || 1,
+    last_page: initialData?.last_page || 1,
+    total: initialData?.total || initialPosts.length
+  };
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -110,7 +117,7 @@ export default async function BlogPage() {
       {/* Blog Grid */}
       <section className="max-w-7xl mx-auto px-4 -mt-16 pb-20 relative z-20">
         {/* Client-side Blog Content wrapped in Suspense */}
-        <BlogContent initialPosts={initialPosts} />
+        <BlogContent initialPosts={initialPosts} initialPagination={initialPagination} />
 
         {/* 🚀 New Categories Section */}
         <BlogCategories />

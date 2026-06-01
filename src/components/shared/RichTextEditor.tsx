@@ -11,6 +11,7 @@ import {
   List,
   ListOrdered,
   Link2,
+  Table,
 } from 'lucide-react';
 
 export interface RichTextEditorProps {
@@ -122,6 +123,29 @@ export default function RichTextEditor({
   const handleLink = () => {
     const url = window.prompt('Enter URL');
     if (url) runCommand('createLink', url);
+  };
+
+  const handleTable = () => {
+    const rows = window.prompt('Number of rows?', '2');
+    const cols = window.prompt('Number of columns?', '2');
+
+    if (rows && cols) {
+      let tableHTML = '<br/><table border="1" style="width:100%; border-collapse: collapse; border: 1px solid #e5e7eb;"><tbody>';
+      for (let i = 0; i < parseInt(rows); i++) {
+        tableHTML += '<tr>';
+        for (let j = 0; j < parseInt(cols); j++) {
+          const isHeader = i === 0;
+          const cellStyle = isHeader
+            ? 'background-color: #f3f4f6; font-weight: bold; padding: 12px; border: 1px solid #e5e7eb; text-align: left;'
+            : 'padding: 12px; border: 1px solid #e5e7eb;';
+          const cellTag = isHeader ? 'th' : 'td';
+          tableHTML += `<${cellTag} style="${cellStyle}">Cell</${cellTag}>`;
+        }
+        tableHTML += '</tr>';
+      }
+      tableHTML += '</tbody></table><br/>';
+      runCommand('insertHTML', tableHTML);
+    }
   };
 
   const getBtnClass = (isActive: boolean) => 
@@ -264,6 +288,14 @@ export default function RichTextEditor({
           onMouseDown={(e) => handleToolbarMouseDown(e, handleLink)}
         >
           <Link2 size={14} />
+        </button>
+        <button
+          type="button"
+          className={getBtnClass(false)}
+          title="Insert table"
+          onMouseDown={(e) => handleToolbarMouseDown(e, handleTable)}
+        >
+          <Table size={14} />
         </button>
       </div>
 

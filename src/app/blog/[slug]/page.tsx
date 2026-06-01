@@ -37,12 +37,21 @@ async function getBlogBySlugOrId(slug: string) {
   }
 }
 
-async function getRelatedPosts() {
+async function getRelatedPosts(categoryId?: number) {
   try {
-    const res = await fetch(`${SERVER_API_BASE}/blogs/published`, {
+    // If a category ID is provided, try to fetch related blogs for that category
+    let endpoint = `${SERVER_API_BASE}/blogs/published`;
+    if (categoryId) {
+      // Trying to fetch by category first. Note: The backend endpoint /blog-categories/{id}/blogs is available
+      // but might not be public/published only. For safety, we can use the main endpoint with a filter if supported
+      endpoint = `${SERVER_API_BASE}/blogs/published?category_id=${categoryId}`;
+    }
+
+    const res = await fetch(endpoint, {
       headers: { 'Accept': 'application/json' },
       next: { revalidate: 3600 } // Enable ISR
     });
+
     if (!res.ok) return [];
     const json = await res.json();
     const wrapper = json?.data;
@@ -121,9 +130,20 @@ export default async function BlogPostDetail({ params }: PageProps) {
   const viewsCount = post.views || post.views_count || post.view_count || 0;
   const blogImg = getBlogImageUrl(post.image);
   const categoryTitle = post.blog_category?.title || 'Blog';
+  const categoryId = post.blog_category_id || post.blog_category?.id;
 
-  const allPosts = await getRelatedPosts();
-  const relatedPosts = allPosts.filter((p: Record<string, any>) => p.slug !== slug).slice(0, 3);
+  // 🚀 Fetch related posts dynamically by category
+  let relatedPosts = [];
+  if (categoryId) {
+     const categoryPosts = await getRelatedPosts(categoryId);
+     relatedPosts = categoryPosts.filter((p: Record<string, any>) => p.slug !== slug && p.id !== post.id).slice(0, 3);
+  }
+
+  // Fallback if no related posts found in category
+  if (relatedPosts.length === 0) {
+     const allPosts = await getRelatedPosts();
+     relatedPosts = allPosts.filter((p: Record<string, any>) => p.slug !== slug && p.id !== post.id).slice(0, 3);
+  }
 
   const safeDescription = (post.meta_description && post.meta_description.trim() !== '') 
     ? post.meta_description.trim() 
@@ -216,7 +236,10 @@ export default async function BlogPostDetail({ params }: PageProps) {
               className="prose prose-base max-w-none text-gray-800 leading-relaxed space-y-4
                 prose-headings:font-black prose-headings:text-gray-900 
                 prose-strong:font-bold prose-strong:text-gray-900 
-                [!&_*]:font-inherit"
+                prose-table:w-full prose-table:border-collapse prose-table:my-6
+                prose-th:bg-gray-100 prose-th:border prose-th:border-gray-200 prose-th:p-3 prose-th:text-left
+                prose-td:border prose-td:border-gray-200 prose-td:p-3
+                [!&_*]:font-inherit overflow-x-auto"
               dangerouslySetInnerHTML={{ __html: post.content || '' }}
             />
 

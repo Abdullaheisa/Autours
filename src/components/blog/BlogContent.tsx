@@ -1,32 +1,45 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, User, ArrowRight } from 'lucide-react';
+import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { CLIENT_API_BASE } from '@/config/api';
 
-function BlogListInner({ initialPosts }: { initialPosts: any[] }) {
+function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[], initialPagination?: any }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const search = searchParams.get('search') || '';
   const category_id = searchParams.get('category_id') || '';
+  const pageParam = searchParams.get('page') || '1';
 
   const [posts, setPosts] = useState(initialPosts);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current_page: initialPagination?.current_page || parseInt(pageParam),
+    last_page: initialPagination?.last_page || 1,
+    total: initialPagination?.total || initialPosts.length
+  });
 
   useEffect(() => {
-    if (!search && !category_id) {
+    // If no search, no category, and page is 1, use initial posts
+    if (!search && !category_id && pageParam === '1') {
       setPosts(initialPosts);
+      setPagination({
+        current_page: initialPagination?.current_page || 1,
+        last_page: initialPagination?.last_page || 1,
+        total: initialPagination?.total || initialPosts.length
+      });
       return;
     }
 
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        // 🚀 Remove pagination limits, fetch a large number or all available
-        let queryPath = `${CLIENT_API_BASE}/blogs/published?per_page=100`;
+        let queryPath = `${CLIENT_API_BASE}/blogs/published?per_page=8&page=${pageParam}`;
         if (search) queryPath += `&search=${encodeURIComponent(search)}`;
         if (category_id) queryPath += `&category_id=${category_id}`;
 
@@ -35,8 +48,17 @@ function BlogListInner({ initialPosts }: { initialPosts: any[] }) {
         });
         if (res.ok) {
           const json = await res.json();
-          // 🚀 Do not slice, show all fetched posts
-          setPosts(json?.data?.data || []);
+          // Assuming Laravel paginated response structure
+          if (json?.data?.data) {
+             setPosts(json.data.data);
+             setPagination({
+               current_page: json.data.current_page || 1,
+               last_page: json.data.last_page || 1,
+               total: json.data.total || json.data.data.length
+             });
+          } else if (Array.isArray(json?.data)) {
+             setPosts(json.data);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -46,11 +68,19 @@ function BlogListInner({ initialPosts }: { initialPosts: any[] }) {
     };
 
     fetchPosts();
-  }, [search, category_id, initialPosts]);
+  }, [search, category_id, pageParam, initialPosts]);
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', newPage.toString());
+    router.push(`/blog?${params.toString()}`);
+    // Scroll to top of the blog grid smoothly
+    document.getElementById('blog-grid-top')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex justify-center py-20 min-h-[400px]">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -65,84 +95,142 @@ function BlogListInner({ initialPosts }: { initialPosts: any[] }) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {posts.map((post: any, index: number) => {
-        const blogImgUrl = getBlogImageUrl(post.image);
-        const categoryTitle = post.blog_category?.title || 'Blog';
+    <div id="blog-grid-top" className="scroll-mt-32">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {posts.map((post: any, index: number) => {
+          const blogImgUrl = getBlogImageUrl(post.image);
+          const categoryTitle = post.blog_category?.title || 'General';
 
-        return (
-          <article
-            key={post.id}
-            className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-500 group flex flex-col"
-          >
-            <Link
-              href={`/blog/${post.slug || post.id}`}
-              className="block relative h-64 overflow-hidden focus:outline-none focus:ring-4 focus:ring-primary"
-              aria-label={`Read full article: ${post.title}`}
+          return (
+            <article
+              key={post.id}
+              className="bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 group flex flex-col"
             >
-              {blogImgUrl ? (
-                <Image
-                  src={blogImgUrl}
-                  alt={post.image_alt_text || post.title}
-                  width={600}
-                  height={400}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  quality={60}
-                  loading={index === 0 ? "eager" : "lazy"}
-                  priority={index === 0}
-                  fetchPriority={index === 0 ? "high" : "auto"}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-sm">No Image</div>
-              )}
-              <div className="absolute top-4 left-4">
-                <span className="bg-primary text-gray-900 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg">
-                  {categoryTitle}
-                </span>
-              </div>
-            </Link>
-
-            <div className="p-8 flex-1 flex flex-col">
-              <div className="flex flex-wrap items-center gap-4 mb-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                  <Calendar size={14} className="text-primary" aria-hidden="true" />
-                  {post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+              <Link
+                href={`/blog/${post.slug || post.id}`}
+                className="block relative h-48 overflow-hidden focus:outline-none focus:ring-4 focus:ring-primary"
+                aria-label={`Read full article: ${post.title}`}
+              >
+                {blogImgUrl ? (
+                  <Image
+                    src={blogImgUrl}
+                    alt={post.image_alt_text || post.title}
+                    width={400}
+                    height={300}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    quality={60}
+                    loading={index < 4 ? "eager" : "lazy"}
+                    priority={index < 2}
+                    fetchPriority={index < 2 ? "high" : "auto"}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-sm">No Image</div>
+                )}
+                <div className="absolute top-3 left-3">
+                  <span className="bg-primary/90 backdrop-blur-sm text-gray-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">
+                    {categoryTitle}
+                  </span>
                 </div>
-              </div>
-
-              <Link href={`/blog/${post.slug || post.id}`} className="focus:outline-none focus:underline" aria-hidden="true" tabIndex={-1}>
-                <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-4 line-clamp-2 hover:text-primary transition-colors leading-tight">
-                  {post.title}
-                </h2>
               </Link>
 
-              <p className="text-sm text-gray-500 mb-8 line-clamp-3 leading-relaxed">
-                {post.meta_description || post.excerpt || ''}
-              </p>
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500">
+                    <Calendar size={12} className="text-primary" aria-hidden="true" />
+                    {post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                  </div>
+                </div>
 
-              <div className="mt-auto">
-                <Link
-                  href={`/blog/${post.slug || post.id}`}
-                  className="inline-flex items-center gap-2 text-sm font-black text-gray-900 uppercase tracking-widest hover:gap-3 transition-all focus:outline-none focus:text-primary"
-                >
-                  Read More
-                  <span className="sr-only">about {post.title}</span>
-                  <ArrowRight size={16} strokeWidth={3} className="text-primary" aria-hidden="true" />
+                <Link href={`/blog/${post.slug || post.id}`} className="focus:outline-none focus:underline" aria-hidden="true" tabIndex={-1}>
+                  <h2 className="text-lg font-black text-gray-900 mb-3 line-clamp-2 hover:text-primary transition-colors leading-tight">
+                    {post.title}
+                  </h2>
                 </Link>
+
+                <p className="text-xs text-gray-500 mb-6 line-clamp-3 leading-relaxed">
+                  {post.meta_description || post.excerpt || ''}
+                </p>
+
+                <div className="mt-auto">
+                  <Link
+                    href={`/blog/${post.slug || post.id}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-black text-gray-900 uppercase tracking-widest hover:gap-2 transition-all focus:outline-none focus:text-primary"
+                  >
+                    Read More
+                    <span className="sr-only">about {post.title}</span>
+                    <ArrowRight size={14} strokeWidth={3} className="text-primary" aria-hidden="true" />
+                  </Link>
+                </div>
               </div>
-            </div>
-          </article>
-        );
-      })}
+            </article>
+          );
+        })}
+      </div>
+
+      {/* Pagination Controls */}
+      {pagination.last_page > 1 && (
+        <div className="mt-16 flex items-center justify-center gap-2">
+          <button
+            onClick={() => handlePageChange(pagination.current_page - 1)}
+            disabled={pagination.current_page === 1}
+            className="p-2 rounded-xl bg-white border border-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+            aria-label="Previous Page"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <div className="flex items-center gap-1 mx-2">
+            {[...Array(pagination.last_page)].map((_, i) => {
+              const pageNumber = i + 1;
+              // Show max 5 pages logic
+              if (
+                pagination.last_page <= 5 ||
+                pageNumber === 1 ||
+                pageNumber === pagination.last_page ||
+                Math.abs(pageNumber - pagination.current_page) <= 1
+              ) {
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
+                    className={`w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-sm ${
+                      pagination.current_page === pageNumber
+                        ? 'bg-primary text-gray-900 border-2 border-primary'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:border-primary hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              } else if (
+                pageNumber === pagination.current_page - 2 ||
+                pageNumber === pagination.current_page + 2
+              ) {
+                return <span key={pageNumber} className="text-gray-400 font-bold px-1">...</span>;
+              }
+              return null;
+            })}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(pagination.current_page + 1)}
+            disabled={pagination.current_page === pagination.last_page}
+            className="p-2 rounded-xl bg-white border border-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+            aria-label="Next Page"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-export default function BlogContent({ initialPosts }: { initialPosts: any[] }) {
+export default function BlogContent({ initialPosts, initialPagination }: { initialPosts: any[], initialPagination?: any }) {
   return (
     <Suspense fallback={<div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-      <BlogListInner initialPosts={initialPosts} />
+      <BlogListInner initialPosts={initialPosts} initialPagination={initialPagination} />
     </Suspense>
   );
 }
