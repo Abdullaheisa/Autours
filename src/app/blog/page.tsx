@@ -1,22 +1,18 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { Search, Calendar, User, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
+import Footer from '@/components/shared/layout/Footer';
 import { siteConfig } from '@/config/site';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { assets } from '@/config/assets';
 import { SERVER_API_BASE } from '@/config/api';
 
-// 🚀 تحميل متأخر للفوتر عشان نعلي سكور الأداء (Lazy Loading)
-const Footer = dynamic(() => import('@/components/shared/layout/Footer'));
-
 interface PageProps {
   searchParams: Promise<{ search?: string; category_id?: string }>;
 }
 
-// 🧠 1. جلب البيانات من السيرفر
 async function getBlogPosts(search?: string, categoryId?: string) {
   try {
     let queryPath = `${SERVER_API_BASE}/blogs/published?per_page=15`;
@@ -37,7 +33,6 @@ async function getBlogPosts(search?: string, categoryId?: string) {
   }
 }
 
-// 🚀 2. إعدادات الـ SEO (تم التأكيد عليها)
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: 'Autours Blog | Travel Tips, Destination Guides, and Car Rental Insights',
@@ -45,18 +40,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/blog',
   },
-  openGraph: {
-    title: 'Autours Blog | Expert Car Rental & Travel Guides',
-    description: 'Expert advice on car rentals and travel destinations in the UAE and beyond.',
-    type: 'website',
-    url: '/blog',
-    siteName: siteConfig.name,
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Autours Blog | Expert Car Rental & Travel Guides',
-    description: 'Expert advice on car rentals and travel destinations in the UAE and beyond.',
-  }
 };
 
 export default async function BlogPage({ searchParams }: PageProps) {
@@ -73,16 +56,6 @@ export default async function BlogPage({ searchParams }: PageProps) {
     "name": "Autours Blog",
     "description": "Travel tips, destination guides, and expert car rental insights.",
     "url": `${siteConfig.url}/blog`,
-    "blogPost": posts.map((post: any) => ({
-      "@type": "BlogPosting",
-      "headline": post.title,
-      "url": `${siteConfig.url}/blog/${post.slug || post.id}`,
-      "datePublished": post.created_at,
-      "author": {
-        "@type": "Person",
-        "name": post.author || "Autours"
-      }
-    }))
   };
 
   return (
@@ -99,12 +72,11 @@ export default async function BlogPage({ searchParams }: PageProps) {
           <Image
             src={assets.hero.background}
             alt="Autours Blog Hero Background"
-            fill
-            sizes="100vw"
+            width={1920}
+            height={1080}
             quality={75}
             priority={true}
-            fetchPriority="high"
-            className="object-cover opacity-40"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-900 to-gray-900" />
         </div>
@@ -140,11 +112,6 @@ export default async function BlogPage({ searchParams }: PageProps) {
         {posts.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-[2rem] border border-gray-100 shadow-xl">
             <p className="text-base font-bold text-gray-500">No articles found matching your criteria.</p>
-            {currentSearch && (
-              <Link href="/blog" className="text-sm font-black text-primary hover:underline mt-2 inline-block">
-                Clear search and view all posts
-              </Link>
-            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -166,12 +133,12 @@ export default async function BlogPage({ searchParams }: PageProps) {
                       <Image
                         src={blogImgUrl}
                         alt={post.image_alt_text || post.title}
-                        fill
+                        width={600}
+                        height={400}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         quality={75}
                         priority={index === 0} 
-                        // 🛠️ تم التعديل هنا: object-cover بدل object-ccontain
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-sm">No Image</div>
@@ -181,9 +148,6 @@ export default async function BlogPage({ searchParams }: PageProps) {
                         {categoryTitle}
                       </span>
                     </div>
-                    <div className="absolute bottom-4 right-4 w-12 h-12 bg-white rounded-full flex items-center justify-center opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 shadow-xl">
-                      <ArrowRight size={20} className="text-gray-900" aria-hidden="true" />
-                    </div>
                   </Link>
 
                   <div className="p-8 flex-1 flex flex-col">
@@ -191,10 +155,6 @@ export default async function BlogPage({ searchParams }: PageProps) {
                       <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
                         <Calendar size={14} className="text-primary" aria-hidden="true" />
                         {post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                        <User size={14} className="text-primary" aria-hidden="true" />
-                        By: {post.author || 'Autours'}
                       </div>
                     </div>
 
