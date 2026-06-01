@@ -63,6 +63,7 @@ export default function HomePage() {
         
         <Contact />
       </main>
+        <SectionDivider />
 
       <Footer />
     </div>

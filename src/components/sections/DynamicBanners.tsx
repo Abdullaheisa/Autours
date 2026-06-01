@@ -103,7 +103,7 @@ export default function DynamicBanners() {
             fill
             sizes="100vw"
             quality={75}
-            className="object-contain"
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10 pointer-events-none" />
           
@@ -163,7 +163,7 @@ export default function DynamicBanners() {
             fill
             sizes="100vw"
             quality={75}
-            className="object-contain"
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-black/20 transition-opacity duration-700 hover:opacity-30 z-10 pointer-events-none" />
 

@@ -261,9 +261,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     initial={{ opacity: 0, y: 5, x: "-50%" }}
                     animate={{ opacity: 1, y: 0, x: "-50%" }}
                     exit={{ opacity: 0, y: 5, x: "-50%" }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                    className="absolute top-full right-[-120px] mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
                   >
-                    <div className="absolute -top-1 left-1/2 translate-x-[-50%] w-2 h-2 bg-gray-900 rotate-45" />
+                    <div className="absolute -top-1 left-[93%] translate-x-[-50%] w-2 h-2 bg-gray-900 rotate-45" />
                     The supplier will provide a car with same class and specifications, though the make may vary.
                   </motion.div>
                 )}
@@ -329,12 +329,38 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
                 <img src={assets.icons.instant} alt="" className="w-4 h-4 object-contain shrink-0" aria-hidden="true" />
                 <span className="text-[10px] md:text-xs font-black text-gray-700">Instant confirmation</span>
+                              <div
+                  className="relative"
+                  onMouseEnter={() => setShowInstantTooltip(true)}
+                  onMouseLeave={() => setShowInstantTooltip(false)}
+                >
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
+                  >
+                    <Info size={10} className="text-gray-900" strokeWidth={3} />
+                  </div>
+                  <AnimatePresence>
+                    {showInstantTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full right-[-30px] mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                      >
+                        <div className="absolute -top-1 right-[33px] w-2 h-2 bg-gray-900 rotate-45" />
+                        Receive instant booking confirmation!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
+
           </div>
+
         </div>
 
-        {carData.freeCancellation && (
+           {carData.freeCancellation && (
           <div className="mx-4 mb-2 flex items-center gap-1.5 text-green-700">
             <Check size={14} className="stroke-[2.5] shrink-0" />
             <span className="text-xs md:text-sm font-black">Free Cancellation ({carData.freeCancellationHours}h)</span>
@@ -456,7 +482,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   onMouseEnter={() => setShowInfoTooltip(true)}
                   onMouseLeave={() => setShowInfoTooltip(false)}
                 >
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 shadow-sm"
+                  <div className="relative w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 shadow-sm"
                     style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
                   >
                     <Info size={11} className="text-gray-900" strokeWidth={3} />
@@ -467,9 +493,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                        className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
                       >
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
+                        <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-900 rotate-45" />
                         The supplier will provide a car with same class and specifications, though the make may vary.
                       </motion.div>
                     )}
@@ -531,16 +557,41 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1.5 shrink-0">
                 <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
                 <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
+                                <div
+                  className="relative"
+                  onMouseEnter={() => setShowInstantTooltip(true)}
+                  onMouseLeave={() => setShowInstantTooltip(false)}
+                >
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
+                  >
+                    <Info size={10} className="text-gray-900" strokeWidth={3} />
+                  </div>
+                  <AnimatePresence>
+                    {showInstantTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
+                      >
+                        <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-900 rotate-45" />
+                        Receive instant booking confirmation!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
           </div>
-        </div>
-        {carData.freeCancellation && (
+          {carData.freeCancellation && (
           <div className="mx-5 mb-2 flex items-center gap-2 text-green-700">
             <Check size={16} className="stroke-[2.5] shrink-0" />
             <span className="text-sm font-bold">Free Cancellation ({carData.freeCancellationHours}h)</span>
           </div>
         )}
+        </div>
+
 
         <div className="flex">
           <div className='flex bg-green-100/35 rounded-xl mx-4 mb-4 w-[75%]'>

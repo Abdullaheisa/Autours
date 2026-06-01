@@ -45,7 +45,7 @@ export const assets = {
     avis: '/img/company_logos/avis.png',
     hertz: '/img/company_logos/hertz.png',
     sixt: '/img/company_logos/sixt.png',
-    dollar: '/img/  company_logos/dollar.png',
+    dollar: '/img/company_logos/dollar.png',
     europcar: '/img/company_logos/europcar.png',
     enterprise: '/img/company_logos/enterprise.png',
     budget: '/img/company_logos/budget.png',

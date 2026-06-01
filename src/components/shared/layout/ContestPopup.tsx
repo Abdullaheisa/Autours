@@ -107,15 +107,19 @@ export default function ContestPopup() {
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/20 rounded-full blur-[3rem] pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-amber-500/10 rounded-full blur-[3rem] pointer-events-none" />
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-amber-500 to-primary" />
-
-        {/* Close button */}
+{/* Close button */}
         {!forceInteraction && (
           <button
-            onClick={handleClose}
-            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all active:scale-95 z-10"
-            aria-label="Close"
+            type="button" // دي مهمة جداً عشان لو المودال جوه Form ميعملش ريفريش
+            onClick={(e) => {
+              e.preventDefault(); // بتمنع أي أكشن افتراضي
+              e.stopPropagation(); // بتمنع الضغطة إنها تسمع في الديف اللي تحته
+              handleClose();
+            }}
+            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors active:scale-95 z-50 cursor-pointer select-none shrink-0 outline-none focus:ring-2 focus:ring-gray-300"
+            aria-label="Close modal"
           >
-            <X size={16} strokeWidth={2.5} />
+            <X size={18} strokeWidth={2.5} className="pointer-events-none" />
           </button>
         )}
 

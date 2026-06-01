@@ -32,7 +32,8 @@ export default function PartnersBanner({
         {allPartners.map((partner, i) => (
           <div 
             key={`${partner.id}-${i}`} 
-            className="inline-flex items-center justify-center shrink-0 px-6 md:px-8"
+            // 🚀 التعديل هنا: قللنا الـ px-4 md:px-6 لـ px-2 md:px-3
+            className="inline-flex items-center justify-center shrink-0 px-2 md:px-3"
           >
             <div className="relative h-9 w-28 md:w-32">
               <Image 
