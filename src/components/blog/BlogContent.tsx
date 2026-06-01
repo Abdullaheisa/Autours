@@ -48,16 +48,26 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
         });
         if (res.ok) {
           const json = await res.json();
-          // Assuming Laravel paginated response structure
-          if (json?.data?.data) {
-             setPosts(json.data.data);
+          const meta = json?.data?.current_page ? json.data : (json?.current_page ? json : null);
+          const dataArray = json?.data?.data || json?.data || [];
+
+          if (meta) {
+             setPosts(Array.isArray(dataArray) ? dataArray : []);
              setPagination({
-               current_page: json.data.current_page || 1,
-               last_page: json.data.last_page || 1,
-               total: json.data.total || json.data.data.length
+               current_page: meta.current_page || 1,
+               last_page: meta.last_page || Math.ceil((meta.total || dataArray.length) / 8) || 1,
+               total: meta.total || dataArray.length
              });
-          } else if (Array.isArray(json?.data)) {
-             setPosts(json.data);
+          } else {
+             // Fallback pagination if the API does not return proper pagination meta
+             const currentPage = parseInt(pageParam) || 1;
+             const isArray = Array.isArray(dataArray);
+             setPosts(isArray ? dataArray.slice((currentPage - 1) * 8, currentPage * 8) : []);
+             setPagination({
+               current_page: currentPage,
+               last_page: isArray ? Math.ceil(dataArray.length / 8) || 1 : 1,
+               total: isArray ? dataArray.length : 0
+             });
           }
         }
       } catch (err) {
@@ -74,9 +84,11 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', newPage.toString());
     router.push(`/blog?${params.toString()}`);
-    // Scroll to top of the blog grid smoothly
     document.getElementById('blog-grid-top')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Ensure pagination array calculations are safe
+  const safeLastPage = Math.max(1, pagination.last_page || 1);
 
   if (loading) {
     return (
@@ -99,7 +111,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {posts.map((post: any, index: number) => {
           const blogImgUrl = getBlogImageUrl(post.image);
-          const categoryTitle = post.blog_category?.title || 'General';
+          const categoryTitle = post.blog_category?.title || post.category?.title || 'Blog';
 
           return (
             <article
@@ -127,6 +139,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
                 ) : (
                   <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-sm">No Image</div>
                 )}
+                {/* Category Badge on Image */}
                 <div className="absolute top-3 left-3">
                   <span className="bg-primary/90 backdrop-blur-sm text-gray-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">
                     {categoryTitle}
@@ -169,7 +182,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
       </div>
 
       {/* Pagination Controls */}
-      {pagination.last_page > 1 && (
+      {safeLastPage > 1 && (
         <div className="mt-16 flex items-center justify-center gap-2">
           <button
             onClick={() => handlePageChange(pagination.current_page - 1)}
@@ -181,13 +194,12 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
           </button>
 
           <div className="flex items-center gap-1 mx-2">
-            {[...Array(pagination.last_page)].map((_, i) => {
+            {Array.from({ length: safeLastPage }).map((_, i) => {
               const pageNumber = i + 1;
-              // Show max 5 pages logic
               if (
-                pagination.last_page <= 5 ||
+                safeLastPage <= 5 ||
                 pageNumber === 1 ||
-                pageNumber === pagination.last_page ||
+                pageNumber === safeLastPage ||
                 Math.abs(pageNumber - pagination.current_page) <= 1
               ) {
                 return (
@@ -215,7 +227,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
 
           <button
             onClick={() => handlePageChange(pagination.current_page + 1)}
-            disabled={pagination.current_page === pagination.last_page}
+            disabled={pagination.current_page === safeLastPage}
             className="p-2 rounded-xl bg-white border border-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
             aria-label="Next Page"
           >

@@ -10,6 +10,7 @@ import { siteConfig } from '@/config/site';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { SERVER_API_BASE } from '@/config/api';
 import BlogSearchSidebar from '@/components/blog/BlogSearchSidebar';
+import BlogCategories from '@/components/blog/BlogCategories';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -255,6 +256,8 @@ export default async function BlogPostDetail({ params }: PageProps) {
                 </div>
               </div>
             )}
+
+            <BlogCategories />
           </article>
 
           <aside className="lg:col-span-4 space-y-8">
