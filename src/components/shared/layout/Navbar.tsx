@@ -63,6 +63,8 @@ export default function Navbar() {
               alt={`${siteConfig.name} Logo`}
               width={180}
               height={48}
+              sizes="180px"
+              quality={60}
               priority
               fetchPriority="high"
               className="h-12 sm:h-10 md:h-12 w-auto object-contain transition-all"
