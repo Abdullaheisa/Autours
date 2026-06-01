@@ -179,13 +179,13 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-2">
               <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm">
-                <Image src={assets.payment.visa} alt="Visa Accepted" width={40} height={24} className="h-full w-full object-contain" />
+              <Image src={assets.payment.visa} alt="Visa Accepted" width={40} height={24} loading="lazy" className="h-full w-full object-contain" />
               </div>
               <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm">
-                <Image src={assets.payment.mastercard} alt="Mastercard Accepted" width={40} height={24} className="h-full w-full object-contain" />
+              <Image src={assets.payment.mastercard} alt="Mastercard Accepted" width={40} height={24} loading="lazy" className="h-full w-full object-contain" />
               </div>
               <div className="h-8 w-12 rounded-sm flex items-center justify-center p-0.5 overflow-hidden bg-white shadow-sm">
-                <Image src={assets.payment.knet} alt="KNET Accepted" width={40} height={24} className="h-full w-full object-contain" />
+              <Image src={assets.payment.knet} alt="KNET Accepted" width={40} height={24} loading="lazy" className="h-full w-full object-contain" />
               </div>
             </div>
           </div>

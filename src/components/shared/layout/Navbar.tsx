@@ -64,6 +64,7 @@ export default function Navbar() {
               width={180}
               height={48}
               priority
+              fetchPriority="high"
               className="h-12 sm:h-10 md:h-12 w-auto object-contain transition-all"
             />
           </Link>

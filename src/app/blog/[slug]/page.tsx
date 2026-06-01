@@ -1,36 +1,31 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { 
-  Calendar, User, Clock, ArrowLeft, Eye 
-} from 'lucide-react';
+import { Calendar, Clock, User, Eye, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import ShareButtons from '@/components/blog/ShareButtons';
 import { siteConfig } from '@/config/site';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { SERVER_API_BASE } from '@/config/api';
+import BlogSearchSidebar from '@/components/blog/BlogSearchSidebar';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-
-
-export const revalidate = 3600;
-
 async function getBlogBySlugOrId(slug: string) {
   try {
     let res = await fetch(`${SERVER_API_BASE}/blogs/slug/${slug}`, {
       headers: { 'Accept': 'application/json' },
-      next: { revalidate: 3600 }
+      next: { revalidate: 3600 } // Enable ISR
     });
 
     if (!res.ok) {
       res = await fetch(`${SERVER_API_BASE}/blogs/${slug}`, {
         headers: { 'Accept': 'application/json' },
-        next: { revalidate: 3600 }
+        next: { revalidate: 3600 } // Enable ISR
       });
     }
 
@@ -46,7 +41,7 @@ async function getRelatedPosts() {
   try {
     const res = await fetch(`${SERVER_API_BASE}/blogs/published`, {
       headers: { 'Accept': 'application/json' },
-      next: { revalidate: 3600 }
+      next: { revalidate: 3600 } // Enable ISR
     });
     if (!res.ok) return [];
     const json = await res.json();
@@ -59,7 +54,6 @@ async function getRelatedPosts() {
   }
 }
 
-// 🚀 حل مشكلة اختفاء الوصف في جوجل
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getBlogBySlugOrId(slug);
@@ -69,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!post) {
     return { 
       title: 'Post Not Found | Autours Blog',
-      description: defaultDesc, // 🚀 تأمين الوصف حتى لو المقالة مش موجودة
+      description: defaultDesc,
     }; 
   }
 
@@ -160,25 +154,24 @@ export default async function BlogPostDetail({ params }: PageProps) {
       />
       <Navbar />
 
-<div className="relative w-full h-[136px] md:h-[245px] lg:h-[328px] bg-gray-100 overflow-hidden shadow-inner border-b border-gray-100">
-  {blogImg ? (
-    <Image
-      src={blogImg}
-      alt={post.image_alt_text || post.title}
-      fill
-      sizes="100vw"
-      quality={85}
-      // object-contain هتضمن إن الصورة تظهر بالكامل من غير ما تتقص في التلات مقاسات
-      className="object-contain" 
-      priority={true}
-      fetchPriority="high"
-    />
-  ) : (
-    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
-      No Featured Image
-    </div>
-  )}
-</div>
+      <div className="relative w-full h-[136px] md:h-[245px] lg:h-[328px] bg-gray-100 overflow-hidden shadow-inner border-b border-gray-100">
+        {blogImg ? (
+          <Image
+            src={blogImg}
+            alt={post.image_alt_text || post.title}
+            fill
+            sizes="100vw"
+            quality={85}
+            className="object-contain"
+            priority={true}
+            fetchPriority="high"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+            No Featured Image
+          </div>
+        )}
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
         <div className="mb-5">
@@ -188,14 +181,12 @@ export default async function BlogPostDetail({ params }: PageProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-          
           <article className="lg:col-span-8 space-y-6">
             <header className="space-y-4">
               <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
                 {post.title}
               </h1>
               
-              {/* 🚀 Contrast Fix: text-gray-500 -> text-gray-600 */}
               <div className="flex flex-wrap items-center gap-6 text-gray-600 border-b border-gray-100 pb-5">
                 <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
                   <User size={15} className="text-primary" aria-hidden="true" /> By {authorName}
@@ -222,7 +213,6 @@ export default async function BlogPostDetail({ params }: PageProps) {
               dangerouslySetInnerHTML={{ __html: post.content || '' }}
             />
 
-            {/* Dynamic SEO Tag Badges */}
             {post.tags && post.tags.trim() !== '' && (
               <div className="mt-10 pt-6 border-t border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Related Tags</h3>
@@ -238,19 +228,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
           </article>
 
           <aside className="lg:col-span-4 space-y-8">
-            <div className="p-6 bg-gray-900 rounded-2xl shadow-xl">
-              <h2 className="text-md font-black text-white mb-4">Search Articles</h2>
-              <form action="/blog" method="GET" className="relative">
-                <label htmlFor="blog-search-sidebar" className="sr-only">Search keywords</label>
-                <input 
-                  id="blog-search-sidebar"
-                  type="text" 
-                  name="search"
-                  placeholder="Keywords..." 
-                  className="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-white outline-none focus:ring-2 focus:ring-primary text-sm" 
-                />
-              </form>
-            </div>
+            <BlogSearchSidebar />
 
             <div className="p-6 border border-gray-100 rounded-2xl">
               <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Related Articles</h2>
@@ -265,13 +243,13 @@ export default async function BlogPostDetail({ params }: PageProps) {
                           fill 
                           sizes="4rem"
                           quality={70}
+                          loading="lazy"
                           className="object-cover transition-transform group-hover:scale-110" 
                         />
                       )}
                     </div>
                     <div>
                       <h3 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-1">{rp.title}</h3>
-                      {/* 🚀 Contrast Fix: text-gray-500 -> text-gray-600 */}
                       <span className="text-[10px] font-bold text-gray-600">{rp.created_at ? new Date(rp.created_at).toLocaleDateString() : ''}</span>
                     </div>
                   </Link>
