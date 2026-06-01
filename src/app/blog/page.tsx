@@ -1,13 +1,16 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Search, Calendar, User, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
-import Footer from '@/components/shared/layout/Footer';
 import { siteConfig } from '@/config/site';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { assets } from '@/config/assets';
 import { SERVER_API_BASE } from '@/config/api';
+
+// 🚀 تحميل متأخر للفوتر عشان نعلي سكور الأداء (Lazy Loading)
+const Footer = dynamic(() => import('@/components/shared/layout/Footer'));
 
 interface PageProps {
   searchParams: Promise<{ search?: string; category_id?: string }>;
@@ -17,7 +20,7 @@ interface PageProps {
 async function getBlogPosts(search?: string, categoryId?: string) {
   try {
     let queryPath = `${SERVER_API_BASE}/blogs/published?per_page=15`;
-    
+
     if (search && search.trim() !== '') queryPath += `&search=${encodeURIComponent(search.trim())}`;
     if (categoryId) queryPath += `&category_id=${categoryId}`;
 
@@ -60,7 +63,7 @@ export default async function BlogPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
   const currentSearch = resolvedParams.search || '';
   const currentCategory = resolvedParams.category_id || '';
-  
+
   const allPosts = await getBlogPosts(currentSearch, currentCategory);
   const posts = allPosts.slice(0, 12);
 
@@ -167,7 +170,8 @@ export default async function BlogPage({ searchParams }: PageProps) {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         quality={75}
                         priority={index === 0} 
-                        className="object-ccontain transition-transform duration-700 group-hover:scale-110"
+                        // 🛠️ تم التعديل هنا: object-cover بدل object-ccontain
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-sm">No Image</div>
@@ -210,7 +214,6 @@ export default async function BlogPage({ searchParams }: PageProps) {
                         className="inline-flex items-center gap-2 text-sm font-black text-gray-900 uppercase tracking-widest hover:gap-3 transition-all focus:outline-none focus:text-primary"
                       >
                         Read More 
-                        {/* 🚀 الحل القاضي لمشكلة Read More (النص ده هيقرأه جوجل والمكفوفين ومش هيظهر لليوزر العادي) */}
                         <span className="sr-only">about {post.title}</span> 
                         <ArrowRight size={16} strokeWidth={3} className="text-primary" aria-hidden="true" />
                       </Link>
