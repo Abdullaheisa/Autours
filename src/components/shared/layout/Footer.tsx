@@ -65,8 +65,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           className="mb-6 border-b border-black/10 pb-4"
         >
@@ -88,8 +88,8 @@ export default function Footer() {
           {Object.entries(footerLinks).map(([category, links], idx) => (
             <motion.div 
               key={category}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.05 }}
               className="space-y-2"
@@ -114,8 +114,8 @@ export default function Footer() {
           ))}
 
           <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
             className="space-y-2 min-h-[160px]" // Fix CLS by reserving space
