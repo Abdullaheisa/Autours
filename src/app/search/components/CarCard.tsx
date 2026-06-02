@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
   Check, Info, X, ChevronDown, ChevronUp,
-  Globe, Fuel, Handshake, Plane, Droplets
+  Globe, Fuel, Handshake, Plane, Droplets, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -220,30 +220,24 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
   const promosList = carData.promos || [];
   
-  // Identify if free cancellation is available explicitly within the promos array
-  // Check broadly for "cancel" or "cancellation" in English, or "إلغاء" in Arabic
-  const freeCancelPromo = promosList.find((p: string) => {
-    const text = p.toLowerCase();
-    return (text.includes('free') && text.includes('cancel')) || text.includes('مجاني');
-  });
-
-  const hasFreeCancellationInclusion = carData.freeCancellation;
-
   let mainHighlight: string | null = null;
   let hiddenPromos: string[] = [];
 
-  if (freeCancelPromo) {
-    mainHighlight = freeCancelPromo;
-    hiddenPromos = promosList.filter((p: string) => p !== freeCancelPromo);
-  } else if (hasFreeCancellationInclusion) {
-    mainHighlight = "Free Cancellation";
-    hiddenPromos = [...promosList];
-  } else if (promosList.length > 0) {
-    mainHighlight = promosList[0];
-    hiddenPromos = promosList.slice(1);
+  if (promosList.length > 0) {
+    const freeCancelPromo = promosList.find((p: string) => {
+      const text = p.toLowerCase();
+      return (text.includes('free') && text.includes('cancel')) || text.includes('مجاني') || text.includes('كنسليشن');
+    });
+
+    if (freeCancelPromo) {
+      mainHighlight = freeCancelPromo;
+      hiddenPromos = promosList.filter((p: string) => p !== freeCancelPromo);
+    } else {
+      mainHighlight = promosList[0];
+      hiddenPromos = promosList.slice(1);
+    }
   }
 
-  // Ensure unique promos and avoid duplicates if backend sends identical items
   hiddenPromos = Array.from(new Set(hiddenPromos));
 
   return (
@@ -344,6 +338,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 Rental Terms
               </button>
             </div>
+
+
 
             <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
               <span className="bg-[var(--primary)] text-gray-900 px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs md:text-sm font-black">{carData.supplier.rating}/10</span>
@@ -569,7 +565,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="mx-5 mb-2 flex relative">
-          <div className="w-[74%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-8 gap-y-4 flex-wrap">
+          <div className="w-[70%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-5 gap-y-3 flex-wrap">
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               {carData.supplier.logo ? (
                 <Image
@@ -589,6 +585,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <span className="text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
               <button onClick={() => setShowTerms(true)} className="text-xs font-black text-blue-600 underline hover:text-blue-800 leading-none">Rental Terms</button>
             </div>
+
+
 
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="bg-[var(--primary)] text-gray-900 px-2 py-1 rounded-md text-sm font-black">{carData.supplier.rating}/10</span>
@@ -631,7 +629,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           </div>
           
           {mainHighlight && (
-            <div className="flex-1 flex items-center justify-end pl-4 pr-1 gap-2 relative">
+            <div className="flex-1 flex items-center justify-start pl-3 gap-2 relative min-w-0">
               <div className="flex items-start gap-1.5 text-green-700 min-w-0">
                 <Check size={18} className="stroke-[3] shrink-0 mt-[1px]" />
                 <span className="text-[13px] font-black leading-tight text-left break-words">{mainHighlight}</span>

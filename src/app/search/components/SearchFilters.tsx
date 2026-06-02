@@ -20,7 +20,7 @@ interface SearchFiltersProps {
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { filterParams, minPrice, maxPrice, filteredSuppliers } = useSelector((state: RootState) => state.search);
+  const { filterParams, minPrice, maxPrice, filteredSuppliers, filteredCategories } = useSelector((state: RootState) => state.search);
   const { code: currencyCode } = useSelector((state: RootState) => state.currency);
 
   // حارس الـ Hydration لمنع تعارض النصوص بين السيرفر والمتصفح
@@ -56,6 +56,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           maxPrice={maxPrice}
           currencyCode={displayCurrency}
           filteredSuppliers={filteredSuppliers}
+          filteredCategories={filteredCategories}
           onClearAll={handleClearAll}
         />
       </div>
@@ -123,6 +124,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
                     maxPrice={maxPrice}
                     currencyCode={displayCurrency}
                     filteredSuppliers={filteredSuppliers}
+                    filteredCategories={filteredCategories}
                     onClearAll={handleClearAll}
                   />
                 </div>
@@ -152,6 +154,7 @@ function FiltersContent({
   maxPrice,
   currencyCode,
   filteredSuppliers,
+  filteredCategories,
   onClearAll
 }: any) {
   const dispatch = useDispatch<AppDispatch>();
@@ -197,7 +200,21 @@ function FiltersContent({
           </div>
         </FilterSection>
 
-        {/* 2. Location Types */}
+        {/* 2. Categories */}
+        {filteredCategories && filteredCategories.length > 0 && (
+          <FilterSection title="Categories" expanded>
+            {filteredCategories.map((cat: any) => (
+              <FilterOption
+                key={cat.id}
+                label={`${cat.name} (${cat.vehicle_count})`}
+                checked={isChecked('category', String(cat.id))}
+                onToggle={() => handleToggle('category', String(cat.id))}
+              />
+            ))}
+          </FilterSection>
+        )}
+
+        {/* 3. Location Types */}
         <FilterSection title="Location Types" expanded>
           {filterOptions.locationTypes.map(opt => (
             <FilterOption

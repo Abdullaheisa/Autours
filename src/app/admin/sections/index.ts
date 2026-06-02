@@ -16,3 +16,4 @@ export { default as WhatIsIncludedSection } from "./what-is-included/WhatIsInclu
 export { default as SubscribersSection } from "./subscribers/SubscribersSection";
 export { default as BackgroundSettingsSection } from "./background-settings/BackgroundSettingsSection";
 export { default as LogoutSection } from "./logout/LogoutSection";
+export { default as PromosSection } from "./promos/PromosSection";

@@ -23,8 +23,8 @@ import EditVehicleSection from "./sections/create-vehicle/EditVehicleSection";
 import NotificationsSection from "@/app/admin/sections/notifications/NotificationsSection";
 
 const pageTitles: Record<string, string> = {
-  dashboard: "Dashboard",
   profile: "My Profile",
+  dashboard: "Dashboard",
   calendar: "Bookings Calendar",
   branches: "Branches",
   "payment-methods": "Payment Methods",
@@ -42,7 +42,7 @@ const pageTitles: Record<string, string> = {
 };
 
 export default function CompanyDashboard() {
-  const [activeItem, setActiveItem] = useState("dashboard");
+  const [activeItem, setActiveItem] = useState("profile");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editVehicleId, setEditVehicleId] = useState<number | null>(null);
 

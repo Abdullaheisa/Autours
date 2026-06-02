@@ -11,7 +11,6 @@ import ProfitMarginSection from "@/app/admin/sections/profit-margin/ProfitMargin
 import VehiclesPhotosSection from "@/app/admin/sections/vehicles-photos/VehiclesPhotosSection";
 import VehiclesBulkUploadSection from "@/app/admin/sections/vehicles-bulk-upload/VehiclesBulkUploadSection";
 import CategoriesSection from "@/app/admin/sections/categories/CategoriesSection";
-import BlogCategoriesSection from "@/app/admin/sections/blog-categories/BlogCategoriesSection";
 import SpecificationsSection from "@/app/admin/sections/specifications/SpecificationsSection";
 import MembershipsSection from "@/app/admin/sections/memberships/MembershipsSection";
 import CustomersSection from "@/app/admin/sections/customers/CustomersSection";
@@ -19,6 +18,7 @@ import RentalsSection from "@/app/admin/sections/rentals/RentalsSection";
 import RentalReviewsSection from "@/app/admin/sections/rental-reviews/RentalReviewsSection";
 import RentalTermsSection from "@/app/admin/sections/rental-terms/RentalTermsSection";
 import WhatIsIncludedSection from "@/app/admin/sections/what-is-included/WhatIsIncludedSection";
+import PromosSection from "@/app/admin/sections/promos/PromosSection";
 import SubscribersSection from "@/app/admin/sections/subscribers/SubscribersSection";
 import ContestPopupControlPage from "@/app/admin/sections/contest-control/ContestPopupControlPage";
 import BackgroundSettingsSection from "@/app/admin/sections/background-settings/BackgroundSettingsSection";
@@ -33,7 +33,6 @@ const pageTitles: Record<string, string> = {
   profile: "My Profile",
   companies: "My Companies",
   blogs: "Blog Management",
-  "blog-categories": "Blog Categories",
   profit: "Profit Margin",
   vehicles: "Vehicles Photos",
   bulk: "Vehicles Bulk Upload",
@@ -45,6 +44,7 @@ const pageTitles: Record<string, string> = {
   reviews: "Rental Reviews",
   terms: "Rental Terms",
   included: "What is included?",
+  promos: "Promos",
   subscribers: "Subscribers",
   "contest-popup": "Contest Campaign Control",
   background: "Background Settings",
@@ -63,7 +63,7 @@ const sidebarFeatureMap: Record<string, keyof typeof features> = {
 };
 
 export default function AdminDashboard() {
-  const [activeItem, setActiveItem] = useState("dashboard");
+  const [activeItem, setActiveItem] = useState("profile");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -101,7 +101,6 @@ export default function AdminDashboard() {
       case "profile":     return <ProfileSection />;
       case "companies":   return <CompaniesPage />;
       case "blogs":       return <BlogsPage />;
-      case "blog-categories": return <BlogCategoriesSection />;
       case "profit":      return <ProfitMarginSection />;
       case "vehicles":    return <VehiclesPhotosSection />;
       case "bulk":        return <VehiclesBulkUploadSection />;
@@ -113,6 +112,7 @@ export default function AdminDashboard() {
       case "reviews":     return <RentalReviewsSection />;
       case "terms":       return <RentalTermsSection />;
       case "included":    return <WhatIsIncludedSection />;
+      case "promos":      return <PromosSection />;
       case "subscribers": return <SubscribersSection />;
       case "contest-popup": return <ContestPopupControlPage />;
       case "background":  return <BackgroundSettingsSection />;

@@ -38,12 +38,7 @@ export default function StatsCard({ label, value, icon, change, trend = "up", co
           {Number.isNaN(Number(value)) ? 0 : value}
         </h3>  <div className="flex items-center gap-2">
             <p className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</p>
-            {change && (
-              <span className={`inline-flex items-center gap-0.5 text-[10px] font-medium ${trend === "up" ? "text-emerald-600" : "text-red-600"}`}>
-                {trend === "up" ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                {change}
-              </span>
-            )}
+            
           </div>
         </div>
       </div>
