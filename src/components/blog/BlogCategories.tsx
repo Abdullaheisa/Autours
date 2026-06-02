@@ -11,7 +11,7 @@ export default function BlogCategories() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${CLIENT_API_BASE}/blog-categories`, {
+        const res = await fetch(`${CLIENT_API_BASE}/api/blog-categories`, {
           headers: { 'Accept': 'application/json' },
         });
         if (res.ok) {
@@ -33,16 +33,21 @@ export default function BlogCategories() {
   if (!categories || categories.length === 0) return null;
 
   return (
-    <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm mt-8">
-      <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Browse Categories</h2>
-      <div className="flex flex-wrap gap-2">
+    <div className="p-6 border border-primary rounded-xl bg-white shadow-sm mt-8">
+      <h2 className="text-lg font-black text-gray-900 mb-4 pb-2 border-b-2 border-primary inline-block min-w-[50%]">
+        Category
+      </h2>
+      <div className="flex flex-col gap-4 mt-2">
         {categories.map((cat: any) => (
           <Link
             key={cat.id}
             href={`/blog?category_id=${cat.id}`}
-            className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-xs font-bold text-gray-700 hover:text-primary-800"
+            className="flex items-center gap-3 group"
           >
-            {cat.title || cat.name}
+            <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 transition-transform group-hover:scale-125"></span>
+            <span className="text-sm font-medium text-gray-800 group-hover:text-primary transition-colors">
+              {cat.title || cat.name}
+            </span>
           </Link>
         ))}
       </div>

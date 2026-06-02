@@ -45,6 +45,13 @@ export default function RichTextEditor({
     insertOrderedList: false,
   });
 
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+
+  const [tableModalOpen, setTableModalOpen] = useState(false);
+  const [tableRows, setTableRows] = useState('2');
+  const [tableCols, setTableCols] = useState('2');
+
   const savedRangeRef = useRef<Range | null>(null);
 
   const saveSelection = useCallback(() => {
@@ -121,19 +128,31 @@ export default function RichTextEditor({
   };
 
   const handleLink = () => {
-    const url = window.prompt('Enter URL');
-    if (url) runCommand('createLink', url);
+    saveSelection();
+    setLinkUrl('');
+    setLinkModalOpen(true);
+  };
+
+  const submitLink = () => {
+    if (linkUrl) {
+      runCommand('createLink', linkUrl);
+    }
+    setLinkModalOpen(false);
   };
 
   const handleTable = () => {
-    const rows = window.prompt('Number of rows?', '2');
-    const cols = window.prompt('Number of columns?', '2');
+    saveSelection();
+    setTableRows('2');
+    setTableCols('2');
+    setTableModalOpen(true);
+  };
 
-    if (rows && cols) {
+  const submitTable = () => {
+    if (tableRows && tableCols) {
       let tableHTML = '<br/><table border="1" style="width:100%; border-collapse: collapse; border: 1px solid #e5e7eb;"><tbody>';
-      for (let i = 0; i < parseInt(rows); i++) {
+      for (let i = 0; i < parseInt(tableRows); i++) {
         tableHTML += '<tr>';
-        for (let j = 0; j < parseInt(cols); j++) {
+        for (let j = 0; j < parseInt(tableCols); j++) {
           const isHeader = i === 0;
           const cellStyle = isHeader
             ? 'background-color: #f3f4f6; font-weight: bold; padding: 12px; border: 1px solid #e5e7eb; text-align: left;'
@@ -146,6 +165,7 @@ export default function RichTextEditor({
       tableHTML += '</tbody></table><br/>';
       runCommand('insertHTML', tableHTML);
     }
+    setTableModalOpen(false);
   };
 
   const getBtnClass = (isActive: boolean) => 
@@ -314,6 +334,72 @@ export default function RichTextEditor({
         className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-white"
         style={{ minHeight }}
       />
+
+      {/* Link Modal */}
+      {linkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 border border-gray-100">
+            <h3 className="text-sm font-bold text-gray-900 mb-3">Insert Link</h3>
+            <input
+              type="url"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitLink();
+                if (e.key === 'Escape') setLinkModalOpen(false);
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setLinkModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl">Cancel</button>
+              <button onClick={submitLink} className="px-4 py-2 text-sm font-bold bg-primary text-gray-900 rounded-xl hover:bg-primary-600">Insert</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Table Modal */}
+      {tableModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 border border-gray-100">
+            <h3 className="text-sm font-bold text-gray-900 mb-3">Insert Table</h3>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Rows</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={tableRows}
+                  onChange={(e) => setTableRows(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Columns</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={tableCols}
+                  onChange={(e) => setTableCols(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submitTable();
+                    if (e.key === 'Escape') setTableModalOpen(false);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setTableModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl">Cancel</button>
+              <button onClick={submitTable} className="px-4 py-2 text-sm font-bold bg-primary text-gray-900 rounded-xl hover:bg-primary-600">Insert</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

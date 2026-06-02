@@ -43,8 +43,13 @@
 }
 
 @layer base {
+  * {
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
   body {
     @apply bg-[var(--background)] text-[var(--text)] transition-colors duration-300 antialiased font-sans;
+    -webkit-tap-highlight-color: transparent;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight font-sans;

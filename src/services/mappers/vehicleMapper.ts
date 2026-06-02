@@ -79,6 +79,7 @@ export const vehicleMapper = {
         : (supplierData.instant_confirmation !== undefined
             ? !!supplierData.instant_confirmation
             : true),
+      promos: raw.promos || [],
     };
   },
 

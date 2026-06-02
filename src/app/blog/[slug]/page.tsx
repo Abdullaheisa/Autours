@@ -130,7 +130,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
   
   const viewsCount = post.views || post.views_count || post.view_count || 0;
   const blogImg = getBlogImageUrl(post.image);
-  const categoryTitle = post.blog_category?.title || 'Blog';
+  const categoryTitle = post.category?.title || post.blog_category?.title || 'Blog';
   const categoryId = post.blog_category_id || post.blog_category?.id;
 
   // 🚀 Fetch related posts dynamically by category
@@ -176,24 +176,6 @@ export default async function BlogPostDetail({ params }: PageProps) {
       />
       <Navbar />
 
-      <div className="relative w-full h-[136px] md:h-[245px] lg:h-[328px] bg-gray-100 overflow-hidden shadow-inner border-b border-gray-100">
-        {blogImg ? (
-          <Image
-            src={blogImg}
-            alt={post.image_alt_text || post.title}
-            fill
-            sizes="100vw"
-            quality={85}
-            className="object-contain"
-            priority={true}
-            fetchPriority="high"
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
-            No Featured Image
-          </div>
-        )}
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="mb-5">
@@ -202,8 +184,28 @@ export default async function BlogPostDetail({ params }: PageProps) {
           </Link>
         </div>
 
+        <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[3/1] bg-gray-50 rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 mb-10">
+          {blogImg ? (
+            <Image
+              src={blogImg}
+              alt={post.image_alt_text || post.title}
+              fill
+              sizes="100vw"
+              quality={90}
+              className="object-cover hover:scale-105 transition-transform duration-700"
+              priority={true}
+              fetchPriority="high"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">
+              No Featured Image
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           <article className="lg:col-span-8 space-y-6">
+
             <header className="space-y-4">
               <div className="mb-2">
                 <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-gray-200">
@@ -259,36 +261,48 @@ export default async function BlogPostDetail({ params }: PageProps) {
 
           </article>
 
-          <aside className="lg:col-span-4 space-y-8">
+          <aside className="lg:col-span-4 space-y-6">
             <BlogSearchSidebar />
             <BlogCategories />
 
-            <div className="p-6 border border-gray-100 rounded-2xl">
-              <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Related Articles</h2>
-              <div className="space-y-4">
-                {relatedPosts.map((rp: any) => (
-                  <Link key={rp.id} href={`/blog/${rp.slug || rp.id}`} className="flex gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl">
-                    <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-50">
-                      {getBlogImageUrl(rp.image) && (
-                        <Image 
-                          src={getBlogImageUrl(rp.image)!} 
-                          alt={rp.image_alt_text || rp.title}
-                          fill 
-                          sizes="4rem"
-                          quality={70}
-                          loading="lazy"
-                          className="object-cover transition-transform group-hover:scale-110" 
-                        />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-1">{rp.title}</h3>
-                      <span className="text-[10px] font-bold text-gray-600">{rp.created_at ? new Date(rp.created_at).toLocaleDateString() : ''}</span>
-                    </div>
-                  </Link>
-                ))}
+            {/* Related Articles */}
+            {relatedPosts.length > 0 && (
+              <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
+                <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Related Articles</h2>
+                <div className="space-y-4">
+                  {relatedPosts.map((rp: any) => (
+                    <Link
+                      key={rp.id}
+                      href={`/blog/${rp.slug || rp.id}`}
+                      className="flex gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                    >
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-50 border border-gray-100">
+                        {getBlogImageUrl(rp.image) && (
+                          <Image
+                            src={getBlogImageUrl(rp.image)!}
+                            alt={rp.image_alt_text || rp.title}
+                            fill
+                            sizes="4rem"
+                            quality={70}
+                            loading="lazy"
+                            className="object-cover transition-transform group-hover:scale-110"
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-1 leading-snug">
+                          {rp.title}
+                        </h3>
+                        <span className="text-[10px] font-bold text-gray-500">
+                          {rp.created_at ? new Date(rp.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
           </aside>
         </div>
       </div>

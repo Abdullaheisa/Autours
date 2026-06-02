@@ -87,7 +87,7 @@ export default function CategoryFilterBar() {
       {canScrollLeft && (
         <button 
           onClick={() => scroll('left')} 
-          aria-label="Scroll categories left" // 🚀 Accessibility Fix
+          aria-label="Scroll categories left"
           className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-md hover:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-yellow-400"
         >
           <ChevronLeft size={20} className="text-gray-600" />
@@ -97,7 +97,7 @@ export default function CategoryFilterBar() {
       {canScrollRight && (
         <button 
           onClick={() => scroll('right')} 
-          aria-label="Scroll categories right" // 🚀 Accessibility Fix
+          aria-label="Scroll categories right"
           className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-md hover:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-yellow-400"
         >
           <ChevronRight size={20} className="text-gray-600" />
@@ -116,7 +116,7 @@ export default function CategoryFilterBar() {
             <motion.button
               key={cat.id}
               onClick={() => handleCategoryClick(catId)}
-              aria-pressed={isSelected} // 🚀 Accessibility Fix
+              aria-pressed={isSelected}
               aria-label={`Filter by ${cat.name}`}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
@@ -126,15 +126,16 @@ export default function CategoryFilterBar() {
                   : 'border-gray-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.12)] hover:border-yellow-300'
               }`}
             >
-              <div className="relative w-full h-[100px] sm:h-[160px] flex items-center justify-center p-3">
+              {/* 💡 المربع أبعاده ثابتة تماماً [100px] للموبايل و [160px] للديسك توب، وتم تقليل الـ padding إلى p-1 بدلاً من p-3 لترك مساحة أكبر للصورة */}
+              <div className="relative w-full h-[100px] sm:h-[160px] flex items-center justify-center p-1">
                 {photoUrl ? (
-                  // 🚀 Performance Fix: next/image instead of <img>
                   <Image 
                     src={photoUrl} 
-                    alt="" // 🚀 Accessibility Fix: Empty alt for decorative images (Redundant text issue)
+                    alt="" 
                     fill
                     sizes="(max-width: 640px) 140px, 180px"
-                    className="object-contain p-3 transition-transform duration-300 group-hover:scale-105" 
+                    // 💡 تم إزالة الـ p-3 من كلاس الصورة لكي تتمدد بكامل حجم الحاوية المتاحة لها وتصبح أكبر وممتازة على الموبايل والديسك توب
+                    className="object-contain transition-transform duration-300 group-hover:scale-105" 
                   />
                 ) : (
                   <span className="text-xs font-bold text-gray-400">{cat.name}</span>

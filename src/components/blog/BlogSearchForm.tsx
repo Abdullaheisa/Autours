@@ -21,7 +21,7 @@ function BlogSearchFormInner() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${CLIENT_API_BASE}/blog-categories/active`, {
+        const res = await fetch(`${CLIENT_API_BASE}/api/blog-categories/active`, {
           headers: { 'Accept': 'application/json' }
         });
         if (res.ok) {

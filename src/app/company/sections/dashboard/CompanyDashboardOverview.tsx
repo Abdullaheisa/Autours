@@ -36,7 +36,9 @@ export default function CompanyDashboardOverview() {
         latestVehicles: charts.latestVehicles || []
       });
     }).catch((err) => {
-      console.warn("Using mock data due to API error:", err.message);
+      if (err?.response?.status !== 401) {
+        console.warn("Using mock data due to API error:", err.message);
+      }
       setStatsData({
         totalEarnings: "12,450",
         totalRentals: "142",

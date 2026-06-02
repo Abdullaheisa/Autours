@@ -376,7 +376,7 @@ function BookingContent() {
           </div>
 
           {/* ── Registration Form ──────────────────────────────────────────────── */}
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+          <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
             <div className="mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
@@ -393,14 +393,17 @@ function BookingContent() {
               <div className="flex gap-3">
                 <div className="w-28 shrink-0">
                   <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Title</label>
-                  <select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    className="w-full px-3 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-semibold text-gray-900 bg-white"
-                  >
-                    <option value="Mr.">Mr.</option>
-                    <option value="Mrs.">Mrs.</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-semibold text-gray-900 bg-white appearance-none cursor-pointer"
+                    >
+                      <option value="Mr.">Mr.</option>
+                      <option value="Mrs.">Mrs.</option>
+                    </select>
+                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
                 <div className="flex-1">
                   <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Full Name</label>
@@ -422,34 +425,19 @@ function BookingContent() {
                 <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
                 <div className="flex gap-3">
                   {/* Code Dropdown */}
-                  <div className="relative w-36 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => { setShowCodeDropdown(!showCodeDropdown); setShowCountryDropdown(false); }}
-                      className="w-full flex items-center justify-between gap-2 px-3 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-semibold text-gray-900 bg-white"
+                  <div className="relative w-28 shrink-0">
+                    <select
+                      value={mobileCode}
+                      onChange={(e) => setMobileCode(e.target.value)}
+                      className="w-full pl-3 pr-8 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs font-semibold text-gray-900 bg-white appearance-none cursor-pointer"
                     >
-                      <span className="flex items-center gap-1.5">
-                        <Phone size={14} className="text-gray-400" />
-                        {mobileCode}
-                      </span>
-                      <ChevronDown size={14} className="text-gray-400" />
-                    </button>
-                    {showCodeDropdown && (
-                      <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
-                        {COUNTRY_CODES.map((c) => (
-                          <button
-                            key={`${c.iso}-${c.code}`}
-                            type="button"
-                            onClick={() => { setMobileCode(`+${c.code}`); setShowCodeDropdown(false); }}
-                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-medium"
-                          >
-                            <span className="text-base">{c.flag}</span>
-                            <span className="flex-1">{c.country}</span>
-                            <span className="text-gray-500 font-bold">+{c.code}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                      {COUNTRY_CODES.map((c) => (
+                        <option key={`${c.iso}-${c.code}`} value={`+${c.code}`}>
+                          {c.country} (+{c.code})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   </div>
                   <input
                     type="tel"
