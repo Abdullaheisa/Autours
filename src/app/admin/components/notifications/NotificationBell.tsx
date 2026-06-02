@@ -34,8 +34,11 @@ export default function NotificationBell() {
   const unreadCount = allNotifications.filter((n) => !n.isRead).length;
   // Header bell dropdown shows ONLY unread notifications
   const dropdownNotifications = allNotifications.filter((n) => !n.isRead);
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     // Initial fetch
     dispatch(fetchNotifications());
 
@@ -45,7 +48,7 @@ export default function NotificationBell() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [dispatch]);
+  }, [dispatch, isAuthenticated]);
 
   const handleNotificationClick = (notif: Notification) => {
     dispatch(markNotificationRead(notif.id));

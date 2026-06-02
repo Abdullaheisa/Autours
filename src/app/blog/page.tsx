@@ -9,7 +9,6 @@ import { SERVER_API_BASE } from '@/config/api';
 // Use the new Client Components
 import BlogContent from '@/components/blog/BlogContent';
 import BlogSearchForm from '@/components/blog/BlogSearchForm';
-import BlogCategories from '@/components/blog/BlogCategories';
 
 // This function fetches the initial (default) blog posts at build time (or via ISR)
 async function getInitialBlogPosts() {
@@ -132,8 +131,6 @@ export default async function BlogPage() {
         {/* Client-side Blog Content wrapped in Suspense */}
         <BlogContent initialPosts={initialPosts} initialPagination={initialPagination} />
 
-        {/* 🚀 New Categories Section */}
-        <BlogCategories />
       </section>
 
       <Footer />

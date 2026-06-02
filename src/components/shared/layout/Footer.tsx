@@ -70,7 +70,7 @@ export default function Footer() {
           viewport={{ once: true }}
           className="mb-6 border-b border-black/10 pb-4"
         >
-          <Link href="/" aria-label="Autours Home" className="inline-block group focus:outline-none focus:ring-2 focus:ring-black rounded-lg">
+          <Link href="/" aria-label="Autours Home" className="inline-block group focus:outline-none rounded-lg">
             <Image 
               src={assets.logoFooter} 
               alt="Autours Logo"
@@ -103,7 +103,7 @@ export default function Footer() {
                     <Link 
                       href={link.href}
                       onClick={(e) => scrollToSection(e, link.href)}
-                      className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-black rounded-sm"
+                      className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                     >
                       {link.name}
                     </Link>
@@ -128,7 +128,7 @@ export default function Footer() {
                 <li key={country.id}>
                   <Link 
                     href={`/countries/${country.id}`}
-                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-black rounded-sm"
+                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                   >
                     {country.name} Car Rental
                   </Link>
@@ -168,7 +168,7 @@ export default function Footer() {
                   href={social.href}
                   aria-label={`Follow us on ${social.name}`} // 🚀 التأكيد على تواجد الـ Aria-label
                   whileHover={{ y: -2 }}
-                  className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-black"
+                  className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none"
                 >
                   {social.icon}
                 </motion.a>

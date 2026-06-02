@@ -203,10 +203,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       },
       inclusions,
       fuelPolicy: typeof vehicle.fuelPolicy === 'string' ? vehicle.fuelPolicy : (vehicle.fuel_policy?.name || (vehicle as any).fuelPolicy?.name || 'Full to Full'),
-      locationType: pickupType ? (pickupType.charAt(0).toUpperCase() + pickupType.slice(1).replace(/_/g, ' ')) : 'Airport',
       pickupType: pickupType,
       freeCancellation: inclusions.some(i => i.toLowerCase().includes('cancel')),
       freeCancellationHours: 24,
+      promos: vehicle.promos || (vehicle.promo ? [vehicle.promo] : []),
     };
   }, [vehicle, daysNumber, currencyCode, allRates, filteredSuppliers, fetchedCurrency]);
 
@@ -217,6 +217,34 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   const displayedInclusions = showAllInclusions
     ? carData.inclusions
     : carData.inclusions.slice(0, 4);
+
+  const promosList = carData.promos || [];
+  
+  // Identify if free cancellation is available explicitly within the promos array
+  // Check broadly for "cancel" or "cancellation" in English, or "إلغاء" in Arabic
+  const freeCancelPromo = promosList.find((p: string) => {
+    const text = p.toLowerCase();
+    return (text.includes('free') && text.includes('cancel')) || text.includes('مجاني');
+  });
+
+  const hasFreeCancellationInclusion = carData.freeCancellation;
+
+  let mainHighlight: string | null = null;
+  let hiddenPromos: string[] = [];
+
+  if (freeCancelPromo) {
+    mainHighlight = freeCancelPromo;
+    hiddenPromos = promosList.filter((p: string) => p !== freeCancelPromo);
+  } else if (hasFreeCancellationInclusion) {
+    mainHighlight = "Free Cancellation";
+    hiddenPromos = [...promosList];
+  } else if (promosList.length > 0) {
+    mainHighlight = promosList[0];
+    hiddenPromos = promosList.slice(1);
+  }
+
+  // Ensure unique promos and avoid duplicates if backend sends identical items
+  hiddenPromos = Array.from(new Set(hiddenPromos));
 
   return (
     <motion.div
@@ -294,7 +322,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="mx-4 mb-2 md:mb-2.5">
-          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-x-6 gap-y-3 flex-wrap">
+          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center justify-start gap-x-4 gap-y-3 flex-wrap">
             <div className="bg-white p-1 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               {carData.supplier.logo ? (
                 <Image
@@ -358,14 +386,31 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           </div>
 
+          {mainHighlight && (
+            <div className="mt-2.5 flex items-start gap-2">
+              <div className="flex items-start gap-1.5 text-green-700 min-w-0">
+                <Check size={16} className="stroke-[3] shrink-0 mt-[1px]" />
+                <span className="text-xs font-black leading-tight break-words">{mainHighlight}</span>
+              </div>
+              {hiddenPromos.length > 0 && (
+                <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm shrink-0">
+                  <span className="text-[10px] font-black">+{hiddenPromos.length}</span>
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
+                    <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45" />
+                    <div className="flex flex-col gap-1.5">
+                      {hiddenPromos.map((p: string, idx: number) => (
+                        <div key={idx} className="flex items-start gap-1.5">
+                          <span className="text-green-100 mt-0.5 shrink-0"><Check size={10} className="stroke-[3]" /></span>
+                          <span className="leading-snug">{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-
-           {carData.freeCancellation && (
-          <div className="mx-4 mb-2 flex items-center gap-1.5 text-green-700">
-            <Check size={14} className="stroke-[2.5] shrink-0" />
-            <span className="text-xs md:text-sm font-black">Free Cancellation ({carData.freeCancellationHours}h)</span>
-          </div>
-        )}
 
         <div className="px-4 pb-2">
           <button
@@ -523,8 +568,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           </div>
         </div>
 
-        <div className="mx-5 mb-2 flex">
-          <div className="w-[74%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center gap-x-8 gap-y-4 flex-wrap">
+        <div className="mx-5 mb-2 flex relative">
+          <div className="w-[74%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-8 gap-y-4 flex-wrap">
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               {carData.supplier.logo ? (
                 <Image
@@ -584,14 +629,32 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             )}
           </div>
-          {carData.freeCancellation && (
-          <div className="mx-5 mb-2 flex items-center gap-2 text-green-700">
-            <Check size={16} className="stroke-[2.5] shrink-0" />
-            <span className="text-sm font-bold">Free Cancellation ({carData.freeCancellationHours}h)</span>
-          </div>
-        )}
+          
+          {mainHighlight && (
+            <div className="flex-1 flex items-center justify-end pl-4 pr-1 gap-2 relative">
+              <div className="flex items-start gap-1.5 text-green-700 min-w-0">
+                <Check size={18} className="stroke-[3] shrink-0 mt-[1px]" />
+                <span className="text-[13px] font-black leading-tight text-left break-words">{mainHighlight}</span>
+              </div>
+              {hiddenPromos.length > 0 && (
+                <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
+                  <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2.5 rounded-xl shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto text-left">
+                    <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 rotate-45" />
+                    <div className="flex flex-col gap-2">
+                      {hiddenPromos.map((p: string, idx: number) => (
+                        <div key={idx} className="flex items-start gap-1.5">
+                          <span className="text-green-100 mt-0.5 shrink-0"><Check size={12} className="stroke-[3]" /></span>
+                          <span className="leading-snug">{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-
 
         <div className="flex">
           <div className='flex bg-green-100/35 rounded-xl mx-4 mb-4 w-[75%]'>

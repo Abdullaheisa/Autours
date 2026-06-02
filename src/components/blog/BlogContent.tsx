@@ -25,12 +25,15 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
   });
 
   useEffect(() => {
-    // If no search, no category, and page is 1, use initial posts
-    // Skip this early return if the page param changes so we fetch new data
+    // Determine if we should use initial posts to avoid unnecessary fetch on first load
     if (!search && !category_id && pageParam === '1' && initialPosts.length > 0) {
-      setPosts(initialPosts);
+      // Ensure initial posts are sorted newest to oldest
+      const sortedInitial = [...initialPosts].sort((a: any, b: any) => 
+        new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      );
+      setPosts(sortedInitial.slice(0, 8)); // ensure it's sliced
       setPagination({
-        current_page: initialPagination?.current_page || 1,
+        current_page: 1,
         last_page: initialPagination?.last_page || 1,
         total: initialPagination?.total || initialPosts.length
       });
@@ -40,14 +43,16 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        // ALWAYS fetch all and fallback to slicing. The backend pagination might be unreliable.
-        let queryPath = `${CLIENT_API_BASE}/blogs/published?per_page=100`;
+        // ALWAYS fetch all and fallback to slicing. Add a timestamp cache buster just in case.
+        let queryPath = `${CLIENT_API_BASE}/api/blogs/published?per_page=100&_t=${Date.now()}`;
         if (search) queryPath += `&search=${encodeURIComponent(search)}`;
         if (category_id) queryPath += `&category_id=${category_id}`;
 
         const res = await fetch(queryPath, {
           headers: { 'Accept': 'application/json' },
+          cache: 'no-store'
         });
+        
         if (res.ok) {
           const json = await res.json();
           // Extract array from nested response
@@ -55,6 +60,11 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
           if (Array.isArray(json)) postsArray = json;
           else if (Array.isArray(json?.data)) postsArray = json.data;
           else if (Array.isArray(json?.data?.data)) postsArray = json.data.data;
+
+          // Sort by newest first
+          postsArray.sort((a: any, b: any) => 
+            new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+          );
 
           const currentPage = parseInt(pageParam) || 1;
           // Force manual slice for strict 8 per page regardless of API metadata
@@ -73,7 +83,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
     };
 
     fetchPosts();
-  }, [search, category_id, pageParam]); // Remove initialPosts from dependency array to prevent infinite loop/stale cache
+  }, [search, category_id, pageParam, initialPosts, initialPagination]);
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -106,7 +116,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {posts.map((post: any, index: number) => {
           const blogImgUrl = getBlogImageUrl(post.image);
-          const categoryTitle = post.blog_category?.title || post.category?.title || 'Blog';
+          const categoryTitle = post.category?.title || post.blog_category?.title || 'Blog';
 
           return (
             <article

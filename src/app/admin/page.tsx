@@ -11,6 +11,7 @@ import ProfitMarginSection from "@/app/admin/sections/profit-margin/ProfitMargin
 import VehiclesPhotosSection from "@/app/admin/sections/vehicles-photos/VehiclesPhotosSection";
 import VehiclesBulkUploadSection from "@/app/admin/sections/vehicles-bulk-upload/VehiclesBulkUploadSection";
 import CategoriesSection from "@/app/admin/sections/categories/CategoriesSection";
+import BlogCategoriesSection from "@/app/admin/sections/blog-categories/BlogCategoriesSection";
 import SpecificationsSection from "@/app/admin/sections/specifications/SpecificationsSection";
 import MembershipsSection from "@/app/admin/sections/memberships/MembershipsSection";
 import CustomersSection from "@/app/admin/sections/customers/CustomersSection";
@@ -32,6 +33,7 @@ const pageTitles: Record<string, string> = {
   profile: "My Profile",
   companies: "My Companies",
   blogs: "Blog Management",
+  "blog-categories": "Blog Categories",
   profit: "Profit Margin",
   vehicles: "Vehicles Photos",
   bulk: "Vehicles Bulk Upload",
@@ -99,6 +101,7 @@ export default function AdminDashboard() {
       case "profile":     return <ProfileSection />;
       case "companies":   return <CompaniesPage />;
       case "blogs":       return <BlogsPage />;
+      case "blog-categories": return <BlogCategoriesSection />;
       case "profit":      return <ProfitMarginSection />;
       case "vehicles":    return <VehiclesPhotosSection />;
       case "bulk":        return <VehiclesBulkUploadSection />;
