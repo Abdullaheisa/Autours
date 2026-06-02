@@ -1,34 +1,32 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { 
-  Calendar, User, Clock, ArrowLeft, Eye 
-} from 'lucide-react';
+import { Calendar, Clock, User, Eye, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import ShareButtons from '@/components/blog/ShareButtons';
 import { siteConfig } from '@/config/site';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { SERVER_API_BASE } from '@/config/api';
+import BlogSearchSidebar from '@/components/blog/BlogSearchSidebar';
+import BlogCategories from '@/components/blog/BlogCategories';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-
-
 async function getBlogBySlugOrId(slug: string) {
   try {
     let res = await fetch(`${SERVER_API_BASE}/blogs/slug/${slug}`, {
       headers: { 'Accept': 'application/json' },
-      cache: 'no-store'
+      next: { revalidate: 3600 } // Enable ISR
     });
 
     if (!res.ok) {
       res = await fetch(`${SERVER_API_BASE}/blogs/${slug}`, {
         headers: { 'Accept': 'application/json' },
-        cache: 'no-store'
+        next: { revalidate: 3600 } // Enable ISR
       });
     }
 
@@ -40,12 +38,21 @@ async function getBlogBySlugOrId(slug: string) {
   }
 }
 
-async function getRelatedPosts() {
+async function getRelatedPosts(categoryId?: number) {
   try {
-    const res = await fetch(`${SERVER_API_BASE}/blogs/published`, {
+    // If a category ID is provided, try to fetch related blogs for that category
+    let endpoint = `${SERVER_API_BASE}/blogs/published`;
+    if (categoryId) {
+      // Trying to fetch by category first. Note: The backend endpoint /blog-categories/{id}/blogs is available
+      // but might not be public/published only. For safety, we can use the main endpoint with a filter if supported
+      endpoint = `${SERVER_API_BASE}/blogs/published?category_id=${categoryId}`;
+    }
+
+    const res = await fetch(endpoint, {
       headers: { 'Accept': 'application/json' },
-      cache: 'no-store'
+      next: { revalidate: 3600 } // Enable ISR
     });
+
     if (!res.ok) return [];
     const json = await res.json();
     const wrapper = json?.data;
@@ -57,7 +64,6 @@ async function getRelatedPosts() {
   }
 }
 
-// 🚀 حل مشكلة اختفاء الوصف في جوجل
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getBlogBySlugOrId(slug);
@@ -67,7 +73,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!post) {
     return { 
       title: 'Post Not Found | Autours Blog',
-      description: defaultDesc, // 🚀 تأمين الوصف حتى لو المقالة مش موجودة
+      description: defaultDesc,
     }; 
   }
 
@@ -124,9 +130,21 @@ export default async function BlogPostDetail({ params }: PageProps) {
   
   const viewsCount = post.views || post.views_count || post.view_count || 0;
   const blogImg = getBlogImageUrl(post.image);
+  const categoryTitle = post.category?.title || post.blog_category?.title || 'Blog';
+  const categoryId = post.blog_category_id || post.blog_category?.id;
 
-  const allPosts = await getRelatedPosts();
-  const relatedPosts = allPosts.filter((p: Record<string, any>) => p.slug !== slug).slice(0, 3);
+  // 🚀 Fetch related posts dynamically by category
+  let relatedPosts = [];
+  if (categoryId) {
+     const categoryPosts = await getRelatedPosts(categoryId);
+     relatedPosts = categoryPosts.filter((p: Record<string, any>) => p.slug !== slug && p.id !== post.id).slice(0, 3);
+  }
+
+  // Fallback if no related posts found in category
+  if (relatedPosts.length === 0) {
+     const allPosts = await getRelatedPosts();
+     relatedPosts = allPosts.filter((p: Record<string, any>) => p.slug !== slug && p.id !== post.id).slice(0, 3);
+  }
 
   const safeDescription = (post.meta_description && post.meta_description.trim() !== '') 
     ? post.meta_description.trim() 
@@ -151,49 +169,54 @@ export default async function BlogPostDetail({ params }: PageProps) {
   };
 
   return (
-    <main className="min-h-screen container bg-white">
+    <main className="min-h-screen bg-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Navbar />
 
-<div className="relative w-full h-[136px] md:h-[245px] lg:h-[328px] bg-gray-100 overflow-hidden shadow-inner border-b border-gray-100">
-  {blogImg ? (
-    <Image
-      src={blogImg}
-      alt={post.image_alt_text || post.title}
-      fill
-      sizes="100vw"
-      quality={85}
-      // object-contain هتضمن إن الصورة تظهر بالكامل من غير ما تتقص في التلات مقاسات
-      className="object-contain" 
-      priority={true}
-      fetchPriority="high"
-    />
-  ) : (
-    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
-      No Featured Image
-    </div>
-  )}
-</div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="mb-5">
           <Link href="/blog" className="inline-flex items-center gap-2 text-gray-700 font-bold text-sm uppercase tracking-wider hover:text-gray-900 transition-all focus:outline-none focus:underline">
             <ArrowLeft size={16} className="text-primary" aria-hidden="true" /> Back to Blog
           </Link>
         </div>
 
+        <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[3/1] bg-gray-50 rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 mb-10">
+          {blogImg ? (
+            <Image
+              src={blogImg}
+              alt={post.image_alt_text || post.title}
+              fill
+              sizes="100vw"
+              quality={90}
+              className="object-cover hover:scale-105 transition-transform duration-700"
+              priority={true}
+              fetchPriority="high"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">
+              No Featured Image
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-          
           <article className="lg:col-span-8 space-y-6">
+
             <header className="space-y-4">
-              <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+              <div className="mb-2">
+                <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-gray-200">
+                  {categoryTitle}
+                </span>
+              </div>
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight leading-tight">
                 {post.title}
               </h1>
+              <div className="w-24 md:w-32 h-1.5 md:h-2 bg-primary rounded-full mb-6"></div>
               
-              {/* 🚀 Contrast Fix: text-gray-500 -> text-gray-600 */}
               <div className="flex flex-wrap items-center gap-6 text-gray-600 border-b border-gray-100 pb-5">
                 <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
                   <User size={15} className="text-primary" aria-hidden="true" /> By {authorName}
@@ -216,11 +239,13 @@ export default async function BlogPostDetail({ params }: PageProps) {
               className="prose prose-base max-w-none text-gray-800 leading-relaxed space-y-4
                 prose-headings:font-black prose-headings:text-gray-900 
                 prose-strong:font-bold prose-strong:text-gray-900 
-                [!&_*]:font-inherit"
+                prose-table:w-full prose-table:border-collapse prose-table:my-6
+                prose-th:bg-gray-100 prose-th:border prose-th:border-gray-200 prose-th:p-3 prose-th:text-left
+                prose-td:border prose-td:border-gray-200 prose-td:p-3
+                [!&_*]:font-inherit overflow-x-auto"
               dangerouslySetInnerHTML={{ __html: post.content || '' }}
             />
 
-            {/* Dynamic SEO Tag Badges */}
             {post.tags && post.tags.trim() !== '' && (
               <div className="mt-10 pt-6 border-t border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Related Tags</h3>
@@ -233,49 +258,51 @@ export default async function BlogPostDetail({ params }: PageProps) {
                 </div>
               </div>
             )}
+
           </article>
 
-          <aside className="lg:col-span-4 space-y-8">
-            <div className="p-6 bg-gray-900 rounded-2xl shadow-xl">
-              <h2 className="text-md font-black text-white mb-4">Search Articles</h2>
-              <form action="/blog" method="GET" className="relative">
-                <label htmlFor="blog-search-sidebar" className="sr-only">Search keywords</label>
-                <input 
-                  id="blog-search-sidebar"
-                  type="text" 
-                  name="search"
-                  placeholder="Keywords..." 
-                  className="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-white outline-none focus:ring-2 focus:ring-primary text-sm" 
-                />
-              </form>
-            </div>
+          <aside className="lg:col-span-4 space-y-6">
+            <BlogSearchSidebar />
+            <BlogCategories />
 
-            <div className="p-6 border border-gray-100 rounded-2xl">
-              <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Related Articles</h2>
-              <div className="space-y-4">
-                {relatedPosts.map((rp: any) => (
-                  <Link key={rp.id} href={`/blog/${rp.slug || rp.id}`} className="flex gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl">
-                    <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-50">
-                      {getBlogImageUrl(rp.image) && (
-                        <Image 
-                          src={getBlogImageUrl(rp.image)!} 
-                          alt={rp.image_alt_text || rp.title}
-                          fill 
-                          sizes="4rem"
-                          quality={70}
-                          className="object-cover transition-transform group-hover:scale-110" 
-                        />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-1">{rp.title}</h3>
-                      {/* 🚀 Contrast Fix: text-gray-500 -> text-gray-600 */}
-                      <span className="text-[10px] font-bold text-gray-600">{rp.created_at ? new Date(rp.created_at).toLocaleDateString() : ''}</span>
-                    </div>
-                  </Link>
-                ))}
+            {/* Related Articles */}
+            {relatedPosts.length > 0 && (
+              <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
+                <h2 className="text-md font-black text-gray-900 mb-4 border-b border-gray-100 pb-2">Related Articles</h2>
+                <div className="space-y-4">
+                  {relatedPosts.map((rp: any) => (
+                    <Link
+                      key={rp.id}
+                      href={`/blog/${rp.slug || rp.id}`}
+                      className="flex gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                    >
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-50 border border-gray-100">
+                        {getBlogImageUrl(rp.image) && (
+                          <Image
+                            src={getBlogImageUrl(rp.image)!}
+                            alt={rp.image_alt_text || rp.title}
+                            fill
+                            sizes="4rem"
+                            quality={70}
+                            loading="lazy"
+                            className="object-cover transition-transform group-hover:scale-110"
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-1 leading-snug">
+                          {rp.title}
+                        </h3>
+                        <span className="text-[10px] font-bold text-gray-500">
+                          {rp.created_at ? new Date(rp.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
           </aside>
         </div>
       </div>

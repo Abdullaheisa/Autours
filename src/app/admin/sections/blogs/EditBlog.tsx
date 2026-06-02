@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Image as ImageIcon, ChevronDown, ArrowLeft, X, CalendarClock, Clock } from "lucide-react";
+import { Save, Image as ImageIcon, ChevronDown, ArrowLeft, X, CalendarClock, Clock, Settings2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import RichTextEditor from "@/components/shared/RichTextEditor";
 import { BlogCategory } from "@/store/slices/blogCategoriesSlice";
@@ -9,6 +9,8 @@ import { Blog, BlogStatus } from "@/store/slices/blogsSlice";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import ManageCategoriesModal from "@/components/shared/ManageCategoriesModal";
+import { blogCategoryApi } from '@/services/api';
 
 // 🎨 تعديل نوع Blog ليشمل imageFile
 interface EditBlogProps {
@@ -42,6 +44,24 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [tags, setTags] = useState(blog?.tags || "");
   const [loading, setLoading] = useState(false);
+  const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
+  const [localCategories, setLocalCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Initial fetch of categories if not passed or empty
+    const fetchCats = async () => {
+      try {
+        const res: any = await blogCategoryApi.getAll();
+        setLocalCategories(res.data?.data || res.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  // Use local state for categories to show real-time updates from modal
+  const activeCategories = localCategories.length > 0 ? localCategories : blogCategories;
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -158,14 +178,22 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Category <span className="text-red-500">*</span></label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Category <span className="text-red-500">*</span></label>
+                  <button
+                    onClick={() => setIsCategoriesModalOpen(true)}
+                    className="text-[10px] font-bold text-primary-600 flex items-center gap-1 hover:text-primary-800 transition-colors"
+                  >
+                    <Settings2 size={12} /> Manage Categories
+                  </button>
+                </div>
                 <div className="relative">
                   <select
                     value={category} onChange={(e) => setCategory(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer bg-white transition-all"
                   >
                     <option value="">Select a category</option>
-                    {blogCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {activeCategories.map((c: any) => <option key={c.id} value={c.id}>{c.title || c.name}</option>)}
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                 </div>
@@ -320,6 +348,12 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3">
+              <ManageCategoriesModal
+                isOpen={isCategoriesModalOpen}
+                onClose={() => setIsCategoriesModalOpen(false)}
+                categories={activeCategories}
+                onCategoriesChange={(newCats) => setLocalCategories(newCats)}
+              />
               <button
                 onClick={handleSave}
                 disabled={loading}

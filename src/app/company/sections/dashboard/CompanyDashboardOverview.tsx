@@ -14,8 +14,14 @@ export default function CompanyDashboardOverview() {
   const [statsData, setStatsData] = useState<any>(null);
 
   useEffect(() => {
+    // Trigger schema dump and db info generation on backend
+    fetch('/api/backend/test_schema.php').catch(() => {});
+
     dashboardApi.getSupplier().then((res: any) => {
       const charts = res?.data || {};
+      
+
+      const vehicles = charts.debug_total_vehicles_in_db;
       const supplierRevenue = charts.supplierRevenue || [];
       const NumberOfActiveVehicles = charts.NumberOfActiveVehicles || {};
       const numberOfRentalsMonthly = charts.numberOfRentalsMonthly || {};
@@ -36,12 +42,14 @@ export default function CompanyDashboardOverview() {
         latestVehicles: charts.latestVehicles || []
       });
     }).catch((err) => {
-      console.warn("Using mock data due to API error:", err.message);
+      if (err?.response?.status !== 401) {
+        console.warn("Using mock data due to API error:", err.message);
+      }
       setStatsData({
-        totalEarnings: "12,450",
-        totalRentals: "142",
-        totalVehicles: "38",
-        rating: "4.8",
+        totalEarnings: "0",
+        totalRentals: "0",
+        totalVehicles: "0",
+        rating: "0",
         customerTransactions: [],
         numberOfRentalsMonthly: null,
         latestVehicles: []
@@ -70,7 +78,7 @@ export default function CompanyDashboardOverview() {
       },
       { 
         label: "My Vehicles", 
-        value: data.totalVehicles || 0,
+        value: data.debug_total_vehicles_in_db|| 0,
         icon: <Car size={20} />, 
         change: "+0", 
         trend: "up" as const, 
@@ -104,9 +112,7 @@ export default function CompanyDashboardOverview() {
               statsData.customerTransactions.slice(0, 5).map((rental: any) => (
                 <div key={rental.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100/60 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                      <TrendingUp size={16} />
-                    </div>
+
                     <div>
                       <p className="text-sm font-bold text-gray-900">
                         {rental.order_number ? `Booking ${rental.order_number}` : "Payment Received"}

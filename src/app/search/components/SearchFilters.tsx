@@ -20,10 +20,10 @@ interface SearchFiltersProps {
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { filterParams, minPrice, maxPrice, filteredSuppliers } = useSelector((state: RootState) => state.search);
+  const { filterParams, minPrice, maxPrice, filteredSuppliers, filteredCategories } = useSelector((state: RootState) => state.search);
   const { code: currencyCode } = useSelector((state: RootState) => state.currency);
 
-  // 🔥 حارس الـ Hydration لمنع تعارض النصوص بين السيرفر والمتصفح
+  // حارس الـ Hydration لمنع تعارض النصوص بين السيرفر والمتصفح
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
@@ -56,6 +56,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           maxPrice={maxPrice}
           currencyCode={displayCurrency}
           filteredSuppliers={filteredSuppliers}
+          filteredCategories={filteredCategories}
           onClearAll={handleClearAll}
         />
       </div>
@@ -123,6 +124,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
                     maxPrice={maxPrice}
                     currencyCode={displayCurrency}
                     filteredSuppliers={filteredSuppliers}
+                    filteredCategories={filteredCategories}
                     onClearAll={handleClearAll}
                   />
                 </div>
@@ -152,6 +154,7 @@ function FiltersContent({
   maxPrice,
   currencyCode,
   filteredSuppliers,
+  filteredCategories,
   onClearAll
 }: any) {
   const dispatch = useDispatch<AppDispatch>();
@@ -167,7 +170,7 @@ function FiltersContent({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="bg-yellow-50 px-5 py-3.5 border-b border-yellow-100 flex justify-between items-center">
+      <div className="bg-yellow-50 px-5 py-3.5 border-b-2 border-yellow-100 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={14} className="text-yellow-700" />
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-800">Filter By</h3>
@@ -180,7 +183,7 @@ function FiltersContent({
         </button>
       </div>
 
-      <div className="divide-y divide-gray-100">
+      <div>
         {/* 1. Price Range Slider */}
         <FilterSection title="Price Range" expanded>
           <div className="pt-2 pb-5 px-1">
@@ -197,7 +200,21 @@ function FiltersContent({
           </div>
         </FilterSection>
 
-        {/* 2. Location Types */}
+        {/* 2. Categories */}
+        {filteredCategories && filteredCategories.length > 0 && (
+          <FilterSection title="Categories" expanded>
+            {filteredCategories.map((cat: any) => (
+              <FilterOption
+                key={cat.id}
+                label={`${cat.name} (${cat.vehicle_count})`}
+                checked={isChecked('category', String(cat.id))}
+                onToggle={() => handleToggle('category', String(cat.id))}
+              />
+            ))}
+          </FilterSection>
+        )}
+
+        {/* 3. Location Types */}
         <FilterSection title="Location Types" expanded>
           {filterOptions.locationTypes.map(opt => (
             <FilterOption
@@ -304,7 +321,7 @@ function FiltersContent({
         </FilterSection>
 
         {/* 10. Doors Filter */}
-        <FilterSection title="Doors">
+        <FilterSection title="Doors" isLast>
           {filterOptions.doors.map(opt => (
             <FilterOption
               key={opt.value}
@@ -438,13 +455,14 @@ function SimplePriceRange({
 }
 
 // Accordion Component with Smooth Animation
-function FilterSection({ title, children, badge, expanded = false }: any) {
+function FilterSection({ title, children, badge, expanded = false, isLast = false }: any) {
   const [isOpen, setIsOpen] = useState(expanded);
   return (
-    <div className="px-4 py-3.5 hover:bg-gray-50/50 transition-colors">
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between group">
+    // 💡 تم تقليص البادينج السفلي إلى pb-0 ونقل الخط border-b-2 ليكون في أسفل الحاوية تماماً ليرتفع الخط للأعلى بشكل مثالي ونظيف
+    <div className={`px-4 pt-3.5 pb-0 transition-colors ${!isLast ? 'border-b-2 border-gray-200' : ''}`}>
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between group pb-3.5">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-gray-800 group-hover:text-yellow-600 transition-colors">{title}</span>
+          <span className="text-[13px] font-bold text-gray-800 transition-colors">{title}</span>
           {badge && <span className="bg-primary/10 text-primary-700 text-[9px] font-bold px-2 py-0.5 rounded-full">{badge}</span>}
         </div>
         <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -461,7 +479,8 @@ function FilterSection({ title, children, badge, expanded = false }: any) {
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="pt-3 space-y-1.5">{children}</div>
+            {/* تم ضبط البادينج الداخلي هنا pb-4 ليحافظ على المسافات متناسقة مع ارتفاع الخط */}
+            <div className="pt-1 pb-4 space-y-1.5">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -473,19 +492,19 @@ function FilterSection({ title, children, badge, expanded = false }: any) {
 function FilterOption({ label, checked, onToggle }: { label: string; checked: boolean; onToggle: () => void }) {
   return (
     <label
-      className="flex items-center justify-between group cursor-pointer py-1.5 px-1 rounded-lg hover:bg-gray-50 transition-colors"
+      className="flex items-center justify-between group cursor-pointer py-1.5 px-1 rounded-lg"
       onClick={(e) => {
         e.preventDefault();
         onToggle();
       }}
     >
-      <span className="text-[13px] font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{label}</span>
+      <span className="text-[13px] font-medium text-gray-600">{label}</span>
       <div className="relative w-5 h-5">
         <motion.div
           className="absolute inset-0 rounded-md border-2 bg-white"
           animate={{
-            borderColor: checked ? "#f4d849" : "#E5E7EB",
-            backgroundColor: checked ? "#f4d849" : "#FFFFFF",
+            borderColor: checked ? "#EAB308" : "#9CA3AF",
+            backgroundColor: checked ? "#EAB308" : "#FFFFFF",
           }}
           transition={{ duration: 0.15 }}
         />
@@ -495,7 +514,7 @@ function FilterOption({ label, checked, onToggle }: { label: string; checked: bo
           animate={{ scale: checked ? 1 : 0, opacity: checked ? 1 : 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
         >
-          <Check size={12} className="text-gray-900" strokeWidth={3} />
+          <Check size={12} className="text-white" strokeWidth={3.5} />
         </motion.div>
       </div>
     </label>

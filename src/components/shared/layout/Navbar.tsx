@@ -55,7 +55,7 @@ export default function Navbar() {
           <Link 
             href="/" 
             aria-label="Autours Homepage" // 🚀 حل مشكلة الـ Accessibility للرابط
-            className="flex items-center group transition-transform active:scale-95 shrink-0 focus:outline-none focus:ring-2 focus:ring-black rounded-lg"
+            className="flex items-center group transition-transform active:scale-95 shrink-0 focus:outline-none rounded-lg"
           >
             {/* 🚀 استخدام next/image و priority للتحميل الفوري كأول عنصر */}
             <Image
@@ -63,7 +63,10 @@ export default function Navbar() {
               alt={`${siteConfig.name} Logo`}
               width={180}
               height={48}
+              sizes="180px"
+              quality={60}
               priority
+              fetchPriority="high"
               className="h-12 sm:h-10 md:h-12 w-auto object-contain transition-all"
             />
           </Link>
@@ -80,7 +83,7 @@ export default function Navbar() {
               {/* Manage Booking Button */}
               <Link
                 href={getManageHref()}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-black"
+                className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 focus:outline-none"
               >
                 <LayoutDashboard size={14} aria-hidden="true" />
                 <span>Manage Booking</span>
@@ -97,7 +100,7 @@ export default function Navbar() {
               onClick={() => dispatch(toggleMobileMenu())}
               aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} // 🚀 حل مشكلة الزرار المجهول للمكفوفين
               aria-expanded={isMobileMenuOpen}
-              className="lg:hidden p-2 bg-black/10 text-gray-900 rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-black"
+              className="lg:hidden p-2 bg-black/10 text-gray-900 rounded-xl transition-all active:scale-90 focus:outline-none"
             >
               <motion.div animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}>
                 {isMobileMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
@@ -125,7 +128,7 @@ export default function Navbar() {
               <Link
                 href={getManageHref()}
                 onClick={() => dispatch(toggleMobileMenu())}
-                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-gray-900 bg-white border-2 border-white rounded-xl shadow-sm active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-gray-900 bg-white border-2 border-white rounded-xl shadow-sm active:scale-95 transition-all focus:outline-none"
               >
                 <LayoutDashboard size={16} aria-hidden="true" />
                 Manage Booking

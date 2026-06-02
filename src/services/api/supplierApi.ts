@@ -69,14 +69,14 @@ export const supplierApi = {
   getPaymentMethods: () => apiClient.get('/get/payment_methods'),
   updatePaymentMethods: (payment_methods: number[]) => apiClient.post('/payment_methods', { selectedMethodId: payment_methods[0] }),
   getPromos: (includedId?: number) => {
-    let url = '/promo';
+    let url = '/api/supplier/promo';
     if (includedId !== undefined) {
       url += `?included_id=${includedId}`;
     }
     return apiClient.get(url);
   },
-  createPromo: (data: { vehicle_id?: number, selected_vehicles?: string, included_id: number }) => apiClient.post('/promo', data),
-  deletePromo: (id: number) => apiClient.delete(`/promo/${id}`),
+  createPromo: (data: { vehicle_id?: number, selected_vehicles?: string, included_id: number }) => apiClient.post('/api/supplier/promo', data),
+  deletePromo: (id: number) => apiClient.delete(`/api/supplier/promo/${id}`),
   requestMembership: () => apiClient.post('/post/request', {}),
   getRole: () => apiClient.get<string>('/get/user/role'),
 };

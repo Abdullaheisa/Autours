@@ -22,17 +22,11 @@ export default function CountryPageContent({ data }: Props) {
       <main className="flex-grow">
         {/* Blend HeroSearch component with HTML layout spacing */}
         <div className="relative">
-          {data.heroBadge && (
-            <div className="absolute top-28 left-1/2 -translate-x-1/2 z-20 hidden md:block">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#f4c400]/20 border border-[#f4c400]/30 text-[#f4c400] font-black text-xs uppercase tracking-wider backdrop-blur-sm">
-                {data.heroBadge}
-              </div>
-            </div>
-          )}
           <HeroSearch 
             title={`${data.heroTitle} `} 
             titleHighlight={data.heroHighlight}
             bottomText={data.heroBottomTitle}
+            badge={data.heroBadge}
           />
         </div>
 

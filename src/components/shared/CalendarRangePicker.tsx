@@ -153,7 +153,7 @@ export default function CalendarRangePicker({
         {/* Compact Weekday Headers */}
         <div className="grid grid-cols-7 gap-1 text-center mb-2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-            <div key={i} className="text-[10px] font-black text-gray-400 h-6 flex items-center justify-center uppercase tracking-wider">
+            <div key={i} className="text-[10px] font-semibold text-gray-400 h-6 flex items-center justify-center uppercase tracking-wider">
               {d}
             </div>
           ))}

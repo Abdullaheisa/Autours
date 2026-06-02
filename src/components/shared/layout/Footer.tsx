@@ -65,17 +65,20 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           className="mb-6 border-b border-black/10 pb-4"
         >
-          <Link href="/" aria-label="Autours Home" className="inline-block group focus:outline-none focus:ring-2 focus:ring-black rounded-lg">
+          <Link href="/" aria-label="Autours Home" className="inline-block group focus:outline-none rounded-lg">
             <Image 
               src={assets.logoFooter} 
               alt="Autours Logo"
               width={240}
               height={96}
+              sizes="(max-width: 768px) 160px, 240px"
+              quality={60}
+              loading="lazy"
               className="h-16 md:h-24 w-auto object-contain transition-transform group-hover:scale-105" 
             />
           </Link>
@@ -85,8 +88,8 @@ export default function Footer() {
           {Object.entries(footerLinks).map(([category, links], idx) => (
             <motion.div 
               key={category}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.05 }}
               className="space-y-2"
@@ -100,7 +103,7 @@ export default function Footer() {
                     <Link 
                       href={link.href}
                       onClick={(e) => scrollToSection(e, link.href)}
-                      className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-black rounded-sm"
+                      className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                     >
                       {link.name}
                     </Link>
@@ -111,11 +114,11 @@ export default function Footer() {
           ))}
 
           <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
-            className="space-y-2"
+            className="space-y-2 min-h-[160px]" // Fix CLS by reserving space
           >
             <h2 className="text-base font-black text-black">
               Location
@@ -125,7 +128,7 @@ export default function Footer() {
                 <li key={country.id}>
                   <Link 
                     href={`/countries/${country.id}`}
-                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-black rounded-sm"
+                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                   >
                     {country.name} Car Rental
                   </Link>
@@ -136,7 +139,7 @@ export default function Footer() {
               <button 
                 onClick={() => setShowAll(!showAll)}
                 aria-expanded={showAll}
-                className="text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block focus:outline-none focus:underline"
+                className="text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block focus:outline-none focus:underline min-h-[20px]"
               >
                 {showAll ? '- Show Less' : `+ Show ${countries.length - 5} More`}
               </button>
@@ -165,7 +168,7 @@ export default function Footer() {
                   href={social.href}
                   aria-label={`Follow us on ${social.name}`} // 🚀 التأكيد على تواجد الـ Aria-label
                   whileHover={{ y: -2 }}
-                  className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-black"
+                  className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none"
                 >
                   {social.icon}
                 </motion.a>
@@ -178,14 +181,14 @@ export default function Footer() {
               Payment Methods
             </p>
             <div className="flex items-center gap-2">
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm">
-                <Image src={assets.payment.visa} alt="Visa Accepted" width={40} height={24} className="h-full w-full object-contain" />
+              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm relative">
+                <Image src={assets.payment.visa} alt="Visa Accepted" fill sizes="48px" quality={60} loading="lazy" className="object-contain p-1" />
               </div>
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm">
-                <Image src={assets.payment.mastercard} alt="Mastercard Accepted" width={40} height={24} className="h-full w-full object-contain" />
+              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm relative">
+                <Image src={assets.payment.mastercard} alt="Mastercard Accepted" fill sizes="48px" quality={60} loading="lazy" className="object-contain p-1" />
               </div>
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-0.5 overflow-hidden bg-white shadow-sm">
-                <Image src={assets.payment.knet} alt="KNET Accepted" width={40} height={24} className="h-full w-full object-contain" />
+              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-0.5 overflow-hidden bg-white shadow-sm relative">
+                <Image src={assets.payment.knet} alt="KNET Accepted" fill sizes="48px" quality={60} loading="lazy" className="object-contain p-0.5" />
               </div>
             </div>
           </div>

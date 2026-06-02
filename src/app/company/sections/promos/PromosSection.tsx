@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check } from "lucide-react";
+import { Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check, AlertCircle } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
+import Pagination from "@/components/ui/Pagination";
 import { useSearch } from "../../context/SearchContext";
 import { supplierApi } from "@/services/api/supplierApi";
+import { promoApi } from "@/services/api";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,11 +21,13 @@ export default function PromosSection() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [localSearch, searchQuery]);
+  // Suggest State
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
+  const [newPromoName, setNewPromoName] = useState("");
+  const [newPromoDescription, setNewPromoDescription] = useState("");
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
-  // Modal State
+  // Fleet Target Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPromo, setCurrentPromo] = useState<any | null>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -31,11 +35,15 @@ export default function PromosSection() {
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [localSearch, searchQuery]);
+
   const fetchPromosAndIncluded = async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch all included features
-      const incRes: any = await supplierApi.getIncluded();
+      // 1. Fetch all promo definitions (is_promo = 1)
+      const incRes: any = await promoApi.getDefinitions();
       const incList = incRes?.data || incRes || [];
 
       // 2. Fetch active promo included IDs
@@ -47,18 +55,18 @@ export default function PromosSection() {
         id: item.id,
         name: item.what_is_included || item.name || `Feature #${item.id}`,
         description: item.description || "No description provided.",
-        promoted: promotedIds.includes(item.id)
+        promoted: promotedIds.includes(item.id),
+        status: item.status
       }));
 
       setPromos(mapped);
     } catch (err: any) {
       console.warn("Failed to load promotions:", err.message);
-      // fallback dummy data
       setPromos([
-        { id: 1, name: "Free Cancellation", description: "Cancel for free up to 48 hours before pickup", promoted: true },
-        { id: 2, name: "Unlimited Mileage", description: "Drive as far as you want without extra charges", promoted: false },
-        { id: 3, name: "Theft Protection", description: "Coverage in case the vehicle is stolen", promoted: false },
-        { id: 4, name: "Collision Damage Waiver", description: "Limits your financial liability for damage", promoted: false }
+        { id: 1, name: "Free Cancellation", description: "Cancel for free up to 48 hours before pickup", promoted: true, status: 'approved' },
+        { id: 2, name: "Unlimited Mileage", description: "Drive as far as you want without extra charges", promoted: false, status: 'approved' },
+        { id: 3, name: "Theft Protection", description: "Coverage in case the vehicle is stolen", promoted: false, status: 'approved' },
+        { id: 4, name: "Collision Damage Waiver", description: "Limits your financial liability for damage", promoted: false, status: 'approved' }
       ]);
     } finally {
       setIsLoading(false);
@@ -81,6 +89,15 @@ export default function PromosSection() {
   }, [filteredPromos, currentPage]);
 
   const handleOpenPromoModal = async (promo: any) => {
+    if (promo.status === 'pending') {
+      toast.error("This promo suggestion is still pending admin approval!");
+      return;
+    }
+    if (promo.status === 'rejected') {
+      toast.error("This promo suggestion was rejected by the admin.");
+      return;
+    }
+
     setCurrentPromo(promo);
     setIsModalOpen(true);
     setIsLoadingVehicles(true);
@@ -98,9 +115,6 @@ export default function PromosSection() {
 
       if (Array.isArray(list)) {
         setVehicles(list);
-        
-        // If there are already active vehicles, pre-select ONLY those.
-        // Otherwise, if it's a new promotion, pre-select all.
         if (promo.promoted && activeVehicleIds.length > 0) {
           setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)));
         } else {
@@ -147,6 +161,29 @@ export default function PromosSection() {
     }
   };
 
+  const handleSuggestSubmit = async () => {
+    if (!newPromoName.trim()) {
+      toast.error("Please enter a promo title");
+      return;
+    }
+    setIsSuggesting(true);
+    try {
+      await promoApi.suggest({
+        included: newPromoName.trim(),
+        description: newPromoDescription.trim()
+      });
+      setShowSuggestModal(false);
+      setNewPromoName("");
+      setNewPromoDescription("");
+      toast.success("Promo suggestion submitted for admin approval!");
+      fetchPromosAndIncluded();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to submit suggestion");
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
   const togglePromoted = (promo: any) => {
     handleOpenPromoModal(promo);
   };
@@ -178,7 +215,9 @@ export default function PromosSection() {
       <PageHeader 
         title="Promotions & Highlights" 
         description="Choose which inclusions to highlight as active promotions across your fleet"
-        showAction={false}
+        showAction={true}
+        actionLabel="Suggest Promo"
+        onAction={() => setShowSuggestModal(true)}
       />
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 flex items-center gap-4 mt-6">
@@ -256,7 +295,19 @@ export default function PromosSection() {
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${promo.promoted ? "bg-emerald-50 text-emerald-600" : "bg-gray-150 text-gray-400"}`}>
                             <Zap size={16} fill={promo.promoted ? "currentColor" : "none"} />
                           </div>
-                          <span className="text-sm font-bold text-gray-900 leading-snug">{promo.name}</span>
+                          <div>
+                            <span className="text-sm font-bold text-gray-900 leading-snug block">{promo.name}</span>
+                            {promo.status === 'pending' && (
+                              <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200/50">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Suggested (Pending)
+                              </span>
+                            )}
+                            {promo.status === 'rejected' && (
+                              <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-750 border border-red-200/50">
+                                Suggested (Rejected)
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -266,10 +317,13 @@ export default function PromosSection() {
                         <button 
                           type="button"
                           onClick={(e) => { e.stopPropagation(); togglePromoted(promo); }}
+                          disabled={promo.status === 'pending' || promo.status === 'rejected'}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
                             promo.promoted 
                               ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm shadow-emerald-50" 
-                              : "bg-gray-50 text-gray-400 border-gray-200 hover:border-primary hover:text-black"
+                              : promo.status === 'pending' || promo.status === 'rejected'
+                                ? "bg-gray-100 text-gray-350 border-gray-200 cursor-not-allowed"
+                                : "bg-gray-50 text-gray-400 border-gray-200 hover:border-primary hover:text-black"
                           }`}
                         >
                           {promo.promoted ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
@@ -302,37 +356,68 @@ export default function PromosSection() {
                 Showing {Math.min(filteredPromos.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
                 {Math.min(filteredPromos.length, currentPage * itemsPerPage)} of {filteredPromos.length} features
               </span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-40 disabled:hover:bg-white"
-                >
-                  Previous
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${
-                      currentPage === page
-                        ? "bg-primary text-black shadow-sm"
-                        : "border border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-40 disabled:hover:bg-white"
-                >
-                  Next
-                </button>
-              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
+        </div>
+      )}
+
+      {/* Suggest Promo Tailwind Modal */}
+      {showSuggestModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
+          <div onClick={() => setShowSuggestModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden p-6 z-10 mx-2 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-150">
+              <h3 className="text-base font-bold text-gray-900">Suggest a New Promo</h3>
+              <button onClick={() => setShowSuggestModal(false)} className="p-1 text-gray-400 hover:text-gray-650 rounded-lg hover:bg-gray-100 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="py-4 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Promo Title / Feature Name</label>
+                <input
+                  type="text"
+                  value={newPromoName}
+                  onChange={(e) => setNewPromoName(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  placeholder="e.g. GPS Included"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Description</label>
+                <textarea
+                  value={newPromoDescription}
+                  onChange={(e) => setNewPromoDescription(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                  placeholder="e.g. Free GPS navigator included with the rental..."
+                />
+              </div>
+            </div>
+            <div className="pt-4 border-t border-gray-150 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowSuggestModal(false)}
+                className="flex-1 py-2.5 bg-gray-150 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-colors uppercase tracking-wider"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSuggestSubmit}
+                disabled={isSuggesting}
+                className="flex-1 py-2.5 bg-primary hover:bg-primary/95 text-black font-black rounded-xl text-xs transition-colors uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-primary/10"
+              >
+                {isSuggesting ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                Submit Suggestion
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

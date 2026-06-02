@@ -25,8 +25,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 
 const companySidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard" },
   { id: "profile", label: "My Profile", icon: "UserCircle" },
+  { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard" },
   { id: "calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
   { id: "branches", label: "Branches", icon: "Building2" },
   { id: "payment-methods", label: "Payment Methods", icon: "CreditCard" },
@@ -59,7 +59,6 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
       authApi.getUser()
         .then((res: any) => {
           if (res) {
-            console.log("USER DATA FROM API (SIDEBAR):", res);
             dispatch(updateUser({
               id: res.id?.toString() || '1',
               name: res.user_name || res.name || '',
@@ -75,7 +74,6 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
     }
   }, [dispatch]);
 
-  console.log("REDUX USER DATA (SIDEBAR):", user);
   const userAvatar = user?.logo || (user as any)?.company_logo || (user as any)?.photo || user?.avatar;
   const avatarUrl = userAvatar ? getUserImageUrl(userAvatar) : null;
 
