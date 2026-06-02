@@ -68,6 +68,7 @@ export const specificationApi = {
 export const includedApi = {
   getAll: () => apiClient.get("/get/included"),
   create: (data: unknown) => apiClient.post("/api/admin/post/included", data),
+  update: (data: { id: number; included: string; description?: string }) => apiClient.post("/api/admin/post/included/update", data),
   delete: (id: number) => apiClient.post("/api/admin/delete/included", { id }),
 };
 
@@ -217,6 +218,12 @@ export const promoApi = {
   getAll: () => apiClient.get("/api/supplier/promo"),
   create: (data: unknown) => apiClient.post("/api/supplier/promo", data),
   delete: (id: number) => apiClient.delete(`/api/supplier/promo/${id}`),
+  // Clean Promo Definitions (is_promo = 1)
+  getDefinitions: () => apiClient.get("/api/get/promos/definitions"),
+  suggest: (data: { included: string; description?: string }) => apiClient.post("/api/post/promos/definitions", data),
+  updateStatus: (data: { id: number; status: string }) => apiClient.post("/api/admin/post/promos/definitions/status", data),
+  update: (data: { id: number; included: string; description?: string }) => apiClient.post("/api/admin/post/promos/definitions/update", data),
+  deleteDefinition: (id: number) => apiClient.post("/api/admin/delete/promos/definitions", { id }),
 };
 
 // Rating API

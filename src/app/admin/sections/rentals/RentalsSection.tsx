@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Search, Filter, Download, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
+import Pagination from "@/components/ui/Pagination";
 import { rentalApi } from "@/services/api";
 import toast from "react-hot-toast";
 
@@ -346,35 +347,11 @@ export default function RentalsSection() {
               Showing {Math.min(filteredRentals.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
               {Math.min(filteredRentals.length, currentPage * itemsPerPage)} of {filteredRentals.length} rentals
             </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-40 disabled:hover:bg-white"
-              >
-                Previous
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${
-                    currentPage === page
-                      ? "bg-primary text-black shadow-sm"
-                      : "border border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-40 disabled:hover:bg-white"
-              >
-                Next
-              </button>
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>

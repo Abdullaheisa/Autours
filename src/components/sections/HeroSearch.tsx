@@ -42,12 +42,14 @@ interface HeroSearchProps {
   title?: string;
   titleHighlight?: string;
   bottomText?: string;
+  badge?: string;
 }
 
 export default function HeroSearch({
   title = "Car Rentals - ",
   titleHighlight = "Search, Book & Enjoy.",
-  bottomText = "Looking for a vehicle? You're at the right place!"
+  bottomText = "Looking for a vehicle? You're at the right place!",
+  badge
 }: HeroSearchProps = {}) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -181,10 +183,15 @@ export default function HeroSearch({
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 w-full flex flex-col items-center">
-        <div className="text-center mb-4 sm:mb-6">
+        <div className="text-center mb-6 sm:mb-8 flex flex-col items-center justify-center gap-4 sm:gap-6">
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
             {title} <span className="text-primary">{titleHighlight}</span>
           </h1>
+          {badge && (
+            <div className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full bg-[#f4c400]/20 border border-[#f4c400]/30 text-[#f4c400] font-black text-xs uppercase tracking-wider backdrop-blur-sm shadow-xl">
+              {badge}
+            </div>
+          )}
         </div>
 
         <div className="bg-white/35 backdrop-blur-sm py-6 px-4 sm:py-8 sm:px-6 lg:py-10 lg:px-8 rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/15 w-full max-w-5xl">

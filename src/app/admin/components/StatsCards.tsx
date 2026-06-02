@@ -25,9 +25,6 @@ export default function StatsCards() {
         <div key={index} className={`bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border ${stat.borderColor} shadow-sm hover:shadow-md transition-shadow`}>
           <div className="flex items-start justify-between">
             <div className={`${stat.bgColor} p-2.5 sm:p-3 rounded-xl`}><stat.icon className={stat.iconColor} size={20} /></div>
-            <div className={`flex items-center gap-1 text-xs sm:text-sm font-medium ${stat.trend === "up" ? "text-emerald-600" : "text-red-600"}`}>
-              <TrendingUp size={14} />{stat.change}
-            </div>
           </div>
           <div className="mt-3 sm:mt-4">
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stat.value}</p>

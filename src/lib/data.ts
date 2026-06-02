@@ -96,13 +96,12 @@ export const recentBookings = [
 ];
 
 export const sidebarItems = [
+  { id: "profile", label: "My Profile", icon: "UserCircle" },
   { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard", active: true },
   { id: "supplier-intelligence", label: "Supplier Intelligence", icon: "BarChart3" },
-  { id: "profile", label: "My Profile", icon: "UserCircle" },
   { id: "bookings-calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
   { id: "companies", label: "My Companies", icon: "Building2" },
   { id: "blogs", label: "Blogs", icon: "BookOpen" },
-  { id: "blog-categories", label: "Blog Categories", icon: "ListTree" },
   { id: "profit", label: "Profit Margin", icon: "TrendingUp" },
   { id: "vehicles", label: "Vehicles Photos", icon: "Car" },
   { id: "bulk", label: "Vehicles Bulk Upload", icon: "Upload" },
@@ -114,6 +113,7 @@ export const sidebarItems = [
   { id: "reviews", label: "Rental Reviews", icon: "Star" },
   { id: "terms", label: "Rental Terms", icon: "FileText" },
   { id: "included", label: "What is included?", icon: "CheckCircle2" },
+  { id: "promos", label: "Promos", icon: "Tag" },
   { id: "subscribers", label: "Subscribers", icon: "Mail" },
   { id: "contest-popup", label: "Contest Control", icon: "Gift" },
   { id: "background", label: "Background Settings", icon: "Palette" },
