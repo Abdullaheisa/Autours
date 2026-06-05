@@ -20,32 +20,38 @@ export default function PriceListSection() {
   const [savingId, setSavingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
 
   useEffect(() => {
     setCurrentPage(1);
   }, [localSearch, searchQuery]);
 
-  const fetchVehicles = async () => {
+  const fetchVehicles = async (page: number = 1) => {
     setIsLoading(true);
     try {
-      const res: any = await supplierApi.getVehicles(1, 200);
-      const list = res?.data?.data || res?.data || res || [];
-      if (Array.isArray(list)) {
-        setVehicles(list);
-        const activeMap: Record<number, boolean> = {};
-        const priceMap: Record<number, any> = {};
-        list.forEach((v: any) => {
-          activeMap[v.id] = !!v.activation;
-          priceMap[v.id] = {
-            price: v.price?.toString() || "0",
-            week_price: v.week_price?.toString() || "0",
-            month_price: v.month_price?.toString() || "0"
-          };
-        });
-        setActiveItems(activeMap);
-        setPrices(priceMap);
+      const res: any = await supplierApi.getVehicles(page, itemsPerPage);
+      const raw: any = res?.data;
+      // Paginated response: { data: [...], total, last_page }
+      const list = raw?.data && Array.isArray(raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
+      if (list.length > 0 || Array.isArray(raw?.data)) {
+        setTotalPages(raw?.last_page || 1);
+        setTotalCount(raw?.total || list.length);
       }
+      setVehicles(list);
+      const activeMap: Record<number, boolean> = {};
+      const priceMap: Record<number, any> = {};
+      list.forEach((v: any) => {
+        activeMap[v.id] = !!v.activation;
+        priceMap[v.id] = {
+          price: v.price?.toString() || "0",
+          week_price: v.week_price?.toString() || "0",
+          month_price: v.month_price?.toString() || "0"
+        };
+      });
+      setActiveItems(activeMap);
+      setPrices(priceMap);
     } catch (err: any) {
       console.warn("Failed to fetch vehicles:", err.message);
       toast.error("Failed to load vehicle pricing data.");
@@ -55,22 +61,25 @@ export default function PriceListSection() {
   };
 
   useEffect(() => {
-    fetchVehicles();
-  }, []);
+    fetchVehicles(currentPage);
+  }, [currentPage]);
 
+  // Client-side filter on top of the current page results
   const filteredVehicles = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();
+    if (!query) return vehicles;
     return vehicles.filter(v => {
       const catName = typeof v.category === 'object' ? v.category?.name : v.category;
       return v.name?.toLowerCase().includes(query) || String(catName || '').toLowerCase().includes(query);
     });
   }, [vehicles, searchQuery, localSearch]);
 
-  const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
-  const paginatedVehicles = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredVehicles.slice(start, start + itemsPerPage);
-  }, [filteredVehicles, currentPage]);
+  // Server-side pagination; fall back to client-side when searching
+  const isSearching = !!(searchQuery || localSearch);
+  const effectiveTotalPages = isSearching ? Math.ceil(filteredVehicles.length / itemsPerPage) : totalPages;
+  const paginatedVehicles = isSearching
+    ? filteredVehicles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filteredVehicles;
 
   const toggleStatus = async (id: number) => {
     const nextStatus = !activeItems[id];
@@ -295,15 +304,16 @@ export default function PriceListSection() {
           </div>
 
           {/* Pagination Footer */}
-          {filteredVehicles.length > 0 && totalPages > 1 && (
+          {(paginatedVehicles.length > 0 || totalCount > 0) && effectiveTotalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 px-6 py-4 bg-gray-50/30">
               <span className="text-xs font-bold text-gray-500">
-                Showing {Math.min(filteredVehicles.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
-                {Math.min(filteredVehicles.length, currentPage * itemsPerPage)} of {filteredVehicles.length} vehicles
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, isSearching ? filteredVehicles.length : totalCount)} of{" "}
+                {isSearching ? filteredVehicles.length : totalCount} vehicles
               </span>
               <Pagination
                 currentPage={currentPage}
-                totalPages={totalPages}
+                totalPages={effectiveTotalPages}
                 onPageChange={setCurrentPage}
               />
             </div>

@@ -103,52 +103,65 @@ export default function MyVehiclesSection({
   const [deleteModal, setDeleteModal] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
 
+  const fetchVehicles = async (page: number = 1) => {
+    setIsLoading(true);
+    try {
+      const response = await supplierApi.getVehicles(page, itemsPerPage);
+      const raw: any = response?.data;
+      // Backend returns paginated: { data: [...], total, last_page, ... }
+      if (raw && Array.isArray(raw.data)) {
+        setItems(raw.data);
+        setTotalPages(raw.last_page || 1);
+        setTotalCount(raw.total || raw.data.length);
+      } else if (Array.isArray(raw)) {
+        setItems(raw);
+        setTotalPages(1);
+        setTotalCount(raw.length);
+      } else {
+        setItems([]);
+        setTotalPages(1);
+        setTotalCount(0);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch vehicles:", error.message);
+      setItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVehicles(currentPage);
+  }, [currentPage]);
+
+  // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [localSearch, searchQuery]);
 
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        // Fetch a large page so all supplier vehicles come through
-        const response = await supplierApi.getVehicles(1, 1000);
-        if (response && Array.isArray(response.data)) {
-          setItems(response.data);
-        } else if (response && response.data && Array.isArray((response.data as any).data)) {
-          setItems((response.data as any).data);
-        } else {
-          setItems([]);
-        }
-      } catch (error: any) {
-        console.error("Failed to fetch vehicles:", error.message);
-        setItems([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchVehicles();
-  }, []);
-
+  // Client-side filter for search (applied on top of server-side page)
   const filteredVehicles = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();
+    if (!query) return items;
     return items.filter((v) => {
       const catName = typeof v.category === "object" ? v.category?.name : v.category;
       return (
         v.name?.toLowerCase().includes(query) ||
-        String(catName || "")
-          ?.toLowerCase()
-          .includes(query)
+        String(catName || "")?.toLowerCase().includes(query)
       );
     });
   }, [items, searchQuery, localSearch]);
 
-  const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
-  const paginatedVehicles = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredVehicles.slice(start, start + itemsPerPage);
-  }, [filteredVehicles, currentPage]);
+  // Use server-supplied pagination unless user is searching (then paginate client-side)
+  const isSearching = !!(searchQuery || localSearch);
+  const effectiveTotalPages = isSearching ? Math.ceil(filteredVehicles.length / itemsPerPage) : totalPages;
+  const paginatedVehicles = isSearching
+    ? filteredVehicles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filteredVehicles;
 
   const handleDeleteClick = (vehicle: any) => {
     setDeleteModal({ id: vehicle.id, name: vehicle.name || "this vehicle" });
@@ -159,9 +172,10 @@ export default function MyVehiclesSection({
     setIsDeleting(true);
     try {
       await supplierApi.deleteVehicle(deleteModal.id);
-      setItems((prev) => prev.filter((v) => v.id !== deleteModal.id));
       toast.success("Vehicle deleted successfully.");
       setDeleteModal(null);
+      // Re-fetch the current page so count + list are accurate
+      fetchVehicles(currentPage);
     } catch (error) {
       console.error("Failed to delete vehicle:", error);
       toast.error("Failed to delete vehicle. Please try again.");
@@ -370,15 +384,16 @@ export default function MyVehiclesSection({
           </div>
 
           {/* Pagination Footer */}
-          {filteredVehicles.length > 0 && totalPages > 1 && (
+          {(paginatedVehicles.length > 0 || totalCount > 0) && effectiveTotalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 px-6 py-4 bg-gray-50/30">
               <span className="text-xs font-bold text-gray-500">
-                Showing {Math.min(filteredVehicles.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
-                {Math.min(filteredVehicles.length, currentPage * itemsPerPage)} of {filteredVehicles.length} vehicles
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, isSearching ? filteredVehicles.length : totalCount)} of{" "}
+                {isSearching ? filteredVehicles.length : totalCount} vehicles
               </span>
               <Pagination
                 currentPage={currentPage}
-                totalPages={totalPages}
+                totalPages={effectiveTotalPages}
                 onPageChange={setCurrentPage}
               />
             </div>
