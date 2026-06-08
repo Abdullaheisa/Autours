@@ -14,7 +14,9 @@ export default function RentalsSection() {
   const [rentalsData, setRentalsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 20;
 
   const mapOrderStatus = (statusVal: any): string => {
     if (statusVal === undefined || statusVal === null) return "upcoming";
@@ -47,13 +49,19 @@ export default function RentalsSection() {
     return str || "upcoming";
   };
 
-  const fetchRentals = async () => {
+  const fetchRentals = async (page: number = 1) => {
     setIsLoading(true);
     try {
-      const res: any = await rentalApi.getAdmin();
-      const list = res?.rentals || res?.data?.rentals || [];
+      const res: any = await rentalApi.getAdmin({ page, per_page: itemsPerPage });
+      // Backend now returns Laravel paginator: { data:[...], total, last_page, current_page }
+      const raw = res?.data ?? res;
+      const list: any[] = Array.isArray(raw?.data) ? raw.data
+        : Array.isArray(raw?.rentals) ? raw.rentals   // fallback for old format
+        : Array.isArray(raw) ? raw
+        : [];
+      setTotalPages(raw?.last_page || 1);
+      setTotalCount(raw?.total || list.length);
       setRentalsData(list.map((r: any) => {
-        // Calculate duration dynamically if number_of_days is missing
         let durationDays = r.number_of_days;
         if (!durationDays && r.start_date && r.end_date) {
           const start = new Date(r.start_date);
@@ -61,7 +69,6 @@ export default function RentalsSection() {
           const diffTime = Math.abs(end.getTime() - start.getTime());
           durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
-
         return {
           id: r.id,
           order_number: r.order_number,
@@ -73,7 +80,7 @@ export default function RentalsSection() {
           duration: durationDays ? `${durationDays} days` : "-",
           amount: `${r.price} ${r.currency}`,
           status: mapOrderStatus(r.order_status),
-          country: r.country || r.vehicle?.branch?.country || (r.vehicle?.name?.toLowerCase().includes('dubai') || r.supplier?.name?.toLowerCase().includes('dubai') ? "UAE" : r.vehicle?.name?.toLowerCase().includes('riyadh') ? "Saudi" : "Egypt"),
+          country: r.country || r.vehicle?.branch?.country || "Unknown",
           rating: r.rate || r.rating || (r.rental_rates && r.rental_rates.length > 0 ? r.rental_rates[0].rating : 0) || 0
         };
       }));
@@ -85,7 +92,7 @@ export default function RentalsSection() {
   };
 
   useEffect(() => {
-    fetchRentals();
+    fetchRentals(1);
   }, []);
 
   const handleExport = () => {
@@ -146,12 +153,14 @@ export default function RentalsSection() {
     }
   };
 
+  // Client-side filter on current page (search/status filter)
   const filteredRentals = rentalsData.filter((rental) => {
-    const matchesSearch = rental.customer.toLowerCase().includes(searchQuery.toLowerCase()) || rental.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) || rental.order_number?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const matchesSearch = !searchQuery ||
+      rental.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      rental.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      rental.order_number?.toLowerCase().includes(searchQuery.toLowerCase());
     const rentalStatus = String(rental.status || "").toLowerCase();
     const filterLower = statusFilter.toLowerCase();
-    
     let matchesStatus = false;
     if (statusFilter === "All") {
       matchesStatus = true;
@@ -162,19 +171,28 @@ export default function RentalsSection() {
     } else {
       matchesStatus = rentalStatus === filterLower;
     }
-    
     return matchesSearch && matchesStatus;
   });
 
+  // Reset to page 1 when search/filter changes and re-fetch
   useEffect(() => {
     setCurrentPage(1);
+    fetchRentals(1);
   }, [searchQuery, statusFilter]);
 
-  const totalPages = Math.ceil(filteredRentals.length / itemsPerPage);
-  const paginatedRentals = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredRentals.slice(start, start + itemsPerPage);
-  }, [filteredRentals, currentPage]);
+  // For server-side mode: paginatedRentals = filteredRentals (already one page from backend)
+  // When searching locally within the page results:
+  const isLocalFiltering = !!(searchQuery || statusFilter !== "All");
+  const localTotalPages = Math.ceil(filteredRentals.length / itemsPerPage);
+  const effectiveTotalPages = isLocalFiltering ? localTotalPages : totalPages;
+  const paginatedRentals = isLocalFiltering
+    ? filteredRentals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filteredRentals;
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (!isLocalFiltering) fetchRentals(page);
+  };
 
   const getStatusIcon = (status: any) => {
     const str = String(status || "").toLowerCase();
@@ -341,16 +359,17 @@ export default function RentalsSection() {
         )}
 
         {/* Pagination Footer */}
-        {filteredRentals.length > 0 && totalPages > 1 && (
+        {effectiveTotalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 px-8 py-4 bg-gray-50/30">
             <span className="text-xs font-bold text-gray-500">
-              Showing {Math.min(filteredRentals.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
-              {Math.min(filteredRentals.length, currentPage * itemsPerPage)} of {filteredRentals.length} rentals
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, isLocalFiltering ? filteredRentals.length : totalCount)} of{" "}
+              {isLocalFiltering ? filteredRentals.length : totalCount} rentals
             </span>
             <Pagination
               currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              totalPages={effectiveTotalPages}
+              onPageChange={handlePageChange}
             />
           </div>
         )}

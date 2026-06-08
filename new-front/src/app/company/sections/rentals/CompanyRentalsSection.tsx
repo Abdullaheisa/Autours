@@ -19,8 +19,10 @@ export default function CompanyRentalsSection() {
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
-  const itemsPerPage = 10;
+  const itemsPerPage = 15;
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const mapStatus = (statusId: number, statusObj?: any): string => {
@@ -31,65 +33,33 @@ export default function CompanyRentalsSection() {
     return (statusObj?.name_en || "pending").toLowerCase();
   };
 
-  const fetchRentals = async () => {
+  const fetchRentals = async (page: number = 1) => {
     setIsLoading(true);
     try {
-      const res: any = await supplierApi.getRentals();
-      console.log("RENTALS API RESPONSE:", res);
-      
-      // Extremely robust list extraction to handle any API payload format
-      const list = Array.isArray(res) 
-        ? res 
-        : (Array.isArray(res?.rentals) 
-          ? res.rentals 
-          : (Array.isArray(res?.data) 
-            ? res.data 
-            : (Array.isArray(res?.data?.data) 
-              ? res.data.data 
-              : (Array.isArray(res?.data?.rentals)
-                ? res.data.rentals
-                : []))));
-
-      if (Array.isArray(list)) {
-        setItems(list.map((r: any) => ({
-          id: r.id,
-          bookingNumber: r.order_number || `BK-${r.id}`,
-          vehicle: r.vehicle?.name || "Unknown Vehicle",
-          customerName: r.customer?.name || "Unknown Customer",
-          country: r.customer?.country || "UAE",
-          duration: r.number_of_days || (r.start_date && r.end_date ? Math.ceil(Math.abs(new Date(r.end_date).getTime() - new Date(r.start_date).getTime()) / (1000 * 60 * 60 * 24)) : 1),
-          period: r.start_date && r.end_date ? `${r.start_date} - ${r.end_date}` : (r.start_date || "N/A"),
-          startedAt: r.start_date || r.created_at || "N/A",
-          totalPrice: `${r.currency || "USD"} ${r.price || r.supplier_price || 0}`,
-          rentalStatus: mapStatus(r.order_status, r.status)
-        })));
-      }
+      const res: any = await supplierApi.getRentals(page, itemsPerPage);
+      // Backend returns Laravel paginator: { data:[...], total, last_page }
+      const raw: any = res?.data ?? res;
+      const list: any[] = Array.isArray(raw?.data) ? raw.data
+        : Array.isArray(raw?.rentals) ? raw.rentals
+        : Array.isArray(raw) ? raw
+        : [];
+      setTotalPages(raw?.last_page || 1);
+      setTotalCount(raw?.total || list.length);
+      setItems(list.map((r: any) => ({
+        id: r.id,
+        bookingNumber: r.order_number || `BK-${r.id}`,
+        vehicle: r.vehicle?.name || "Unknown Vehicle",
+        customerName: r.customer?.name || "Unknown Customer",
+        country: r.customer?.country || "UAE",
+        duration: r.number_of_days || (r.start_date && r.end_date ? Math.ceil(Math.abs(new Date(r.end_date).getTime() - new Date(r.start_date).getTime()) / (1000 * 60 * 60 * 24)) : 1),
+        period: r.start_date && r.end_date ? `${r.start_date} - ${r.end_date}` : (r.start_date || "N/A"),
+        startedAt: r.start_date || r.created_at || "N/A",
+        totalPrice: `${r.currency || "USD"} ${r.price || r.supplier_price || 0}`,
+        rentalStatus: mapStatus(r.order_status, r.status)
+      })));
     } catch (err: any) {
-      console.warn("Using mock rentals due to API error:", err.message);
-      setItems([
-        {
-          id: 1,
-          bookingNumber: "BK-1001",
-          vehicle: "Toyota Camry 2024",
-          customerName: "John Doe",
-          country: "UAE",
-          duration: "3",
-          startedAt: "2026-05-20",
-          totalPrice: "USD 450",
-          rentalStatus: "confirmed"
-        },
-        {
-          id: 2,
-          bookingNumber: "BK-1002",
-          vehicle: "Nissan Patrol 2023",
-          customerName: "Jane Smith",
-          country: "UK",
-          duration: "5",
-          startedAt: "2026-05-22",
-          totalPrice: "AED 2250",
-          rentalStatus: "pending"
-        }
-      ]);
+      console.warn("Rentals API error:", err.message);
+      setItems([]);
     } finally {
       setIsLoading(false);
     }
@@ -149,35 +119,47 @@ export default function CompanyRentalsSection() {
   };
 
   useEffect(() => {
-    fetchRentals();
+    fetchRentals(1);
   }, []);
+
+  // Reset to page 1 and re-fetch when search/status filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchRentals(1);
+  }, [searchQuery, localSearch, statusFilter]);
 
   const filteredItems = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();
     return items.filter((rental) => {
-      const matchesSearch = query === "" || 
-        rental.bookingNumber.toLowerCase().includes(query) || 
+      const matchesSearch = query === "" ||
+        rental.bookingNumber.toLowerCase().includes(query) ||
         rental.customerName.toLowerCase().includes(query) ||
         rental.vehicle.toLowerCase().includes(query);
-      
       const matchesStatus = statusFilter === "all" || rental.rentalStatus === statusFilter;
-      
       return matchesSearch && matchesStatus;
     });
   }, [items, searchQuery, localSearch, statusFilter]);
 
   const stats = useMemo(() => [
-    { label: "Total Rentals", value: items.length, icon: <Calendar size={20} />, color: "blue" as const },
+    { label: "Total Rentals", value: totalCount || items.length, icon: <Calendar size={20} />, color: "blue" as const },
     { label: "Pending", value: items.filter(i => i.rentalStatus === "pending").length, icon: <Clock size={20} />, color: "amber" as const },
     { label: "Confirmed", value: items.filter(i => i.rentalStatus === "confirmed").length, icon: <CheckCircle size={20} />, color: "emerald" as const },
     { label: "Completed", value: items.filter(i => i.rentalStatus === "completed").length, icon: <CheckCircle size={20} />, color: "blue" as const },
     { label: "Cancelled", value: items.filter(i => i.rentalStatus === "cancelled").length, icon: <XCircle size={20} />, color: "red" as const },
-  ], [items]);
+  ], [items, totalCount]);
 
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredItems.slice(start, start + itemsPerPage);
-  }, [filteredItems, currentPage]);
+  // Use server pagination for normal browsing; client-side when filtering
+  const isLocalFiltering = !!(searchQuery || localSearch || statusFilter !== "all");
+  const localTotalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const effectiveTotalPages = isLocalFiltering ? localTotalPages : totalPages;
+  const paginatedItems = isLocalFiltering
+    ? filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filteredItems;
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (!isLocalFiltering) fetchRentals(page);
+  };
 
   return (
     <SectionLayout>
@@ -336,12 +318,17 @@ export default function CompanyRentalsSection() {
         </div>
         
         {/* Pagination component */}
-        {filteredItems.length > 0 && (
-          <div className="p-4 border-t border-gray-100">
+        {effectiveTotalPages > 1 && (
+          <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span className="text-xs font-bold text-gray-500">
+              Showing {(currentPage - 1) * itemsPerPage + 1}–
+              {Math.min(currentPage * itemsPerPage, isLocalFiltering ? filteredItems.length : totalCount)} of{" "}
+              {isLocalFiltering ? filteredItems.length : totalCount} rentals
+            </span>
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(filteredItems.length / itemsPerPage)}
-              onPageChange={setCurrentPage}
+              totalPages={effectiveTotalPages}
+              onPageChange={handlePageChange}
             />
           </div>
         )}

@@ -14,16 +14,23 @@ export default function RentalReviewsSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [expandedRentalId, setExpandedRentalId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 15;
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (page: number = 1) => {
     setIsLoading(true);
     try {
-      // Fetch all admin rentals (same as old Vue project — show all rentals with or without reviews)
-      const res: any = await rentalApi.getAdmin();
-      const list = res?.rentals || res?.data?.rentals || (Array.isArray(res) ? res : []);
+      const res: any = await rentalApi.getAdmin({ page, per_page: itemsPerPage });
+      // Backend returns Laravel paginator: { data:[...], total, last_page }
+      const raw = res?.data ?? res;
+      const list: any[] = Array.isArray(raw?.data) ? raw.data
+        : Array.isArray(raw?.rentals) ? raw.rentals
+        : Array.isArray(raw) ? raw
+        : [];
+      setTotalPages(raw?.last_page || 1);
+      setTotalCount(raw?.total || list.length);
       const formattedItems = list.map((r: any) => {
-        // Calculate duration in days
         let durationDays = r.number_of_days;
         if (!durationDays && r.start_date && r.end_date) {
           const start = new Date(r.start_date);
@@ -31,25 +38,24 @@ export default function RentalReviewsSection() {
           const diffTime = Math.abs(end.getTime() - start.getTime());
           durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
-
         return {
           id: r.id,
           order_number: r.order_number,
           customer: r.customer?.name || "Customer",
           vehicle: r.vehicle?.name || r.vehicle?.model || "Vehicle",
           company: r.supplier?.name || r.vehicle?.supplier?.name || "Supplier",
-          country: r.country || r.vehicle?.branch?.country || (r.vehicle?.name?.toLowerCase().includes('dubai') || r.supplier?.name?.toLowerCase().includes('dubai') ? "UAE" : r.vehicle?.name?.toLowerCase().includes('riyadh') ? "Saudi" : "Egypt"),
+          country: r.country || r.vehicle?.branch?.country || "Unknown",
           date: r.start_date,
           end_date: r.end_date,
           duration: durationDays ? `${durationDays} days` : "-",
           rating: r.rate || r.rating || 0,
           comment: r.comment || "",
           status: r.order_status || "confirmed",
-          rentalRates: r.rental_rates || r.rentalRates || [] // Include ratings breakdown!
+          rentalRates: r.rental_rates || r.rentalRates || []
         };
       });
       setItems(formattedItems);
-
+      // Build filter options from current page data
       const uniqueCountries = Array.from(new Set(formattedItems.map((r: any) => r.country).filter((c: any) => c && c !== "Unknown"))) as string[];
       const uniqueSuppliers = Array.from(new Set(formattedItems.map((r: any) => r.company).filter(Boolean))) as string[];
       setCountries(uniqueCountries);
@@ -62,7 +68,7 @@ export default function RentalReviewsSection() {
   };
 
   useEffect(() => {
-    fetchReviews();
+    fetchReviews(1);
   }, []);
 
   const [countryFilter, setCountryFilter] = useState("All");
@@ -103,13 +109,23 @@ export default function RentalReviewsSection() {
 
   useEffect(() => {
     setCurrentPage(1);
+    fetchReviews(1);
   }, [searchQuery, countryFilter, supplierFilter, statusFilter, referenceFilter, startDate, endDate]);
 
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedReviews = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredItems.slice(start, start + itemsPerPage);
-  }, [filteredItems, currentPage]);
+  // Server-side: backend already returns one page; local filter narrows that page
+  const isLocalFiltering = !!(searchQuery || countryFilter !== "All" || supplierFilter !== "All" || statusFilter !== "All");
+  const localTotalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const effectiveTotalPages = isLocalFiltering ? localTotalPages : totalPages;
+  const effectiveTotalCount = isLocalFiltering ? filteredItems.length : totalCount;
+
+  const paginatedReviews = isLocalFiltering
+    ? filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filteredItems;
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (!isLocalFiltering) fetchReviews(page);
+  };
 
   return (
     <div className="p-6 bg-white min-h-screen">
@@ -394,16 +410,16 @@ export default function RentalReviewsSection() {
         )}
 
         {/* Pagination Footer */}
-        {filteredItems.length > 0 && totalPages > 1 && (
+        {effectiveTotalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 px-8 py-4 bg-gray-50/30">
             <span className="text-xs font-bold text-gray-500">
-              Showing {Math.min(filteredItems.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
-              {Math.min(filteredItems.length, currentPage * itemsPerPage)} of {filteredItems.length} rentals
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, effectiveTotalCount)} of {effectiveTotalCount} rentals
             </span>
             <Pagination
               currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              totalPages={effectiveTotalPages}
+              onPageChange={handlePageChange}
             />
           </div>
         )}

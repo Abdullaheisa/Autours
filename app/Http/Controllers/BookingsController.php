@@ -135,12 +135,9 @@ class BookingsController extends Controller
         if ($request->has('has_review')) {
             $rentals->whereHas('rentalRates');
         }
-        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')->orderBy('id', 'desc')->get();
+        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')->orderBy('id', 'desc')->paginate($request->get('per_page', 20));
 
-        return response()->json([
-            'rentals' => $data,
-            'rental_statuses' => RentalStatus::query()->get()
-        ]);
+        return response()->json($data);
     }
 
     public function destroy(Request $request)
@@ -202,12 +199,9 @@ class BookingsController extends Controller
 
         $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')
                         ->orderBy('id', 'desc')
-                        ->get();
+                        ->paginate($request->get('per_page', 20));
 
-        return response()->json([
-            'rentals'        => $data,
-            'rental_statuses' => RentalStatus::query()->get()
-        ]);
+        return response()->json($data);
     }
 
     public function book(BookCarRequest $request)

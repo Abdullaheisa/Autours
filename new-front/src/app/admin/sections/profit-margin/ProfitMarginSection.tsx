@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Wallet, Percent, Download, Search, Filter, Car, Save, Store } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { DollarSign, Wallet, Percent, Save, Store, Car } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import StatsCard from "@/components/ui/StatsCard";
@@ -9,6 +9,7 @@ import { profitApi } from "@/services/api";
 import ProfitFilters, { FilterItem } from "@/app/admin/components/profit/ProfitFilters";
 import ProfitPercentageForm from "@/app/admin/components/profit/ProfitPercentageForm";
 import VehicleProfitTable from "@/app/admin/components/profit/VehicleProfitTable";
+import Pagination from "@/components/ui/Pagination";
 import toast from "react-hot-toast";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
 
@@ -27,6 +28,8 @@ interface VehicleProfit {
   hasMargin?: boolean;
 }
 
+const ITEMS_PER_PAGE = 15;
+
 export default function ProfitMarginsPage() {
   // Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,15 +39,23 @@ export default function ProfitMarginsPage() {
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [showNoProfitOnly, setShowNoProfitOnly] = useState(false);
 
+  // Server-side pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   // Options State
   const [countries, setCountries] = useState<FilterItem[]>([]);
   const [suppliers, setSuppliers] = useState<FilterItem[]>([]);
   const [branches, setBranches] = useState<FilterItem[]>([]);
   const [vehiclesList, setVehiclesList] = useState<FilterItem[]>([]);
 
-  // Vehicles State
+  // Vehicles State (current page only)
   const [vehicles, setVehicles] = useState<VehicleProfit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Track current filters in a ref to reset page when they change
+  const filtersRef = useRef({ searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle, showNoProfitOnly });
 
   // Fetch Options
   useEffect(() => {
@@ -102,29 +113,33 @@ export default function ProfitMarginsPage() {
     setSelectedVehicle("");
   }, [fetchVehiclesList]);
 
-  // Fetch Main Data
-  const fetchData = useCallback(() => {
+  // ── Main Data Fetch (server-side pagination) ─────────────────────────────────
+  const fetchData = useCallback((page: number = 1) => {
     setIsLoading(true);
-    
-    // Always fetch page 1 with all applied filters to show the matching vehicles
+
     const params: any = {
-      page: 1,
-      per_page: 10000 // Fetch all items to support local pagination
+      page,
+      per_page: ITEMS_PER_PAGE,
     };
-    
+
     if (searchQuery) params.search = searchQuery;
     if (selectedCountry) params.country = selectedCountry;
     if (selectedSupplier) params.supplier = selectedSupplier;
     if (selectedBranch) params.branch = selectedBranch;
-    if (selectedVehicle) params.selectedVehicles = [selectedVehicle]; // API expects array of IDs
-    if (showNoProfitOnly) params.no_profit = 'true';
+    if (selectedVehicle) params.selectedVehicles = [selectedVehicle];
+    if (showNoProfitOnly) params.no_profit = "true";
 
     profitApi.getAll(params)
       .then((res: any) => {
-        const items = Array.isArray(res?.data?.data) ? res.data.data
-          : Array.isArray(res?.data) ? res.data
-          : Array.isArray(res) ? res
+        // Backend returns Laravel paginated: { data:[...], total, last_page, current_page }
+        const raw = res?.data ?? res;
+        const items: any[] = Array.isArray(raw?.data) ? raw.data
+          : Array.isArray(raw) ? raw
           : [];
+
+        setTotalPages(raw?.last_page || 1);
+        setTotalCount(raw?.total || items.length);
+        setCurrentPage(raw?.current_page || page);
 
         setVehicles(items.map((item: any) => ({
           id: item.vehicle_id ?? item.id,
@@ -145,24 +160,43 @@ export default function ProfitMarginsPage() {
         console.warn("Failed to load profit margins:", err.message);
       })
       .finally(() => setIsLoading(false));
-  }, [searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle]);
+  }, [searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle, showNoProfitOnly]);
 
+  // Reset to page 1 when filters change, then fetch
   useEffect(() => {
-    fetchData();
-  }, [fetchData]); // Auto fetch when filters change
+    const prev = filtersRef.current;
+    const filtersChanged =
+      prev.searchQuery !== searchQuery ||
+      prev.selectedCountry !== selectedCountry ||
+      prev.selectedSupplier !== selectedSupplier ||
+      prev.selectedBranch !== selectedBranch ||
+      prev.selectedVehicle !== selectedVehicle ||
+      prev.showNoProfitOnly !== showNoProfitOnly;
 
-  // Local filtering is removed since API handles it now
-  const filteredVehicles = vehicles;
+    filtersRef.current = { searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle, showNoProfitOnly };
 
-  // Stats
-  const totalVehicles = filteredVehicles.length;
+    if (filtersChanged) {
+      setCurrentPage(1);
+      fetchData(1);
+    } else {
+      fetchData(currentPage);
+    }
+  }, [fetchData]);
+
+  // Fetch when page changes (but not when filters change — that's handled above)
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    fetchData(page);
+  }, [fetchData]);
+
+  // Stats (computed from current page — totals come from server)
   const avgMargin =
-    filteredVehicles.length > 0
-      ? filteredVehicles.reduce((sum, v) => sum + v.profit1_2 + v.profit3_7 + v.profit8_30 + v.profitWeekend, 0) /
-        (filteredVehicles.length * 4)
+    vehicles.length > 0
+      ? vehicles.reduce((sum, v) => sum + v.profit1_2 + v.profit3_7 + v.profit8_30 + v.profitWeekend, 0) /
+        (vehicles.length * 4)
       : 0;
-  const savedCount = filteredVehicles.filter((v) => v.isSaved).length;
-  const activeBranches = new Set(filteredVehicles.map((v) => v.branch)).size;
+  const savedCount = vehicles.filter((v) => v.isSaved).length;
+  const activeBranches = new Set(vehicles.map((v) => v.branch)).size;
 
   // Handlers
   const handleVehicleProfitChange = (
@@ -183,7 +217,6 @@ export default function ProfitMarginsPage() {
     const vehicle = vehicles.find((v) => v.id === id);
     if (!vehicle) return;
     try {
-      // Backend expects: priceTax, weekPriceTax, monthPriceTax, weekendPriceTax, selectedVehicles
       await profitApi.upload({
         priceTax: vehicle.profit1_2,
         weekPriceTax: vehicle.profit3_7,
@@ -200,40 +233,24 @@ export default function ProfitMarginsPage() {
   };
 
   const handleGlobalSubmit = async (percentages: { days1_2: string; days3_7: string; days8_30: string; weekend: string }) => {
-    if (filteredVehicles.length === 0) return;
+    if (vehicles.length === 0) return;
 
-    const idsToUpdate = new Set(filteredVehicles.map((v) => v.id));
-    const updatedVehicles = vehicles.map((v) => {
-      if (idsToUpdate.has(v.id)) {
-        return {
-          ...v,
-          profit1_2: percentages.days1_2 ? parseInt(percentages.days1_2) : v.profit1_2,
-          profit3_7: percentages.days3_7 ? parseInt(percentages.days3_7) : v.profit3_7,
-          profit8_30: percentages.days8_30 ? parseInt(percentages.days8_30) : v.profit8_30,
-          profitWeekend: percentages.weekend ? parseInt(percentages.weekend) : v.profitWeekend,
-          isSaved: true,
-        };
-      }
-      return v;
-    });
-
-    const first = updatedVehicles.find(v => idsToUpdate.has(v.id));
-    if (!first) return;
+    const idsToUpdate = new Set(vehicles.map((v) => v.id));
 
     try {
       await profitApi.upload({
-        priceTax: first.profit1_2,
-        weekPriceTax: first.profit3_7,
-        monthPriceTax: first.profit8_30,
-        weekendPriceTax: first.profitWeekend,
-        selectedVehicles: [...idsToUpdate].join(','),
+        priceTax: percentages.days1_2 ? parseInt(percentages.days1_2) : 0,
+        weekPriceTax: percentages.days3_7 ? parseInt(percentages.days3_7) : 0,
+        monthPriceTax: percentages.days8_30 ? parseInt(percentages.days8_30) : 0,
+        weekendPriceTax: percentages.weekend ? parseInt(percentages.weekend) : 0,
+        selectedVehicles: [...idsToUpdate].join(","),
       });
-      toast.success(`Profit margins updated for ${idsToUpdate.size} vehicles!`);
+      toast.success(`Profit margins updated for ${idsToUpdate.size} vehicles on this page!`);
+      fetchData(currentPage);
     } catch (e: any) {
       console.warn("Failed to upload global profit:", e.message);
       toast.error("Failed to update margins. Please try again.");
     }
-    setVehicles(updatedVehicles);
   };
 
   const clearFilters = () => {
@@ -242,6 +259,7 @@ export default function ProfitMarginsPage() {
     setSelectedSupplier("");
     setSelectedBranch("");
     setSelectedVehicle("");
+    setShowNoProfitOnly(false);
   };
 
   return (
@@ -249,16 +267,16 @@ export default function ProfitMarginsPage() {
       {/* Page Header */}
       <PageHeader
         title="Profit Margins"
-        description="Manage vehicle pricing margins"
+        description={`Manage vehicle pricing margins — ${totalCount} vehicles total`}
         showAction={false}
       />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatsCard label="Total Vehicles" value={totalVehicles} icon={<Car size={20} />} change="+12%" color="blue" />
-        <StatsCard label="Avg Margin" value={`${avgMargin.toFixed(1)}%`} icon={<Percent size={20} />} change="+5%" color="emerald" />
-        <StatsCard label="Saved Rules" value={savedCount} icon={<Save size={20} />} change="+8" color="purple" />
-        <StatsCard label="Active Branches" value={activeBranches} icon={<Store size={20} />} color="amber" />
+        <StatsCard label="Total Vehicles" value={totalCount} icon={<Car size={20} />} color="blue" />
+        <StatsCard label="Avg Margin (page)" value={`${avgMargin.toFixed(1)}%`} icon={<Percent size={20} />} color="emerald" />
+        <StatsCard label="Saved (page)" value={savedCount} icon={<Save size={20} />} color="purple" />
+        <StatsCard label="Branches (page)" value={activeBranches} icon={<Store size={20} />} color="amber" />
       </div>
 
       {/* Filters */}
@@ -280,7 +298,7 @@ export default function ProfitMarginsPage() {
         showNoProfitOnly={showNoProfitOnly}
         onToggleNoProfit={setShowNoProfitOnly}
         onClearFilters={clearFilters}
-        onSearchClick={fetchData}
+        onSearchClick={() => fetchData(1)}
       />
 
       {/* Profit Percentage Form */}
@@ -288,11 +306,26 @@ export default function ProfitMarginsPage() {
 
       {/* Vehicle Table */}
       <VehicleProfitTable
-        vehicles={filteredVehicles}
+        vehicles={vehicles}
         onUpdateVehicle={handleVehicleProfitChange}
         onSaveRow={handleSaveRow}
         onClearFilters={clearFilters}
       />
+
+      {/* Server-side Pagination Footer */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-2xl border border-gray-100 px-6 py-4 shadow-sm">
+          <span className="text-xs font-bold text-gray-500">
+            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+            {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} vehicles
+          </span>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
     </SectionLayout>
   );
 }
