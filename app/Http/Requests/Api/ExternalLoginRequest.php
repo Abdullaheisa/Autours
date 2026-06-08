@@ -17,7 +17,7 @@ class ExternalLoginRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string'],
         ];
     }
 
@@ -27,7 +27,6 @@ class ExternalLoginRequest extends FormRequest
             'email.required' => 'Email is required.',
             'email.email' => 'Please provide a valid email address.',
             'password.required' => 'Password is required.',
-            'password.min' => 'Password must be at least 6 characters.',
         ];
     }
 

@@ -23,7 +23,7 @@ class CreateCategoryRequest extends FormRequest
     {
         return [
             'name' => 'required|string|unique:categories,name',
-            'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
     }
 }

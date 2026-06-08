@@ -17,11 +17,14 @@ class Branch extends Model
         'location',
         'adresse',
         'company_id',
+        'station_id',
         'currency',
         'country',
+        'city',
         'lat',
         'lng',
-        'location_type'
+        'location_type',
+        'abriviation'
     ];
 
     public function company() {
@@ -30,6 +33,13 @@ class Branch extends Model
 
     public function vehicles()
     {
-        return $this->hasMany(Vehicle::class, 'id', 'pickup_loc');
+        return $this->hasMany(Vehicle::class, 'pickup_loc', 'id');
+    }
+
+    public function pivotVehicles()
+    {
+        return $this->belongsToMany(Vehicle::class, 'branch_vehicle')
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 }

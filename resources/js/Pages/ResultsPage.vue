@@ -74,7 +74,7 @@
                                 </div>
                                 <div class=" mt-3 p-3" style="background: #fff;">
                                     <h5>PICK-UP - LOCATION </h5>
-                                    <p class="col-11"><span class="  ti ti-gps"></span>&nbsp;{{ form.pickupLoc }}</p>
+                                    <p class="col-11"><span class="  ti ti-gps"></span>&nbsp;{{ locationName }}</p>
 
                                     <span class="col-md-6 ti ti-calendar">&nbsp;{{ form.date_from }}</span>
                                     <span class="col-md-3 ti ti-clock">&nbsp;{{ form.time_from }}</span>
@@ -83,7 +83,7 @@
                                 <div class=" mt-3 p-3" style="background: #fff;">
                                     <h5>DROP-OFF - LOCATION </h5>
 
-                                    <p class="col-11"><span class="  ti ti-gps"></span>&nbsp;{{ form.pickupLoc }}</p>
+                                    <p class="col-11"><span class="  ti ti-gps"></span>&nbsp;{{ locationName }}</p>
 
                                     <span class="col-md-6 ti ti-calendar">&nbsp;{{ form.date_to }}</span>
                                     <span class="col-md-3 ti ti-clock">&nbsp;{{ form.time_to }}</span>
@@ -108,8 +108,8 @@
                                                            :remote-method="remoteLocations"
                                                            :loading="locations.loading.value">
                                                     <el-option v-for="item in locations.all.value"
-                                                               :label="item.location"
-                                                               :value="item.location"/>
+                                                               :label="item.name"
+                                                               :value="item.id"/>
                                                 </el-select>
                                             </div>
                                             <div class="mb-3 row">
@@ -445,10 +445,10 @@
                                 <Loader/>
                             </div>
 
-                            <div v-if="!loading" v-for="(vehicle, mobileIndex) in priceFiltered" :key="mobileIndex" class="mb-4 mobile-card px-2">
+                            <div v-if="!loading" v-for="(vehicle, mobileIndex) in priceFiltered" :key="mobileIndex" class="mb-4 mobile-card px-2" :style="getDisplayStyle(vehicle)">
                                 <div class="  p-3 position-relative" style="background: #fff; border-radius: 1%;">
                                     <!-- Close Button -->
-                                    <div class="position-absolute top-0 end-0 m-2 cursor-pointer" @click="hideItem(mobileIndex)">
+                                    <div class="position-absolute top-0 end-0 m-2 cursor-pointer" @click="hideItem(vehicle)">
                                       <i class="fa fa-close"/>
                                     </div>
 
@@ -566,7 +566,7 @@
                                     <div class="de-item-list mb-3 p-4 ">
                                         <div class="close"
                                              style="position: absolute; top: 10px;right: 35px; cursor: pointer;"
-                                             @click="hideItem(index)">
+                                             @click="hideItem(vehicle)">
                                             <svg width="25" height="25" fill="currentColor" viewBox="0 0 24 24"
                                                  xmlns="http://www.w3.org/2000/svg">
                                                 <path fill-rule="evenodd"
@@ -628,119 +628,86 @@
                                                 <div class="clearfix"></div>
                                             </div>
                                             <div class="row rounded-2 mb-3 py-1" style="background: #edecec; width: 76.5%;">
-                                                <div class="d-supplier">
-                                                    <div class="mt-2 d-img" style="width: 18%; height: 60px; ">
-                                                        <img :src="'img/' + vehicle.supplier.logo" height="55"  width="140" alt=""/>
+                                                <div class="d-supplier d-flex align-items-center gap-4 w-100 px-3">
+                                                    <div class="mt-2 d-img">
+                                                        <img :src="'img/' + vehicle.supplier.logo" style="height: 55px; width: 140px; object-fit: contain;" alt=""/>
                                                     </div>
-                                                    <div class="col-md-3 row">
-                                                        <div>
-                                                            <span
-                                                                style="font-size: 110%; color: #000;"
-                                                                class="text-nowrap">{{
-                                                                    vehicle.supplier.company
-                                                                }}</span>
-                                                        </div>
-
-                                                        <div style=" margin-top: -10px;">
-                                                            <div><a
-                                                                class="cursor-pointer text-primary text-decoration-underline"
-                                                                href="javascript:void(0);"
-                                                                @click="openRentalTerms(vehicle)">Rental&nbsp;Terms</a>
-                                                            </div>
-                                                        </div>
+                                                    <div class="d-flex flex-column align-items-start">
+                                                        <span style="font-size: 110%; color: #000;" class="text-nowrap fw-bold">{{ vehicle.supplier.company }}</span>
+                                                        <a class="cursor-pointer text-primary text-decoration-underline mt-1" href="javascript:void(0);" @click="openRentalTerms(vehicle)">Rental&nbsp;Terms</a>
                                                     </div>
-                                                    <el-tooltip v-if="vehicle.instant_confirmation"
-                                                                placement="right-start">
-                                                        <template #content>
-                                                            <h5>Customers Feedback!</h5>
-                                                            <div class="row col-md-12 text-nowrap" style="width: 500px"
-                                                                 v-for="rentalReview in vehicle?.questions_rate">
-                                                                <div class="col-md-6 text-nowrap">
-                                                                    {{ rentalReview.objective }}
-                                                                </div>
-                                                                <div class="col-md-6 text-nowrap">
-                                                                    <CProgressBar style="border-radius: 10px;"
-                                                                                  :value="rentalReview.total_rate * 10">
-                                                                        {{ rentalReview.total_rate }} / 10
-                                                                    </CProgressBar>
-                                                                </div>
-                                                            </div>
-                                                        </template>
-                                                        <div>
-                                                        <span class="py-2 px-1 rounded-1"
-                                                              style=" background-color: #f9d602; font-size: 1.0em;font-weight: 600;">{{
-                                                                vehicle?.supplier_rate
-                                                            }}/10</span>
-                                                        </div>
-                                                    </el-tooltip>
-                                                    <div class="col-md-2">
-                                                        <span class="be_media-body"><h5 style="margin-bottom: -5px;">
-                                                            {{
-                                                                vehicle?.supplier_rate >= 1 && vehicle?.supplier_rate <= 2 ? 'Terrible' :
-                                                                    vehicle?.supplier_rate > 2 && vehicle?.supplier_rate <= 4 ? 'Ok' :
-                                                                        vehicle?.supplier_rate > 4 && vehicle?.supplier_rate <= 6 ? 'Good' :
-                                                                            vehicle?.supplier_rate > 6 && vehicle?.supplier_rate <= 8 ? 'Ver Good' :
-                                                                                vehicle?.supplier_rate > 8 && vehicle?.supplier_rate <= 10 ? 'Excellent' : ''
-                                                            }}
-                                                        </h5><span
-                                                            style="font-size: medium; ">(&nbsp;<strong
-                                                            style="color: #f9d602">{{
-                                                                vehicle.supplier_number_of_reviews
-                                                            }}&nbsp;</strong>+&nbsp;reviews)</span></span>
-                                                    </div>
-                                                    <el-tooltip v-if="vehicle.instant_confirmation"
-                                                                placement="right-start">
-                                                        <template #content>
-                                                            <div style="font-size: 1vw;">
-                                                                Receive instant booking confirmation!
-                                                            </div>
-                                                        </template>
-                                                        <div class="col-md-2 mt-3 text-nowrap bold">
-                                                            <div class="" id="instant_btn">
-                                                                <p style="font-size: 1vw;"><img class="mb-1" width="40"
-                                                                                                src="/images/icons/instant_confirmation.png"/>
-                                                                    Instant Confirmation <i class="fas fa-info-circle"
-                                                                                            style="color: #6969d8;"></i>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </el-tooltip>
-                                                    <div>
-                                                        <el-tooltip v-if="!vehicle.instant_confirmation"
-                                                                    placement="right-start">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <el-tooltip v-if="vehicle.instant_confirmation" placement="right-start">
                                                             <template #content>
-                                                                <div style="font-size: 1vw;">
-                                                                    You will receive booking confirmation after the
-                                                                    requested service availability is verified!
+                                                                <h5>Customers Feedback!</h5>
+                                                                <div class="row col-md-12 text-nowrap" style="width: 500px" v-for="rentalReview in vehicle?.questions_rate">
+                                                                    <div class="col-md-6 text-nowrap">
+                                                                        {{ rentalReview.objective }}
+                                                                    </div>
+                                                                    <div class="col-md-6 text-nowrap">
+                                                                        <CProgressBar style="border-radius: 10px;" :value="rentalReview.total_rate * 10">
+                                                                            {{ rentalReview.total_rate }} / 10
+                                                                        </CProgressBar>
+                                                                    </div>
                                                                 </div>
                                                             </template>
-                                                            <div class="col-md-2  text-nowrap bold">
-                                                                <div>
-                                                                    <p style="font-size: 1vw">
-                                                                        <i style="font-size: 1.8vw; color: gold;"
-                                                                           class=" px-2 fa fa-ban be_media-left be_media-middle"/>
-                                                                        <strong class="mb-5"> On request <i
-                                                                            class=" fas fa-info-circle"
-                                                                            style="color: #6969d8;"></i></strong>
-                                                                    </p>
+                                                            <span class="py-2 px-1 rounded-1" style="background-color: #f9d602; font-size: 1.0em; font-weight: 600;">
+                                                                {{ vehicle?.supplier_rate }}/10
+                                                            </span>
+                                                        </el-tooltip>
+                                                        <div class="d-flex flex-column align-items-start">
+                                                            <h5 style="margin-bottom: -5px; font-size: 0.9em;">
+                                                                {{
+                                                                    vehicle?.supplier_rate >= 1 && vehicle?.supplier_rate <= 2 ? 'Terrible' :
+                                                                    vehicle?.supplier_rate > 2 && vehicle?.supplier_rate <= 4 ? 'Ok' :
+                                                                    vehicle?.supplier_rate > 4 && vehicle?.supplier_rate <= 6 ? 'Good' :
+                                                                    vehicle?.supplier_rate > 6 && vehicle?.supplier_rate <= 8 ? 'Very Good' :
+                                                                    vehicle?.supplier_rate > 8 && vehicle?.supplier_rate <= 10 ? 'Excellent' : ''
+                                                                }}
+                                                            </h5>
+                                                            <span style="font-size: small;">(&nbsp;<strong style="color: #f9d602">{{ vehicle.supplier_number_of_reviews }}&nbsp;</strong>+&nbsp;reviews)</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="ms-auto">
+                                                        <el-tooltip v-if="vehicle.instant_confirmation" placement="right-start">
+                                                            <template #content>
+                                                                <div style="font-size: 1vw;">
+                                                                    Receive instant booking confirmation!
                                                                 </div>
+                                                            </template>
+                                                            <div class="text-nowrap fw-bold d-flex align-items-center gap-2">
+                                                                <img width="30" src="/images/icons/instant_confirmation.png"/>
+                                                                <span style="font-size: 1vw;">Instant Confirmation</span>
+                                                                <i class="fas fa-info-circle" style="color: #6969d8;"></i>
                                                             </div>
                                                         </el-tooltip>
 
+                                                        <el-tooltip v-if="!vehicle.instant_confirmation" placement="right-start">
+                                                            <template #content>
+                                                                <div style="font-size: 1vw;">
+                                                                    You will receive booking confirmation after the requested service availability is verified!
+                                                                </div>
+                                                            </template>
+                                                            <div class="text-nowrap fw-bold d-flex align-items-center gap-2">
+                                                                <i style="font-size: 1.5vw; color: gold;" class="fa fa-ban"/>
+                                                                <span style="font-size: 1vw;">On request</span>
+                                                                <i class="fas fa-info-circle" style="color: #6969d8;"></i>
+                                                            </div>
+                                                        </el-tooltip>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="row" style="display: flex; align-items: stretch;">
                                                 <div class=" rounded-2 bg-light-gray row ml-1"
                                                      style="width: 75%; min-height: 100%;">
-                                                    <div class="row col-md-8">
+                                                    <div class="row col-md-6 pe-3">
                                                         <p class="primary bold pt-2" style="color: #5e9007;">What is Included!</p>
-                                                        <ul class="row">
+                                                        <ul class="row list-unstyled">
                                                             <li class="col-md-6" style="margin-top: -5%"
                                                                 v-for="(item, index) in vehicle.included ">
-                                                                <div class="row" v-if="index < 6">
-                                                                    <i class="col-md-1 fa fa-check fa-l mt-2 text-nowrap"
-                                                                       style="color: green;"/>
+                                                                <div class="d-flex align-items-start gap-2" v-if="index < 6">
+                                                                    <i class="fa fa-check text-success mt-1"/>
                                                                     <el-tooltip v-if="item?.description?.length"
                                                                                 placement="right-start" trigger="hover">
                                                                         <template #content>
@@ -748,18 +715,17 @@
                                                                                 {{ item.description }}
                                                                             </div>
                                                                         </template>
-                                                                        <p style="font-size: 14px; "
-                                                                           class="col-md-10 included-font text-nowrap">
+                                                                        <p style="font-size: 14px; margin-bottom: 5px;"
+                                                                           class="included-font text-nowrap text-truncate">
                                                                             {{ item.what_is_included }}</p>
                                                                     </el-tooltip>
-                                                                    <p v-else style="font-size: 14px; "
-                                                                       class="col-md-10 included-font text-nowrap">
+                                                                    <p v-else style="font-size: 14px; margin-bottom: 5px;"
+                                                                       class="included-font text-nowrap text-truncate">
                                                                         {{ item.what_is_included }}</p>
                                                                 </div>
-                                                                <div :class="'row text-nowrap vehicle-'+vehicle.id"
+                                                                <div :class="'d-flex align-items-start gap-2 vehicle-'+vehicle.id"
                                                                      style="display: none;" v-else>
-                                                                    <i class="col-md-1 fa fa-check fa-l mt-2 text-nowrap"
-                                                                       style="color: green;"/>
+                                                                    <i class="fa fa-check text-success mt-1"/>
                                                                     <el-tooltip v-if="item?.description?.length"
                                                                                 placement="right-start" trigger="hover">
                                                                         <template #content>
@@ -767,58 +733,56 @@
                                                                                 {{ item.description }}
                                                                             </div>
                                                                         </template>
-                                                                        <p style="font-size: 14px; "
-                                                                           class="col-md-10 text-nowrap included-font">
+                                                                        <p style="font-size: 14px; margin-bottom: 5px;"
+                                                                           class="text-nowrap text-truncate included-font">
                                                                             {{ item.what_is_included }}</p>
                                                                     </el-tooltip>
-                                                                    <p style="font-size: 14px; " v-else
-                                                                       class="col-md-10 included-font text-nowrap">
+                                                                    <p style="font-size: 14px; margin-bottom: 5px;" v-else
+                                                                       class="included-font text-nowrap text-truncate">
                                                                         {{ item.what_is_included }}</p>
                                                                 </div>
                                                             </li>
-                                                            <span @click="showMoreIncluded(vehicle.id)"
-                                                                  class="col-md-12 cursor-pointer"
-                                                                  :id="'show-more'+ vehicle.id"
-                                                                  v-if="vehicle.included.length > 6 ">Show more ...</span>
+                                                            <div class="col-12 mt-2">
+                                                                <span @click="showMoreIncluded(vehicle.id)"
+                                                                      class="cursor-pointer text-primary"
+                                                                      :id="'show-more'+ vehicle.id"
+                                                                      v-if="vehicle.included.length > 6 ">Show more ...</span>
+                                                            </div>
                                                         </ul>
                                                     </div>
-                                                    <div class=" col-md-4 mt-3 ">
-                                                        <div class="mt-2">
-                                                            <p class="">
-                                                                <a target="_blank"
-                                                                   :href=" 'https://www.google.com/maps/search/?api=1&query=' +vehicle.branch.lat+','+vehicle.branch.lng">
-                                                                    <i class="fa fa-earth" style="color: navy;"/></a>
-                                                                &nbsp;Address:&nbsp;
-                                                                {{
-                                                                    vehicle.supplier.address
-                                                                }}</p>
+                                                    <div class="col-md-6 mt-3 ps-4 border-start d-flex flex-column justify-content-center">
+                                                        <div class="mb-2">
+                                                            <p class="mb-1 text-nowrap">
+                                                                <a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(vehicle.supplier.address)">
+                                                                    <i class="fa fa-earth text-primary me-2"/>
+                                                                </a>
+                                                                <span class="text-secondary">Address:</span>
+                                                                <span class="ms-1 fw-medium text-truncate" style="max-width: 200px; display: inline-block; vertical-align: bottom;" :title="vehicle.supplier.address">
+                                                                    {{ vehicle.supplier.address }}
+                                                                </span>
+                                                            </p>
                                                         </div>
-                                                        <div style="margin-top: -5%">
+                                                        <div class="mb-2">
                                                             <el-tooltip placement="right-start" trigger="hover">
                                                                 <template #content>
                                                                     <div class="" style="font-size: 14px;">
                                                                         {{ vehicle?.fuel_policy?.description }}
                                                                     </div>
                                                                 </template>
-
-                                                                <label class="text-nowrap"><i
-                                                                    class="fa fa-gas-pump"/>&nbsp;
-                                                                    Fuel Policy: <strong>
-                                                                        {{
-                                                                            vehicle?.fuel_policy?.name
-                                                                        }} </strong></label>
-
+                                                                <p class="mb-1 text-nowrap">
+                                                                    <i class="fa fa-gas-pump text-primary me-2"/>
+                                                                    <span class="text-secondary">Fuel Policy:</span>
+                                                                    <strong class="ms-1">{{ vehicle?.fuel_policy?.name }}</strong>
+                                                                </p>
                                                             </el-tooltip>
                                                         </div>
-                                                        <div style="margin-top: -1%;">
-                                                            <p style="margin: 0; font-size: 16px;"><i
-                                                                :class="'fa fa-'+vehicle.location_type[0]?.icon "/>&nbsp;
-                                                                &nbsp;Location Type: <strong>{{
-                                                                        vehicle?.location_type?.length ? vehicle.location_type[0]?.name : ''
-                                                                    }}</strong></p>
+                                                        <div>
+                                                            <p class="mb-1 text-nowrap">
+                                                                <i :class="'fa fa-' + vehicle.location_type[0]?.icon + ' text-primary me-2'"/>
+                                                                <span class="text-secondary">Location Type:</span>
+                                                                <strong class="ms-1">{{ vehicle?.location_type?.length ? vehicle.location_type[0]?.name : '' }}</strong>
+                                                            </p>
                                                         </div>
-
-
                                                     </div>
                                                 </div>
                                                 <div class="price-booking-section" style="width: 20%; margin-left: 4%; display: flex; flex-direction: column; justify-content: flex-end;">
@@ -908,6 +872,7 @@ const locations = {
 let vehicleIds = [];
 
 const loading = ref(false);
+const locationName = ref("");
 const category = ref([]);
 const supplier = ref([]);
 const locationType = ref([]);
@@ -1086,20 +1051,17 @@ const getVehicles = async () => {
     try {
         form.currency = localStorage.getItem('currency') ?? 'USD';
         loading.value = true;
-        const response = await axios.post("filter/vehicles", form);
+        const response = await axios.post("/filter/vehicles", form);
         filteredVehicles.value = response.data.filteredVehicles;
-        form.pickupLoc = response.data.location;
+        locationName.value = response.data.location;
+        if (response.data.location_id) {
+            form.pickupLoc = response.data.location_id;
+        }
         form.date_from = response.data.date_from
         form.date_to = response.data.date_to
-        if (filteredCategories.value.length <= 0) {
-            filteredCategories.value = response.data.filteredCategories;
-        }
-        if (filteredSuppliers.value.length <= 0) {
-            filteredSuppliers.value = response.data.filteredSuppliers;
-        }
-        if (filteredLocationTypes.value.length <= 0) {
-            filteredLocationTypes.value = response.data.filteredLocationTypes;
-        }
+        filteredCategories.value = response.data.filteredCategories;
+        filteredSuppliers.value = response.data.filteredSuppliers;
+        filteredLocationTypes.value = response.data.filteredLocationTypes;
         if (response.data.paymentMethods) {
             paymentMethods.value = response.data.paymentMethods
         }
@@ -1147,7 +1109,7 @@ const getFilters = async () => {
         formData.append("supplier", supplier.value);
         formData.append("specification", specification.value);
         formData.append("currency", localStorage.getItem('currency') ?? 'EGP');
-        const response = await axios.post("filter/vehicles", formData);
+        const response = await axios.post("/filter/vehicles", formData);
         filteredVehicles.value = response.data.filteredVehicles;
         count.value = response.data.count;
         // max.value = 0;
@@ -1162,9 +1124,8 @@ const getFilters = async () => {
 const filters = () => {
     $('.mobile-filters').slideToggle()
 }
-const hideItem = (index) => {
-    const item = filteredVehicles.value[index];
-    item.isHidden = true;
+const hideItem = (vehicle) => {
+    vehicle.isHidden = true;
 };
 
 const getDisplayStyle = (item) => {
@@ -1177,13 +1138,15 @@ const openRentalTerms = (vehicle) => {
 }
 
 const priceFiltered = computed(() => {
-    if (filteredVehicles.value != []) {
-        if (priceRange.value && priceRange.value > min.value) {
+    if (filteredVehicles.value && filteredVehicles.value.length > 0) {
+        if (priceRange.value !== undefined && priceRange.value !== null) {
             return filteredVehicles.value.filter((vehicle) => {
                 return vehicle.final_price <= priceRange.value;
             });
         }
+        return filteredVehicles.value;
     }
+    return [];
 });
 const selectedCurrency = computed(() => {
     return localStorage.getItem('currency') ?? 'USD'
@@ -1210,23 +1173,52 @@ const setParams = async () => {
     let urlParams = new URLSearchParams(window.location.search);
 
     if (urlParams.has('pickupLoc')) {
-        form.pickupLoc = await urlParams.get('pickupLoc')
+        form.pickupLoc = urlParams.get('pickupLoc')
     }
     if (urlParams.has('date_from')) {
-        form.date_from = await urlParams.get('date_from')
+        form.date_from = urlParams.get('date_from')
     }
     if (urlParams.has('date_to')) {
-        form.date_to = await urlParams.get('date_to')
+        form.date_to = urlParams.get('date_to')
     }
     if (urlParams.has('time_from')) {
-        form.time_from = await urlParams.get('time_from')
+        form.time_from = urlParams.get('time_from')
     }
     if (urlParams.has('time_to')) {
-        form.time_to = await urlParams.get('time_to')
+        form.time_to = urlParams.get('time_to')
     }
-    if (urlParams.has('category')) {
-        category.value = await urlParams.get('category')
+
+    const cat = urlParams.getAll('category[]');
+    if (cat.length > 0) {
+        category.value = cat.map(Number);
+    } else if (urlParams.has('category')) {
+        category.value = [Number(urlParams.get('category'))];
     }
+    form.category = category.value;
+
+    const sup = urlParams.getAll('supplier[]');
+    if (sup.length > 0) {
+        supplier.value = sup.map(Number);
+    } else if (urlParams.has('supplier')) {
+        supplier.value = [Number(urlParams.get('supplier'))];
+    }
+    form.supplier = supplier.value;
+
+    const lt = urlParams.getAll('location_type_id[]');
+    if (lt.length > 0) {
+        locationType.value = lt.map(Number);
+    } else if (urlParams.has('location_type_id')) {
+        locationType.value = [Number(urlParams.get('location_type_id'))];
+    }
+    form.location_type_id = locationType.value;
+
+    const pm = urlParams.getAll('payment_methods[]');
+    if (pm.length > 0) {
+        selectedPaymentMethod.value = pm.map(Number);
+    } else if (urlParams.has('payment_methods')) {
+        selectedPaymentMethod.value = [Number(urlParams.get('payment_methods'))];
+    }
+    form.payment_methods = selectedPaymentMethod.value;
 
     await getVehicles();
 }
@@ -1636,25 +1628,14 @@ onMounted(() => {
     }
 }
 
-@media screen  and (max-width: 999px){
- .mobile-filters {
-     display: none;
-   }
-    .filter-by {
-        display: block;
-    }
-    .web-card{
+    .web-card {
         display: none;
     }
     .mobile-card {
         display: block;
-
     }
 
-}
-
-@media screen  and (min-width: 1000px){
-
+@media screen and (min-width: 1000px) {
     .filter-by {
         display: none;
     }
@@ -1667,7 +1648,15 @@ onMounted(() => {
     .mobile-card {
         display: none;
     }
+}
 
+@media screen and (max-width: 999px) {
+    .mobile-filters {
+        display: none;
+    }
+    .filter-by {
+        display: block;
+    }
 }
 
 // ========================================

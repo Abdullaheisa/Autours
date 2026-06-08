@@ -13,7 +13,7 @@ class Profit extends Model
     protected $fillable = [
         'supplier_id',
         'per_day_profit',
-        'peer_week_profit',
+        'per_week_profit',
         'per_month_profit',
         'vehicle_id',
         'branch_id',

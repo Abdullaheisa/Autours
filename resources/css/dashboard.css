@@ -11493,3 +11493,71 @@
   .formbold-w-45 {
       width: 45%;
   }
+
+  /* Modernize Dashboard CSS */
+  .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      background: #ffffff;
+      margin-bottom: 1.5rem;
+  }
+  .card:hover {
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  }
+  .card-body {
+      padding: 1.5rem;
+  }
+  h2.mb-4 {
+      font-weight: 600;
+      color: #2c3e50;
+      letter-spacing: -0.5px;
+  }
+  .el-table {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+  }
+  .el-table th {
+      background-color: #f8f9fa !important;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+  }
+  .btn {
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+  }
+  .btn-primary {
+      background-color: #4361ee;
+      border-color: #4361ee;
+  }
+  .btn-primary:hover {
+      background-color: #3a0ca3;
+      border-color: #3a0ca3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+  }
+  .btn-danger {
+      background-color: #ef233c;
+      border-color: #ef233c;
+  }
+  .btn-danger:hover {
+      background-color: #d90429;
+      border-color: #d90429;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(239, 35, 60, 0.3);
+  }
+  .btn-success {
+      background-color: #2ec4b6;
+      border-color: #2ec4b6;
+  }
+  .btn-success:hover {
+      background-color: #20a4f3;
+      border-color: #20a4f3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(46, 196, 182, 0.3);
+  }

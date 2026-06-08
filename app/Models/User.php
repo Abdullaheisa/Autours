@@ -56,17 +56,16 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
         'integration' => 'boolean',
     ];
 
     public function vehicles() {
-        return $this->hasMany(Vehicle::class, 'id', 'supplier');
+        return $this->hasMany(Vehicle::class, 'supplier', 'id');
     }
 
     public function branches()
     {
-        return $this->hasMany(Branch::class, 'id', 'company_id');
+        return $this->hasMany(Branch::class, 'company_id', 'id');
     }
     public function fuelPolicy()
     {
@@ -76,6 +75,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Rental::class, 'supplier_id', 'id');
 
+    }
+
+    public function customerRentals()
+    {
+        return $this->hasMany(Rental::class, 'customer_id', 'id');
     }
 
     public function parent()

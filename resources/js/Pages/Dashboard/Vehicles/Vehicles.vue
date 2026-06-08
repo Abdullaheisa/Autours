@@ -3,47 +3,96 @@
         <div class="card-body">
             <h2 class="mb-4">Fleet</h2>
 
-            <div class=" d-flex">
-                <el-table :data="filterTableData" style="width: 100%" :loading="loading" stripe>
-                    <el-table-column label="Photo" prop="">
+            <div class="filters-bar mb-4 d-flex align-items-end" style="gap: 15px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="form-label d-block">Search Name</label>
+                    <el-input v-model="search" placeholder="Search by name" clearable @change="handleFilterChange"/>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="form-label d-block">Category</label>
+                    <el-select v-model="filterCategory" placeholder="All Categories" clearable @change="handleFilterChange" style="width: 100%">
+                        <el-option
+                            v-for="item in categories.options.value"
+                            :key="item.id"
+                            :label="item.label"
+                            :value="item.id"
+                        />
+                    </el-select>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="form-label d-block">Branch</label>
+                    <el-select v-model="filterBranch" placeholder="All Branches" clearable @change="handleFilterChange" style="width: 100%">
+                        <el-option
+                            v-for="item in locations.options.value"
+                            :key="item.id"
+                            :label="item.label"
+                            :value="item.id"
+                        />
+                    </el-select>
+                </div>
+                <div>
+                    <el-button type="primary" @click="handleFilterChange">Filter</el-button>
+                    <el-button @click="resetFilters">Reset</el-button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <el-table :data="tableData" style="width: 100%" v-loading="loading" stripe>
+                    <el-table-column label="Photo" width="120">
                         <template #default="scope">
-                            <img :src="'/img/vehicles/' + scope.row.photo" class="w-100">
+                            <img :src="'/img/vehicles/' + scope.row.photo" class="w-100" style="object-fit: contain; max-height: 80px;">
                         </template>
                     </el-table-column>
-                    <el-table-column label="Name" prop="name"/>
-                    <el-table-column label="Pickup" prop="branch.location" width="200"/>
-                    <el-table-column label="Price" prop="price"/>
-                    <el-table-column label="Active Rentals" prop="rentals_count"/>
-                    <el-table-column v-if="role === 'admin'" label="Supplier">
+                    <el-table-column label="Name" prop="name" min-width="150"/>
+                    <el-table-column label="Pickup" min-width="180">
                         <template #default="scope">
-                            <img :src="'/img/' + scope.row.supplier.logo" class="w-100" width="50" height="120">
+                            <span v-if="scope.row.branches && scope.row.branches.length > 0">
+                                {{ Array.from(new Set(scope.row.branches.map(b => b.location))).join(', ') }}
+                            </span>
+                            <span v-else>{{ scope.row.branch?.location }}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column align="right">
-
-                        <template #header>
-                            <el-input v-model="search" size="small" placeholder="Type to search"/>
+                    <el-table-column label="Price" prop="price" width="100">
+                        <template #default="scope">
+                            ${{ scope.row.price }}
                         </template>
-
+                    </el-table-column>
+                    <el-table-column label="Active Rentals" prop="rentals_count" width="130" align="center"/>
+                    <el-table-column v-if="role === 'admin'" label="Supplier" width="150">
+                        <template #default="scope">
+                            <img v-if="scope.row.supplier?.logo" :src="'/img/' + scope.row.supplier.logo" width="50" height="50" style="object-fit: contain;">
+                            <span v-else>{{ scope.row.supplier?.name }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="Actions" align="right" width="200">
                         <template #default="scope">
                             <el-button
-                                class="col-6"
-                                size="large"
+                                size="small"
                                 type="danger"
                                 @click="handleDelete(scope.$index, scope.row)"
                             >Delete
                             </el-button>
                             <el-button
-                                class="col-6"
-                                size="large"
+                                size="small"
                                 type="info"
                                 @click="handleDrawer(scope.$index, scope.row);"
                             >Edit
                             </el-button>
                         </template>
-
                     </el-table-column>
                 </el-table>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <el-pagination
+                        v-model:current-page="currentPage"
+                        v-model:page-size="pageSize"
+                        :page-sizes="[10, 20, 50, 100]"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total"
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                    />
+                </div>
             </div>
             <el-drawer v-model="drawer" direction="rtl" :before-close="handleClose">
                 <template #header>
@@ -209,15 +258,23 @@
 
 <script setup>
 import {router, useForm} from '@inertiajs/vue3';
-import {onMounted, computed, ref} from 'vue'
+import {onMounted, computed, ref, watch} from 'vue'
 
 const search = ref('')
+const filterCategory = ref('')
+const filterBranch = ref('')
 const tableData = ref([])
 const loading = ref(false)
 const role = ref('')
 const drawer = ref(false)
 const photo = ref('')
 const category = ref('')
+
+// Pagination
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+
 const categories = {
     loading: ref(false),
     all: ref([]),
@@ -253,6 +310,7 @@ const fetchPhotos = async () => {
             label: `${item.name}`,
             photo: `${item.photo}`,
         }))
+        photos.options.value = photos.list.value;
     } catch (error) {
         console.error(error)
     } finally {
@@ -275,14 +333,12 @@ const remotePhotos = (query) => {
 }
 
 const getSpecificationOption = (name, option, list) => {
-    console.log(list)
     const s = {
         'name': name,
         'icon': list.icon,
         'option': option,
     }
 
-    console.log(s);
     const isDuplicate = selectedSpecifications.value.some(item => (
         item.name === name
     ));
@@ -300,12 +356,9 @@ const getSpecificationOption = (name, option, list) => {
 const fetchSpecifications = async () => {
     try {
         const response = await axios.get('get/specifications');
-        console.log(response.data)
         allSpecifications.value = response.data;
     } catch (error) {
         console.error(error);
-    } finally {
-
     }
 }
 
@@ -315,9 +368,10 @@ const fetchCategories = async () => {
         const response = await axios.get('get/categories')
         categories.all.value = response.data
         categories.list.value = categories.all.value.map((item) => ({
-            id: `${item.id}`,
-            label: `${item.name}`,
+            id: item.id,
+            label: item.name,
         }))
+        categories.options.value = categories.list.value;
     } catch (error) {
         console.error(error)
     } finally {
@@ -349,7 +403,6 @@ const handleClose = () => {
             drawer.value = false
         })
         .catch(() => {
-            // catch error
         })
 }
 
@@ -359,7 +412,6 @@ function cancelClick() {
             drawer.value = false
         })
         .catch(() => {
-            // catch error
         })
 }
 
@@ -370,7 +422,6 @@ function confirmClick() {
             drawer.value = false
         })
         .catch(() => {
-            // catch error
         })
 }
 
@@ -402,8 +453,7 @@ const upload = async () => {
             formData.append('specifications', JSON.stringify(selectedSpecifications.value));
         }
         formData.append('update', '1');
-        const response = await axios.post('post/vehicles', formData);
-        tableData.value = response.data;
+        await axios.post('post/vehicles', formData);
     } catch (error) {
         console.error(error);
     } finally {
@@ -423,19 +473,21 @@ const getRole = async () => {
     }
 }
 
-const getData = async (index, row) => {
+const getData = async () => {
     try {
         loading.value = true;
-        const response = await axios.get('/get/vehicles');
-        tableData.value = response.data;
-        for (const key in tableData.value[index]) {
-            data.value[key] = tableData.value[index][key] || '';
-        }
-        photo.value = photos.all.value.find(p => {
-            return p.photo === data.value.photo;
-        })?.name
-        category.value = data.value.category?.name;
-        pickupLoc.value = data.value.branch?.name;
+        const response = await axios.get('/get/vehicles', {
+            params: {
+                paginate: true,
+                page: currentPage.value,
+                per_page: pageSize.value,
+                search: search.value,
+                category_id: filterCategory.value,
+                branch_id: filterBranch.value
+            }
+        });
+        tableData.value = response.data.data;
+        total.value = response.data.total;
     } catch (error) {
         console.error(error);
     } finally {
@@ -449,9 +501,10 @@ const fetchBranches = async () => {
         const response = await axios.get('get/branches')
         locations.all.value = response.data
         locations.list.value = locations.all.value.map((item) => ({
-            id: `${item.id}`,
-            label: `${item.name}`,
+            id: item.id,
+            label: item.name,
         }))
+        locations.options.value = locations.list.value;
     } catch (error) {
         console.error(error)
     } finally {
@@ -473,12 +526,29 @@ const remoteBranches = (query) => {
     }
 }
 
-const filterTableData = computed(() => {
-    const dataArray = Array.isArray(tableData.value) ? tableData.value : [];
-    return dataArray.filter((data) =>
-        !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
-    );
-})
+const handleFilterChange = () => {
+    currentPage.value = 1;
+    getData();
+}
+
+const resetFilters = () => {
+    search.value = '';
+    filterCategory.value = '';
+    filterBranch.value = '';
+    currentPage.value = 1;
+    getData();
+}
+
+const handleSizeChange = (val) => {
+    pageSize.value = val;
+    currentPage.value = 1;
+    getData();
+}
+
+const handleCurrentChange = (val) => {
+    currentPage.value = val;
+    getData();
+}
 
 const handleDelete = async (index, row) => {
     try {
@@ -487,13 +557,12 @@ const handleDelete = async (index, row) => {
             return;
         }
         loading.value = true;
-        const response = await axios.post('delete/vehicles/' +row.id );
-        tableData.value = response.data;
+        await axios.post('delete/vehicles/' +row.id );
+        getData()
     } catch (error) {
         console.error(error);
     } finally {
         loading.value = false;
-        getData()
     }
 }
 
@@ -510,13 +579,13 @@ onMounted(() => {
 
 <style lang="scss">
 .el-table td.el-table__cell:last-child div {
-    gap: 5px;
+    gap: 10px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: flex-end;
     align-items: center;
 
     button {
-        width: 100%;
         margin: 0;
     }
 }
@@ -533,5 +602,19 @@ onMounted(() => {
 
 .el-drawer .el-drawer__body {
     padding-top: 150px;
+}
+
+.filters-bar {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        color: #495057;
+    }
 }
 </style>

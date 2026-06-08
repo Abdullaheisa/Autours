@@ -19,11 +19,40 @@ class Blog extends Model
         'content',
         'meta_description',
         'is_published',
+        'published_at',
+        'views',
+        'tags',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Self-healing schema: Automatically detect and create columns if missing on the new DB
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('blogs', 'published_at')) {
+                \Illuminate\Support\Facades\Schema::table('blogs', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->timestamp('published_at')->nullable();
+                });
+            }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('blogs', 'views')) {
+                \Illuminate\Support\Facades\Schema::table('blogs', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->integer('views')->default(0);
+                });
+            }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('blogs', 'tags')) {
+                \Illuminate\Support\Facades\Schema::table('blogs', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->text('tags')->nullable();
+                });
+            }
+        } catch (\Exception $e) {
+            // Keep silent during setup or when DB connection is not fully initialized
+        }
+    }
 
     /**
      * Get the category of this blog

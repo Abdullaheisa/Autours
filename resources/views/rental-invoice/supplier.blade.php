@@ -80,12 +80,12 @@
         <tr class="border-color">
             <td class="border-color" style=" width: 47%; text-align: left;background-color: #faefac">
                 <h3 style="background: #ffd719">Customer Name</h3>
-                <p>{{isset($rental) ? $rental->customer->name : ''}}</p>
+                <p>{{(isset($rental) && $rental->customer) ? $rental->customer->name : ''}}</p>
             </td>
             <td style=" width: 5%; background-color: #ffffff"></td>
             <td class="border-color" style=" width: 47%; background-color: #faefac">
                 <h3 style="background: #ffd719">Supplier</h3>
-                <p>{{isset($rental) ?  $rental->supplier->name : ''}}</p>
+                <p>{{(isset($rental) && $rental->supplier) ?  $rental->supplier->name : ''}}</p>
             </td>
         </tr>
     </table>
@@ -96,13 +96,12 @@
             <td class="border-color" style=" width: 47%; text-align: left; background-color: #faefac">
                 <div style="width: 47%; margin-bottom: 20px; ">
                     <h3 style="font-size: 1.2em; margin-bottom: 0.5em; width: 1200px; background-color: #fbd726">Pick-up</h3>
-                    <p style="margin-bottom: 0.5em;">{{isset($rental) ? \Carbon\Carbon::parse($rental->start_date)->format("d M Y") .' '. \Carbon\Carbon::parse($rental->start_date)->dayName
-                        . ', ' . \Carbon\Carbon::parse($rental->start_time)->format("h i A") : ''}}</p>
-                    <p style="margin-bottom: 0.5em;">{{isset($rental) ? $rental->vehicle->branch->location . ' ' . count($rental->vehicle->locationType) ? $rental->vehicle->locationType[0]->name  : '': ''}}</p>
+                    <p style="margin-bottom: 0.5em;">{{(isset($rental) && $rental->start_date) ? \Carbon\Carbon::parse($rental->start_date)->format("d M Y") .' '. \Carbon\Carbon::parse($rental->start_date)->dayName : ''}} {{(isset($rental) && $rental->start_time) ? ', ' . \Carbon\Carbon::parse($rental->start_time)->format("h:i A") : ''}}</p>
+                    <p style="margin-bottom: 0.5em;">{{ (isset($rental) && $rental->vehicle && $rental->vehicle->branch) ? $rental->vehicle->branch->location : '' }} {{ (isset($rental) && $rental->vehicle && $rental->vehicle->locationType && count($rental->vehicle->locationType) > 0) ? $rental->vehicle->locationType[0]->name : '' }}</p>
                     <p style="margin-bottom: 0.5em;">
-                        Address: {{isset($rental) ? $rental->vehicle->branch->adresse : ''}}</p>
+                        Address: {{ (isset($rental) && $rental->vehicle && $rental->vehicle->branch) ? $rental->vehicle->branch->adresse : '' }}</p>
                     <p style="margin-bottom: 0.5em;">Business hours: 08:00-23:00 (Sunday)</p>
-                    <p style="margin-bottom: 0.5em;">Phone: {{isset($rental)? $rental->supplier->phone_num : ' '}}</p>
+                    <p style="margin-bottom: 0.5em;">Phone: {{ (isset($rental) && $rental->supplier) ? $rental->supplier->phone_num : ' ' }}</p>
                 </div>
             </td>
             <td style=" width: 5%; background-color: #ffffff"></td>
@@ -110,13 +109,12 @@
             <td class="border-color" style=" width: 47%; background-color: #faefac">
                 <div style="width: 47%; margin-bottom: 20px;">
                     <h3 style="font-size: 1.2em; margin-bottom: 0.5em; background-color: #fbd726">Drop-off</h3>
-                    <p style="margin-bottom: 0.5em;">{{isset($rental) ? \Carbon\Carbon::parse($rental->end_date)->format("d M Y") .' '. \Carbon\Carbon::parse($rental->start_date)->dayName
-                        . ', ' . \Carbon\Carbon::parse($rental->end_time)->format("h i A") : ''}}</p>
-                    <p style="margin-bottom: 0.5em;">{{isset($rental) ? $rental->vehicle->branch->location . ' ' . count($rental->vehicle->locationType) ? $rental->vehicle->locationType[0]->name  : '': ''}}</p>
+                    <p style="margin-bottom: 0.5em;">{{(isset($rental) && $rental->end_date) ? \Carbon\Carbon::parse($rental->end_date)->format("d M Y") .' '. \Carbon\Carbon::parse($rental->end_date)->dayName : ''}} {{(isset($rental) && $rental->end_time) ? ', ' . \Carbon\Carbon::parse($rental->end_time)->format("h:i A") : ''}}</p>
+                    <p style="margin-bottom: 0.5em;">{{ (isset($rental) && $rental->vehicle && $rental->vehicle->branch) ? $rental->vehicle->branch->location : '' }} {{ (isset($rental) && $rental->vehicle && $rental->vehicle->locationType && count($rental->vehicle->locationType) > 0) ? $rental->vehicle->locationType[0]->name : '' }}</p>
                     <p style="margin-bottom: 0.5em;">
-                        Address: {{isset($rental) ? $rental->vehicle->branch->adresse : ''}}</p>
+                        Address: {{ (isset($rental) && $rental->vehicle && $rental->vehicle->branch) ? $rental->vehicle->branch->adresse : '' }}</p>
                     <p style="margin-bottom: 0.5em;">Business hours: 08:00-23:00 (Sunday)</p>
-                    <p style="margin-bottom: 0.5em;">Phone: {{isset($rental)? $rental->supplier->phone_num : ' '}}</p>
+                    <p style="margin-bottom: 0.5em;">Phone: {{ (isset($rental) && $rental->supplier) ? $rental->supplier->phone_num : ' ' }}</p>
                 </div>
             </td>
         </tr>
@@ -135,9 +133,10 @@
                                 Car Category
                             </td>
                             <td class="border-color"
-                                style="border: 1px solid #ddd; padding: 8px; text-align: left;">{{$rental->vehicle->vehicle_category->name . ' ' . $rental->vehicle->name}}
+                                style="border: 1px solid #ddd; padding: 8px; text-align: left;">{{ ($rental && $rental->vehicle && $rental->vehicle->vehicle_category && is_object($rental->vehicle->vehicle_category)) ? $rental->vehicle->vehicle_category->name : (($rental && $rental->vehicle && $rental->vehicle->category && is_object($rental->vehicle->category)) ? $rental->vehicle->category->name : '') }} {{ ($rental && $rental->vehicle) ? $rental->vehicle->name : '' }}
                             </td>
                         </tr>
+                        @if(isset($rental) && $rental->vehicle && $rental->vehicle->vehicle_specifications)
                         @for($i = 0; $i< count($rental->vehicle->vehicle_specifications); $i+=2)
                             <tr class="border-color" >
                                 <td class="border-color"
@@ -150,10 +149,11 @@
                                     <td class="border-color"
                                         style="border: 1px solid #ddd; padding: 8px; text-align: left;">{{$rental->vehicle->vehicle_specifications[$i+1]->name}}</td>
                                     <td class="border-color"
-                                        style="border: 1px solid #ddd; padding: 8px; text-align: left;">{{$rental->vehicle->vehicle_specifications[$i+1]->name}}</td>
+                                        style="border: 1px solid #ddd; padding: 8px; text-align: left;">{{$rental->vehicle->vehicle_specifications[$i+1]->value}}</td>
                                 </tr>
                             @endif
                         @endfor
+                        @endif
                     </table>
                 </div>
             </td>
@@ -163,6 +163,7 @@
                     <h3 style="font-size: 1.2em; margin-bottom: 10px; background-color: #fbd726">Protection</h3>
                     <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
 
+                        @if(isset($rental) && $rental->vehicle && $rental->vehicle->included)
                         @for($i = 0; $i< count($rental->vehicle->included); $i+=2)
                             <tr class="border-color">
 
@@ -186,6 +187,7 @@
                                 </tr>
                             @endif
                         @endfor
+                        @endif
                     </table>
                 </div>
             </td>
@@ -199,7 +201,7 @@
             <td class="border-color" style=" width: 47%; text-align: left; background-color: #faefac">
                 <h3 style="margin-top: 1%; margin-bottom: 1%; background-color: #fbd726">Payment</h3>
                     <p style="margin: 15%;">Paid</p>
-                    <p style="margin-top: 15%;">{{$rental->price }}  {{$rental->currency }}</p>
+                    <p style="margin-top: 15%;">{{ isset($rental) ? $rental->price : '' }}  {{ isset($rental) ? $rental->currency : '' }}</p>
                     <p style="margin-top: 15%;">No Any other fees or hidden payments</p>
             </td>
             <td style=" width: 5%; background-color: #ffffff"></td>

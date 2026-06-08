@@ -20,12 +20,19 @@ use App\Models\PaymentMethodSupplier;
 use App\Models\SupplierRentalTerm;
 use App\Models\VehicleIncluded;
 use App\Models\VehicleSpecification;
+use App\Services\EmrJsonApiService;
+use App\Services\JimpisoftApiService;
+use App\Services\SurpriceApiService;
 use App\Services\VehicleService;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Category;
+use App\Models\LocationType;
 use App\Models\Specification;
 use App\Models\Vehicle;
 use App\Models\Branch;
@@ -72,7 +79,29 @@ class VehicleController extends Controller
             $filteredVehicles = Vehicle::query();
 
             if ($location) {
-                $filteredVehicles->whereRelation('branch', 'location', $location);
+                $filteredVehicles->whereHas('branch', function ($q) use ($location) {
+                    if (is_numeric($location)) {
+                        // Direct branch ID lookup
+                        $branch = Branch::find($location);
+                        if ($branch) {
+                            $q->where(function ($q2) use ($branch) {
+                                $q2->where('branches.id', $branch->id)
+                                   ->orWhere('branches.location', $branch->location)
+                                   ->orWhere('branches.city', $branch->city);
+                            });
+                        } else {
+                            $q->where('branches.id', $location);
+                        }
+                    } else {
+                        // String location: search by location, name, city, or adresse (partial match)
+                        $q->where(function ($q2) use ($location) {
+                            $q2->where('branches.location', 'LIKE', "%{$location}%")
+                               ->orWhere('branches.name', 'LIKE', "%{$location}%")
+                               ->orWhere('branches.city', 'LIKE', "%{$location}%")
+                               ->orWhere('branches.adresse', 'LIKE', "%{$location}%");
+                        });
+                    }
+                });
             }
             $priceTax = 0;
 
@@ -86,11 +115,8 @@ class VehicleController extends Controller
                     'status' => false
                 ]);
             }
-            $query = $filteredVehicles->with('category', 'fuelPolicy', 'supplier.rentals.rentalRates','supplier.paymentMethods', 'profit', 'included', 'branch', 'locationType', 'specifications');
+            $query = $filteredVehicles->with('category', 'fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'profit', 'included', 'branch', 'locationType', 'specifications');
 
-            if ($request->priceRange && $request->priceRange !== 0) {
-                $query->where('price', '<=', ($request->priceRange));
-            }
             if ($request->category) {
                 $query->whereIn('category', $request->category);
             }
@@ -107,7 +133,7 @@ class VehicleController extends Controller
 
             if ($request->payment_methods) {
 
-                $query->whereHas('supplier.paymentMethods', function (\Illuminate\Database\Eloquent\Builder $query) use ($request) {
+                $query->whereHas('supplierUser.paymentMethods', function (\Illuminate\Database\Eloquent\Builder $query) use ($request) {
                     $query->whereIn('payment_method_id', $request->payment_methods);
                 });
             }
@@ -116,8 +142,10 @@ class VehicleController extends Controller
                 $specifications = $request->specifications;
                 foreach ($specifications as $specification) {
                     if ($specification && isset($specification['option']) && is_array($specification['option']) && count($specification['option']) > 0) {
-                        $query->whereRelation('specifications', 'name', $specification['name'])
-                            ->whereRelation('specifications', 'value', $specification['option']);
+                        $query->whereHas('specifications', function ($q) use ($specification) {
+                            $q->where('name', $specification['name'])
+                              ->whereIn('value', $specification['option']);
+                        });
                     }
                 }
             }
@@ -126,17 +154,28 @@ class VehicleController extends Controller
             $minPrice = 10000000;
 
 
-            $locationTypes = LocationTypeVehicle::query()
-                ->join('vehicles', 'vehicles.id', '=', 'location_type_vehicle.vehicle_id')
-                ->join('location_types', 'location_types.id', '=', 'location_type_vehicle.location_type_id')
-                ->select(['location_types.id as id', 'location_types.name as name'])
-                ->distinct('location_types.id')->get();
+            if (is_numeric($location)) {
+                $cityBranch = Branch::find($location);
+                $city = $cityBranch ? $cityBranch->location : $location;
+                $branches = Branch::query()->where('location', $city)->get();
+            } else {
+                $city = $location;
+                $branches = Branch::query()->where('location', $city)->get();
+            }
 
-
-            $branches = Branch::query()->where('location', $location)->get();
             $suppliers = User::query()->whereIn('id', $branches->pluck('company_id'))->get();
             $paymentMethods = PaymentMethod::query()->whereIn('id', PaymentMethodSupplier::query()->whereIn('supplier_id', $branches->pluck('company_id')->toArray())->get()->pluck('payment_method_id')->toArray())->get();
             $vehicles = $query->where('activation', true)->has('profit')->get();
+
+            foreach ($vehicles as $vehicle) {
+                $vehicle->available_branches = $vehicle->branch ? collect([$vehicle->branch]) : collect([]);
+            }
+
+            $locationTypeIds = $vehicles->flatMap(function ($vehicle) {
+                return $vehicle->locationType->pluck('id');
+            })->unique()->filter()->values()->toArray();
+            $locationTypes = LocationType::query()->whereIn('id', $locationTypeIds)->get();
+
             foreach ($locationTypes as $locationType) {
                 $locationType->vehicle_count = 0;
                 foreach ($vehicles as $vehicle) {
@@ -149,19 +188,16 @@ class VehicleController extends Controller
             foreach ($paymentMethods as $paymentMethod) {
                 $paymentMethod->vehicle_count = 0;
                 foreach ($vehicles as $vehicle) {
-                    if (isset($vehicle->supplier->payment_methods) && count($vehicle->supplier->payment_methods) && $vehicle->supplier->payment_methods[0]->id == $paymentMethod->id) {
+                    if ($vehicle->supplierUser && $vehicle->supplierUser->paymentMethods && count($vehicle->supplierUser->paymentMethods) && $vehicle->supplierUser->paymentMethods[0]->id == $paymentMethod->id) {
                         $paymentMethod->vehicle_count++;
                     }
                 }
             }
+            $categoryIds = $vehicles->pluck('category')->unique()->filter()->values()->toArray();
             $categories = Category::query()
-                ->join('vehicles', 'vehicles.category', '=', 'categories.id')
-                ->join('branches', 'branches.id', '=', 'vehicles.pickup_loc')
-                ->where('branches.location', $location)
-                ->whereIn('vehicles.id', $vehicles->pluck('id')->toArray())
-                ->select(['categories.id as id', 'categories.name as name', 'categories.photo as photo', 'categories.sort'])
+                ->whereIn('id', $categoryIds)
                 ->orderBy('sort')
-                ->distinct('categories.id', 'sort')->get();
+                ->get();
             foreach ($categories as $category) {
                 $category->vehicle_count = 0;
                 foreach ($vehicles as $vehicle) {
@@ -173,7 +209,8 @@ class VehicleController extends Controller
             foreach ($suppliers as $supplier) {
                 $supplier->vehicle_count = 0;
                 foreach ($vehicles as $vehicle) {
-                    if ($vehicle->supplier == $supplier->id) {
+                    $vehicleSupplierId = $vehicle->supplierUser ? $vehicle->supplierUser->id : ($vehicle->getAttributes()['supplier'] ?? null);
+                    if ($vehicleSupplierId == $supplier->id) {
                         $supplier->vehicle_count++;
                     }
                 }
@@ -183,19 +220,26 @@ class VehicleController extends Controller
 
             $diffInDays = $startDate->diffInDays($endDate);
             foreach ($vehicles as $vehicle) {
-                if ($diffInDays >= '1' && $diffInDays < '3') {
-                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $vehicle->profit->per_day_profit) / 100)) * $diffInDays;
-                    $priceTax = $vehicle->profit->per_day_profit;
-                } else if ($diffInDays >= '3' && $diffInDays <= '7') {
+                // Use profit margins if available, default to 0% markup
+                $perDayProfit   = $vehicle->profit->per_day_profit   ?? 0;
+                $perWeekProfit  = $vehicle->profit->per_week_profit  ?? 0;
+                $perMonthProfit = $vehicle->profit->per_month_profit ?? 0;
 
-                    $vehicle->final_price = ($vehicle->week_price + (($vehicle->week_price * $vehicle->profit->per_week_profit) / 100)) * $diffInDays;
-                    $priceTax = $vehicle->profit->per_week_profit;
+                if ($diffInDays >= '1' && $diffInDays < '3') {
+                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * $diffInDays;
+                    $priceTax = $perDayProfit;
+                } else if ($diffInDays >= '3' && $diffInDays <= '7') {
+                    $vehicle->final_price = ($vehicle->week_price + (($vehicle->week_price * $perWeekProfit) / 100)) * $diffInDays;
+                    $priceTax = $perWeekProfit;
                 } else if ($diffInDays >= 8) {
-                    $vehicle->final_price = ($vehicle->month_price + (($vehicle->month_price * $vehicle->profit->per_month_profit) / 100)) * $diffInDays;
-                    $priceTax = $vehicle->profit->per_month_profit;
+                    $vehicle->final_price = ($vehicle->month_price + (($vehicle->month_price * $perMonthProfit) / 100)) * $diffInDays;
+                    $priceTax = $perMonthProfit;
+                } else {
+                    // fallback: use daily price
+                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * max($diffInDays, 1);
                 }
                 $vehicle->final_price = round($vehicle->final_price, 2);
-                if ($currency != $vehicle->branch->currency) {
+                if ($vehicle->branch && $currency != $vehicle->branch->currency) {
                     $rate = CurrencyRate::query()->where('currency_from', $vehicle->branch->currency)->where('currency_to', $currency)->first();
                     if ($rate != null) {
                         $vehicle->final_price *= $rate->rate;
@@ -207,23 +251,28 @@ class VehicleController extends Controller
 
             }
 
+            if ($request->has('priceRange')) {
+                $priceRange = (float) $request->input('priceRange');
+                $vehicles = $vehicles->filter(function ($vehicle) use ($priceRange) {
+                    return $vehicle->final_price <= $priceRange;
+                })->values();
+            }
 
             $count = $vehicles->count();
 
             foreach ($vehicles as $vehicle) {
-                $vehicle->promo = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicle->id]);
-                if ($vehicle->promo && count($vehicle->promo)) {
-                    $vehicle->promo = $vehicle->promo[0]->promotion;
-                }
-                $rentals = Rental::query()->where('supplier_id', $vehicle->supplier)->with('rentalRates.question')->whereNotNull('rate')->get();
-                $vehicle->questions_rate = DB::select('SELECT objective, sum(rental_rates.rate)/count(rental_rates.id)  as total_rate FROM rentals
+                $supplierId = $vehicle->supplier instanceof User ? $vehicle->supplier->id : $vehicle->getAttributes()['supplier'];
+                $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicle->id]);
+                $vehicle->setAttribute('promos', array_map(function($p) { return $p->promotion; }, $promos));
+                $rentals = Rental::query()->where('supplier_id', $supplierId)->with('rentalRates.question')->whereNotNull('rate')->get();
+                $vehicle->setAttribute('questions_rate', DB::select('SELECT objective, sum(rental_rates.rate)/count(rental_rates.id)  as total_rate FROM rentals
                                         JOIN rental_rates on rental_rates.rental_id = rentals.id
                                         JOIN rate_questions on rate_questions.id = rental_rates.question_id
                                         WHERE supplier_id = :supplier_id
-                                        Group By rate_questions.objective', ['supplier_id' => $vehicle->supplier]);
-                $vehicle->supplier_rate = round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1);
-                $vehicle->supplier_number_of_reviews = $rentals->count();
-                $vehicle->rental_terms = SupplierRentalTerm::query()->where('supplier_id', $vehicle->supplier)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get();
+                                        Group By rate_questions.objective', ['supplier_id' => $supplierId]));
+                $vehicle->setAttribute('supplier_rate', round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1));
+                $vehicle->setAttribute('supplier_number_of_reviews', $rentals->count());
+                $vehicle->setAttribute('rental_terms', SupplierRentalTerm::query()->where('supplier_id', $supplierId)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get());
             }
             $vehicles = $vehicles->toArray();
 
@@ -234,8 +283,15 @@ class VehicleController extends Controller
                 return (($a["final_price"] < $b["final_price"]) ? -1 : 1);
             });
             if ($minPrice >= $maxPrice) $minPrice = 0;
+            $locationName = $location;
+            if (is_numeric($location)) {
+                $cityBranch = Branch::find($location);
+                $locationName = $cityBranch ? $cityBranch->name : $location;
+            }
+
             return [
-                'location' => $location,
+                'location' => $locationName,
+                'location_id' => is_numeric($location) ? (int)$location : null,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'filteredVehicles' => $vehicles,
@@ -287,7 +343,7 @@ class VehicleController extends Controller
 //                   ->where('end_date', '>=', $endDate);
 //         });
 
-        $results = $vehicles->with(['category', 'supplier'])->get();
+        $results = $vehicles->with(['category', 'supplierUser'])->get();
 
 
         Session::put([
@@ -434,7 +490,11 @@ class VehicleController extends Controller
             if ($request->has('instant_confirmation')) {
                 $item->instant_confirmation = $request->instant_confirmation ? 1 : 0;
             }
-            $item->supplier = auth()->user()->id;
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthenticated'], 401);
+            }
+            $item->supplier = $user->id;
 
             if ($request->has('price')) {
                 $item->price = $request->price;
@@ -489,6 +549,21 @@ class VehicleController extends Controller
             }
         }
         DB::commit();
+
+        if ($request->update !== '1') {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "A new vehicle '{$item->name}' has been added by supplier '{$user->name}' (ID: {$user->id}). Please assign a profit margin to this vehicle.",
+                    function ($message) use ($item, $user) {
+                        $message->to(['admin@autours.net', 'contact@autours.net'])
+                                ->subject("New Vehicle Added: {$item->name}");
+                    }
+                );
+            } catch (\Exception $mailEx) {
+                info("Failed sending vehicle creation email alert: " . $mailEx->getMessage());
+            }
+        }
+
         return response()->json([
             'data' => $item,
             'status' => true
@@ -620,6 +695,18 @@ class VehicleController extends Controller
 
             DB::commit();
 
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "A new vehicle '{$vehicle->name}' has been added by external supplier '{$user->name}' (ID: {$user->id}). Please assign a profit margin to this vehicle.",
+                    function ($message) use ($vehicle, $user) {
+                        $message->to(['admin@autours.net', 'contact@autours.net'])
+                                ->subject("New External Vehicle Added: {$vehicle->name}");
+                    }
+                );
+            } catch (\Exception $mailEx) {
+                info("Failed sending external vehicle creation email alert: " . $mailEx->getMessage());
+            }
+
             $vehicle->load(['category', 'branch', 'fuelPolicy', 'locationType', 'included', 'specifications']);
 
             return response()->json([
@@ -726,9 +813,14 @@ class VehicleController extends Controller
 
         $vehicles = Vehicle::query()
             ->where('supplier', $supplier->id)
-            ->with(['category', 'branch', 'fuelPolicy'])
+            ->with(['category', 'branch', 'fuelPolicy', 'vehiclePhoto'])
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 15));
+
+        foreach ($vehicles->items() as $vehicle) {
+            $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicle->id]);
+            $vehicle->setAttribute('promos', array_map(function($p) { return $p->promotion; }, $promos));
+        }
 
         return response()->json([
             'status' => true,
@@ -782,28 +874,27 @@ class VehicleController extends Controller
 
     public function getLocations()
     {
-        $locations = Branch::query()->orderBy('location')->get()->unique('location');
+        $locations = Branch::query()
+            ->orderBy('name')
+            ->get()
+            ->unique('name')
+            ->values();
         return response()->json($locations);
-
     }
 
     public function show(Request $request)
     {
         $vehicles = Vehicle::query();
 
-        $user = auth()->user();
-        $branchId = null;
-        $supplierId = null;
-        if ($request->has('branch_id')) {
-            $branchId = $request->branch_id;
-        }
-        if ($request->has('supplier')) {
-            $supplierId = $request->supplier;
-        }
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        $branchId = $request->get('branch_id');
+        $supplierId = $request->get('supplier');
+        $categoryId = $request->get('category_id');
+        $search = $request->get('search');
+
         if ($user) {
             $id = $user->id;
             $role = $user->role;
-
 
             if ($role === 'active_supplier') {
                 $vehicles->where('supplier', $id);
@@ -817,12 +908,25 @@ class VehicleController extends Controller
         if ($branchId != null) {
             $vehicles->where('pickup_loc', $branchId);
         }
-        $data = $vehicles->with('category', 'supplier', 'branch', 'fuelPolicy')->orderBy('id')->get();
-        foreach ($data as $vehicle) {
-            $vehicle->activation = $vehicle->activation == 1 ? true : false;
 
+        if ($categoryId != null) {
+            $vehicles->where('category', $categoryId);
         }
+
+        if ($search != null) {
+            $vehicles->where('name', 'LIKE', '%' . $search . '%');
+        }
+
+        $query = $vehicles->with('category', 'supplierUser', 'branch', 'fuelPolicy')->orderBy('id');
+
+        if ($request->has('paginate')) {
+            $data = $query->paginate($request->get('per_page', 10));
+        } else {
+            $data = $query->get();
+        }
+
         $data->each(function ($vehicle) {
+            $vehicle->activation = $vehicle->activation == 1;
             $vehicle->load(['rentals' => function ($query) {
                 $query->where('order_status', 1);
             }]);
@@ -830,17 +934,19 @@ class VehicleController extends Controller
         });
 
         return response()->json($data);
-
     }
 
     public function getVehicle(GetVehiclePageRequest $request)
     {
         try {
 
-            $location = $request->location;
+            $location = $request->location ?? $request->pickupLoc;
             $currency = $request->currency;
-            $selectedVehicle = Vehicle::where('id', $request->id)->with('locationType','category', 'fuelPolicy', 'branch', 'included', 'specifications', 'supplier.fuelPolicy', 'supplier.rentals.rentalRates','supplier.paymentMethods', 'fuelPolicy')->first();
+            $selectedVehicle = Vehicle::where('id', $request->id)->with('locationType','category', 'fuelPolicy', 'branch', 'included', 'specifications', 'supplierUser.fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'fuelPolicy')->first();
 
+            if ($location && $selectedVehicle) {
+                $selectedVehicle->available_branches = $selectedVehicle->branch ? collect([$selectedVehicle->branch]) : collect([]);
+            }
             $startDate = Carbon::parse($request->date_from);
             $endDate = Carbon::parse($request->date_to);
             $diffInDays = $startDate->diffInDays($endDate);
@@ -866,9 +972,9 @@ class VehicleController extends Controller
                 }
             }
             $selectedVehicle->final_price = round($selectedVehicle->final_price, 2);
-            $selectedVehicle->rental_terms = SupplierRentalTerm::query()->where('supplier_id', $selectedVehicle->supplier)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get();
+            $selectedVehicle->rental_terms = SupplierRentalTerm::query()->where('supplier_id', $selectedVehicle->supplierUser->id)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get();
 
-            $rentals = Rental::query()->where('supplier_id', $selectedVehicle->supplier)->whereNotNull('rate')->get();
+            $rentals = Rental::query()->where('supplier_id', $selectedVehicle->supplierUser->id)->whereNotNull('rate')->get();
             $selectedVehicle->supplier_rate = round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1);
             $selectedVehicle->supplier_number_of_reviews = $rentals->count();
 
@@ -897,13 +1003,25 @@ class VehicleController extends Controller
 
     public function createPhotos(Request $request)
     {
-        $item = new VehiclesPhotos();
+        if ($request->has('id') && !empty($request->id)) {
+            $item = VehiclesPhotos::findOrFail($request->id);
+        } else {
+            $item = new VehiclesPhotos();
+        }
 
         if ($request->has('name')) {
             $item->name = $request->name;
         }
 
         if ($request->hasFile('photo')) {
+            // Delete old photo file if it exists and we are updating
+            if (!empty($item->photo)) {
+                $oldPath = public_path('img/vehicles/' . $item->photo);
+                if (file_exists($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+
             $image = $request->file('photo');
             $image_name = preg_replace('/\.jpg/', '', str_replace(' ', '_', $request->file('photo')->getClientOriginalName())) . "_" . $request->name . "_vehicle_photo" . "." . $request->file('photo')->extension();
             $image->move(public_path('img/vehicles'), $image_name);
@@ -919,7 +1037,7 @@ class VehicleController extends Controller
     public function getPhotos()
     {
 
-        return response()->json(VehiclesPhotos::all());
+        return response()->json(VehiclesPhotos::orderBy('name', 'asc')->get());
 
     }
 
@@ -974,12 +1092,20 @@ class VehicleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
-
-            Vehicle::query()->where('id', $id)->delete();
-            return response([
+            $user = $request->user();
+            $query = Vehicle::query()->where('id', $id);
+            // If called via external API with authenticated user, restrict to their vehicles
+            if ($user) {
+                $query->where('supplier', $user->id);
+            }
+            $deleted = $query->delete();
+            if (!$deleted) {
+                return response()->json(['status' => false, 'message' => 'Vehicle not found or not authorized'], 404);
+            }
+            return response()->json([
                 'status' => true,
                 'message' => 'deleted successfully'
             ]);
@@ -998,7 +1124,18 @@ class VehicleController extends Controller
 
     public function updateActivation(Request $request)
     {
-        Vehicle::query()->find($request->vehicle_id)->update(['activation' => $request->activation]);
+        $user = $request->user();
+        $query = Vehicle::query()->where('id', $request->vehicle_id);
+        // If called via external API with authenticated user, restrict to their vehicles
+        if ($user) {
+            $query->where('supplier', $user->id);
+        }
+        $vehicle = $query->first();
+        if ($vehicle) {
+            $vehicle->update(['activation' => $request->activation]);
+            return response()->json(['status' => true]);
+        }
+        return response()->json(['status' => false, 'message' => 'Vehicle not found'], 404);
     }
 
     public function bulkUpload(Request $request)
@@ -1010,9 +1147,14 @@ class VehicleController extends Controller
         DB::beginTransaction();
         try {
 
+            $supplierId = $request->supplier;
+            if (empty($supplierId)) {
+                $supplierId = auth()->user()->id;
+            }
+
             $import = new VehiclesExcelImport(
                 $request->branch,
-                $request->supplier
+                $supplierId
             );
 
             Excel::import($import, $request->file('file'));
@@ -1083,5 +1225,465 @@ class VehicleController extends Controller
             new VehiclesTemplateExport(),
             'vehicles_bulk_upload_template.xlsx'
         );
+    }
+
+    /**
+     * Refresh EMR prices for a specific branch/city and date range.
+     * Cached for 15 minutes to avoid hammering the EMR API.
+     */
+    public function refreshEmrPrices(Request $request)
+    {
+        try {
+            $location = $request->pickupLoc;
+            $dateFrom = $request->date_from;
+            $dateTo = $request->date_to;
+
+            if (empty($location) || empty($dateFrom) || empty($dateTo)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'pickupLoc, date_from, and date_to are required.'
+                ], 422);
+            }
+
+            $cacheKey = "emr_prices:v2:{$location}:{$dateFrom}:{$dateTo}";
+
+            if ($cached = Cache::get($cacheKey)) {
+                return response()->json([
+                    'status' => true,
+                    'fresh' => false,
+                    'cached_at' => $cached['cached_at'],
+                    'message' => 'Prices served from cache.',
+                    'data' => $cached['data']
+                ]);
+            }
+
+            $supplierUser = User::firstOrCreate(
+                ['email' => 'alicansarp@emrcarrental.com'],
+                [
+                    'name' => 'Turev Rent (EMR)',
+                    'role' => 'active_supplier',
+                    'password' => Hash::make(Str::random(32)),
+                    'company' => 'Turev Rent',
+                ]
+            );
+
+            if (is_numeric($location)) {
+                $branches = Branch::where('id', $location)
+                    ->where('company_id', $supplierUser->id)
+                    ->whereNotNull('station_id')
+                    ->get();
+            } else {
+                $branches = Branch::where('location', $location)
+                    ->where('company_id', $supplierUser->id)
+                    ->whereNotNull('station_id')
+                    ->get();
+            }
+
+            if ($branches->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No EMR branches found for the given location.'
+                ], 404);
+            }
+
+            $service = new EmrJsonApiService();
+            $pickupDateTime = $dateFrom . ' 10:00';
+            $dropoffDateTime = $dateTo . ' 10:00';
+
+            $updatedVehicles = 0;
+            $branchResults = [];
+
+            foreach ($branches as $branch) {
+                $apiCurrency = match ($branch->currency) {
+                    'TRY' => 'TL',
+                    'EUR' => 'EURO',
+                    default => 'TL',
+                };
+
+                $cars = $service->getAvailableCars(
+                    $branch->station_id,
+                    $branch->station_id,
+                    $pickupDateTime,
+                    $dropoffDateTime,
+                    $apiCurrency
+                );
+
+                $branchResults[$branch->id] = [];
+
+                foreach ($cars as $car) {
+                    $groupId = (string) ($car['group_id'] ?? '');
+                    $dailyRental = (float) str_replace(',', '.', (string) ($car['daily_rental'] ?? 0));
+
+                    if (empty($groupId) || $dailyRental <= 0) {
+                        continue;
+                    }
+
+                    $vehicle = Vehicle::where('description', 'LIKE', "%[EMR-GROUP-ID:{$groupId}]%")
+                        ->where('pickup_loc', $branch->id)
+                        ->first();
+
+                    if ($vehicle) {
+                        $vehicle->update([
+                            'price' => $dailyRental,
+                            'week_price' => round($dailyRental * 7, 2),
+                            'month_price' => round($dailyRental * 30, 2),
+                            'activation' => true,
+                        ]);
+                        $updatedVehicles++;
+                    }
+
+                    $branchResults[$branch->id][$groupId] = [
+                        'day_value' => $dailyRental,
+                        'total_value' => (float) str_replace(',', '.', (string) ($car['total_rental'] ?? 0)),
+                        'currency' => $car['currency'] ?? $apiCurrency,
+                        'days' => (int) ($car['days'] ?? 1),
+                    ];
+                }
+            }
+
+            $result = [
+                'branches_updated' => $branches->pluck('id')->toArray(),
+                'vehicles_updated' => $updatedVehicles,
+                'prices' => $branchResults,
+            ];
+
+            Cache::put($cacheKey, [
+                'data' => $result,
+                'cached_at' => now()->toIso8601String(),
+            ], now()->addMinutes(15));
+
+            return response()->json([
+                'status' => true,
+                'fresh' => true,
+                'message' => 'Prices refreshed successfully.',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('EMR price refresh failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Price refresh failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Refresh Jimpisoft prices for a specific branch/city and date range.
+     * Cached for 15 minutes to avoid hammering the Jimpisoft API.
+     */
+    public function refreshJimpisoftPrices(Request $request)
+    {
+        try {
+            $location = $request->pickupLoc;
+            $dateFrom = $request->date_from;
+            $dateTo = $request->date_to;
+
+            if (empty($location) || empty($dateFrom) || empty($dateTo)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'pickupLoc, date_from, and date_to are required.'
+                ], 422);
+            }
+
+            $cacheKey = "jimpisoft_prices:v2:{$location}:{$dateFrom}:{$dateTo}";
+
+            if ($cached = Cache::get($cacheKey)) {
+                return response()->json([
+                    'status' => true,
+                    'fresh' => false,
+                    'cached_at' => $cached['cached_at'],
+                    'message' => 'Prices served from cache.',
+                    'data' => $cached['data']
+                ]);
+            }
+
+            $supplierUser = User::firstOrCreate(
+                ['email' => 'Jincy@drivus.ae'],
+                [
+                    'name' => 'Drivus',
+                    'role' => 'active_supplier',
+                    'password' => Hash::make(Str::random(32)),
+                    'company' => 'Drivus',
+                ]
+            );
+
+            if (is_numeric($location)) {
+                $branches = Branch::where('id', $location)
+                    ->where('company_id', $supplierUser->id)
+                    ->whereNotNull('station_id')
+                    ->get();
+            } else {
+                $branches = Branch::where('location', $location)
+                    ->where('company_id', $supplierUser->id)
+                    ->whereNotNull('station_id')
+                    ->get();
+            }
+
+            if ($branches->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No Jimpisoft branches found for the given location.'
+                ], 404);
+            }
+
+            $vehicles = Vehicle::where('supplier', $supplierUser->id)
+                ->where('description', 'LIKE', '%[JIMPI-GROUP-ID:%')
+                ->get();
+
+            $groupIds = [];
+            $vehicleByGroup = [];
+            foreach ($vehicles as $v) {
+                if (preg_match('/\[JIMPI-GROUP-ID:([^\]]+)\]/', $v->description, $m)) {
+                    $groupId = $m[1];
+                    $groupIds[] = $groupId;
+                    $vehicleByGroup[$groupId][$v->pickup_loc] = $v;
+                }
+            }
+
+            $groupIds = array_values(array_unique($groupIds));
+
+            if (empty($groupIds)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No Jimpisoft vehicles found.'
+                ], 404);
+            }
+
+            $service = new JimpisoftApiService();
+            $pickupDateTime = $dateFrom . ' 10:00';
+            $dropoffDateTime = $dateTo . ' 10:00';
+
+            $updatedVehicles = 0;
+            $branchResults = [];
+
+            if ($branches->count() === 1) {
+                $branch = $branches->first();
+                $prices = $service->getMultiplePrices($groupIds, $pickupDateTime, $dropoffDateTime, $branch->station_id);
+
+                foreach ($prices as $groupId => $priceData) {
+                    $dayValue = $priceData['day_value'] ?? null;
+                    if ($dayValue === null || $dayValue <= 0) {
+                        continue;
+                    }
+
+                    $vehicle = $vehicleByGroup[$groupId][$branch->id] ?? null;
+                    if ($vehicle) {
+                        // Only update dynamic daily rate, leave sync-calculated week/month alone
+                        $vehicle->update([
+                            'price' => $dayValue,
+                        ]);
+                        $updatedVehicles++;
+                    }
+                }
+
+                $branchResults[$branch->id] = $prices;
+            } else {
+                $stationToBranchMap = [];
+                foreach ($branches as $branch) {
+                    $stationToBranchMap[$branch->station_id] = $branch->id;
+                }
+
+                $stationPrices = $service->getMultiplePricesForStations(
+                    $groupIds,
+                    $pickupDateTime,
+                    $dropoffDateTime,
+                    $stationToBranchMap,
+                    5
+                );
+
+                foreach ($stationPrices as $branchId => $prices) {
+                    $branchResults[$branchId] = $prices;
+
+                    foreach ($prices as $groupId => $priceData) {
+                        $dayValue = $priceData['day_value'] ?? null;
+                        if ($dayValue === null || $dayValue <= 0) {
+                            continue;
+                        }
+
+                        $vehicle = $vehicleByGroup[$groupId][$branchId] ?? null;
+                        if ($vehicle) {
+                            // Only update dynamic daily rate, leave sync-calculated week/month alone
+                            $vehicle->update([
+                                'price' => $dayValue,
+                            ]);
+                            $updatedVehicles++;
+                        }
+                    }
+                }
+            }
+
+            $result = [
+                'branches_updated' => $branches->pluck('id')->toArray(),
+                'vehicles_updated' => $updatedVehicles,
+                'prices' => $branchResults,
+            ];
+
+            Cache::put($cacheKey, [
+                'data' => $result,
+                'cached_at' => now()->toIso8601String(),
+            ], now()->addMinutes(15));
+
+            return response()->json([
+                'status' => true,
+                'fresh' => true,
+                'message' => 'Prices refreshed successfully.',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Jimpisoft price refresh failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Price refresh failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Refresh Surprice prices for a specific branch/city and date range.
+     * Cached for 15 minutes to avoid hammering the Surprice API.
+     */
+    public function refreshSurpricePrices(Request $request)
+    {
+        try {
+            $location = $request->pickupLoc;
+            $dateFrom = $request->date_from;
+            $dateTo = $request->date_to;
+
+            if (empty($location) || empty($dateFrom) || empty($dateTo)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'pickupLoc, date_from, and date_to are required.'
+                ], 422);
+            }
+
+            $cacheKey = "surprice_prices:v2:{$location}:{$dateFrom}:{$dateTo}";
+
+            if ($cached = Cache::get($cacheKey)) {
+                return response()->json([
+                    'status' => true,
+                    'fresh' => false,
+                    'cached_at' => $cached['cached_at'],
+                    'message' => 'Prices served from cache.',
+                    'data' => $cached['data']
+                ]);
+            }
+
+            $supplierUser = User::firstOrCreate(
+                ['email' => 'a.racko@surpricemobility.com'],
+                [
+                    'name' => 'Surprice Mobility',
+                    'role' => 'active_supplier',
+                    'password' => Hash::make('Qrentals@12345'),
+                    'company' => 'Surprice',
+                ]
+            );
+
+            if (is_numeric($location)) {
+                $branches = Branch::where('id', $location)
+                    ->where('company_id', $supplierUser->id)
+                    ->whereNotNull('station_id')
+                    ->get();
+            } else {
+                $branches = Branch::where('location', $location)
+                    ->where('company_id', $supplierUser->id)
+                    ->whereNotNull('station_id')
+                    ->get();
+            }
+
+            if ($branches->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No Surprice branches found for the given location.'
+                ], 404);
+            }
+
+            $service = new SurpriceApiService();
+            $pickupDateTime = $dateFrom . 'T10:00:00';
+            $dropoffDateTime = $dateTo . 'T10:00:00';
+
+            $updatedVehicles = 0;
+            $branchResults = [];
+
+            foreach ($branches as $branch) {
+                $data = $service->getAvailability(
+                    $branch->station_id,
+                    $pickupDateTime,
+                    $dropoffDateTime,
+                    30,
+                    'Autours'
+                );
+
+                $branchResults[$branch->id] = [];
+
+                foreach ($data['productOfferings'] ?? [] as $offering) {
+                    $groupId = (string) ($offering['vehicle']['code'] ?? '');
+                    $charge = $offering['rentalDetails'][0]['rentalRate']['vehicleCharges'][0] ?? [];
+                    $unitCharge = $charge['calculationInfo']['unitCharge'] ?? 0;
+
+                    if (empty($groupId) || $unitCharge <= 0) {
+                        continue;
+                    }
+
+                    $vehicle = Vehicle::where('description', 'LIKE', "%[SURPRICE-GROUP-ID:{$groupId}|RATE:Autours]%")
+                        ->where('pickup_loc', $branch->id)
+                        ->first();
+
+                    if (! $vehicle) {
+                        // Try FDW variant
+                        $vehicle = Vehicle::where('description', 'LIKE', "%[SURPRICE-GROUP-ID:{$groupId}|RATE:Autours FDW]%")
+                            ->where('pickup_loc', $branch->id)
+                            ->first();
+                    }
+
+                    if ($vehicle) {
+                        $vehicle->update([
+                            'price' => $unitCharge,
+                        ]);
+                        $updatedVehicles++;
+                    }
+
+                    $branchResults[$branch->id][$groupId] = [
+                        'day_value' => $unitCharge,
+                        'currency' => $charge['currencyCode'] ?? 'EUR',
+                    ];
+                }
+            }
+
+            $result = [
+                'branches_updated' => $branches->pluck('id')->toArray(),
+                'vehicles_updated' => $updatedVehicles,
+                'prices' => $branchResults,
+            ];
+
+            Cache::put($cacheKey, [
+                'data' => $result,
+                'cached_at' => now()->toIso8601String(),
+            ], now()->addMinutes(15));
+
+            return response()->json([
+                'status' => true,
+                'fresh' => true,
+                'message' => 'Prices refreshed successfully.',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Surprice price refresh failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Price refresh failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

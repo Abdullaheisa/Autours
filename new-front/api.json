@@ -1,0 +1,2932 @@
+{
+  "api_documentation": {
+    "project": "Autours Car Rental System",
+    "version": "1.0",
+    "base_url": "https://autours.net",
+    "last_updated": "2026-05-24",
+    "total_sections": 24,
+    "total_endpoints": 150,
+    "sections": [
+      {
+        "name": "Authentication",
+        "description": "Login, logout, register, password reset",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/login",
+            "description": "Web Login - Authenticate with email/password. Sets session cookie.",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "email": "user@example.com",
+                "password": "password"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Login successful",
+                "media_type": "application/json",
+                "schema": {
+                  "data": [],
+                  "status": true,
+                  "children": {"user_type": "customer"}
+                }
+              },
+              "401": {
+                "description": "Invalid credentials",
+                "media_type": "application/json",
+                "schema": {
+                  "message": ["Credentials not valid"],
+                  "status": false
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/logout",
+            "description": "Web Logout - Destroy session and redirect to home.",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "302": {"description": "Redirect to home page", "media_type": null}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/post/user/data",
+            "description": "Register a new customer or supplier.",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "name": "John Doe",
+                "email": "user@example.com",
+                "password": "string",
+                "phone": "string",
+                "country": "string",
+                "supplier": 0
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Registration successful",
+                "media_type": "application/json",
+                "schema": {"data": [], "status": true}
+              },
+              "422": {
+                "description": "Validation error",
+                "media_type": "application/json",
+                "schema": {
+                  "message": "The given data was invalid.",
+                  "errors": {
+                    "additionalProp1": ["string"],
+                    "additionalProp2": ["string"],
+                    "additionalProp3": ["string"]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/forget-password",
+            "description": "Request password reset",
+            "request": {
+              "content_type": "application/json",
+              "body": {"email": "user@example.com"}
+            },
+            "responses": {
+              "200": {
+                "description": "Email sent",
+                "media_type": "application/json",
+                "schema": {"status": true}
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/validate-forget-password-key",
+            "description": "Validate password reset key",
+            "request": {
+              "content_type": "application/json",
+              "body": {"key": "string"}
+            },
+            "responses": {
+              "200": {
+                "description": "Key valid",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [],
+                  "message": "key validated"
+                }
+              },
+              "403": {
+                "description": "Invalid or expired key",
+                "media_type": "application/json",
+                "schema": {"status": false, "message": "string"}
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/save-new-password",
+            "description": "Set new password",
+            "request": {
+              "content_type": "application/json",
+              "body": {"key": "string", "newPassword": "string"}
+            },
+            "responses": {
+              "200": {
+                "description": "Password reset",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "message": "password has been reset successfully"
+                }
+              },
+              "403": {
+                "description": "Invalid or expired key",
+                "media_type": "application/json",
+                "schema": {"status": false, "message": "string"}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "External Supplier API",
+        "description": "Sanctum-token-based API for external suppliers",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/api/external/supplier/login",
+            "description": "Supplier Login",
+            "request": {
+              "content_type": "application/json",
+              "body": {"email": "supplier@example.com", "password": "password"}
+            },
+            "responses": {
+              "200": {
+                "description": "Login successful",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "message": "Login successful.",
+                  "data": {
+                    "user_name": "John Doe",
+                    "email": "user@example.com",
+                    "role": "customer",
+                    "phone_num": "+1234567890",
+                    "company": "Acme Rentals",
+                    "logo": "logo.png",
+                    "country": "USA",
+                    "language": "en",
+                    "price_tax": 10,
+                    "integration": false,
+                    "webhook_url": "https://example.com/webhook",
+                    "created_at": "2026-05-24T09:26:35.534Z"
+                  },
+                  "token": "1|abc123",
+                  "token_type": "Bearer"
+                }
+              },
+              "401": {"description": "Invalid credentials"},
+              "403": {"description": "Not a supplier"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/external/supplier/logout",
+            "description": "Supplier Logout",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Logged out",
+                "media_type": "application/json",
+                "schema": {"status": true, "message": "Logged out successfully."}
+              },
+              "401": {"description": "Unauthenticated or unauthorized"}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/profile",
+            "description": "Get Supplier Profile",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Profile",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": {
+                    "id": 1,
+                    "name": "string",
+                    "email": "string",
+                    "role": "string",
+                    "phone": "string",
+                    "company_name": "string",
+                    "integration": true,
+                    "webhook_url": "string",
+                    "created_at": "2026-05-24T09:26:47.711Z"
+                  }
+                }
+              },
+              "401": {"description": "Unauthenticated or unauthorized"}
+            }
+          },
+          {
+            "method": "PUT",
+            "path": "/api/external/supplier/integration-settings",
+            "description": "Update Integration Settings",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "integration": true,
+                "webhook_url": "https://your-system.com/webhook/autours"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Updated",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "message": "string",
+                  "data": {"integration": true, "webhook_url": "string"}
+                }
+              },
+              "400": {"description": "Bad request"},
+              "401": {"description": "Unauthenticated or unauthorized"}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/vehicles",
+            "description": "List Supplier Vehicles",
+            "request": {
+              "parameters": {
+                "page": "integer (query)",
+                "per_page": "15 (integer, query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Vehicles retrieved",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": {
+                    "current_page": 1,
+                    "data": [{}],
+                    "first_page_url": "string",
+                    "from": 1,
+                    "last_page": 0,
+                    "last_page_url": "string",
+                    "next_page_url": "string",
+                    "path": "string",
+                    "per_page": 15,
+                    "prev_page_url": "string",
+                    "to": 0,
+                    "total": 0
+                  }
+                }
+              },
+              "401": {"description": "Unauthenticated or unauthorized"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/external/supplier/vehicles",
+            "description": "Create Vehicle (External)",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "photo": "string",
+                "car_photo": "string ($binary) [file upload]",
+                "name": "Toyota Camry (required)",
+                "description": "Sedan with auto transmission (required)",
+                "price": 50,
+                "week_price": 45,
+                "month_price": 40,
+                "pickup_loc": 1,
+                "category": 2,
+                "fuel_policy_id": 1,
+                "instant_confirmation": true,
+                "activation": true,
+                "location_types": [2],
+                "included": [1, 3, 5],
+                "specifications": [
+                  {"name": "Transmission", "value": "Automatic", "icon": "fa-cog"}
+                ]
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "message": "string",
+                  "data": {
+                    "id": 1,
+                    "name": "Toyota Camry 2024",
+                    "description": "Comfortable sedan with automatic transmission",
+                    "photo": "toyota_camry.jpg",
+                    "price": 50,
+                    "week_price": 45,
+                    "month_price": 40,
+                    "activation": true,
+                    "instant_confirmation": true,
+                    "supplier": 5,
+                    "pickup_loc": 1,
+                    "category": 2,
+                    "fuel_policy_id": 1,
+                    "created_at": "2026-05-24T09:27:25.935Z",
+                    "updated_at": "2026-05-24T09:27:25.935Z"
+                  }
+                }
+              },
+              "401": {"description": "Unauthenticated or unauthorized"},
+              "422": {"description": "Validation error"}
+            }
+          },
+          {
+            "method": "PUT",
+            "path": "/api/external/supplier/vehicles/{vehicleId}/price",
+            "description": "Update Vehicle Price",
+            "request": {
+              "parameters": {"vehicleId": "integer (path, required)"},
+              "content_type": "application/json",
+              "body": {"price": 55, "week_price": 50, "month_price": 45}
+            },
+            "responses": {
+              "200": {
+                "description": "Updated",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "message": "string",
+                  "data": {"id": 1, "name": "string", "price": 55, "week_price": 50, "month_price": 45}
+                }
+              },
+              "401": {"description": "Unauthenticated or unauthorized"},
+              "404": {"description": "Not found"}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/rentals",
+            "description": "List Supplier Rentals",
+            "request": {
+              "parameters": {
+                "page": "integer (query)",
+                "per_page": "15 (integer, query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Rentals retrieved",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": {
+                    "current_page": 1,
+                    "data": [{}],
+                    "first_page_url": "string",
+                    "from": 1,
+                    "last_page": 0,
+                    "last_page_url": "string",
+                    "next_page_url": "string",
+                    "path": "string",
+                    "per_page": 15,
+                    "prev_page_url": "string",
+                    "to": 0,
+                    "total": 0
+                  }
+                }
+              },
+              "401": {"description": "Unauthenticated or unauthorized"}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/included",
+            "description": "Get Included Items",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Included items",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {"what_is_included": "Free Cancellation", "description": "Cancel for free up to 48h before pickup"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/categories",
+            "description": "Get Categories",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Categories",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "Sedan", "photo": "sedan.png"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/fuel-policies",
+            "description": "Get Fuel Policies",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Fuel policies",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "Full to Full", "description": "Return with same fuel level"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/location-types",
+            "description": "Get Location Types",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Location types",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "Airport", "icon": "fa-plane"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/external/supplier/branches",
+            "description": "Get Supplier Branches",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Branches",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Downtown Branch",
+                      "location": "London",
+                      "location_address": "123 Main St",
+                      "adresse": "123 Main St",
+                      "city": "London",
+                      "country": "UK",
+                      "phone": "+44 20 1234 5678",
+                      "lat": 51.5074,
+                      "lng": -0.1278,
+                      "email": "branch@example.com",
+                      "company_id": 5,
+                      "currency": "GBP",
+                      "location_type": "Airport"
+                    }
+                  ]
+                }
+              },
+              "401": {"description": "Unauthenticated or unauthorized"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "User & Profile",
+        "description": "User data, roles, companies, customers",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/api/user",
+            "description": "Get authenticated user (Sanctum)",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Current user",
+                "media_type": "application/json",
+                "schema": {
+                  "id": 1,
+                  "name": "John Doe",
+                  "email": "john@example.com",
+                  "role": "customer",
+                  "phone_num": "+1234567890",
+                  "company": "Acme Rentals",
+                  "logo": "logo.png",
+                  "country": "USA",
+                  "language": "en",
+                  "price_tax": 10,
+                  "integration": false,
+                  "webhook_url": "https://example.com/webhook",
+                  "created_at": "2026-05-24T09:28:37.636Z"
+                }
+              },
+              "401": {"description": "Unauthenticated or unauthorized"}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/user/data",
+            "description": "Get current user",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Current user object",
+                "media_type": "application/json",
+                "schema": {
+                  "id": 1,
+                  "name": "John Doe",
+                  "email": "john@example.com",
+                  "role": "customer",
+                  "phone_num": "+1234567890",
+                  "company": "Acme Rentals",
+                  "logo": "logo.png",
+                  "country": "USA",
+                  "language": "en",
+                  "price_tax": 10,
+                  "integration": false,
+                  "webhook_url": "https://example.com/webhook",
+                  "created_at": "2026-05-24T09:29:01.201Z"
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/my-current-user-profile",
+            "description": "Get customer profile with rentals",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "User profile",
+                "media_type": "application/json",
+                "schema": {
+                  "data": {
+                    "id": 1,
+                    "name": "string",
+                    "email": "string",
+                    "role": "string",
+                    "rentals": [
+                      {
+                        "id": 1,
+                        "order_number": "USATR0001",
+                        "customer_id": 10,
+                        "supplier_id": 5,
+                        "vehicle_id": 1,
+                        "price": 350,
+                        "supplier_price": 300,
+                        "profit_margin": 50,
+                        "start_date": "2025-06-01",
+                        "end_date": "2025-06-07",
+                        "start_time": "10:00:00",
+                        "end_time": "10:00:00",
+                        "currency": "USD",
+                        "number_of_days": 6,
+                        "order_status": "confirmed",
+                        "rate": 4.5,
+                        "old_rental_id": null,
+                        "created_at": "2026-05-24T09:29:01.205Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/user/role",
+            "description": "Get current user role",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {"description": "Role string or null", "media_type": null}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/companies",
+            "description": "Get companies/suppliers",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Companies",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "John Doe",
+                      "email": "john@example.com",
+                      "role": "customer",
+                      "phone_num": "+1234567890",
+                      "company": "Acme Rentals",
+                      "logo": "logo.png",
+                      "country": "USA",
+                      "language": "en",
+                      "price_tax": 10,
+                      "integration": false,
+                      "webhook_url": "https://example.com/webhook",
+                      "created_at": "2026-05-24T09:29:25.628Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/suppliers",
+            "description": "Get active suppliers",
+            "request": {"parameters": {"country": "string (query)"}},
+            "responses": {
+              "200": {
+                "description": "Suppliers",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "John Doe",
+                      "email": "john@example.com",
+                      "role": "customer",
+                      "phone_num": "+1234567890",
+                      "company": "Acme Rentals",
+                      "logo": "logo.png",
+                      "country": "USA",
+                      "language": "en",
+                      "price_tax": 10,
+                      "integration": false,
+                      "webhook_url": "https://example.com/webhook",
+                      "created_at": "2026-05-24T09:29:25.636Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/upload",
+            "description": "Upload user profile/logo",
+            "request": {
+              "content_type": "multipart/form-data",
+              "body": {
+                "logo": "string ($binary) [file]",
+                "newPass": "string",
+                "oldPass": "string",
+                "confirmNewPass": "string"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Upload result",
+                "media_type": "application/json",
+                "schema": {"message": "string"}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Vehicles",
+        "description": "Vehicle search, filter, CRUD, pricing",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/filter/vehicles",
+            "description": "Filter/search vehicles",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "pickupLoc": "London",
+                "date_from": "2025-06-01",
+                "date_to": "2025-06-07",
+                "time_from": "10:00",
+                "time_to": "10:00",
+                "currency": "USD",
+                "priceRange": 200,
+                "category": [1, 2],
+                "supplier": [5],
+                "location_type_id": [1],
+                "payment_methods": [2, 3],
+                "specifications": [{"name": "Transmission", "option": ["Automatic"]}]
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Filtered results",
+                "media_type": "application/json",
+                "schema": {
+                  "location": "London",
+                  "location_id": 1,
+                  "date_from": "2025-06-01",
+                  "date_to": "2025-06-07",
+                  "filteredVehicles": [
+                    {
+                      "id": 1,
+                      "name": "Toyota Camry 2024",
+                      "description": "Comfortable sedan with automatic transmission",
+                      "photo": "toyota_camry.jpg",
+                      "price": 50,
+                      "week_price": 45,
+                      "month_price": 40,
+                      "activation": true,
+                      "instant_confirmation": true,
+                      "supplier": 5,
+                      "pickup_loc": 1,
+                      "category": 2,
+                      "fuel_policy_id": 1,
+                      "created_at": "2026-05-24T09:36:27.456Z",
+                      "updated_at": "2026-05-24T09:36:27.456Z"
+                    }
+                  ],
+                  "filteredCategories": [{"id": 1, "name": "Sedan", "photo": "sedan.png"}],
+                  "filteredSuppliers": [
+                    {
+                      "id": 1,
+                      "name": "John Doe",
+                      "email": "john@example.com",
+                      "role": "customer",
+                      "phone_num": "+1234567890",
+                      "company": "Acme Rentals",
+                      "logo": "logo.png",
+                      "country": "USA",
+                      "language": "en",
+                      "price_tax": 10,
+                      "integration": false,
+                      "webhook_url": "https://example.com/webhook",
+                      "created_at": "2026-05-24T09:36:27.456Z"
+                    }
+                  ],
+                  "filteredLocationTypes": [{"id": 1, "name": "Airport", "icon": "fa-plane"}],
+                  "paymentMethods": [{"id": 1, "name": "Credit Card"}],
+                  "count": 42,
+                  "max": 500,
+                  "min": 30,
+                  "priceTax": 15,
+                  "daysNumber": 6
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/vehicles",
+            "description": "Get vehicles list",
+            "request": {
+              "parameters": {
+                "branch_id": "integer (query)",
+                "supplier": "integer (query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Vehicles",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Toyota Camry 2024",
+                      "description": "Comfortable sedan with automatic transmission",
+                      "photo": "toyota_camry.jpg",
+                      "price": 50,
+                      "week_price": 45,
+                      "month_price": 40,
+                      "activation": true,
+                      "instant_confirmation": true,
+                      "supplier": 5,
+                      "pickup_loc": 1,
+                      "category": 2,
+                      "fuel_policy_id": 1,
+                      "created_at": "2026-05-24T09:37:57.379Z",
+                      "updated_at": "2026-05-24T09:37:57.380Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/get/vehicle/data",
+            "description": "Get single vehicle details",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "id": 1,
+                "location": "London",
+                "date_from": "2025-06-01",
+                "date_to": "2025-06-07",
+                "currency": "USD"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Vehicle details",
+                "media_type": "application/json",
+                "schema": {
+                  "data": {
+                    "vehicle": {
+                      "id": 1,
+                      "name": "Toyota Camry 2024",
+                      "description": "Comfortable sedan with automatic transmission",
+                      "photo": "toyota_camry.jpg",
+                      "price": 50,
+                      "week_price": 45,
+                      "month_price": 40,
+                      "activation": true,
+                      "instant_confirmation": true,
+                      "supplier": 5,
+                      "pickup_loc": 1,
+                      "category": 2,
+                      "fuel_policy_id": 1,
+                      "created_at": "2026-05-24T09:39:17.780Z",
+                      "updated_at": "2026-05-24T09:39:17.780Z"
+                    },
+                    "date_from": "2025-06-01",
+                    "date_to": "2025-06-07",
+                    "time_from": "10:00:00",
+                    "time_to": "10:00:00",
+                    "days": 6,
+                    "currency": "USD",
+                    "location": "London",
+                    "status": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/search/vehicles",
+            "description": "Search vehicles (sets session)",
+            "request": {
+              "content_type": "application/json",
+              "body": {"pickupLoc": "London", "date": "2025-06-01", "currency": "USD"}
+            },
+            "responses": {
+              "302": {"description": "Redirect to results page", "media_type": null}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/get/filtered/specifications",
+            "description": "Get filtered specifications",
+            "request": {
+              "content_type": "application/json",
+              "body": {"vehicle_ids": [1, 2, 3]}
+            },
+            "responses": {
+              "200": {
+                "description": "Specifications with counts",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {"id": 1, "name": "Transmission", "icon": "fa-cog", "options": ["Automatic", "Manual"]}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/jimpisoft/refresh-prices",
+            "description": "Refresh Jimpisoft prices",
+            "request": {
+              "content_type": "application/json",
+              "body": {"pickupLoc": "London", "date_from": "2025-06-01", "date_to": "2025-06-07"}
+            },
+            "responses": {
+              "200": {
+                "description": "Prices refreshed",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "fresh": true,
+                  "message": "Prices refreshed successfully.",
+                  "data": {"branches_updated": [1], "vehicles_updated": 5, "prices": {}}
+                }
+              },
+              "404": {"description": "No branches/vehicles found"},
+              "422": {"description": "Missing parameters"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Bookings & Rentals",
+        "description": "Booking creation, cancellation, rental lists, invoices",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/rentals",
+            "description": "Get rentals (supplier or admin)",
+            "request": {
+              "parameters": {
+                "order_status": "integer (query)",
+                "order_number": "string (query)",
+                "country": "string (query)",
+                "date_range": "array[string] (query)",
+                "has_review": "boolean (query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Rentals list",
+                "media_type": "application/json",
+                "schema": {
+                  "rentals": [
+                    {
+                      "id": 1,
+                      "order_number": "USATR0001",
+                      "customer_id": 10,
+                      "supplier_id": 5,
+                      "vehicle_id": 1,
+                      "price": 350,
+                      "supplier_price": 300,
+                      "profit_margin": 50,
+                      "start_date": "2025-06-01",
+                      "end_date": "2025-06-07",
+                      "start_time": "10:00:00",
+                      "end_time": "10:00:00",
+                      "currency": "USD",
+                      "number_of_days": 6,
+                      "order_status": "confirmed",
+                      "rate": 4.5,
+                      "old_rental_id": null,
+                      "created_at": "2026-05-24T09:39:57.257Z"
+                    }
+                  ],
+                  "rental_statuses": [{"id": 0, "name": "string", "created_at": "2026-05-24T09:39:57.257Z"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/booking/{id}",
+            "description": "Get booking details",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Booking details",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": {
+                    "id": 1,
+                    "order_number": "USATR0001",
+                    "customer_id": 10,
+                    "supplier_id": 5,
+                    "vehicle_id": 1,
+                    "price": 350,
+                    "supplier_price": 300,
+                    "profit_margin": 50,
+                    "start_date": "2025-06-01",
+                    "end_date": "2025-06-07",
+                    "start_time": "10:00:00",
+                    "end_time": "10:00:00",
+                    "currency": "USD",
+                    "number_of_days": 6,
+                    "order_status": "confirmed",
+                    "rate": 4.5,
+                    "old_rental_id": null,
+                    "created_at": "2026-05-24T09:40:44.317Z"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/booking/update-status",
+            "description": "Update booking status",
+            "request": {
+              "parameters": {
+                "request": "string (query, required)",
+                "status": "integer (query, required)"
+              }
+            },
+            "responses": {
+              "200": {"description": "Status updated", "media_type": null}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/rental/rate/{id}",
+            "description": "Get rental with ratings",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Rental with rates",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": {"id": 1, "rentalRates": [{}]}
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Branches",
+        "description": "Branch management",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/branches",
+            "description": "Get branches",
+            "request": {
+              "parameters": {
+                "company_id": "integer (query)",
+                "country": "string (query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Branches",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Downtown Branch",
+                      "location": "London",
+                      "location_address": "123 Main St",
+                      "adresse": "123 Main St",
+                      "city": "London",
+                      "country": "UK",
+                      "phone": "+44 20 1234 5678",
+                      "lat": 51.5074,
+                      "lng": -0.1278,
+                      "email": "branch@example.com",
+                      "company_id": 5,
+                      "currency": "GBP",
+                      "location_type": "Airport"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Categories",
+        "description": "Vehicle categories CRUD",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/categories",
+            "description": "Get vehicle categories",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Categories",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "Sedan", "photo": "sedan.png"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/post/categories",
+            "description": "Create category",
+            "request": {
+              "content_type": "application/json",
+              "body": {"name": "SUV", "photo": "suv.png"}
+            },
+            "responses": {
+              "200": {"description": "Success", "media_type": null}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/update/categories",
+            "description": "Update category",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0, "name": "string", "photo": "string"}
+            },
+            "responses": {
+              "200": {"description": "Success", "media_type": null}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/delete/categories",
+            "description": "Delete category",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0}
+            },
+            "responses": {
+              "200": {"description": "Success", "media_type": null}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Specifications",
+        "description": "Vehicle specifications CRUD",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/specifications",
+            "description": "Get specifications",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Specifications",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {"id": 1, "name": "Transmission", "icon": "fa-cog", "options": ["Automatic", "Manual"]}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/post/specifications",
+            "description": "Create specification",
+            "request": {
+              "content_type": "application/json",
+              "body": {"name": "Transmission", "icon": "fa-cog", "options": ["Automatic", "Manual"]}
+            },
+            "responses": {"200": {"description": "Success"}}
+          },
+          {
+            "method": "POST",
+            "path": "/specifications/update",
+            "description": "Update specification",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0, "name": "string", "icon": "string", "options": ["string"]}
+            },
+            "responses": {"200": {"description": "Success"}}
+          },
+          {
+            "method": "POST",
+            "path": "/delete/specifications",
+            "description": "Delete specification",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0}
+            },
+            "responses": {"200": {"description": "Success"}}
+          }
+        ]
+      },
+      {
+        "name": "Included Items",
+        "description": "What's included items CRUD",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/included",
+            "description": "Get included items",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Included items",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {"id": 1, "what_is_included": "Free Cancellation", "description": "Cancel for free up to 48h before pickup"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/post/included",
+            "description": "Create included item",
+            "request": {
+              "content_type": "application/json",
+              "body": {"what_is_included": "Free GPS", "description": "GPS navigation included"}
+            },
+            "responses": {"200": {"description": "Success"}}
+          },
+          {
+            "method": "POST",
+            "path": "/delete/included",
+            "description": "Delete included item",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0}
+            },
+            "responses": {"200": {"description": "Success"}}
+          }
+        ]
+      },
+      {
+        "name": "Fuel Policies",
+        "description": "Fuel policies management",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/fuel-policies",
+            "description": "Get fuel policies",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Fuel policies",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "Full to Full", "description": "Return with same fuel level"}]
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Location Types",
+        "description": "Location types management",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/location-types",
+            "description": "Get location types",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Location types",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "Airport", "icon": "fa-plane"}]
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Rental Terms",
+        "description": "Rental terms management",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/rental-terms",
+            "description": "Get rental terms",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Rental terms",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "title": "Minimum age 21",
+                      "description": "Driver must be at least 21 years old",
+                      "status": "approved",
+                      "created_by": 0,
+                      "created_at": "2026-05-24T09:43:09.991Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/post/rental-terms",
+            "description": "Create rental term",
+            "request": {
+              "content_type": "application/json",
+              "body": {"title": "No Smoking", "description": "Smoking is not allowed in the vehicle"}
+            },
+            "responses": {"200": {"description": "Success"}}
+          },
+          {
+            "method": "POST",
+            "path": "/delete/rental-terms",
+            "description": "Delete rental term",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0}
+            },
+            "responses": {"200": {"description": "Success"}}
+          },
+          {
+            "method": "POST",
+            "path": "/edit/rental-terms",
+            "description": "Edit rental term",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0, "title": "string", "description": "string"}
+            },
+            "responses": {"200": {"description": "Success"}}
+          },
+          {
+            "method": "POST",
+            "path": "/show/rental-terms",
+            "description": "Get single rental term",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0}
+            },
+            "responses": {"200": {"description": "Success"}}
+          },
+          {
+            "method": "POST",
+            "path": "/update/rental-terms/status",
+            "description": "Approve or reject rental term",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 0, "status": "approved"}
+            },
+            "responses": {"200": {"description": "Success"}}
+          }
+        ]
+      },
+      {
+        "name": "Payment Methods",
+        "description": "Supplier payment methods",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/payment_methods",
+            "description": "Get payment methods",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Payment methods",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "Credit Card"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/payment_methods",
+            "description": "Store supplier payment methods",
+            "request": {
+              "content_type": "application/json",
+              "body": {"payment_methods": [1, 3]}
+            },
+            "responses": {
+              "200": {"description": "Payment methods saved"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Promos",
+        "description": "Promotions/offers management",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/promo",
+            "description": "Get promos",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Promos",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 0, "vehicle_id": 0, "included_id": 0, "created_at": "2026-05-24T09:44:17.203Z"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/promo",
+            "description": "Create promo",
+            "request": {
+              "content_type": "application/json",
+              "body": {"vehicle_id": 1, "included_id": 2}
+            },
+            "responses": {
+              "200": {"description": "Promo created"}
+            }
+          },
+          {
+            "method": "DELETE",
+            "path": "/promo/{id}",
+            "description": "Delete promo",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {"description": "Promo deleted"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Rates & Reviews",
+        "description": "Ratings and review questions",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/rating/questions",
+            "description": "Get rating questions",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Rating questions",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "objective": "Cleanliness", "question": "How clean was the vehicle?"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/rating",
+            "description": "Submit rating",
+            "request": {
+              "content_type": "application/json",
+              "body": {"rental_id": 1, "comment": "Great service!"}
+            },
+            "responses": {
+              "200": {
+                "description": "Rating saved",
+                "media_type": "application/json",
+                "schema": {"status": true, "message": "Success", "data": {}}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Background Settings",
+        "description": "Background image settings",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/api/background-settings",
+            "description": "Get background settings",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Background settings",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "section_key": "homepage_hero",
+                      "section_name": "Homepage Hero",
+                      "image_path": "bg/home.jpg",
+                      "default_image_path": "bg/default_home.jpg",
+                      "is_active": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/background-settings/{id}",
+            "description": "Update background setting",
+            "request": {
+              "parameters": {"id": "integer (path, required)"},
+              "content_type": "multipart/form-data",
+              "body": {
+                "image": "string ($binary) [file]",
+                "is_active": "boolean"
+              }
+            },
+            "responses": {
+              "200": {"description": "Setting updated"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/background-settings/{id}/reset",
+            "description": "Reset background to default",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {"description": "Reset successful"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Blog",
+        "description": "Blog posts management",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/api/blogs",
+            "description": "List all blogs",
+            "request": {
+              "parameters": {
+                "category_id": "integer (query)",
+                "is_published": "boolean (query)",
+                "per_page": "15 (integer, query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Blogs list",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "data": {
+                    "current_page": 1,
+                    "data": [{}],
+                    "first_page_url": "string",
+                    "from": 0,
+                    "last_page": 0,
+                    "last_page_url": "string",
+                    "next_page_url": "string",
+                    "path": "string",
+                    "per_page": 0,
+                    "prev_page_url": "string",
+                    "to": 0,
+                    "total": 0
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/blogs/published",
+            "description": "List published blogs",
+            "request": {
+              "parameters": {
+                "category_id": "integer (query)",
+                "per_page": "15 (integer, query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Published blogs",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "data": {
+                    "current_page": 1,
+                    "data": [{}],
+                    "first_page_url": "string",
+                    "from": 0,
+                    "last_page": 0,
+                    "last_page_url": "string",
+                    "next_page_url": "string",
+                    "path": "string",
+                    "per_page": 0,
+                    "prev_page_url": "string",
+                    "to": 0,
+                    "total": 0
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/blogs/{blog}",
+            "description": "Get blog by ID",
+            "request": {"parameters": {"blog": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Blog",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "data": {
+                    "id": 1,
+                    "blog_category_id": 1,
+                    "title": "10 Tips for Renting a Car",
+                    "slug": "10-tips-for-renting-a-car",
+                    "author": "John Doe",
+                    "image": "blog/renting_tips.jpg",
+                    "image_alt_text": "Car rental tips",
+                    "content": "<p>Renting a car can be easy...</p>",
+                    "meta_description": "Learn the best tips for renting a car.",
+                    "is_published": true,
+                    "created_at": "2026-05-24T09:45:49.118Z"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/blogs/slug/{slug}",
+            "description": "Get blog by slug",
+            "request": {"parameters": {"slug": "string (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Blog",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "data": {
+                    "id": 1,
+                    "blog_category_id": 1,
+                    "title": "10 Tips for Renting a Car",
+                    "slug": "10-tips-for-renting-a-car",
+                    "author": "John Doe",
+                    "image": "blog/renting_tips.jpg",
+                    "image_alt_text": "Car rental tips",
+                    "content": "<p>Renting a car can be easy...</p>",
+                    "meta_description": "Learn the best tips for renting a car.",
+                    "is_published": true,
+                    "created_at": "2026-05-24T09:46:08.169Z"
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "media_type": "application/json",
+                "schema": {"status": false, "message": "Error message"}
+              }
+            }
+          },
+          {
+            "method": "PATCH",
+            "path": "/api/blogs/{blog}/toggle-publish",
+            "description": "Toggle blog publish status",
+            "request": {"parameters": {"blog": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Toggled",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "data": {
+                    "id": 1,
+                    "blog_category_id": 1,
+                    "title": "10 Tips for Renting a Car",
+                    "slug": "10-tips-for-renting-a-car",
+                    "author": "John Doe",
+                    "image": "blog/renting_tips.jpg",
+                    "image_alt_text": "Car rental tips",
+                    "content": "<p>Renting a car can be easy...</p>",
+                    "meta_description": "Learn the best tips for renting a car.",
+                    "is_published": true,
+                    "created_at": "2026-05-24T09:46:08.184Z"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/blogs-admin-store",
+            "description": "Create blog (admin web route)",
+            "request": {
+              "content_type": "multipart/form-data",
+              "body": {
+                "blog_category_id": "integer",
+                "title": "string",
+                "slug": "string",
+                "author": "string",
+                "image": "string ($binary) [file]",
+                "image_alt_text": "string",
+                "content": "string",
+                "meta_description": "string",
+                "is_published": "integer"
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "data": {
+                    "id": 1,
+                    "blog_category_id": 1,
+                    "title": "10 Tips for Renting a Car",
+                    "slug": "10-tips-for-renting-a-car",
+                    "author": "John Doe",
+                    "image": "blog/renting_tips.jpg",
+                    "image_alt_text": "Car rental tips",
+                    "content": "<p>Renting a car can be easy...</p>",
+                    "meta_description": "Learn the best tips for renting a car.",
+                    "is_published": true,
+                    "created_at": "2026-05-24T09:46:21.728Z"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/blogs-admin-update/{blog}",
+            "description": "Update blog (admin web route)",
+            "request": {
+              "parameters": {"blog": "integer (path, required)"},
+              "content_type": "multipart/form-data",
+              "body": {
+                "blog_category_id": "integer",
+                "title": "string",
+                "slug": "string",
+                "author": "string",
+                "image": "string ($binary) [file]",
+                "image_alt_text": "string",
+                "content": "string",
+                "meta_description": "string",
+                "is_published": "integer"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Updated",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "data": {
+                    "id": 1,
+                    "blog_category_id": 1,
+                    "title": "10 Tips for Renting a Car",
+                    "slug": "10-tips-for-renting-a-car",
+                    "author": "John Doe",
+                    "image": "blog/renting_tips.jpg",
+                    "image_alt_text": "Car rental tips",
+                    "content": "<p>Renting a car can be easy...</p>",
+                    "meta_description": "Learn the best tips for renting a car.",
+                    "is_published": true,
+                    "created_at": "2026-05-24T09:46:33.772Z"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "DELETE",
+            "path": "/api/blogs-admin-delete/{blog}",
+            "description": "Delete blog (admin web route)",
+            "request": {"parameters": {"blog": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Deleted",
+                "media_type": "application/json",
+                "schema": {"status": true, "message": "Success", "data": {}}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Blog Categories",
+        "description": "Blog categories management",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/api/blog-categories",
+            "description": "List all blog categories",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Categories",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "data": [
+                    {"id": 1, "title": "Travel Tips", "activation": true, "created_at": "2026-05-24T09:46:52.071Z"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/api/blog-categories",
+            "description": "Create blog category",
+            "request": {
+              "content_type": "application/json",
+              "body": {"title": "Travel Tips", "activation": true}
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "data": {"id": 1, "title": "Travel Tips", "activation": true, "created_at": "2026-05-24T09:47:19.904Z"}
+                }
+              },
+              "422": {"description": "Validation error"}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/blog-categories/active",
+            "description": "List active blog categories",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Active categories",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "data": [
+                    {"id": 1, "title": "Travel Tips", "activation": true, "created_at": "2026-05-24T09:47:19.914Z"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/blog-categories/{blogCategory}",
+            "description": "Get blog category",
+            "request": {"parameters": {"blogCategory": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Category",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "data": {"id": 1, "title": "Travel Tips", "activation": true, "created_at": "2026-05-24T09:47:46.129Z"}
+                }
+              }
+            }
+          },
+          {
+            "method": "PUT",
+            "path": "/api/blog-categories/{blogCategory}",
+            "description": "Update blog category",
+            "request": {
+              "parameters": {"blogCategory": "integer (path, required)"},
+              "content_type": "application/json",
+              "body": {"title": "Travel Tips", "activation": true}
+            },
+            "responses": {
+              "200": {
+                "description": "Updated",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "data": {"id": 1, "title": "Travel Tips", "activation": true, "created_at": "2026-05-24T09:47:46.147Z"}
+                }
+              }
+            }
+          },
+          {
+            "method": "DELETE",
+            "path": "/api/blog-categories/{blogCategory}",
+            "description": "Delete blog category",
+            "request": {"parameters": {"blogCategory": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Deleted",
+                "media_type": "application/json",
+                "schema": {"status": true, "message": "Success", "data": {}}
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/api/blog-categories/{category}/blogs",
+            "description": "Get blogs by category",
+            "request": {
+              "parameters": {
+                "category": "integer (path, required)",
+                "is_published": "boolean (query)",
+                "per_page": "15 (integer, query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Blogs",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "message": "string",
+                  "category": {"id": 1, "title": "Travel Tips", "activation": true, "created_at": "2026-05-24T09:48:13.956Z"},
+                  "data": {
+                    "current_page": 1,
+                    "data": [{}],
+                    "first_page_url": "string",
+                    "from": 0,
+                    "last_page": 0,
+                    "last_page_url": "string",
+                    "next_page_url": "string",
+                    "path": "string",
+                    "per_page": 0,
+                    "prev_page_url": "string",
+                    "to": 0,
+                    "total": 0
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "PATCH",
+            "path": "/api/blog-categories/{blogCategory}/toggle-activation",
+            "description": "Toggle category activation",
+            "request": {"parameters": {"blogCategory": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Toggled",
+                "media_type": "application/json",
+                "schema": {
+                  "success": true,
+                  "data": {"id": 1, "title": "Travel Tips", "activation": true, "created_at": "2026-05-24T09:48:59.390Z"}
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Subscribers",
+        "description": "Newsletter subscribers",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/subscribers",
+            "description": "Get subscribers",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Subscribers list",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {"id": 1, "email": "subscriber@example.com", "country": "USA", "created_at": "2026-05-24T09:48:59.397Z"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/delete/subscribers",
+            "description": "Delete subscriber",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {"200": {"description": "Deleted"}}
+          },
+          {
+            "method": "POST",
+            "path": "/send-email",
+            "description": "Send email to subscribers",
+            "request": {
+              "content_type": "application/json",
+              "body": {"subject": "Newsletter", "message": "Hello subscribers!"}
+            },
+            "responses": {
+              "200": {"description": "Email sent"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "description": "Dashboard stats",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/dashboard",
+            "description": "Get admin dashboard stats",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Dashboard data",
+                "media_type": "application/json",
+                "schema": {"status": true, "data": {}}
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/supplier-dashboard",
+            "description": "Get supplier dashboard stats",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Dashboard data",
+                "media_type": "application/json",
+                "schema": {"status": true, "data": {}}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Reference Data",
+        "description": "Countries, currencies, logos, backgrounds, photos",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/get/countries",
+            "description": "Get countries",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "List of country names",
+                "media_type": "application/json",
+                "schema": ["USA", "UK", "France"]
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/currencies",
+            "description": "Get currencies",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Currencies",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "name": "USD", "symbol": "$"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/logos",
+            "description": "Get supplier logos",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Array of logo filenames",
+                "media_type": "application/json",
+                "schema": ["logo1.png"]
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/backgrounds",
+            "description": "Get background settings",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Background settings",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "section_key": "homepage_hero",
+                      "section_name": "Homepage Hero",
+                      "image_path": "bg/home.jpg",
+                      "default_image_path": "bg/default_home.jpg",
+                      "is_active": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/photos",
+            "description": "Get vehicle photos",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Vehicle photos",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [{"id": 1, "photo": "vehicle_123.jpg", "name": "Toyota Camry"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/priceTax",
+            "description": "Get price tax settings",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Price taxes",
+                "media_type": "application/json",
+                "schema": {
+                  "priceTax": 10,
+                  "weekPriceTax": 8,
+                  "monthPriceTax": 0,
+                  "yearPriceTax": 0
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/locations",
+            "description": "Get branch locations",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Locations",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Downtown Branch",
+                      "location": "London",
+                      "location_address": "123 Main St",
+                      "adresse": "123 Main St",
+                      "city": "London",
+                      "country": "UK",
+                      "phone": "+44 20 1234 5678",
+                      "lat": 51.5074,
+                      "lng": -0.1278,
+                      "email": "branch@example.com",
+                      "company_id": 5,
+                      "currency": "GBP",
+                      "location_type": "Airport"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Admin Operations",
+        "description": "Admin-only operations",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/vehicles/bulk-upload",
+            "description": "Bulk upload vehicles via Excel",
+            "request": {
+              "content_type": "multipart/form-data",
+              "body": {
+                "file": "string ($binary) [file, required]",
+                "branch": "integer (required)",
+                "supplier": "integer"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Upload result",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": {
+                    "vehicles_imported": 0,
+                    "vehicle_ids": [],
+                    "warnings": ["string"],
+                    "message": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/vehicles/bulk-upload/template",
+            "description": "Download bulk upload template",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Excel file download",
+                "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/rentals/admin",
+            "description": "Get all rentals (admin)",
+            "request": {
+              "parameters": {
+                "supplier_id": "integer (query)",
+                "order_status": "integer (query)",
+                "order_number": "string (query)",
+                "country": "string (query)",
+                "date_range": "array[string] (query)",
+                "has_review": "boolean (query)"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Admin rentals",
+                "media_type": "application/json",
+                "schema": {
+                  "rentals": [
+                    {
+                      "id": 1,
+                      "order_number": "USATR0001",
+                      "customer_id": 10,
+                      "supplier_id": 5,
+                      "vehicle_id": 1,
+                      "price": 350,
+                      "supplier_price": 300,
+                      "profit_margin": 50,
+                      "start_date": "2025-06-01",
+                      "end_date": "2025-06-07",
+                      "start_time": "10:00:00",
+                      "end_time": "10:00:00",
+                      "currency": "USD",
+                      "number_of_days": 6,
+                      "order_status": "confirmed",
+                      "rate": 4.5,
+                      "old_rental_id": null,
+                      "created_at": "2026-05-24T09:52:08.420Z"
+                    }
+                  ],
+                  "rental_statuses": [{"id": 0, "name": "string", "created_at": "2026-05-24T09:52:08.420Z"}]
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/supplier/invoice",
+            "description": "Get supplier invoice summary",
+            "request": {
+              "parameters": {"company_id": "integer (query, required)"}
+            },
+            "responses": {
+              "200": {
+                "description": "Invoice data",
+                "media_type": "application/json",
+                "schema": {
+                  "data": {
+                    "total_price": 1500,
+                    "currency": "USD",
+                    "count_rentals": 10
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/rentals/reconcile",
+            "description": "Reconcile supplier rentals",
+            "request": {
+              "content_type": "application/json",
+              "body": {"supplier_id": 5}
+            },
+            "responses": {
+              "200": {
+                "description": "Reconciled",
+                "media_type": "application/json",
+                "schema": {"status": true, "data": []}
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/customers",
+            "description": "Get all customers",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Customers",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "John Doe",
+                      "email": "john@example.com",
+                      "role": "customer",
+                      "phone_num": "+1234567890",
+                      "company": "Acme Rentals",
+                      "logo": "logo.png",
+                      "country": "USA",
+                      "language": "en",
+                      "price_tax": 10,
+                      "integration": false,
+                      "webhook_url": "https://example.com/webhook",
+                      "created_at": "2026-05-24T09:52:48.316Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/delete/customers",
+            "description": "Delete a customer",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {
+                "description": "Deleted",
+                "media_type": "application/json",
+                "schema": {
+                  "data": [],
+                  "status": true,
+                  "message": "Customer deleted successfully"
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/assign-parent",
+            "description": "Assign parent company",
+            "request": {
+              "content_type": "application/json",
+              "body": {"selectedCompany": 2, "parentCompany": 1}
+            },
+            "responses": {
+              "200": {
+                "description": "Assignment result",
+                "media_type": "application/json",
+                "schema": {"status": true}
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/requests",
+            "description": "Get membership requests",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Requests",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "John Doe",
+                      "email": "john@example.com",
+                      "role": "customer",
+                      "phone_num": "+1234567890",
+                      "company": "Acme Rentals",
+                      "logo": "logo.png",
+                      "country": "USA",
+                      "language": "en",
+                      "price_tax": 10,
+                      "integration": false,
+                      "webhook_url": "https://example.com/webhook",
+                      "created_at": "2026-05-24T09:53:12.360Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/accept/requests",
+            "description": "Accept membership request",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {"description": "Request accepted"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/delete/requests",
+            "description": "Delete/reject membership request",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {"description": "Request deleted"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/post/photos",
+            "description": "Upload vehicle photo",
+            "request": {
+              "content_type": "multipart/form-data",
+              "body": {
+                "name": "string",
+                "photo": "string ($binary) [file, required]"
+              }
+            },
+            "responses": {"200": {"description": "Photo uploaded"}}
+          },
+          {
+            "method": "POST",
+            "path": "/delete/photos",
+            "description": "Delete vehicle photo",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {"description": "Photo deleted"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/profit/upload",
+            "description": "Upload profit margins",
+            "request": {
+              "content_type": "multipart/form-data",
+              "body": {"file": "string ($binary)"}
+            },
+            "responses": {
+              "200": {"description": "Profits uploaded"}
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/get/profit",
+            "description": "Get profit margins",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Profit data",
+                "media_type": "application/json",
+                "schema": {"status": true, "data": {}}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Supplier Operations",
+        "description": "Supplier-only operations",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/post/vehicles",
+            "description": "Create or update vehicle (Requires active_supplier middleware)",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "update": "0",
+                "name": "Toyota Camry",
+                "description": "Sedan",
+                "price": 50,
+                "week_price": 45,
+                "month_price": 40,
+                "pickupLoc": "1",
+                "category": 2,
+                "location_types": 1,
+                "specifications": "[{\"name\":\"Transmission\",\"value\":\"Automatic\"}]",
+                "included": "1,2,3"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Vehicle saved",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "message": "string",
+                  "data": {
+                    "id": 1,
+                    "name": "Toyota Camry 2024",
+                    "description": "Comfortable sedan with automatic transmission",
+                    "photo": "toyota_camry.jpg",
+                    "price": 50,
+                    "week_price": 45,
+                    "month_price": 40,
+                    "activation": true,
+                    "instant_confirmation": true,
+                    "supplier": 5,
+                    "pickup_loc": 1,
+                    "category": 2,
+                    "fuel_policy_id": 1,
+                    "created_at": "2026-05-24T09:54:42.565Z",
+                    "updated_at": "2026-05-24T09:54:42.565Z"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/edit/vehicles/{id}",
+            "description": "Get vehicle for editing",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Vehicle edit data",
+                "media_type": "application/json",
+                "schema": {
+                  "data": {
+                    "id": 1,
+                    "name": "Toyota Camry 2024",
+                    "description": "Comfortable sedan with automatic transmission",
+                    "photo": "toyota_camry.jpg",
+                    "price": 50,
+                    "week_price": 45,
+                    "month_price": 40,
+                    "activation": true,
+                    "instant_confirmation": true,
+                    "supplier": 5,
+                    "pickup_loc": 1,
+                    "category": 2,
+                    "fuel_policy_id": 1,
+                    "created_at": "2026-05-24T09:55:10.927Z",
+                    "updated_at": "2026-05-24T09:55:10.927Z"
+                  },
+                  "status": true
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/edit-vehicle-price",
+            "description": "Update vehicle price",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1, "price": 50, "week_price": 45, "month_price": 40}
+            },
+            "responses": {
+              "200": {
+                "description": "Price updated",
+                "media_type": "application/json",
+                "schema": {"data": {}, "status": true}
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/update/vehicles/activation",
+            "description": "Toggle vehicle activation",
+            "request": {
+              "content_type": "application/json",
+              "body": {"vehicle_id": 1, "activation": false}
+            },
+            "responses": {
+              "200": {"description": "Activation updated"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/delete/vehicles/{id}",
+            "description": "Delete vehicle",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Deleted",
+                "media_type": "application/json",
+                "schema": {"status": true, "message": "deleted successfully"}
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/change-company",
+            "description": "Switch to another company account",
+            "request": {
+              "content_type": "application/json",
+              "body": {"selectedCompany": 2}
+            },
+            "responses": {"200": {"description": "Company switched"}}
+          },
+          {
+            "method": "POST",
+            "path": "/upload/branch",
+            "description": "Create branch",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "name": "Downtown Branch",
+                "location": "London",
+                "adresse": "123 Main St",
+                "country": "UK",
+                "pickup_type": "Airport",
+                "city": "London",
+                "phone": "+44 20 1234 5678",
+                "lat": 51.5074,
+                "lng": -0.1278,
+                "email": "branch@example.com",
+                "currency": "GBP"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Branch created",
+                "media_type": "application/json",
+                "schema": {"message": "Branch created successfully", "status": true}
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/delete/branches",
+            "description": "Delete branch",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {
+                "description": "Deleted",
+                "media_type": "application/json",
+                "schema": {"message": "Branch deleted successfully"}
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/branches/edit/{id}",
+            "description": "Get branch for edit",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "Branch data",
+                "media_type": "application/json",
+                "schema": {
+                  "status": true,
+                  "data": {
+                    "id": 1,
+                    "name": "Downtown Branch",
+                    "location": "London",
+                    "location_address": "123 Main St",
+                    "adresse": "123 Main St",
+                    "city": "London",
+                    "country": "UK",
+                    "phone": "+44 20 1234 5678",
+                    "lat": 51.5074,
+                    "lng": -0.1278,
+                    "email": "branch@example.com",
+                    "company_id": 5,
+                    "currency": "GBP",
+                    "location_type": "Airport"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/branches/update",
+            "description": "Update branch",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "name": "string",
+                "location": "string",
+                "adresse": "string",
+                "country": "string",
+                "pickup_type": "string",
+                "city": "string",
+                "phone": "string",
+                "lat": 0,
+                "lng": 0,
+                "email": "user@example.com",
+                "currency": "string"
+              }
+            },
+            "responses": {
+              "200": {"description": "Branch updated"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/select-rental-terms",
+            "description": "Assign rental terms to supplier",
+            "request": {
+              "content_type": "application/json",
+              "body": {"rental_term_id": 1}
+            },
+            "responses": {
+              "200": {"description": "Assigned"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/accept/rentals",
+            "description": "Accept rental",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {"description": "Rental accepted"}
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/delete/rentals",
+            "description": "Delete/reject rental",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {"description": "Rental deleted"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Customer Operations",
+        "description": "Customer-only operations",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/book/vehicles",
+            "description": "Book a vehicle",
+            "request": {
+              "content_type": "application/json",
+              "body": {
+                "id": 1,
+                "date_from": "2025-06-01",
+                "date_to": "2025-06-07",
+                "time_from": "10:00",
+                "time_to": "10:00",
+                "currency": "USD"
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Booking created",
+                "media_type": "application/json",
+                "schema": {
+                  "data": {
+                    "id": 1,
+                    "order_number": "USATR0001",
+                    "vehicle_id": 1,
+                    "price": 50,
+                    "order_status": "confirmed"
+                  },
+                  "status": true
+                }
+              },
+              "500": {
+                "description": "Server error",
+                "media_type": "application/json",
+                "schema": {"status": false, "message": "Error message"}
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/cancel/booking",
+            "description": "Cancel booking",
+            "request": {
+              "content_type": "application/json",
+              "body": {"id": 1}
+            },
+            "responses": {
+              "200": {
+                "description": "Cancelled",
+                "media_type": "application/json",
+                "schema": {"data": [], "message": "Order has been canceled"}
+              },
+              "403": {
+                "description": "Cannot cancel",
+                "media_type": "application/json",
+                "schema": {"status": false, "message": "Error message"}
+              }
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/invoice/booking/{id}",
+            "description": "Download booking invoice PDF",
+            "request": {"parameters": {"id": "integer (path, required)"}},
+            "responses": {
+              "200": {
+                "description": "PDF download",
+                "media_type": "application/pdf",
+                "schema": "string"
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "path": "/post/request",
+            "description": "Submit membership request",
+            "request": {"parameters": "No parameters"},
+            "responses": {
+              "200": {
+                "description": "Requested",
+                "media_type": "application/json",
+                "schema": {"message": "Role updated successfully"}
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "schemas": {
+      "SuccessResponse": {"status": true, "data": {}, "message": "string"},
+      "ErrorResponse": {"status": false, "message": "Error message"},
+      "ValidationErrorResponse": {
+        "message": "The given data was invalid.",
+        "errors": {
+          "additionalProp1": ["string"],
+          "additionalProp2": ["string"],
+          "additionalProp3": ["string"]
+        }
+      },
+      "User": {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "customer",
+        "phone_num": "+1234567890",
+        "company": "Acme Rentals",
+        "logo": "logo.png",
+        "country": "USA",
+        "language": "en",
+        "price_tax": 10,
+        "integration": false,
+        "webhook_url": "https://example.com/webhook",
+        "created_at": "2026-05-24T09:28:37.636Z"
+      },
+      "Vehicle": {
+        "id": 1,
+        "name": "Toyota Camry 2024",
+        "description": "Comfortable sedan with automatic transmission",
+        "photo": "toyota_camry.jpg",
+        "price": 50,
+        "week_price": 45,
+        "month_price": 40,
+        "activation": true,
+        "instant_confirmation": true,
+        "supplier": 5,
+        "pickup_loc": 1,
+        "category": 2,
+        "fuel_policy_id": 1,
+        "created_at": "2026-05-24T09:36:27.456Z",
+        "updated_at": "2026-05-24T09:36:27.456Z"
+      },
+      "Rental": {
+        "id": 1,
+        "order_number": "USATR0001",
+        "customer_id": 10,
+        "supplier_id": 5,
+        "vehicle_id": 1,
+        "price": 350,
+        "supplier_price": 300,
+        "profit_margin": 50,
+        "start_date": "2025-06-01",
+        "end_date": "2025-06-07",
+        "start_time": "10:00:00",
+        "end_time": "10:00:00",
+        "currency": "USD",
+        "number_of_days": 6,
+        "order_status": "confirmed",
+        "rate": 4.5,
+        "old_rental_id": null,
+        "created_at": "2026-05-24T09:29:01.205Z"
+      }
+    }
+  }
+}

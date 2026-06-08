@@ -17,9 +17,15 @@ class isMember
      */
     public function handle(Request $request, Closure $next)
     {
-        if(Auth::check() && Auth::user()->role == 'active_supplier' || Auth::user()->role == 'supplier' || Auth::user()->role == 'reviewing'){
+        $user = Auth::guard('sanctum')->user() ?? Auth::user();
+        if ($user && ($user->role == 'active_supplier' || $user->role == 'supplier' || $user->role == 'reviewing' || $user->role == 'under_review')) {
+            if (Auth::guard('sanctum')->check()) {
+                Auth::shouldUse('sanctum');
+            } else {
+                Auth::setUser($user);
+            }
             return $next($request);
-        }else{
+        } else {
             return abort(403, 'Unauthorized');
         }
     }

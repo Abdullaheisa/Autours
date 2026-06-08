@@ -280,29 +280,7 @@ const filterTableData = computed(() => {
     }
 )
 
-const handleAccept = async (index, row) => {
-    try {
-        loading.value = true;
-        const response = await axios.post('accept/rentals', row);
-        tableData.value = response.data;
-    } catch (error) {
-        console.error(error);
-    } finally {
-        loading.value = false;
-    }
-}
 
-const handleDelete = async (index, row) => {
-    try {
-        loading.value = true;
-        const response = await axios.post('delete/rentals', row);
-        tableData.value = response.data;
-    } catch (error) {
-        console.error(error);
-    } finally {
-        loading.value = false;
-    }
-}
 
 onMounted(() => {
         getRole()

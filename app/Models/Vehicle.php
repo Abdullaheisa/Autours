@@ -30,6 +30,10 @@ class Vehicle extends Model
         'specifications' => 'array'
     ];
 
+    protected $appends = [
+        'rental_terms'
+    ];
+
     public function category() {
         return $this->belongsTo(Category::class, 'category', 'id');
     }
@@ -37,12 +41,18 @@ class Vehicle extends Model
         return $this->belongsTo(Category::class, 'category', 'id');
     }
 
-    public function supplier() {
+    public function supplierUser() {
         return $this->belongsTo(User::class, 'supplier', 'id');
     }
 
     public function branch() {
         return $this->belongsTo(Branch::class, 'pickup_loc', 'id');
+    }
+
+    public function branches() {
+        return $this->belongsToMany(Branch::class, 'branch_vehicle')
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 
     public function rentals(){
@@ -62,9 +72,21 @@ class Vehicle extends Model
         return $this->belongsToMany(Included::class, 'vehicle_included','vehicle_id','included_id');
     }
 
-    public function rental_terms()
+    public function getRentalTermsAttribute()
     {
-        $this->rental_terms =  SupplierRentalTerm::query()->where('supplier_id', $this->supplier)->join('rental_terms','rental_terms.id', '=','supplier_rental_terms.rental_term_id')->select(['title','description'])->get();
+        $supplierId = $this->attributes['supplier'] ?? ($this->getAttributes()['supplier'] ?? null);
+        if (!$supplierId && $this->relationLoaded('supplierUser')) {
+            $supplierId = $this->supplierUser ? $this->supplierUser->id : null;
+        }
+        
+        if (!$supplierId) {
+            return [];
+        }
+        return SupplierRentalTerm::query()
+            ->where('supplier_id', $supplierId)
+            ->join('rental_terms','rental_terms.id', '=','supplier_rental_terms.rental_term_id')
+            ->select(['title','description'])
+            ->get();
     }
     public function specifications()
     {
@@ -77,5 +99,22 @@ class Vehicle extends Model
     public function fuelPolicy()
     {
         return $this->belongsTo(FuelPolicy::class,'fuel_policy_id','id');
+    }
+
+    public function vehiclePhoto()
+    {
+        return $this->belongsTo(VehiclesPhotos::class, 'photo', 'id');
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (array_key_exists('supplier_user', $array)) {
+            $array['supplier'] = $array['supplier_user'];
+            unset($array['supplier_user']);
+        } elseif ($this->relationLoaded('supplierUser')) {
+            $array['supplier'] = $this->supplierUser ? $this->supplierUser->toArray() : null;
+        }
+        return $array;
     }
 }

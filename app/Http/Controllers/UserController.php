@@ -37,17 +37,63 @@ class UserController extends Controller
 
     public function upload(Request $request)
     {
-        $user = User::where('id', Auth::user()->id)->first();
-        $updateData = $request->all();
-
-        if ($request->hasFile('logo')) {
-            $image = $request->file('logo');
-            $image_name = Auth::user()->name . "_logo" . md5(Carbon::now()->toDateString()) . "." . $request->file('logo')->extension();
-            $image->move(public_path('img'), $image_name);
-
-            $updateData['logo'] = $image_name;
+        // Resolve the authenticated user via sanctum guard (Bearer token) first,
+        // then fall back to the session guard. This is safe for both auth modes.
+        $authUser = Auth::guard('sanctum')->user() ?? Auth::user();
+        if (!$authUser) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
+        $user = User::where('id', $authUser->id)->first();
+        $updateData = $request->all();
+
+        // CRITICAL: never allow a profile update to downgrade the user's role.
+        // The frontend may include a 'role' field but it must never overwrite the DB value.
+        unset($updateData['role']);
+
+        // Prevent unique constraint violations for phone_num
+        if ($request->has('phone_num') && !empty(trim($request->phone_num))) {
+            $reqPhone = preg_replace('/[^0-9]/', '', $request->phone_num);
+            $userPhone = preg_replace('/[^0-9]/', '', $user->phone_num ?? '');
+            if ($reqPhone !== $userPhone) {
+                $exists = User::whereRaw("REPLACE(REPLACE(REPLACE(phone_num, '+', ''), ' ', ''), '-', '') = ?", [$reqPhone])
+                    ->where('id', '<>', $user->id)->exists();
+                if ($exists) {
+                    return response()->json([
+                        'message' => 'The phone number has already been taken.'
+                    ], StatusCodes::BAD_REQUEST);
+                }
+            } else {
+                unset($updateData['phone_num']);
+            }
+        } else {
+            unset($updateData['phone_num']);
+        }
+
+        // Prevent unique constraint violations for email
+        if ($request->has('email') && !empty(trim($request->email))) {
+            $reqEmail = trim(strtolower($request->email));
+            $userEmail = trim(strtolower($user->email ?? ''));
+            if ($reqEmail !== $userEmail) {
+                $exists = User::where('email', $reqEmail)->where('id', '<>', $user->id)->exists();
+                if ($exists) {
+                    return response()->json([
+                        'message' => 'The email address has already been taken.'
+                    ], StatusCodes::BAD_REQUEST);
+                }
+            } else {
+                unset($updateData['email']);
+            }
+        } else {
+            unset($updateData['email']);
+        }
+
+        if ($request->hasFile('logo')) {
+            $image      = $request->file('logo');
+            $image_name = $authUser->name . '_logo' . md5(Carbon::now()->toDateString()) . '.' . $image->extension();
+            $image->move(public_path('img'), $image_name);
+            $updateData['logo'] = $image_name;
+        }
 
         if ($request->has('newPass')) {
             if ($request->has('oldPass') && Hash::check($request->oldPass, $user->password) && $request->newPass === $request->confirmNewPass) {
@@ -57,11 +103,20 @@ class UserController extends Controller
             }
         }
 
+        $oldName = $user->name;
+        $oldCompany = $user->company;
 
         $user->update($updateData);
 
-        return response()->json(['message' => 1]);
+        // Dynamic propagation to associated models (e.g., Blog author string)
+        if ($request->has('name') && $user->name !== $oldName && !empty($oldName)) {
+            \App\Models\Blog::where('author', $oldName)->update(['author' => $user->name]);
+        }
+        if ($request->has('company') && $user->company !== $oldCompany && !empty($oldCompany)) {
+            \App\Models\Blog::where('author', $oldCompany)->update(['author' => $user->company]);
+        }
 
+        return response()->json(['message' => 1]);
     }
 
     public function changeCompany(Request $request)
@@ -76,14 +131,12 @@ class UserController extends Controller
     }
     public function role()
     {
-        $user = Auth::user();
-        $check = Auth::check();
-        if ($check) {
-            return json_encode($user->role);
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? Auth::user();
+        if ($user) {
+            return response()->json($user->role);
         } else {
-            return 'null';
+            return response()->json(null);
         }
-
     }
 
     public function priceTax()
@@ -106,24 +159,32 @@ class UserController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
-        if (isset($user->language))
-            $user->language = explode(',', auth()->user()->language);
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        if ($user && isset($user->language)) {
+            $user->language = explode(',', $user->language);
+        }
         return $user;
 
     }
 
     public function Companies()
     {
-        if (\auth()->user()->role == 'admin') {
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        if ($user->role == 'admin') {
             return User::query()
                 ->whereIn('role', ['active_supplier', 'under_review'])
                 ->with(['parent'])
+                ->withCount(['vehicles', 'rentals'])
                 ->get();
         } else {
             return User::query()
                 ->whereIn('role', ['active_supplier', 'under_review'])
-                ->where('parent_company_id', \auth()->user()->id)
+                ->where('parent_company_id', $user->id)
+                ->withCount(['vehicles', 'rentals'])
                 ->get();
         }
     }
@@ -135,8 +196,10 @@ class UserController extends Controller
 
     public function membership()
     {
-
-        $user = Auth::user();
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
         $user->update(['role' => 'under_review']);
 
         return response()->json(['message' => 'Role updated successfully']);
@@ -151,7 +214,8 @@ class UserController extends Controller
     {
         $query = User::query()->where('role', 'active_supplier');
         if ($request->has('country')) {
-            $query->where('country', $request->country);
+            $supplierIds = Branch::where('country', $request->country)->pluck('company_id');
+            $query->whereIn('id', $supplierIds);
         }
         return $query->get();
     }
@@ -181,14 +245,19 @@ class UserController extends Controller
             $branch->location = $request->location;
             $branch->adresse = $request->adresse;
             $branch->country = $request->country;
-            $branch->location_type = $request->pickup_type;
+            $branch->location_type = $request->input('pickup_type', $request->input('location_type', 'City'));
             $branch->city = $request->city;
             $branch->phone = $request->phone;
             $branch->lat = $request->lat;
             $branch->lng = $request->lng;
             $branch->email = $request->email;
-            $branch->company_id = auth()->user()->id;
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthenticated'], 401);
+            }
+            $branch->company_id = $user->id;
             $branch->currency = $request->currency;
+            $branch->abriviation = $request->abriviation;
 
             $branch->save();
 
@@ -206,7 +275,8 @@ class UserController extends Controller
 
     public function getBranch(Request $request)
     {
-        $companyId = auth()->user()->id;
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        $companyId = $user ? $user->id : null;
 
 
         $branches = Branch::query();
@@ -232,7 +302,7 @@ class UserController extends Controller
     public function profile(Request $request)
     {
         try {
-            $user = \auth()->user();
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
             if (is_null($user) || $user->role != 'customer') {
                 return response()->json([
                     'data' => [],
@@ -257,13 +327,53 @@ class UserController extends Controller
     public function getCustomers(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $data = User::query()->where('role', 'customer')->get();
+            $data = User::query()
+                ->where('role', 'customer')
+                ->withCount('customerRentals as rentals_count')
+                ->get();
+
+            $data->each(function($customer) {
+                // Calculate average rating of reviews: average of 'rate' column in all customer rentals
+                $avgRate = Rental::where('customer_id', $customer->id)
+                    ->whereNotNull('rate')
+                    ->avg('rate');
+                $customer->setAttribute('rating', $avgRate ? round($avgRate, 1) : 0);
+                
+                // Formulate correct address: Address, City, Country
+                $addressParts = [];
+                if (!empty($customer->address)) $addressParts[] = $customer->address;
+                if (!empty($customer->city)) $addressParts[] = $customer->city;
+                if (!empty($customer->country)) $addressParts[] = $customer->country;
+                
+                $customer->setAttribute('formatted_address', count($addressParts) > 0 ? implode(', ', $addressParts) : 'N/A');
+            });
+
             return response()->json([
                 'data' => $data,
                 'status' => 1
             ]);
         } catch (\Exception $e) {
             info("error while getting the customers");
+            info($e->getMessage());
+            return response()->json([
+                'data' => [],
+                'message' => 'Server Error'
+            ], StatusCodes::SERVER_ERROR);
+        }
+    }
+
+    public function deleteCustomer(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            User::where('id', $request->id)->where('role', 'customer')->delete();
+            $data = User::query()->where('role', 'customer')->get();
+            return response()->json([
+                'data' => $data,
+                'status' => 1,
+                'message' => 'Customer deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            info("error while deleting the customer");
             info($e->getMessage());
             return response()->json([
                 'data' => [],

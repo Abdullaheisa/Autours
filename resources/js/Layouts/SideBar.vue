@@ -44,17 +44,24 @@
                         </a>
                     </li>
                     <li class="sidebar-item" v-if="admin">
-                        <a :class="  ['sidebar-link', isActive('compan') ? 'active' : '']" href="/companies"
+                        <a :class="  ['sidebar-link', isActive('companies') ? 'active' : '']" href="/companies"
                            aria-expanded="false">
                             <span><i class="ti ti-building-store"></i></span>
                             <span class="hide-menu">My Companies</span>
                         </a>
                     </li>
                     <li class="sidebar-item" v-if="admin">
-                        <a :class="  ['sidebar-link', isActive('compan') ? 'active' : '']" href="/admin/blogs"
+                        <a :class="  ['sidebar-link', isActive('blogs') ? 'active' : '']" href="/admin/blogs"
                            aria-expanded="false">
                             <span><i class="ti ti-book"></i></span>
                             <span class="hide-menu">Blogs</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item" v-if="admin">
+                        <a :class="  ['sidebar-link', isActive('/admin/blogs/categories') ? 'active' : '']" href="/admin/blogs/categories"
+                           aria-expanded="false">
+                            <span><i class="ti ti-folder"></i></span>
+                            <span class="hide-menu">Blog Categories</span>
                         </a>
                     </li>
                     <li class="sidebar-item" v-if="activeSupplier">
@@ -294,7 +301,11 @@ const getUser = async () => {
 }
 
 const isActive = (name) => {
-    return window.location.href.split('/').pop() === name
+    const path = window.location.pathname;
+    if (name.startsWith('/')) {
+        return path === name;
+    }
+    return path.split('/').pop() === name;
 }
 
 onMounted(() => {

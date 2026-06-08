@@ -7,9 +7,17 @@
                     <el-table :data="filterTableData" style="width: 100%" :loading="loading" stripe>
                         <el-table-column label="Name" prop="email"/>
                         <el-table-column label="Country" prop="country"/>
-                        <el-table-column align="center">
+                        <el-table-column align="right">
                             <template #header>
                                 <el-input v-model="search" size="small" placeholder="Type to search"/>
+                            </template>
+                            <template #default="scope">
+                                <el-button
+                                    size="small"
+                                    type="danger"
+                                    @click="handleDelete(scope.$index, scope.row)"
+                                >Delete
+                                </el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -45,6 +53,18 @@ const filterTableData = computed(() => {
         return tableData.value.filter((data) => !search.value || data.email.toLowerCase().includes(search.value.toLowerCase()))
     }
 )
+
+const handleDelete = async (index, row) => {
+    try {
+        loading.value = true;
+        const response = await axios.post('/delete/subscribers', { id: row.id });
+        tableData.value = response.data;
+    } catch (error) {
+        console.error(error);
+    } finally {
+        loading.value = false;
+    }
+}
 
 onMounted(() => {
         getData()

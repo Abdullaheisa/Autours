@@ -31,10 +31,11 @@ class PaymentMethodsController extends Controller
     public function index(Request $request)
     {
         try {
-            if (\auth()->user()) {
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
+            if ($user) {
 
                 $paymentMethods = PaymentMethod::query()->get();
-                $activePaymentMethods = PaymentMethodSupplier::query()->where('supplier_id', \auth()->id())->get()->pluck('payment_method_id')->toArray();
+                $activePaymentMethods = PaymentMethodSupplier::query()->where('supplier_id', $user->id)->get()->pluck('payment_method_id')->toArray();
                 foreach ($paymentMethods as $paymentMethod) {
                     $paymentMethod->activation = in_array($paymentMethod->id, $activePaymentMethods);
                 }
@@ -46,7 +47,7 @@ class PaymentMethodsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'You are not authorized'
-            ]);
+            ], 401);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -58,20 +59,25 @@ class PaymentMethodsController extends Controller
     public function store(Request $request)
     {
         try {
-            if (PaymentMethodSupplier::query()->where('supplier_id', \auth()->id())->where('payment_method_id', $request->selectedMethodId)->exists()) {
-                PaymentMethodSupplier::query()->where('supplier_id', \auth()->id())->where('payment_method_id', $request->selectedMethodId)->delete();
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not authorized'
+                ], 401);
+            }
+
+            if (PaymentMethodSupplier::query()->where('supplier_id', $user->id)->where('payment_method_id', $request->selectedMethodId)->exists()) {
+                PaymentMethodSupplier::query()->where('supplier_id', $user->id)->where('payment_method_id', $request->selectedMethodId)->delete();
                 return response()->json([
                     'success' => true,
                     'message' => 'Method has been removed']);
             } else {
-                if(PaymentMethodSupplier::query()->where('supplier_id', \auth()->user()->id)->count() >= 1) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Can not use more than one method'
-                    ], StatusCodes::FORBIDDEN);
-                }
+                // Delete any existing payment method for this supplier to allow instant switching
+                PaymentMethodSupplier::query()->where('supplier_id', $user->id)->delete();
+
                 $paymentMethod = new PaymentMethodSupplier();
-                $paymentMethod->supplier_id = \auth()->user()->id;
+                $paymentMethod->supplier_id = $user->id;
                 $paymentMethod->payment_method_id = $request->selectedMethodId;
 
                 $paymentMethod->save();

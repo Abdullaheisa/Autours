@@ -62,15 +62,25 @@ class LoginController extends Controller
 
             $user = User::query()->where('email', $request->email)->with(['children'])->first();
 
-            if (Auth::attempt($credentials)) {
+            if (Auth::guard('web')->attempt($credentials)) {
                 $request->session()->regenerate();
             }
             if (\auth()->user()) {
+                $authUser = \auth()->user();
+                $token = $authUser->createToken('customer-api-token', ['customer:*'])->plainTextToken;
                 return response()->json([
-                    'data' => [],
+                    'data' => [
+                        'user' => [
+                            'id' => $authUser->id,
+                            'name' => $authUser->name,
+                            'email' => $authUser->email,
+                            'role' => $authUser->role,
+                        ],
+                        'token' => $token,
+                    ],
                     'status' => true,
                     'children' => count($user->children),
-                    'user_type' => \auth()->user()->role
+                    'user_type' => $authUser->role
                 ]);
             }
             return response()->json([

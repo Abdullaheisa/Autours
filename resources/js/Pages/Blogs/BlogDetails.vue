@@ -1,4 +1,11 @@
 <template>
+    <Head>
+        <title>{{ blog?.title ? blog.title + ' - Autours' : 'Blog Details - Autours' }}</title>
+        <meta v-if="blog?.meta_description" name="description" :content="blog.meta_description" />
+        <meta v-else-if="blog?.content" name="description" :content="getExcerpt(blog.content, 150)" />
+        <meta property="og:title" :content="blog?.title" />
+        <meta v-if="blog?.image" property="og:image" :content="`/img/blogs/${blog.image}`" />
+    </Head>
     <div id="wrapper">
         <!-- header begin -->
         <header-one/>
@@ -203,17 +210,24 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage, Head } from '@inertiajs/vue3'
 import axios from 'axios'
 import HeaderOne from '@/components/HeaderOne.vue'
 import FooterOne from '@/components/Footer.vue'
 
+const props = defineProps({
+    initialBlog: {
+        type: Object,
+        default: null
+    }
+})
+
 const page = usePage()
 
-const blog = ref(null)
+const blog = ref(props.initialBlog)
 const allBlogs = ref([])
 const categories = ref([])
-const loading = ref(true)
+const loading = ref(props.initialBlog ? false : true)
 const carouselContainer = ref(null)
 
 // ... define functions first ...
@@ -316,9 +330,9 @@ const blogSlug = computed(() => {
     return null
 })
 
-// Watch for blog slug changes and fetch when it's available (NOW fetchBlog is defined)
+// Watch for blog slug changes and fetch when it's available
 watch(() => blogSlug.value, (newSlug) => {
-    if (newSlug) {
+    if (newSlug && !props.initialBlog) {
         fetchBlog()
     }
 }, { immediate: true })
@@ -338,8 +352,8 @@ onMounted(async () => {
         fetchCategories()
     ])
 
-    // Fetch blog if slug is available
-    if (blogSlug.value) {
+    // Fetch blog if slug is available and no initial blog was provided
+    if (blogSlug.value && !props.initialBlog) {
         await fetchBlog()
     } else {
         loading.value = false

@@ -1,7 +1,26 @@
 <template>
   <div class="card">
     <div class="card-body">
-      <h2 class="mb-4">Promos</h2>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Promos</h2>
+        <el-button type="primary" @click="showSuggestModal = true">Suggest Promo</el-button>
+      </div>
+
+      <el-dialog v-model="showSuggestModal" title="Suggest a New Promo" width="30%">
+        <div class="formbold-mb-3">
+          <label class="formbold-form-label">What is included?</label>
+          <el-input v-model="newPromoName" placeholder="Enter promo name..."></el-input>
+        </div>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="showSuggestModal = false">Cancel</el-button>
+            <el-button type="primary" :loading="suggestLoading" @click="submitSuggestPromo">
+              Submit Suggestion
+            </el-button>
+          </span>
+        </template>
+      </el-dialog>
+
       <div class="card">
         <div class="card-body">
           <el-table :data="filterTableData" :loading="loading" stripe>
@@ -149,6 +168,10 @@ const tableData = ref([])
 const vehicleTableData = ref([])
 const loading = ref(false)
 
+const showSuggestModal = ref(false)
+const suggestLoading = ref(false)
+const newPromoName = ref('')
+
 const selectedIncluded = ref("")
 const selectedVehicles = ref([])
 const promos = ref([])
@@ -220,6 +243,35 @@ const AddPromo = async () => {
     console.error(e)
   }
 }
+
+const submitSuggestPromo = async () => {
+  if (!newPromoName.value.trim()) {
+    $toast.error("Please enter a promo name", {position: "top"})
+    return
+  }
+  
+  try {
+    suggestLoading.value = true;
+    const formData = new FormData();
+    formData.append('included', newPromoName.value.trim());
+    
+    const response = await axios.post('/post/included', formData);
+    if (response.data.status) {
+      $toast.success(response.data.message || 'Promo suggestion submitted successfully!', {position: "top"});
+      showSuggestModal.value = false;
+      newPromoName.value = '';
+      getData(); // Refresh table data to show the pending item
+    } else {
+      $toast.error('Failed to submit suggestion', {position: "top"});
+    }
+  } catch (e) {
+    $toast.error("Something went wrong", {position: "top"});
+    console.error(e);
+  } finally {
+    suggestLoading.value = false;
+  }
+}
+
 const selectVehicle = (vehicle) => {
   console.log(vehicle)
   if (selectedVehicles.value?.indexOf(vehicle) >= 0) {

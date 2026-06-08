@@ -1,54 +1,130 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Autours External Supplier API",
-    "description": "API for external suppliers to integrate with Autours car rental platform. This API allows suppliers to manage their vehicles, view rentals, and receive webhook notifications for rental events.",
-    "version": "1.0.0",
+    "title": "Autours API",
+    "description": "Complete API documentation for Autours car rental platform. Covers all JSON endpoints needed to build a separated frontend.\n\n**Auth modes:**\n- Session cookie auth for web routes (login via `/login` sets session cookie)\n- Bearer token (Sanctum) for API routes (login via `/api/external/supplier/login`)\n- Some routes use middleware guards: `admin`, `admin_or_supplier`, `active_supplier`, `customer`, `member`",
+    "version": "2.0.0",
     "contact": {
       "name": "Autours Support",
-      "email": "info@autours.net",
-      "url": "https://autours.net"
+      "email": "info@autours.net"
     }
   },
   "servers": [
     {
-      "url": "https://www.autours.net/api",
+      "url": "https://www.autours.net",
       "description": "Production Server"
     },
     {
-      "url": "http://localhost:8000/api",
+      "url": "http://localhost:8000",
       "description": "Local Development Server"
     }
   ],
   "tags": [
     {
       "name": "Authentication",
-      "description": "Authentication endpoints for suppliers"
+      "description": "Login, logout, register, password reset"
     },
     {
-      "name": "Profile",
-      "description": "Supplier profile management"
+      "name": "External Supplier API",
+      "description": "Sanctum-token-based API for external suppliers"
+    },
+    {
+      "name": "User & Profile",
+      "description": "User data, roles, companies, customers"
     },
     {
       "name": "Vehicles",
-      "description": "Vehicle management endpoints"
+      "description": "Vehicle search, filter, CRUD, pricing"
     },
     {
-      "name": "Rentals",
-      "description": "Rental information endpoints"
+      "name": "Bookings & Rentals",
+      "description": "Booking creation, cancellation, rental lists, invoices"
     },
     {
-      "name": "Integration",
-      "description": "Webhook integration settings"
+      "name": "Branches",
+      "description": "Branch management"
+    },
+    {
+      "name": "Categories",
+      "description": "Vehicle categories"
+    },
+    {
+      "name": "Specifications",
+      "description": "Vehicle specifications"
+    },
+    {
+      "name": "Included",
+      "description": "What's included items"
+    },
+    {
+      "name": "Fuel Policies",
+      "description": "Fuel policies"
+    },
+    {
+      "name": "Location Types",
+      "description": "Location types"
+    },
+    {
+      "name": "Rental Terms",
+      "description": "Rental terms management"
+    },
+    {
+      "name": "Payment Methods",
+      "description": "Supplier payment methods"
+    },
+    {
+      "name": "Promos",
+      "description": "Promotions / offers"
+    },
+    {
+      "name": "Rates & Reviews",
+      "description": "Ratings and review questions"
+    },
+    {
+      "name": "Background Settings",
+      "description": "Background image settings"
+    },
+    {
+      "name": "Blog",
+      "description": "Blog posts"
+    },
+    {
+      "name": "Blog Categories",
+      "description": "Blog categories"
+    },
+    {
+      "name": "Subscribers",
+      "description": "Newsletter subscribers"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard stats"
+    },
+    {
+      "name": "Reference Data",
+      "description": "Countries, currencies, logos, backgrounds, photos"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin-only operations"
+    },
+    {
+      "name": "Supplier",
+      "description": "Supplier-only operations"
+    },
+    {
+      "name": "Customer",
+      "description": "Customer-only operations"
     }
   ],
   "paths": {
-    "/external/supplier/login": {
+    "/login": {
       "post": {
-        "tags": ["Authentication"],
-        "summary": "Supplier Login",
-        "description": "Authenticate a supplier and receive an API token for subsequent requests.",
-        "operationId": "supplierLogin",
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Web Login",
+        "description": "Authenticate with email/password. Sets session cookie.",
         "requestBody": {
           "required": true,
           "content": {
@@ -57,19 +133,19 @@
                 "$ref": "#/components/schemas/LoginRequest"
               },
               "example": {
-                "email": "supplier@example.com",
-                "password": "your_password"
+                "email": "user@example.com",
+                "password": "password"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful login",
+            "description": "Login successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
+                  "$ref": "#/components/schemas/LoginWebResponse"
                 }
               }
             }
@@ -82,22 +158,59 @@
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "status": false,
-                  "message": "Invalid credentials."
+                  "message": [
+                    "Credentials not valid"
+                  ],
+                  "status": false
                 }
               }
             }
-          },
-          "403": {
-            "description": "Not a supplier account",
+          }
+        }
+      }
+    },
+    "/logout": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Web Logout",
+        "description": "Destroy session and redirect to home.",
+        "responses": {
+          "302": {
+            "description": "Redirect to home page"
+          }
+        }
+      }
+    },
+    "/post/user/data": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register",
+        "description": "Register a new customer or supplier.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/SuccessResponse"
                 },
                 "example": {
-                  "status": false,
-                  "message": "Only suppliers can access this API."
+                  "data": [],
+                  "status": true
                 }
               }
             }
@@ -115,50 +228,290 @@
         }
       }
     },
-    "/external/supplier/logout": {
+    "/forget-password": {
       "post": {
-        "tags": ["Authentication"],
-        "summary": "Supplier Logout",
-        "description": "Revoke the current API token.",
-        "operationId": "supplierLogout",
-        "security": [{"bearerAuth": []}],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Request password reset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Successfully logged out",
+            "description": "Email sent",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Logged out successfully."
-                    }
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validate-forget-password-key": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Validate password reset key",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
                   }
+                },
+                "required": [
+                  "key"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Key valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": true,
+                  "data": {},
+                  "message": "key validated"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Invalid or expired key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": false,
+                  "message": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/save-new-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Set new password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                },
+                "required": [
+                  "key",
+                  "newPassword"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": true,
+                  "message": "password has been reset successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user": {
+      "get": {
+        "tags": [
+          "User & Profile"
+        ],
+        "summary": "Get authenticated user (Sanctum)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/external/supplier/profile": {
-      "get": {
-        "tags": ["Profile"],
-        "summary": "Get Supplier Profile",
-        "description": "Retrieve the authenticated supplier's profile information.",
-        "operationId": "getSupplierProfile",
-        "security": [{"bearerAuth": []}],
+    "/api/external/supplier/login": {
+      "post": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Supplier Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Supplier profile retrieved successfully",
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a supplier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/logout": {
+      "post": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Supplier Logout",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": true,
+                  "message": "Logged out successfully."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/profile": {
+      "get": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Get Supplier Profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile",
             "content": {
               "application/json": {
                 "schema": {
@@ -168,47 +521,42 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/external/supplier/integration-settings": {
+    "/api/external/supplier/integration-settings": {
       "put": {
-        "tags": ["Integration"],
+        "tags": [
+          "External Supplier API"
+        ],
         "summary": "Update Integration Settings",
-        "description": "Enable or disable webhook integration and set the webhook URL. When integration is enabled, you will receive HTTP POST requests to your webhook URL for rental events (new rental, rental update, rental cancellation, rental request).",
-        "operationId": "updateIntegrationSettings",
-        "security": [{"bearerAuth": []}],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/IntegrationSettingsRequest"
-              },
-              "examples": {
-                "enable": {
-                  "summary": "Enable integration",
-                  "value": {
-                    "integration": true,
-                    "webhook_url": "https://your-system.com/webhook/autours"
-                  }
-                },
-                "disable": {
-                  "summary": "Disable integration",
-                  "value": {
-                    "integration": false,
-                    "webhook_url": null
-                  }
-                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Integration settings updated successfully",
+            "description": "Updated",
             "content": {
               "application/json": {
                 "schema": {
@@ -218,37 +566,43 @@
             }
           },
           "400": {
-            "description": "Webhook URL required when enabling integration",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "status": false,
-                  "message": "Webhook URL is required when enabling integration."
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/external/supplier/vehicles": {
+    "/api/external/supplier/vehicles": {
       "get": {
-        "tags": ["Vehicles"],
-        "summary": "List Vehicles",
-        "description": "Retrieve a paginated list of all vehicles belonging to the authenticated supplier.",
-        "operationId": "listVehicles",
-        "security": [{"bearerAuth": []}],
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "List Supplier Vehicles",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "description": "Page number",
             "schema": {
               "type": "integer",
               "default": 1
@@ -257,36 +611,45 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "Number of items per page",
             "schema": {
               "type": "integer",
-              "default": 15,
-              "maximum": 100
+              "default": 15
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Vehicles retrieved successfully",
+            "description": "Vehicles retrieved",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VehicleListResponse"
+                  "$ref": "#/components/schemas/PaginatedVehicleResponse"
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "post": {
-        "tags": ["Vehicles"],
-        "summary": "Create Vehicle",
-        "description": "Create a new vehicle for the authenticated supplier.",
-        "operationId": "createVehicle",
-        "security": [{"bearerAuth": []}],
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Create Vehicle (External)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -304,7 +667,7 @@
         },
         "responses": {
           "201": {
-            "description": "Vehicle created successfully",
+            "description": "Created",
             "content": {
               "application/json": {
                 "schema": {
@@ -314,7 +677,14 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
@@ -322,6 +692,1201 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/vehicles/{vehicleId}/price": {
+      "put": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Update Vehicle Price",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVehiclePriceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateVehiclePriceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/rentals": {
+      "get": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "List Supplier Rentals",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rentals retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRentalResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/included": {
+      "get": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Get Included Items",
+        "responses": {
+          "200": {
+            "description": "Included items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncludedListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/categories": {
+      "get": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Get Categories",
+        "responses": {
+          "200": {
+            "description": "Categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/fuel-policies": {
+      "get": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Get Fuel Policies",
+        "responses": {
+          "200": {
+            "description": "Fuel policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FuelPolicyListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/location-types": {
+      "get": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Get Location Types",
+        "responses": {
+          "200": {
+            "description": "Location types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationTypeListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external/supplier/branches": {
+      "get": {
+        "tags": [
+          "External Supplier API"
+        ],
+        "summary": "Get Supplier Branches",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/countries": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "Get countries",
+        "responses": {
+          "200": {
+            "description": "List of country names",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "example": [
+                  "USA",
+                  "UK",
+                  "France"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/currencies": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "Get currencies",
+        "responses": {
+          "200": {
+            "description": "Currencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/logos": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "Get supplier logos",
+        "responses": {
+          "200": {
+            "description": "Array of logo filenames",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "example": [
+                  "logo1.png",
+                  "logo2.png"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/backgrounds": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "Get background settings",
+        "responses": {
+          "200": {
+            "description": "Background settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundSettingListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/photos": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "Get vehicle photos",
+        "responses": {
+          "200": {
+            "description": "Vehicle photos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehiclePhotoListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/priceTax": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "Get price tax settings",
+        "responses": {
+          "200": {
+            "description": "Price taxes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceTaxResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/rating/questions": {
+      "get": {
+        "tags": [
+          "Rates & Reviews"
+        ],
+        "summary": "Get rating questions",
+        "responses": {
+          "200": {
+            "description": "Rating questions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateQuestionListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/locations": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "Get branch locations",
+        "responses": {
+          "200": {
+            "description": "Locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/fuel-policies": {
+      "get": {
+        "tags": [
+          "Fuel Policies"
+        ],
+        "summary": "Get fuel policies",
+        "responses": {
+          "200": {
+            "description": "Fuel policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FuelPolicyListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/included": {
+      "get": {
+        "tags": [
+          "Included"
+        ],
+        "summary": "Get included items",
+        "responses": {
+          "200": {
+            "description": "Included items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncludedListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/rental-terms": {
+      "get": {
+        "tags": [
+          "Rental Terms"
+        ],
+        "summary": "Get rental terms",
+        "responses": {
+          "200": {
+            "description": "Rental terms",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalTermsListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/specifications": {
+      "get": {
+        "tags": [
+          "Specifications"
+        ],
+        "summary": "Get specifications",
+        "responses": {
+          "200": {
+            "description": "Specifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpecificationListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/categories": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Get vehicle categories",
+        "responses": {
+          "200": {
+            "description": "Categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/location-types": {
+      "get": {
+        "tags": [
+          "Location Types"
+        ],
+        "summary": "Get location types",
+        "responses": {
+          "200": {
+            "description": "Location types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationTypeListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/filter/vehicles": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Filter/search vehicles",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FilterVehicleRequest"
+              },
+              "example": {
+                "pickupLoc": "London",
+                "date_from": "2025-06-01",
+                "date_to": "2025-06-07",
+                "time_from": "10:00",
+                "time_to": "10:00",
+                "currency": "USD",
+                "priceRange": 200,
+                "category": [
+                  1,
+                  2
+                ],
+                "supplier": [
+                  5
+                ],
+                "location_type_id": [
+                  1
+                ],
+                "payment_methods": [
+                  2,
+                  3
+                ],
+                "specifications": [
+                  {
+                    "name": "Transmission",
+                    "option": [
+                      "Automatic"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Filtered results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleFilterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/vehicles": {
+      "get": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Get vehicles list",
+        "parameters": [
+          {
+            "name": "branch_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "supplier",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vehicles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/vehicle/data": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Get single vehicle details",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "pickupLoc": {
+                    "type": "string"
+                  },
+                  "date_from": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "date_to": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "currency": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1,
+                "location": "London",
+                "date_from": "2025-06-01",
+                "date_to": "2025-06-07",
+                "currency": "USD"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vehicle details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/vehicles": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Search vehicles (sets session)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pickupLoc": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string"
+                  },
+                  "currency": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "pickupLoc": "London",
+                "date": "2025-06-01",
+                "currency": "USD"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to results page"
+          }
+        }
+      }
+    },
+    "/get/filtered/specifications": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Get filtered specifications",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "vehicle_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "vehicle_ids": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Specifications with counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpecificationListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jimpisoft/refresh-prices": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Refresh Jimpisoft prices",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pickupLoc": {
+                    "type": "string"
+                  },
+                  "date_from": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "date_to": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "pickupLoc",
+                  "date_from",
+                  "date_to"
+                ]
+              },
+              "example": {
+                "pickupLoc": "London",
+                "date_from": "2025-06-01",
+                "date_to": "2025-06-07"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prices refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": true,
+                  "fresh": true,
+                  "message": "Prices refreshed successfully.",
+                  "data": {
+                    "branches_updated": [
+                      1
+                    ],
+                    "vehicles_updated": 5,
+                    "prices": {}
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No branches/vehicles found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/post/vehicles": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Create or update vehicle",
+        "description": "Requires active_supplier middleware. Set `update=1` and provide `id` to update an existing vehicle.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEditVehicleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vehicle saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/edit/vehicles/{id}": {
+      "get": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Get vehicle for editing",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vehicle edit data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleEditResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/edit-vehicle-price": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Update vehicle price",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "price": {
+                    "type": "number"
+                  },
+                  "week_price": {
+                    "type": "number"
+                  },
+                  "month_price": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1,
+                "price": 50.0,
+                "week_price": 45.0,
+                "month_price": 40.0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Price updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "data": {},
+                  "status": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/update/vehicles/activation": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Toggle vehicle activation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "vehicle_id": {
+                    "type": "integer"
+                  },
+                  "activation": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "vehicle_id",
+                  "activation"
+                ]
+              },
+              "example": {
+                "vehicle_id": 1,
+                "activation": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Activation updated"
+          }
+        }
+      }
+    },
+    "/delete/vehicles/{id}": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Delete vehicle",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": true,
+                  "message": "deleted successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vehicles/bulk-upload": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Bulk upload vehicles via Excel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "branch": {
+                    "type": "integer"
+                  },
+                  "supplier": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file",
+                  "branch"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkUploadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vehicles/bulk-upload/template": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Download bulk upload template",
+        "responses": {
+          "200": {
+            "description": "Excel file download",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/book/vehicles": {
+      "post": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Book a vehicle",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "description": "Vehicle ID"
+                  },
+                  "date_from": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "date_to": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "time_from": {
+                    "type": "string"
+                  },
+                  "time_to": {
+                    "type": "string"
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "old_rental_id": {
+                    "type": "integer",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "id",
+                  "date_from",
+                  "date_to",
+                  "currency"
+                ]
+              },
+              "example": {
+                "id": 1,
+                "date_from": "2025-06-01",
+                "date_to": "2025-06-07",
+                "time_from": "10:00",
+                "time_to": "10:00",
+                "currency": "USD"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Booking created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": 1,
+                    "order_number": "USATR0001",
+                    "vehicle_id": 1,
+                    "price": 350.0,
+                    "order_status": 1
+                  },
+                  "status": true
                 }
               }
             }
@@ -339,19 +1904,1050 @@
         }
       }
     },
-    "/external/supplier/vehicles/{vehicleId}/price": {
-      "put": {
-        "tags": ["Vehicles"],
-        "summary": "Update Vehicle Price",
-        "description": "Update the pricing for a specific vehicle. You can update one or more price fields in a single request.",
-        "operationId": "updateVehiclePrice",
-        "security": [{"bearerAuth": []}],
+    "/cancel/booking": {
+      "post": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Cancel booking",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "data": [],
+                  "message": "Order has benn canceled"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cannot cancel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/rentals": {
+      "get": {
+        "tags": [
+          "Bookings & Rentals"
+        ],
+        "summary": "Get rentals (supplier or admin)",
         "parameters": [
           {
-            "name": "vehicleId",
+            "name": "order_status",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "order_number",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_range",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "has_review",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rentals list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalListWithStatusesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/rentals/admin": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get all rentals (admin)",
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "order_status",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "order_number",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_range",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "has_review",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin rentals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalListWithStatusesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/booking/{id}": {
+      "get": {
+        "tags": [
+          "Bookings & Rentals"
+        ],
+        "summary": "Get booking details",
+        "parameters": [
+          {
+            "name": "id",
             "in": "path",
             "required": true,
-            "description": "The ID of the vehicle to update",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoice/booking/{id}": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Download booking invoice PDF",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF download",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/supplier/invoice": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get supplier invoice summary",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invoice data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierInvoiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rentals/reconcile": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Reconcile supplier rentals",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "supplier_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "supplier_id"
+                ]
+              },
+              "example": {
+                "supplier_id": 5
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reconciled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": true,
+                  "data": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/booking/update-status": {
+      "get": {
+        "tags": [
+          "Bookings & Rentals"
+        ],
+        "summary": "Update booking status",
+        "parameters": [
+          {
+            "name": "request",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded JSON with rental_id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          }
+        }
+      }
+    },
+    "/rental/rate/{id}": {
+      "get": {
+        "tags": [
+          "Bookings & Rentals"
+        ],
+        "summary": "Get rental with ratings",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rental with rates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalWithRatesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rating": {
+      "post": {
+        "tags": [
+          "Rates & Reviews"
+        ],
+        "summary": "Submit rating",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rental_id": {
+                    "type": "integer"
+                  },
+                  "rate": {
+                    "type": "number"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "rental_id",
+                  "rate"
+                ]
+              },
+              "example": {
+                "rental_id": 1,
+                "rate": 4.5,
+                "comment": "Great service!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rating saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/user/data": {
+      "get": {
+        "tags": [
+          "User & Profile"
+        ],
+        "summary": "Get current user",
+        "responses": {
+          "200": {
+            "description": "Current user object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/my-current-user-profile": {
+      "get": {
+        "tags": [
+          "User & Profile"
+        ],
+        "summary": "Get customer profile with rentals",
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/user/role": {
+      "get": {
+        "tags": [
+          "User & Profile"
+        ],
+        "summary": "Get current user role",
+        "responses": {
+          "200": {
+            "description": "Role string or null"
+          }
+        }
+      }
+    },
+    "/get/companies": {
+      "get": {
+        "tags": [
+          "User & Profile"
+        ],
+        "summary": "Get companies/suppliers",
+        "responses": {
+          "200": {
+            "description": "Companies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/suppliers": {
+      "get": {
+        "tags": [
+          "User & Profile"
+        ],
+        "summary": "Get active suppliers",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Suppliers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/customers": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get all customers",
+        "responses": {
+          "200": {
+            "description": "Customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/customers": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete a customer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "data": [],
+                  "status": 1,
+                  "message": "Customer deleted successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assign-parent": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Assign parent company",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "selectedCompany": {
+                    "type": "integer"
+                  },
+                  "parentCompany": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "selectedCompany",
+                  "parentCompany"
+                ]
+              },
+              "example": {
+                "selectedCompany": 2,
+                "parentCompany": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignment result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "tags": [
+          "User & Profile"
+        ],
+        "summary": "Upload user profile/logo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "logo": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "newPass": {
+                    "type": "string"
+                  },
+                  "oldPass": {
+                    "type": "string"
+                  },
+                  "confirmNewPass": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/change-company": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Switch to another company account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "selectedCompany": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "selectedCompany"
+                ]
+              },
+              "example": {
+                "selectedCompany": 2
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Switched"
+          }
+        }
+      }
+    },
+    "/get/branches": {
+      "get": {
+        "tags": [
+          "Branches"
+        ],
+        "summary": "Get branches",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload/branch": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Create branch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BranchRequest"
+              },
+              "example": {
+                "name": "Downtown Branch",
+                "location": "London",
+                "adresse": "123 Main St",
+                "country": "UK",
+                "pickup_type": "Airport",
+                "city": "London",
+                "phone": "+44 20 1234 5678",
+                "lat": 51.5074,
+                "lng": -0.1278,
+                "email": "branch@example.com",
+                "currency": "GBP"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Branch created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "message": "Branch created successfully",
+                  "status": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/branches": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Delete branch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "message": "Branch deleted successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/branches/edit/{id}": {
+      "get": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Get branch for edit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/branches/update": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Update branch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BranchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Branch updated"
+          }
+        }
+      }
+    },
+    "/api/blog-categories": {
+      "get": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "List all blog categories",
+        "responses": {
+          "200": {
+            "description": "Categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogCategoryListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "Create blog category",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlogCategoryRequest"
+              },
+              "example": {
+                "title": "Travel Tips",
+                "activation": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogCategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blog-categories/active": {
+      "get": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "List active blog categories",
+        "responses": {
+          "200": {
+            "description": "Active categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogCategoryListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blog-categories/{blogCategory}": {
+      "get": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "Get blog category",
+        "parameters": [
+          {
+            "name": "blogCategory",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogCategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "Update blog category",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blogCategory",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer"
             }
@@ -362,21 +2958,993 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateVehiclePriceRequest"
-              },
-              "examples": {
-                "allPrices": {
-                  "summary": "Update all prices",
-                  "value": {
-                    "price": 50.00,
-                    "week_price": 45.00,
-                    "month_price": 40.00
+                "$ref": "#/components/schemas/BlogCategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogCategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "Delete blog category",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blogCategory",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blog-categories/{category}/blogs": {
+      "get": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "Get blogs by category",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "is_published",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blogs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogCategoryWithBlogsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blog-categories/{blogCategory}/toggle-activation": {
+      "patch": {
+        "tags": [
+          "Blog Categories"
+        ],
+        "summary": "Toggle category activation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blogCategory",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Toggled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogCategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs": {
+      "get": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "List all blogs",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "is_published",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blogs list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogPaginatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs/published": {
+      "get": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "List published blogs",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published blogs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogPaginatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs/{blog}": {
+      "get": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "Get blog by ID",
+        "parameters": [
+          {
+            "name": "blog",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs/slug/{slug}": {
+      "get": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "Get blog by slug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs/{blog}/toggle-publish": {
+      "patch": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "Toggle blog publish status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blog",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Toggled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs-admin-store": {
+      "post": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "Create blog (admin web route: POST /api/blogs)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/BlogFormRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs-admin-update/{blog}": {
+      "post": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "Update blog (admin web route: POST /api/blogs/{blog})",
+        "parameters": [
+          {
+            "name": "blog",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/BlogFormRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blogs-admin-delete/{blog}": {
+      "delete": {
+        "tags": [
+          "Blog"
+        ],
+        "summary": "Delete blog (admin web route: DELETE /api/blogs/{blog})",
+        "parameters": [
+          {
+            "name": "blog",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/post/categories": {
+      "post": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Create category",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/update/categories": {
+      "post": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Update category",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/categories": {
+      "post": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Delete category",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
                   }
                 },
-                "dailyOnly": {
-                  "summary": "Update daily price only",
-                  "value": {
-                    "price": 55.00
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/post/specifications": {
+      "post": {
+        "tags": [
+          "Specifications"
+        ],
+        "summary": "Create specification",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpecificationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/specifications/update": {
+      "post": {
+        "tags": [
+          "Specifications"
+        ],
+        "summary": "Update specification",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpecificationUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/specifications": {
+      "post": {
+        "tags": [
+          "Specifications"
+        ],
+        "summary": "Delete specification",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/post/included": {
+      "post": {
+        "tags": [
+          "Included"
+        ],
+        "summary": "Create included item",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncludedRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/included": {
+      "post": {
+        "tags": [
+          "Included"
+        ],
+        "summary": "Delete included item",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/post/rental-terms": {
+      "post": {
+        "tags": [
+          "Rental Terms"
+        ],
+        "summary": "Create rental term",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalTermsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/rental-terms": {
+      "post": {
+        "tags": [
+          "Rental Terms"
+        ],
+        "summary": "Delete rental term",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/edit/rental-terms": {
+      "post": {
+        "tags": [
+          "Rental Terms"
+        ],
+        "summary": "Edit rental term",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalTermsUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/show/rental-terms": {
+      "post": {
+        "tags": [
+          "Rental Terms"
+        ],
+        "summary": "Get single rental term",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/update/rental-terms/status": {
+      "post": {
+        "tags": [
+          "Rental Terms"
+        ],
+        "summary": "Approve or reject rental term",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalTermsStatusRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/select-rental-terms": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Assign rental terms to supplier",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rental_term_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "rental_term_id"
+                ]
+              },
+              "example": {
+                "rental_term_id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assigned"
+          }
+        }
+      }
+    },
+    "/get/requests": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get membership requests",
+        "responses": {
+          "200": {
+            "description": "Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accept/requests": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Accept membership request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request accepted"
+          }
+        }
+      }
+    },
+    "/delete/requests": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete/reject membership request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request deleted"
+          }
+        }
+      }
+    },
+    "/post/request": {
+      "post": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Submit membership request",
+        "responses": {
+          "200": {
+            "description": "Requested",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "message": "Role updated successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/post/photos": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Upload vehicle photo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "photo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photo uploaded"
+          }
+        }
+      }
+    },
+    "/delete/photos": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete vehicle photo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photo deleted"
+          }
+        }
+      }
+    },
+    "/profit/upload": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Upload profit margins",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
                   }
                 }
               }
@@ -385,38 +3953,24 @@
         },
         "responses": {
           "200": {
-            "description": "Vehicle price updated successfully",
+            "description": "Profits uploaded"
+          }
+        }
+      }
+    },
+    "/get/profit": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get profit margins",
+        "responses": {
+          "200": {
+            "description": "Profit data",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateVehiclePriceResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "At least one price field is required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          },
-          "404": {
-            "description": "Vehicle not found or no permission",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "status": false,
-                  "message": "Vehicle not found or you do not have permission to update it."
+                  "$ref": "#/components/schemas/ProfitResponse"
                 }
               }
             }
@@ -424,47 +3978,429 @@
         }
       }
     },
-    "/external/supplier/rentals": {
+    "/get/subscribers": {
       "get": {
-        "tags": ["Rentals"],
-        "summary": "List Rentals",
-        "description": "Retrieve a paginated list of all rentals for the authenticated supplier's vehicles.",
-        "operationId": "listRentals",
-        "security": [{"bearerAuth": []}],
+        "tags": [
+          "Subscribers"
+        ],
+        "summary": "Get subscribers",
+        "responses": {
+          "200": {
+            "description": "Subscribers list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/subscribers": {
+      "post": {
+        "tags": [
+          "Subscribers"
+        ],
+        "summary": "Delete subscriber",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscriber deleted"
+          }
+        }
+      }
+    },
+    "/send-email": {
+      "post": {
+        "tags": [
+          "Subscribers"
+        ],
+        "summary": "Send email to subscribers",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subject": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "subject",
+                  "message"
+                ]
+              },
+              "example": {
+                "subject": "Newsletter",
+                "message": "Hello subscribers!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent"
+          }
+        }
+      }
+    },
+    "/get/payment_methods": {
+      "get": {
+        "tags": [
+          "Payment Methods"
+        ],
+        "summary": "Get payment methods",
+        "responses": {
+          "200": {
+            "description": "Payment methods",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment_methods": {
+      "post": {
+        "tags": [
+          "Payment Methods"
+        ],
+        "summary": "Store supplier payment methods",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "payment_methods": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "required": [
+                  "payment_methods"
+                ]
+              },
+              "example": {
+                "payment_methods": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment methods saved"
+          }
+        }
+      }
+    },
+    "/promo": {
+      "get": {
+        "tags": [
+          "Promos"
+        ],
+        "summary": "Get promos",
+        "responses": {
+          "200": {
+            "description": "Promos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromoListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Promos"
+        ],
+        "summary": "Create promo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "vehicle_id": {
+                    "type": "integer"
+                  },
+                  "included_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "vehicle_id",
+                  "included_id"
+                ]
+              },
+              "example": {
+                "vehicle_id": 1,
+                "included_id": 2
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Promo created"
+          }
+        }
+      }
+    },
+    "/promo/{id}": {
+      "delete": {
+        "tags": [
+          "Promos"
+        ],
+        "summary": "Delete promo",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "description": "Page number",
+            "name": "id",
+            "in": "path",
+            "required": true,
             "schema": {
-              "type": "integer",
-              "default": 1
-            }
-          },
-          {
-            "name": "per_page",
-            "in": "query",
-            "description": "Number of items per page",
-            "schema": {
-              "type": "integer",
-              "default": 15,
-              "maximum": 100
+              "type": "integer"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Rentals retrieved successfully",
+            "description": "Promo deleted"
+          }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get admin dashboard stats",
+        "responses": {
+          "200": {
+            "description": "Dashboard data",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RentalListResponse"
+                  "$ref": "#/components/schemas/DashboardResponse"
                 }
               }
             }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/supplier-dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get supplier dashboard stats",
+        "responses": {
+          "200": {
+            "description": "Dashboard data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/background-settings": {
+      "get": {
+        "tags": [
+          "Background Settings"
+        ],
+        "summary": "Get background settings",
+        "responses": {
+          "200": {
+            "description": "Background settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundSettingListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/background-settings/{id}": {
+      "post": {
+        "tags": [
+          "Background Settings"
+        ],
+        "summary": "Update background setting",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Setting updated"
+          }
+        }
+      }
+    },
+    "/api/background-settings/{id}/reset": {
+      "post": {
+        "tags": [
+          "Background Settings"
+        ],
+        "summary": "Reset background to default",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reset successful"
+          }
+        }
+      }
+    },
+    "/accept/rentals": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Accept rental",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental accepted"
+          }
+        }
+      }
+    },
+    "/delete/rentals": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "summary": "Delete/reject rental",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "example": {
+                "id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental deleted"
           }
         }
       }
@@ -476,44 +4412,73 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "Token",
-        "description": "Enter the token received from the login endpoint"
+        "description": "Sanctum token from supplier/external login"
       }
     },
-    "responses": {
-      "UnauthorizedError": {
-        "description": "Authentication required or token invalid",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "example": "Unauthenticated."
-                }
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Success"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error message"
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "The given data was invalid."
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
             }
           }
         }
-      }
-    },
-    "schemas": {
+      },
       "LoginRequest": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "properties": {
           "email": {
             "type": "string",
             "format": "email",
-            "description": "Supplier email address",
             "example": "supplier@example.com"
           },
           "password": {
             "type": "string",
             "format": "password",
-            "minLength": 6,
-            "description": "Supplier password",
-            "example": "your_password"
+            "example": "password"
           }
         }
       },
@@ -532,31 +4497,11 @@
             "type": "object",
             "properties": {
               "user": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "example": 1
-                  },
-                  "name": {
-                    "type": "string",
-                    "example": "Supplier Company"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "example": "supplier@example.com"
-                  },
-                  "role": {
-                    "type": "string",
-                    "example": "active_supplier"
-                  }
-                }
+                "$ref": "#/components/schemas/User"
               },
               "token": {
                 "type": "string",
-                "description": "API token to use for authenticated requests",
-                "example": "1|abcdefghijklmnopqrstuvwxyz123456"
+                "example": "1|abc123"
               },
               "token_type": {
                 "type": "string",
@@ -566,7 +4511,132 @@
           }
         }
       },
-      "ProfileResponse": {
+      "LoginWebResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "example": []
+          },
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "children": {
+            "type": "integer",
+            "example": 0
+          },
+          "user_type": {
+            "type": "string",
+            "example": "customer"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "phone": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "supplier": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "description": "1 for supplier, 0 for customer"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "customer",
+              "supplier",
+              "active_supplier",
+              "under_review",
+              "member"
+            ],
+            "example": "customer"
+          },
+          "phone_num": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "company": {
+            "type": "string",
+            "example": "Acme Rentals"
+          },
+          "logo": {
+            "type": "string",
+            "example": "logo.png"
+          },
+          "country": {
+            "type": "string",
+            "example": "USA"
+          },
+          "language": {
+            "type": "string",
+            "example": "en"
+          },
+          "price_tax": {
+            "type": "number",
+            "example": 10
+          },
+          "integration": {
+            "type": "boolean",
+            "example": false
+          },
+          "webhook_url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserListResponse": {
         "type": "object",
         "properties": {
           "status": {
@@ -574,50 +4644,77 @@
             "example": true
           },
           "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        }
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
             "type": "object",
             "properties": {
               "id": {
-                "type": "integer",
-                "example": 1
+                "type": "integer"
               },
               "name": {
-                "type": "string",
-                "example": "Supplier Company"
+                "type": "string"
               },
               "email": {
-                "type": "string",
-                "format": "email",
-                "example": "supplier@example.com"
+                "type": "string"
               },
               "role": {
-                "type": "string",
-                "example": "active_supplier"
+                "type": "string"
+              },
+              "rentals": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Rental"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProfileResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
               },
               "phone": {
-                "type": "string",
-                "nullable": true,
-                "example": "+1234567890"
+                "type": "string"
               },
               "company_name": {
-                "type": "string",
-                "nullable": true,
-                "example": "ABC Car Rentals"
+                "type": "string"
               },
               "integration": {
-                "type": "boolean",
-                "description": "Whether webhook integration is enabled",
-                "example": true
+                "type": "boolean"
               },
               "webhook_url": {
-                "type": "string",
-                "nullable": true,
-                "description": "URL where webhook notifications are sent",
-                "example": "https://your-system.com/webhook/autours"
+                "type": "string"
               },
               "created_at": {
                 "type": "string",
-                "format": "date-time",
-                "example": "2026-01-15T10:30:00.000000Z"
+                "format": "date-time"
               }
             }
           }
@@ -625,18 +4722,17 @@
       },
       "IntegrationSettingsRequest": {
         "type": "object",
-        "required": ["integration"],
+        "required": [
+          "integration"
+        ],
         "properties": {
           "integration": {
             "type": "boolean",
-            "description": "Enable or disable webhook integration"
+            "example": true
           },
           "webhook_url": {
             "type": "string",
-            "format": "uri",
             "nullable": true,
-            "maxLength": 500,
-            "description": "URL to receive webhook notifications (required when integration is true)",
             "example": "https://your-system.com/webhook/autours"
           }
         }
@@ -645,180 +4741,284 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "message": {
-            "type": "string",
-            "example": "Integration settings updated successfully."
+            "type": "string"
           },
           "data": {
             "type": "object",
             "properties": {
               "integration": {
-                "type": "boolean",
-                "example": true
+                "type": "boolean"
               },
               "webhook_url": {
                 "type": "string",
-                "nullable": true,
-                "example": "https://your-system.com/webhook/autours"
+                "nullable": true
               }
             }
+          }
+        }
+      },
+      "Vehicle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Toyota Camry 2024"
+          },
+          "description": {
+            "type": "string",
+            "example": "Comfortable sedan with automatic transmission"
+          },
+          "photo": {
+            "type": "string",
+            "example": "toyota_camry.jpg"
+          },
+          "price": {
+            "type": "number",
+            "example": 50.0
+          },
+          "week_price": {
+            "type": "number",
+            "example": 45.0
+          },
+          "month_price": {
+            "type": "number",
+            "example": 40.0
+          },
+          "activation": {
+            "type": "boolean",
+            "example": true
+          },
+          "instant_confirmation": {
+            "type": "boolean",
+            "example": true
+          },
+          "supplier": {
+            "type": "integer",
+            "example": 5
+          },
+          "pickup_loc": {
+            "type": "integer",
+            "example": 1
+          },
+          "category": {
+            "type": "integer",
+            "example": 2
+          },
+          "fuel_policy_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "VehicleListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Vehicle"
+            }
+          }
+        }
+      },
+      "VehicleFilterResponse": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "example": "London"
+          },
+          "location_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "date_from": {
+            "type": "string",
+            "example": "2025-06-01"
+          },
+          "date_to": {
+            "type": "string",
+            "example": "2025-06-07"
+          },
+          "filteredVehicles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Vehicle"
+            }
+          },
+          "filteredCategories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          "filteredSuppliers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "filteredLocationTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationType"
+            }
+          },
+          "paymentMethods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethod"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "example": 42
+          },
+          "max": {
+            "type": "number",
+            "example": 500
+          },
+          "min": {
+            "type": "number",
+            "example": 30
+          },
+          "priceTax": {
+            "type": "number",
+            "example": 15
+          },
+          "daysNumber": {
+            "type": "integer",
+            "example": 6
+          }
+        }
+      },
+      "VehicleDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "vehicle": {
+                "$ref": "#/components/schemas/Vehicle"
+              },
+              "date_from": {
+                "type": "string",
+                "example": "2025-06-01"
+              },
+              "date_to": {
+                "type": "string",
+                "example": "2025-06-07"
+              },
+              "time_from": {
+                "type": "string",
+                "example": "10:00:00"
+              },
+              "time_to": {
+                "type": "string",
+                "example": "10:00:00"
+              },
+              "days": {
+                "type": "integer",
+                "example": 6
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              },
+              "location": {
+                "type": "string",
+                "example": "London"
+              }
+            }
+          },
+          "status": {
+            "type": "boolean"
+          }
+        }
+      },
+      "VehicleEditResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Vehicle"
+          },
+          "status": {
+            "type": "boolean"
+          }
+        }
+      },
+      "VehicleResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Vehicle"
           }
         }
       },
       "CreateVehicleRequest": {
         "type": "object",
-        "required": ["name", "description", "price", "week_price", "month_price", "pickup_loc", "category"],
+        "required": [
+          "name",
+          "description",
+          "price",
+          "week_price",
+          "month_price",
+          "pickup_loc",
+          "category"
+        ],
         "properties": {
           "photo": {
             "type": "string",
-            "description": "URL to vehicle photo (required if car_photo not provided)",
-            "example": "https://example.com/car-photo.jpg"
+            "description": "Photo URL or file"
           },
           "car_photo": {
             "type": "string",
             "format": "binary",
-            "description": "Vehicle photo file upload (required if photo not provided)"
+            "description": "Photo file upload"
           },
           "name": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 1000,
-            "description": "Vehicle name/model",
-            "example": "Toyota Camry 2024"
+            "example": "Toyota Camry"
           },
           "description": {
             "type": "string",
-            "minLength": 5,
-            "maxLength": 1000,
-            "description": "Vehicle description",
-            "example": "Comfortable sedan with automatic transmission"
+            "example": "Sedan with auto transmission"
           },
           "price": {
             "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "maximum": 999999.99,
-            "description": "Daily rental price",
-            "example": 50.00
+            "example": 50.0
           },
           "week_price": {
             "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "maximum": 999999.99,
-            "description": "Weekly rental price per day",
-            "example": 45.00
+            "example": 45.0
           },
           "month_price": {
             "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "maximum": 999999.99,
-            "description": "Monthly rental price per day",
-            "example": 40.00
-          },
-          "pickup_loc": {
-            "type": "integer",
-            "description": "Branch ID for pickup location",
-            "example": 1
-          },
-          "category": {
-            "type": "integer",
-            "description": "Category ID",
-            "example": 2
-          },
-          "fuel_policy_id": {
-            "type": "integer",
-            "nullable": true,
-            "description": "Fuel policy ID",
-            "example": 1
-          },
-          "instant_confirmation": {
-            "type": "boolean",
-            "nullable": true,
-            "description": "Whether bookings are instantly confirmed",
-            "example": true
-          },
-          "activation": {
-            "type": "boolean",
-            "nullable": true,
-            "description": "Whether the vehicle is active",
-            "example": true
-          },
-          "location_types": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            },
-            "description": "Array of location type IDs",
-            "example": [1, 2]
-          },
-          "included": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            },
-            "description": "Array of included feature IDs",
-            "example": [1, 3, 5]
-          },
-          "specifications": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["name", "value"],
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Specification name",
-                  "example": "Transmission"
-                },
-                "value": {
-                  "type": "string",
-                  "description": "Specification value",
-                  "example": "Automatic"
-                },
-                "icon": {
-                  "type": "string",
-                  "nullable": true,
-                  "description": "Icon class name",
-                  "example": "fa-cog"
-                }
-              }
-            }
-          }
-        }
-      },
-      "CreateVehicleRequestJson": {
-        "type": "object",
-        "required": ["name", "description", "price", "week_price", "month_price", "pickup_loc", "category", "photo"],
-        "properties": {
-          "photo": {
-            "type": "string",
-            "description": "URL to vehicle photo",
-            "example": "https://example.com/car-photo.jpg"
-          },
-          "name": {
-            "type": "string",
-            "example": "Toyota Camry 2024"
-          },
-          "description": {
-            "type": "string",
-            "example": "Comfortable sedan with automatic transmission"
-          },
-          "price": {
-            "type": "number",
-            "example": 50.00
-          },
-          "week_price": {
-            "type": "number",
-            "example": 45.00
-          },
-          "month_price": {
-            "type": "number",
-            "example": 40.00
+            "example": 40.0
           },
           "pickup_loc": {
             "type": "integer",
@@ -830,7 +5030,6 @@
           },
           "fuel_policy_id": {
             "type": "integer",
-            "nullable": true,
             "example": 1
           },
           "instant_confirmation": {
@@ -846,14 +5045,21 @@
             "items": {
               "type": "integer"
             },
-            "example": [1, 2]
+            "example": [
+              1,
+              2
+            ]
           },
           "included": {
             "type": "array",
             "items": {
               "type": "integer"
             },
-            "example": [1, 3, 5]
+            "example": [
+              1,
+              3,
+              5
+            ]
           },
           "specifications": {
             "type": "array",
@@ -872,169 +5078,117 @@
               }
             },
             "example": [
-              {"name": "Transmission", "value": "Automatic"},
-              {"name": "Seats", "value": "5"}
+              {
+                "name": "Transmission",
+                "value": "Automatic",
+                "icon": "fa-cog"
+              }
             ]
           }
         }
       },
-      "VehicleResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean",
-            "example": true
-          },
-          "message": {
-            "type": "string",
-            "example": "Vehicle created successfully"
-          },
-          "data": {
-            "$ref": "#/components/schemas/Vehicle"
+      "CreateVehicleRequestJson": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CreateVehicleRequest"
           }
-        }
+        ],
+        "required": [
+          "name",
+          "description",
+          "price",
+          "week_price",
+          "month_price",
+          "pickup_loc",
+          "category",
+          "photo"
+        ]
       },
-      "Vehicle": {
+      "CreateEditVehicleRequest": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
-            "example": 123
+            "description": "Required for update"
           },
-          "name": {
+          "update": {
             "type": "string",
-            "example": "Toyota Camry 2024"
-          },
-          "description": {
-            "type": "string",
-            "example": "Comfortable sedan with automatic transmission"
+            "enum": [
+              "0",
+              "1"
+            ],
+            "description": "1 = update, 0 = create"
           },
           "photo": {
-            "type": "string",
-            "example": "car_1234567890.jpg"
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           },
           "price": {
-            "type": "number",
-            "example": 50.00
+            "type": "number"
           },
           "week_price": {
-            "type": "number",
-            "example": 45.00
+            "type": "number"
           },
           "month_price": {
-            "type": "number",
-            "example": 40.00
+            "type": "number"
           },
-          "activation": {
-            "type": "boolean",
-            "example": true
+          "fuel_policy": {
+            "type": "integer"
           },
           "instant_confirmation": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
+          },
+          "pickupLoc": {
+            "type": "string"
           },
           "category": {
-            "$ref": "#/components/schemas/Category"
+            "type": "integer"
           },
-          "branch": {
-            "$ref": "#/components/schemas/Branch"
+          "location_types": {
+            "type": "integer"
           },
-          "fuelPolicy": {
-            "$ref": "#/components/schemas/FuelPolicy"
-          },
-          "created_at": {
+          "specifications": {
             "type": "string",
-            "format": "date-time"
+            "description": "JSON string of specifications array"
           },
-          "updated_at": {
+          "included": {
             "type": "string",
-            "format": "date-time"
+            "description": "Comma-separated included IDs"
           }
-        }
-      },
-      "VehicleListResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "current_page": {
-                "type": "integer",
-                "example": 1
-              },
-              "data": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Vehicle"
-                }
-              },
-              "first_page_url": {
-                "type": "string"
-              },
-              "from": {
-                "type": "integer"
-              },
-              "last_page": {
-                "type": "integer"
-              },
-              "last_page_url": {
-                "type": "string"
-              },
-              "next_page_url": {
-                "type": "string",
-                "nullable": true
-              },
-              "path": {
-                "type": "string"
-              },
-              "per_page": {
-                "type": "integer"
-              },
-              "prev_page_url": {
-                "type": "string",
-                "nullable": true
-              },
-              "to": {
-                "type": "integer"
-              },
-              "total": {
-                "type": "integer"
-              }
-            }
-          }
+        },
+        "example": {
+          "update": "0",
+          "name": "Toyota Camry",
+          "description": "Sedan",
+          "price": 50,
+          "week_price": 45,
+          "month_price": 40,
+          "pickupLoc": "1",
+          "category": 2,
+          "location_types": 1,
+          "specifications": "[{\"name\":\"Transmission\",\"value\":\"Automatic\"}]",
+          "included": "1,2,3"
         }
       },
       "UpdateVehiclePriceRequest": {
         "type": "object",
-        "description": "At least one price field is required",
         "properties": {
           "price": {
             "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "maximum": 999999.99,
-            "description": "Daily rental price",
-            "example": 50.00
+            "example": 55.0
           },
           "week_price": {
             "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "maximum": 999999.99,
-            "description": "Weekly rental price per day",
-            "example": 45.00
+            "example": 50.0
           },
           "month_price": {
             "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "maximum": 999999.99,
-            "description": "Monthly rental price per day",
-            "example": 40.00
+            "example": 45.0
           }
         }
       },
@@ -1042,157 +5196,148 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "message": {
-            "type": "string",
-            "example": "Vehicle price updated successfully."
+            "type": "string"
           },
           "data": {
             "type": "object",
             "properties": {
               "id": {
-                "type": "integer",
-                "example": 123
+                "type": "integer"
               },
               "name": {
-                "type": "string",
-                "example": "Toyota Camry 2024"
+                "type": "string"
               },
               "price": {
-                "type": "number",
-                "example": 50.00
+                "type": "number"
               },
               "week_price": {
-                "type": "number",
-                "example": 45.00
+                "type": "number"
               },
               "month_price": {
-                "type": "number",
-                "example": 40.00
+                "type": "number"
               }
             }
           }
         }
       },
-      "RentalListResponse": {
+      "FilterVehicleRequest": {
+        "type": "object",
+        "properties": {
+          "pickupLoc": {
+            "type": "string",
+            "description": "Branch ID or location name",
+            "example": "London"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-06-01"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-06-07"
+          },
+          "time_from": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "time_to": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "priceRange": {
+            "type": "number",
+            "example": 200
+          },
+          "category": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              1,
+              2
+            ]
+          },
+          "supplier": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              5
+            ]
+          },
+          "location_type_id": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              1
+            ]
+          },
+          "payment_methods": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              2,
+              3
+            ]
+          },
+          "specifications": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "example": [
+              {
+                "name": "Transmission",
+                "option": [
+                  "Automatic"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "BulkUploadResponse": {
         "type": "object",
         "properties": {
           "status": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "data": {
             "type": "object",
             "properties": {
-              "current_page": {
+              "vehicles_imported": {
                 "type": "integer"
               },
-              "data": {
+              "vehicle_ids": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/Rental"
+                  "type": "integer"
                 }
-              },
-              "total": {
-                "type": "integer"
-              },
-              "per_page": {
-                "type": "integer"
-              },
-              "last_page": {
-                "type": "integer"
               }
             }
-          }
-        }
-      },
-      "Rental": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "example": 456
           },
-          "order_number": {
-            "type": "string",
-            "example": "ORD-2026-001234"
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
-          "order_status": {
-            "type": "integer",
-            "description": "Status ID"
-          },
-          "price": {
-            "type": "number",
-            "example": 250.00
-          },
-          "start_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2026-04-15"
-          },
-          "end_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2026-04-20"
-          },
-          "start_time": {
-            "type": "string",
-            "example": "10:00"
-          },
-          "end_time": {
-            "type": "string",
-            "example": "10:00"
-          },
-          "comment": {
-            "type": "string",
-            "nullable": true
-          },
-          "vehicle": {
-            "$ref": "#/components/schemas/Vehicle"
-          },
-          "customer": {
-            "$ref": "#/components/schemas/Customer"
-          },
-          "status": {
-            "$ref": "#/components/schemas/RentalStatus"
-          },
-          "paymentMethod": {
-            "$ref": "#/components/schemas/PaymentMethod"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "Customer": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "phone_num": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "name": {
+          "message": {
             "type": "string"
           }
         }
@@ -1201,30 +5346,282 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Downtown Branch"
+          },
+          "location": {
+            "type": "string",
+            "example": "London"
+          },
+          "location_address": {
+            "type": "string",
+            "example": "123 Main St"
+          },
+          "adresse": {
+            "type": "string",
+            "example": "123 Main St"
+          },
+          "city": {
+            "type": "string",
+            "example": "London"
+          },
+          "country": {
+            "type": "string",
+            "example": "UK"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+44 20 1234 5678"
+          },
+          "lat": {
+            "type": "number",
+            "example": 51.5074
+          },
+          "lng": {
+            "type": "number",
+            "example": -0.1278
+          },
+          "email": {
+            "type": "string",
+            "example": "branch@example.com"
+          },
+          "company_id": {
+            "type": "integer",
+            "example": 5
+          },
+          "currency": {
+            "type": "string",
+            "example": "GBP"
+          },
+          "location_type": {
+            "type": "string",
+            "example": "Airport"
+          }
+        }
+      },
+      "BranchListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Branch"
+            }
+          }
+        }
+      },
+      "BranchResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Branch"
+          }
+        }
+      },
+      "BranchRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "location",
+          "country",
+          "city",
+          "currency"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
           },
           "location": {
             "type": "string"
           },
+          "adresse": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "pickup_type": {
+            "type": "string"
+          },
           "city": {
             "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
           },
           "currency": {
             "type": "string"
           }
         }
       },
-      "FuelPolicy": {
+      "Rental": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "integer",
+            "example": 1
           },
-          "name": {
-            "type": "string"
+          "order_number": {
+            "type": "string",
+            "example": "USATR0001"
           },
-          "description": {
-            "type": "string"
+          "customer_id": {
+            "type": "integer",
+            "example": 10
+          },
+          "supplier_id": {
+            "type": "integer",
+            "example": 5
+          },
+          "vehicle_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "price": {
+            "type": "number",
+            "example": 350.0
+          },
+          "supplier_price": {
+            "type": "number",
+            "example": 300.0
+          },
+          "profit_margin": {
+            "type": "number",
+            "example": 50.0
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-06-01"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-06-07"
+          },
+          "start_time": {
+            "type": "string",
+            "example": "10:00:00"
+          },
+          "end_time": {
+            "type": "string",
+            "example": "10:00:00"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "number_of_days": {
+            "type": "integer",
+            "example": 6
+          },
+          "order_status": {
+            "type": "integer",
+            "example": 1
+          },
+          "rate": {
+            "type": "number",
+            "example": 4.5
+          },
+          "old_rental_id": {
+            "type": "integer",
+            "example": null
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RentalResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Rental"
+          }
+        }
+      },
+      "RentalListWithStatusesResponse": {
+        "type": "object",
+        "properties": {
+          "rentals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rental"
+            }
+          },
+          "rental_statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalStatus"
+            }
+          }
+        }
+      },
+      "RentalWithRatesResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "rentalRates": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "SupplierInvoiceResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "total_price": {
+                "type": "number",
+                "example": 1500.0
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              },
+              "count_rentals": {
+                "type": "integer",
+                "example": 10
+              }
+            }
           }
         }
       },
@@ -1236,6 +5633,365 @@
           },
           "name": {
             "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Sedan"
+          },
+          "photo": {
+            "type": "string",
+            "example": "sedan.png"
+          }
+        }
+      },
+      "CategoryListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          }
+        }
+      },
+      "CategoryRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "SUV"
+          },
+          "photo": {
+            "type": "string",
+            "example": "suv.png"
+          }
+        }
+      },
+      "CategoryUpdateRequest": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          }
+        }
+      },
+      "Specification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Transmission"
+          },
+          "icon": {
+            "type": "string",
+            "example": "fa-cog"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Automatic",
+              "Manual"
+            ]
+          }
+        }
+      },
+      "SpecificationListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Specification"
+            }
+          }
+        }
+      },
+      "SpecificationRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Transmission"
+          },
+          "icon": {
+            "type": "string",
+            "example": "fa-cog"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Automatic",
+              "Manual"
+            ]
+          }
+        }
+      },
+      "SpecificationUpdateRequest": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Included": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "what_is_included": {
+            "type": "string",
+            "example": "Free Cancellation"
+          },
+          "description": {
+            "type": "string",
+            "example": "Cancel for free up to 48h before pickup"
+          }
+        }
+      },
+      "IncludedListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Included"
+            }
+          }
+        }
+      },
+      "IncludedRequest": {
+        "type": "object",
+        "required": [
+          "what_is_included"
+        ],
+        "properties": {
+          "what_is_included": {
+            "type": "string",
+            "example": "Free GPS"
+          },
+          "description": {
+            "type": "string",
+            "example": "GPS navigation included"
+          }
+        }
+      },
+      "FuelPolicy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Full to Full"
+          },
+          "description": {
+            "type": "string",
+            "example": "Return with same fuel level"
+          }
+        }
+      },
+      "FuelPolicyListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FuelPolicy"
+            }
+          }
+        }
+      },
+      "LocationType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Airport"
+          },
+          "icon": {
+            "type": "string",
+            "example": "fa-plane"
+          }
+        }
+      },
+      "LocationTypeListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationType"
+            }
+          }
+        }
+      },
+      "RentalTerms": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "Minimum age 21"
+          },
+          "description": {
+            "type": "string",
+            "example": "Driver must be at least 21 years old"
+          },
+          "status": {
+            "type": "string",
+            "example": "approved"
+          },
+          "created_by": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RentalTermsListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalTerms"
+            }
+          }
+        }
+      },
+      "RentalTermsRequest": {
+        "type": "object",
+        "required": [
+          "title",
+          "description"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "No smoking"
+          },
+          "description": {
+            "type": "string",
+            "example": "Smoking is not allowed in the vehicle"
+          }
+        }
+      },
+      "RentalTermsUpdateRequest": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "RentalTermsStatusRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "example": "approved"
           }
         }
       },
@@ -1243,116 +5999,548 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "integer",
+            "example": 1
           },
           "name": {
+            "type": "string",
+            "example": "Credit Card"
+          }
+        }
+      },
+      "PaymentMethodListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethod"
+            }
+          }
+        }
+      },
+      "Promo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "vehicle_id": {
+            "type": "integer"
+          },
+          "included_id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PromoListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Promo"
+            }
+          }
+        }
+      },
+      "RateQuestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "objective": {
+            "type": "string",
+            "example": "Cleanliness"
+          },
+          "question": {
+            "type": "string",
+            "example": "How clean was the vehicle?"
+          }
+        }
+      },
+      "RateQuestionListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RateQuestion"
+            }
+          }
+        }
+      },
+      "Subscriber": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "email": {
+            "type": "string",
+            "example": "subscriber@example.com"
+          },
+          "country": {
+            "type": "string",
+            "example": "USA"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SubscriberListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Subscriber"
+            }
+          }
+        }
+      },
+      "BackgroundSetting": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "section_key": {
+            "type": "string",
+            "example": "homepage_hero"
+          },
+          "section_name": {
+            "type": "string",
+            "example": "Homepage Hero"
+          },
+          "image_path": {
+            "type": "string",
+            "example": "bg/home.jpg"
+          },
+          "default_image_path": {
+            "type": "string",
+            "example": "bg/default_home.jpg"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "BackgroundSettingListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BackgroundSetting"
+            }
+          }
+        }
+      },
+      "VehiclePhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "photo": {
+            "type": "string",
+            "example": "vehicle_123.jpg"
+          },
+          "name": {
+            "type": "string",
+            "example": "Toyota Camry"
+          }
+        }
+      },
+      "VehiclePhotoListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VehiclePhoto"
+            }
+          }
+        }
+      },
+      "Currency": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "USD"
+          },
+          "symbol": {
+            "type": "string",
+            "example": "$"
+          }
+        }
+      },
+      "CurrencyListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        }
+      },
+      "Blog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "blog_category_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "10 Tips for Renting a Car"
+          },
+          "slug": {
+            "type": "string",
+            "example": "10-tips-for-renting-a-car"
+          },
+          "author": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "image": {
+            "type": "string",
+            "example": "blog/renting_tips.jpg"
+          },
+          "image_alt_text": {
+            "type": "string",
+            "example": "Car rental tips"
+          },
+          "content": {
+            "type": "string",
+            "example": "<p>Renting a car can be easy...</p>"
+          },
+          "meta_description": {
+            "type": "string",
+            "example": "Learn the best tips for renting a car."
+          },
+          "is_published": {
+            "type": "boolean",
+            "example": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BlogResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
             "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Blog"
           }
         }
       },
-      "ErrorResponse": {
+      "BlogPaginatedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "BlogFormRequest": {
+        "type": "object",
+        "properties": {
+          "blog_category_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary"
+          },
+          "image_alt_text": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "meta_description": {
+            "type": "string"
+          },
+          "is_published": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "BlogCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "Travel Tips"
+          },
+          "activation": {
+            "type": "boolean",
+            "example": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BlogCategoryListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlogCategory"
+            }
+          }
+        }
+      },
+      "BlogCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/BlogCategory"
+          }
+        }
+      },
+      "BlogCategoryRequest": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Travel Tips"
+          },
+          "activation": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "BlogCategoryWithBlogsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/BlogCategory"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ProfitResponse": {
         "type": "object",
         "properties": {
           "status": {
-            "type": "boolean",
-            "example": false
+            "type": "boolean"
           },
-          "message": {
-            "type": "string",
-            "example": "Error message here"
+          "data": {
+            "type": "object"
           }
         }
       },
-      "ValidationErrorResponse": {
+      "PriceTaxResponse": {
+        "type": "object",
+        "properties": {
+          "priceTax": {
+            "type": "number",
+            "example": 10
+          },
+          "weekPriceTax": {
+            "type": "number",
+            "example": 8
+          },
+          "monthPriceTax": {
+            "type": "number",
+            "example": 5
+          },
+          "yearPriceTax": {
+            "type": "number",
+            "example": 3
+          }
+        }
+      },
+      "DashboardResponse": {
         "type": "object",
         "properties": {
           "status": {
-            "type": "boolean",
-            "example": false
+            "type": "boolean"
           },
-          "message": {
-            "type": "string",
-            "example": "Validation failed."
-          },
-          "errors": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "example": {
-              "email": ["The email field is required."],
-              "password": ["The password must be at least 6 characters."]
-            }
+          "data": {
+            "type": "object"
           }
         }
       },
-      "WebhookPayload": {
+      "SupplierDashboardResponse": {
         "type": "object",
-        "description": "Payload sent to webhook URL when rental events occur",
         "properties": {
-          "event": {
+          "status": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "current_page": {
+            "type": "integer",
+            "example": 1
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "first_page_url": {
+            "type": "string"
+          },
+          "from": {
+            "type": "integer"
+          },
+          "last_page": {
+            "type": "integer"
+          },
+          "last_page_url": {
+            "type": "string"
+          },
+          "next_page_url": {
             "type": "string",
-            "enum": ["new_rental", "rental_updated", "rental_cancelled", "rental_request"],
-            "description": "Type of rental event"
+            "nullable": true
           },
-          "timestamp": {
+          "path": {
+            "type": "string"
+          },
+          "per_page": {
+            "type": "integer"
+          },
+          "prev_page_url": {
             "type": "string",
-            "format": "date-time",
-            "description": "ISO 8601 timestamp of the event"
+            "nullable": true
           },
-          "rental": {
-            "type": "object",
-            "properties": {
-              "id": {"type": "integer"},
-              "order_number": {"type": "string"},
-              "order_status": {"type": "integer"},
-              "price": {"type": "number"},
-              "supplier_price": {"type": "number", "nullable": true},
-              "start_date": {"type": "string", "format": "date"},
-              "end_date": {"type": "string", "format": "date"},
-              "start_time": {"type": "string"},
-              "end_time": {"type": "string"},
-              "num_of_days": {"type": "integer", "nullable": true},
-              "comment": {"type": "string", "nullable": true},
-              "created_at": {"type": "string", "format": "date-time"},
-              "updated_at": {"type": "string", "format": "date-time"}
-            }
+          "to": {
+            "type": "integer"
           },
-          "vehicle": {
-            "type": "object",
-            "nullable": true,
-            "properties": {
-              "id": {"type": "integer"},
-              "name": {"type": "string"},
-              "description": {"type": "string"},
-              "category_id": {"type": "integer"},
-              "price": {"type": "number"}
-            }
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "PaginatedVehicleResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
           },
-          "customer": {
-            "type": "object",
-            "nullable": true,
-            "properties": {
-              "id": {"type": "integer"},
-              "name": {"type": "string"},
-              "email": {"type": "string", "format": "email"},
-              "phone": {"type": "string", "nullable": true}
-            }
+          "data": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "PaginatedRentalResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
           },
-          "payment_method": {
-            "type": "object",
-            "nullable": true,
-            "properties": {
-              "id": {"type": "integer"},
-              "name": {"type": "string"}
-            }
+          "data": {
+            "$ref": "#/components/schemas/Pagination"
           }
         }
       }
     }
   }
 }
-

@@ -12,6 +12,14 @@
                         <template #header>
                             <el-input v-model="search" size="default" placeholder="Type to search"/>
                         </template>
+                        <template #default="scope">
+                            <el-button
+                                size="small"
+                                type="danger"
+                                @click="handleDelete(scope.$index, scope.row)"
+                            >Delete
+                            </el-button>
+                        </template>
                     </el-table-column>
                 </el-table>
             </div>
@@ -57,6 +65,22 @@ const filterTableData = computed(() => {
         })
     }
 )
+
+const handleDelete = async (index, row) => {
+    if (!window.confirm('Are you sure you want to delete this customer? All associated rentals will also be deleted.')) {
+        return; // User canceled the deletion
+    }
+
+    try {
+        loading.value = true;
+        const response = await axios.post('/delete/customers', { id: row.id });
+        tableData.value = response.data.data;
+    } catch (error) {
+        console.error(error);
+    } finally {
+        loading.value = false;
+    }
+}
 
 
 

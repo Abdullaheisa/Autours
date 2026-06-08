@@ -45,7 +45,7 @@
 
                             <div class="mb-4">
                                 <label class="form-label">Content *</label>
-                                <Editor v-model="form.content"  style="height: 200px" required></Editor>
+                                <Editor v-model="form.content"></Editor>
                             </div>
 
                             <!-- SEO Section -->
@@ -111,7 +111,7 @@
 import { ref, onMounted } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import axios from 'axios'
-import Editor from 'primevue/editor';
+import Editor from '@/components/TinymceEditor.vue';
 
 import 'vue-toast-notification/dist/theme-sugar.css';
 
@@ -145,6 +145,10 @@ const handleImageUpload = (event) => {
 
 
 const submitForm = async () => {
+    if (!form.value.content || form.value.content.trim() === '') {
+        alert('Please enter article content')
+        return
+    }
     submitting.value = true
     try {
         const formData = new FormData()

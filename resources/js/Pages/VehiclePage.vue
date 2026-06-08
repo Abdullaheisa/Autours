@@ -231,7 +231,7 @@
                                 </div>
                                 <div class="col-12 d-flex align-items-start mb-2">
                                     <i class="ti ti-gps me-2"></i>
-                                    <p class="mb-0">{{ form.pickupLoc }}</p>
+                                    <p class="mb-0">{{ pickupLocationName }}</p>
                                 </div>
                                 <div class="col-6 mb-2">
                                     <i class="ti ti-calendar me-1"></i> {{ form.date_from }}
@@ -249,7 +249,7 @@
                                 </div>
                                 <div class="col-12 d-flex align-items-start mb-2">
                                     <i class="ti ti-gps me-2"></i>
-                                    <p class="mb-0">{{ form.pickupLoc }}</p>
+                                    <p class="mb-0">{{ pickupLocationName }}</p>
                                 </div>
                                 <div class="col-6 mb-2">
                                     <i class="ti ti-calendar me-1"></i> {{ form.date_to }}
@@ -274,8 +274,14 @@
                                             class="w-100"
                                             v-model="form.pickupLoc"
                                             size="large"
-                                            placeholder="Pickup..."
-                                            disabled>
+                                            placeholder="Select Pickup Branch...">
+                                            <el-option
+                                                v-if="vehicle && vehicle.available_branches"
+                                                v-for="branch in vehicle.available_branches"
+                                                :key="branch.id"
+                                                :label="branch.name"
+                                                :value="branch.id"
+                                            />
                                         </el-select>
                                     </div>
 
@@ -617,7 +623,7 @@
                                                 <p class="text-nowrap" style="font-size: .8vw"><i
                                                     class="fa fa-map-marker" style="font-size: 1.3vw"/>&nbsp;
                                                     &nbsp;Pickup: <strong>{{
-                                                            vehicle?.branch ? vehicle.branch.location : ''
+                                                            pickupLocationName
                                                         }}</strong></p>
                                             </div>
 
@@ -901,7 +907,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, computed} from 'vue'
 import {usePage, useForm} from '@inertiajs/vue3';
 import {useToast} from 'vue-toast-notification';
 import 'vue-toast-notification/dist/theme-sugar.css';
@@ -988,6 +994,15 @@ const form = useForm({
     price: "",
     currency: localStorage.getItem('currency') ?? 'USD',
 });
+
+const pickupLocationName = computed(() => {
+    if (vehicle.value && vehicle.value.available_branches && form.pickupLoc) {
+        const branch = vehicle.value.available_branches.find(b => b.id == form.pickupLoc);
+        return branch ? branch.name : form.pickupLoc;
+    }
+    return form.pickupLoc;
+});
+
 const countries = {
     loading: ref(false),
     all: ref([]),
@@ -1091,6 +1106,14 @@ const getVehicle = async () => {
         daysNumber.value = response.data.data.days
         if (vehicle.value.supplier?.payment_methods?.length === 1) {
             selectedMethod.value = vehicle.value.supplier.payment_methods[0].id
+        }
+
+        // Initialize pickupLoc to an actual branch ID instead of the city string
+        if (vehicle.value.available_branches && vehicle.value.available_branches.length > 0) {
+            // If it's not a number (e.g. it's still 'Dubai'), set it to the first branch ID
+            if (isNaN(form.pickupLoc)) {
+                form.pickupLoc = vehicle.value.available_branches[0].id;
+            }
         }
         loading.value = false
 

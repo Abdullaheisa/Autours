@@ -82,7 +82,7 @@ class RegisterController extends Controller
                 $role = 'customer';
             }
 
-            User::create([
+            $user = User::create([
                 'name' => $request->name,
                 'phone_num' => $request->phone,
                 'email' => $request->email,
@@ -94,18 +94,34 @@ class RegisterController extends Controller
                 'email' => $request->email,
                 'password' => $request->password,
             ];
-            if (Auth::attempt($credentials)) {
+            if (Auth::guard('web')->attempt($credentials) && $request->hasSession()) {
                 $request->session()->regenerate();
             }
             if ($request->supplier === 1) {
                 event(new NewSupplier($request->email));
             }
+
+            // Generate Sanctum API token for customer
+            $token = $user->createToken('customer-api-token', ['customer:*'])->plainTextToken;
+
             return response()->json([
-                'data' => [],
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                    ],
+                    'token' => $token,
+                ],
                 'status' => true
             ], StatusCodes::SUCCESS);
 
         } catch (Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Registration Exception: " . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
             return response()->json([
                 'error' => $e->getMessage(),
                 'status' => false

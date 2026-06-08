@@ -14,12 +14,12 @@
                                       placeholder="Enter your Location">
                             <template #value="slotProps">
                                 <div v-if="slotProps.value" class="flex align-items-center">
-                                    <div>{{ slotProps.value }}</div>
+                                    <div>{{ slotProps.value.name || slotProps.value }}</div>
                                 </div>
                             </template>
                             <template #option="slotProps">
                                 <div class="flex align-items-center">
-                                    <div>{{ slotProps.option.location }}&nbsp;&nbsp; <i
+                                    <div>{{ slotProps.option.name }}&nbsp;&nbsp; <i
                                         :class=" slotProps.option.location_type === 'Airport' ? 'fa fa-plane-arrival' : slotProps.option.location_type === 'Downtown' ? 'fa fa-building' : 'fa fa-hotel'"/>
                                     </div>
                                 </div>
@@ -218,12 +218,12 @@ import getUnicodeFlagIcon from 'country-flag-icons/unicode'
 
 const value = ref()
 const form = useForm({
-    pickupLoc: ref(),
-    date: ref(''),
-    date_from: ref(''),
-    date_to: ref(''),
-    time_from: ref('00:00'),
-    time_to: ref('00:00')
+    pickupLoc: null,
+    date: '',
+    date_from: '',
+    date_to: '',
+    time_from: '00:00',
+    time_to: '00:00'
 });
 const logos = ref({})
 const countries = ref('')
@@ -252,7 +252,7 @@ const disabledDate = (time) => {
 }
 
 const selectLocation = ($event) => {
-    form.pickupLoc = form.pickupLoc.location
+    // Keep the object to retain ID and name
 }
 const getLogos = async () => {
     try {
@@ -301,11 +301,12 @@ const getLocations = async () => {
 }
 const suggest = (event) => {
     if (!event.query.trim().length) {
-        filteredLocations.value = [...locations.all.value.location];
+        filteredLocations.value = [...locations.all.value];
     } else {
 
         filteredLocations.value = locations.all.value.filter((location) => {
-            return location.location.toLowerCase().includes(event.query.toLowerCase());
+            return location.name.toLowerCase().includes(event.query.toLowerCase()) || 
+                   location.location.toLowerCase().includes(event.query.toLowerCase());
         });
     }
 }
@@ -318,25 +319,25 @@ const search = async () => {
     form.date_to = form.date[1];
 
     console.log(form.pickupLoc)
-    if (form.date[0] == undefined || form.date_from.value === null) {
+    if (form.date[0] == undefined || form.date_from === null) {
         alert('Please Select Start Date.')
         loading.value = false
         return;
     }
 
-    if (form.date[1] == [] || form.date_to.value === null) {
+    if (form.date[1] == [] || form.date_to === null) {
         alert('Please Select End Date.')
         loading.value = false
         return;
     }
 
-    if (form.time_from.value == [] || form.time_from.value === null) {
+    if (form.time_from == [] || form.time_from === null) {
         alert('Please Select Start Time.')
         loading.value = false
         return;
     }
 
-    if (form.time_to.value == [] || form.time_to.value === null) {
+    if (form.time_to == [] || form.time_to === null) {
         alert('Please Select End Time.')
         loading.value = false
         return;
@@ -357,8 +358,12 @@ const search = async () => {
         return;
     }
 
+    let searchParams = form.data();
+    if (typeof searchParams.pickupLoc === 'object' && searchParams.pickupLoc !== null) {
+        searchParams.pickupLoc = searchParams.pickupLoc.id;
+    }
 
-    router.get('/results', form.data())
+    router.get('/results', searchParams)
     loading.value = false
 
 }

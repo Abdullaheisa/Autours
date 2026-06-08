@@ -61,7 +61,12 @@ class SpecificationsController extends Controller
             $item->icon = $request->icon;
         }
         if ($request->has('options')) {
-            $item->options = json_decode($request->options);
+            $options = $request->options;
+            // Handle both array (from FormData/JSON body) and JSON string
+            if (is_string($options)) {
+                $options = json_decode($options, true);
+            }
+            $item->options = json_encode($options);
         }
 
         $item->save();
@@ -73,7 +78,7 @@ class SpecificationsController extends Controller
     {
         Specification::where('id', $request->id)->delete();
 
-        return $this->getSpecifications();
+        return $this->index();
 
     }
 

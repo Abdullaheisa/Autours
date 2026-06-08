@@ -74,19 +74,19 @@ class BookingsController extends Controller
             $cancel24PolicyId = VehicleIncluded::query()->where('vehicle_id', $rental->vehicle_id)->where('included_id', 1)->first();
             $cancel48PolicyId = VehicleIncluded::query()->where('vehicle_id', $rental->vehicle_id)->where('included_id', 48)->first();
 
-            if ($rental->start_date->diffInDays($today) <= 2 && !is_null($cancel48PolicyId)) {
+            if ($rental->start_date->diffInDays($today) <= 2 && !is_null($cancel48PolicyId) && !$request->fareApproval) {
                 return response()->json([
                     'data' => [],
                     'message' => "There will be a fare to cancel"
                 ], StatusCodes::FORBIDDEN);
             }
-            if ($rental->start_date->diffInDays($today) <= 1 && !is_null($cancel24PolicyId)) {
+            if ($rental->start_date->diffInDays($today) <= 1 && !is_null($cancel24PolicyId) && !$request->fareApproval) {
                 return response()->json([
                     'data' => [],
                     'message' => "There will be a fare to cancel"
                 ], StatusCodes::FORBIDDEN);
             }
-            if (is_null($cancel24PolicyId) && is_null($cancel48PolicyId)) {
+            if (is_null($cancel24PolicyId) && is_null($cancel48PolicyId) && !$request->fareApproval) {
                 return response()->json([
                     'data' => [],
                     'message' => "There will be a fare to cancel"
@@ -135,7 +135,7 @@ class BookingsController extends Controller
         if ($request->has('has_review')) {
             $rentals->whereHas('rentalRates');
         }
-        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer')->orderBy('id', 'desc')->get();
+        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')->orderBy('id', 'desc')->get();
 
         return response()->json([
             'rentals' => $data,
@@ -143,14 +143,33 @@ class BookingsController extends Controller
         ]);
     }
 
+    public function destroy(Request $request)
+    {
+        try {
+            Rental::query()->where('id', $request->id)->delete();
+            return response()->json([
+                'status' => true,
+                'message' => 'Rental deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], StatusCodes::SERVER_ERROR);
+        }
+    }
+
     public function getRentals(Request $request)
     {
+        // Resolve via sanctum guard (Bearer token) first, then session fallback
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
+             ?? \Illuminate\Support\Facades\Auth::user();
 
-        $user = auth()->user();
-        if(!$user) {
-            abort(401);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
-        $id = $user->id;
+
+        $id   = $user->id;
         $role = $user->role;
 
         $rentals = Rental::query();
@@ -170,27 +189,25 @@ class BookingsController extends Controller
         }
         if ($request->has('date_range') && $request->date_range) {
             $rentals->whereBetween('created_at', [$request->date_range[0], $request->date_range[1]]);
-
         }
         if ($request->has('has_review') && $request->has_review) {
             $rentals->whereHas('rentalRates');
-
         }
 
-
-        if ($role === 'active_supplier') {
+        // Scope supplier to only their vehicles — MUST be done before ->get()
+        if ($role === 'active_supplier' || $role === 'under_review') {
             $vehicles = Vehicle::where('supplier', $id)->pluck('id')->unique();
-            $data = $rentals->whereIn('vehicle_id', $vehicles)->get();
+            $rentals->whereIn('vehicle_id', $vehicles);
         }
 
-        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer')->orderBy('id', 'desc')->get();
+        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')
+                        ->orderBy('id', 'desc')
+                        ->get();
 
-        return response()->json(
-            [
-                'rentals' => $data,
-                'rental_statuses' => RentalStatus::query()->get()
-            ]
-        );
+        return response()->json([
+            'rentals'        => $data,
+            'rental_statuses' => RentalStatus::query()->get()
+        ]);
     }
 
     public function book(BookCarRequest $request)
@@ -211,11 +228,16 @@ class BookingsController extends Controller
             $item = new Rental();
             $item->customer_id = auth()->user()->id;
             $item->supplier_id = $vehicleWithPrice->supplier;
-            $item->payment_method_id = count($supplierPaymentMethod->paymentMethods ) ? $supplierPaymentMethod->paymentMethods[0]->id : null;
+            
+            $paymentMethodId = null;
+            if ($supplierPaymentMethod && $supplierPaymentMethod->paymentMethods && count($supplierPaymentMethod->paymentMethods)) {
+                $paymentMethodId = $supplierPaymentMethod->paymentMethods[0]->id;
+            }
+            $item->payment_method_id = $paymentMethodId;
 
-            $item->order_status = $vehicle->instant_confirmation >= 1 ? RentalStatuses::CONFIRMED : RentalStatuses::PENDING;
+            $item->order_status = ($vehicle && $vehicle->instant_confirmation >= 1) ? RentalStatuses::CONFIRMED : RentalStatuses::PENDING;
 
-            $prefix = $vehicle->branch->country ? strtoupper($vehicle->branch->country[0]) . strtoupper($vehicle->branch->country[1]) : null;
+            $prefix = ($vehicle && $vehicle->branch && $vehicle->branch->country) ? strtoupper($vehicle->branch->country[0]) . strtoupper($vehicle->branch->country[1]) : 'AE';
             $count = Rental::query()->count();
             $suffix_count = $count;
             if ($count < 1000) {
@@ -357,13 +379,16 @@ class BookingsController extends Controller
             if (is_int((int)$id) && $id > 0) {
                 $rental = Rental::query()->with('supplier', 'vehicle.branch', 'vehicle.vehicle_specifications', 'vehicle.included', 'vehicle.locationType', 'vehicle.vehicle_category', 'customer')->find($id);
 
-                ob_clean();
+                $tempDir = public_path('tmp');
+                if (!file_exists($tempDir)) {
+                    @mkdir($tempDir, 0777, true);
+                }
 
                 $mpdf = new Mpdf([
                     'mode' => 'utf-8',
                     'format' => [280, 280],
                     'font' => 'frutiger',
-                    'tempDir' => public_path() . '/tmp',
+                    'tempDir' => $tempDir,
                     'orientation' => 'L',
 
                 ]);
@@ -374,11 +399,15 @@ class BookingsController extends Controller
                 $mpdf->autoLangToFont = true;
                 $html = view('rental-invoice.supplier', ['rental' => $rental])->render();
                 $mpdf->WriteHTML($html);
-                $mpdf->Output('invoice.pdf', 'D');
-                return response()->json([
-                    'status' => 1,
-                    'msg' => 'Download started'
-                ], StatusCodes::SUCCESS);
+                $pdfContent = $mpdf->Output('', 'S');
+                return response($pdfContent, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="invoice.pdf"',
+                    'Content-Length' => strlen($pdfContent),
+                    'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
+                ]);
             } else {
                 return response()->json([
                     'status' => 0,

@@ -33,18 +33,17 @@ class RentalTermsController extends Controller
     public function index()
     {
         $terms = RentalTerms::query();
-        if (\auth()->user()->role == 'active_supplier') {
-            $terms = $terms->where('created_by', \auth()->user()->id)->get();
+        // Resolve via sanctum guard first (Bearer token), then fall back to session user
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
+             ?? \Illuminate\Support\Facades\Auth::user();
+
+        if ($user && ($user->role == 'active_supplier' || $user->role == 'supplier' || $user->role == 'under_review')) {
+            $terms = $terms->where('status', 'approved')->get();
             $selected = SupplierRentalTerm::query()
-                ->where('supplier_id', \auth()->user()->id)
+                ->where('supplier_id', $user->id)
                 ->get()->pluck('rental_term_id')->toArray();
             foreach ($terms as $term) {
-                if (in_array($term->id, $selected)) {
-                    $term->selected = 1;
-                } else {
-                    $term->selected = 0;
-
-                }
+                $term->selected = in_array($term->id, $selected) ? 1 : 0;
             }
         } else {
             $terms = $terms->get();
@@ -56,11 +55,12 @@ class RentalTermsController extends Controller
     public function insert(CreateRentalTerms $request)
     {
         try {
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
             $rental = new RentalTerms();
             $rental->title = $request->title;
             $rental->description = $request->description;
-            $rental->status = $request->status;
-            $rental->created_by = \auth()->user()->id;
+            $rental->status = $request->status ?? 'pending';
+            $rental->created_by = $user ? $user->id : 1;
             $rental->save();
 
             return response()->json([
@@ -94,13 +94,23 @@ class RentalTermsController extends Controller
         ]);
     }
 
-    public function assignRentalTerms(AssignRentalTerm $request)
+    public function assignRentalTerms(Request $request)
     {
-        $checkIfSelected = SupplierRentalTerm::query()->where('supplier_id', auth()->user()->id)->where('rental_term_id', $request->term_id)->get();
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        $termId = $request->input('term_id') ?? $request->input('rental_term_id');
+        if (!$termId) {
+            return response()->json(['message' => 'The term id is required.'], 422);
+        }
+
+        $checkIfSelected = SupplierRentalTerm::query()->where('supplier_id', $user->id)->where('rental_term_id', $termId)->get();
         if ($checkIfSelected->count()) {
-            $status = SupplierRentalTerm::query()->where('supplier_id', auth()->user()->id)->where('rental_term_id', $request->term_id)->delete();
+            $status = SupplierRentalTerm::query()->where('supplier_id', $user->id)->where('rental_term_id', $termId)->delete();
         } else {
-            $status = SupplierRentalTerm::query()->insert(['supplier_id' => auth()->user()->id, 'rental_term_id' => $request->term_id]);
+            $status = SupplierRentalTerm::query()->insert(['supplier_id' => $user->id, 'rental_term_id' => $termId]);
         }
         return response()->json([
             'status' => $status,

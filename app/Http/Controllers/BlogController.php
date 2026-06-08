@@ -17,6 +17,14 @@ class BlogController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            // Auto-align legacy/default authors with the current Admin's name
+            $admin = \App\Models\User::where('role', 'admin')->first();
+            if ($admin) {
+                Blog::whereIn('author', ['TBR', 'tbr', 'admin', 'Admin', ''])
+                    ->orWhereNull('author')
+                    ->update(['author' => $admin->name]);
+            }
+
             $query = Blog::with('category');
 
             // Filter by category if provided
@@ -27,6 +35,16 @@ class BlogController extends Controller
             // Filter by published status if provided
             if ($request->has('is_published')) {
                 $query->where('is_published', $request->query('is_published'));
+            }
+
+            // Filter by search term if provided
+            if ($request->has('search') && !empty($request->query('search'))) {
+                $search = $request->query('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('content', 'like', "%{$search}%")
+                      ->orWhere('tags', 'like', "%{$search}%");
+                });
             }
 
             // Paginate results
@@ -52,14 +70,44 @@ class BlogController extends Controller
     public function published(Request $request): JsonResponse
     {
         try {
-            $query = Blog::where('is_published', true)->with('category');
+            // Auto-align legacy/default authors with the current Admin's name
+            $admin = \App\Models\User::where('role', 'admin')->first();
+            if ($admin) {
+                Blog::whereIn('author', ['TBR', 'tbr', 'admin', 'Admin', ''])
+                    ->orWhereNull('author')
+                    ->update(['author' => $admin->name]);
+            }
+
+            $now = now()->timezone('+03:00')->format('Y-m-d H:i:s');
+            $query = Blog::where(function ($q) use ($now) {
+                $q->where('is_published', true)
+                  ->where(function ($sub) use ($now) {
+                      $sub->whereNull('published_at')
+                          ->orWhere('published_at', '=', '')
+                          ->orWhere('published_at', '<=', $now);
+                  });
+            })->orWhere(function ($q) {
+                $q->whereNotNull('published_at')
+                  ->where('published_at', '!=', '')
+                  ->where('published_at', '<=', now()->timezone('+03:00')->format('Y-m-d H:i:s'));
+            })->with('category');
 
             // Filter by category if provided
             if ($request->has('category_id')) {
                 $query->where('blog_category_id', $request->query('category_id'));
             }
 
-            $blogs = $query->paginate($request->query('per_page', 15));
+            // Filter by search term if provided
+            if ($request->has('search') && !empty($request->query('search'))) {
+                $search = $request->query('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('content', 'like', "%{$search}%")
+                      ->orWhere('tags', 'like', "%{$search}%");
+                });
+            }
+
+            $blogs = $query->orderBy('id', 'desc')->paginate($request->query('per_page', 15));
 
             return response()->json([
                 'success' => true,
@@ -81,6 +129,7 @@ class BlogController extends Controller
     public function show(Blog $blog): JsonResponse
     {
         try {
+            $blog->increment('views'); // Increment view count dynamically
             $blog->load('category');
 
             return response()->json([
@@ -112,6 +161,7 @@ class BlogController extends Controller
                 ], 404);
             }
 
+            $blog->increment('views'); // Increment view count dynamically
             $blog->load('category');
 
             return response()->json([
@@ -137,13 +187,16 @@ class BlogController extends Controller
             $validated = $request->validate([
                 'blog_category_id' => 'required|exists:blog_categories,id',
                 'title' => 'required|string|max:255',
-                'slug' => 'sometimes|string|max:255|unique:blogs,slug',
-                'author' => 'required|string|max:255|unique:blogs,author',
-                'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'image_alt_text' => 'sometimes|string|max:255',
+                'slug' => 'nullable|string|max:255|unique:blogs,slug',
+                'author' => 'required|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image_alt_text' => 'nullable|string|max:255',
                 'content' => 'required|string',
-                'meta_description' => 'sometimes|string|max:500',
+                'meta_description' => 'nullable|string|max:500',
                 'is_published' => 'required|in:0,1',
+                'published_at' => 'nullable|string',
+                'tags' => 'nullable|string',
+                'views' => 'nullable|integer',
             ]);
 
             // Generate slug if not provided
@@ -194,13 +247,16 @@ class BlogController extends Controller
             $validated = $request->validate([
                 'blog_category_id' => 'sometimes|exists:blog_categories,id',
                 'title' => 'sometimes|string|max:255',
-                'slug' => 'sometimes|string|max:255|unique:blogs,slug,' . $blog->id,
-                'author' => 'sometimes|string|max:255|unique:blogs,author,' . $blog->id,
-                'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'image_alt_text' => 'sometimes|string|max:255',
+                'slug' => 'nullable|string|max:255|unique:blogs,slug,' . $blog->id,
+                'author' => 'sometimes|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image_alt_text' => 'nullable|string|max:255',
                 'content' => 'sometimes|string',
-                'meta_description' => 'sometimes|string|max:500',
+                'meta_description' => 'nullable|string|max:500',
                 'is_published' => 'sometimes|in:0,1',
+                'published_at' => 'nullable|string',
+                'tags' => 'nullable|string',
+                'views' => 'nullable|integer',
             ]);
 
             // Generate slug if title changed but slug not provided

@@ -450,7 +450,7 @@ const fetchBranches = async () => {
 const fetchIncluded = async () => {
     included.loading.value = true;
     try {
-        const response = await axios.get('/get/included')
+        const response = await axios.get('/get/included?approved_only=true')
         included.all.value = response.data
         included.list.value = included.all.value.map((item) => ({
             id: `${item.id}`,

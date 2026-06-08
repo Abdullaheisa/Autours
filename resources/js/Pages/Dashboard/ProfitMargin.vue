@@ -13,12 +13,10 @@
                                         v-model="country"
                                         size="large"
                                         filterable
-                                        remote
-                                        reserve-keyword
+                                        clearable
                                         placeholder="Countries..."
-                                        remote-show-suffix
                                         :loading="countries.loading.value"
-                                        v-on:change="getSuppliers()"
+                                        v-on:change="handleCountryChange"
                                         required>
                                         <el-option
                                             v-for="item in countries.list.value"
@@ -34,12 +32,10 @@
                                         v-model="supplier"
                                         size="large"
                                         filterable
-                                        remote
-                                        reserve-keyword
-                                        v-on:change="getBranches()"
+                                        clearable
                                         placeholder="Suppliers..."
-                                        remote-show-suffix
                                         :loading="suppliers.loading.value"
+                                        v-on:change="handleSupplierChange"
                                         required>
                                         <el-option
                                             v-for="item in suppliers.list.value"
@@ -55,12 +51,10 @@
                                         v-model="branch"
                                         size="large"
                                         filterable
-                                        remote
-                                        reserve-keyword
-                                        v-on:change="getVehicles()"
+                                        clearable
                                         placeholder="Branches..."
-                                        remote-show-suffix
                                         :loading="branches.loading.value"
+                                        v-on:change="handleBranchChange"
                                         required>
                                         <el-option
                                             v-for="item in branches.list.value"
@@ -76,11 +70,9 @@
                                         v-model="selectedVehicles"
                                         size="large"
                                         filterable
-                                        remote
+                                        clearable
                                         multiple
-                                        reserve-keyword
                                         placeholder="Vehicles..."
-                                        remote-show-suffix
                                         :loading="vehicles.loading.value"
                                         required>
                                         <el-option
@@ -97,7 +89,7 @@
                                     </el-select>
                                 </div>
                                 <div class="mt-4 col-md-1">
-                                    <button class="mt-2 btn btn-primary col-md-12" type="button" @click="getUserData">Search</button>
+                                    <button class="mt-2 btn btn-primary col-md-12" type="button" @click="getUserData(1)">Search</button>
                                 </div>
                             </div>
                             <hr/>
@@ -146,7 +138,7 @@
             </div>
             <div class="card">
                 <div class="card-body">
-                    <el-table :data="filterTableData" style="width: 100%" :loading="loading" stripe>
+                    <el-table :data="tableData" style="width: 100%" :loading="loading" stripe>
 
                         <el-table-column label="Photo" prop="">
                             <template #default="scope">
@@ -191,11 +183,23 @@
                                                        class="fa fa-check fa-2x"/></button>
                             </template>
                             <template #header>
-                                <el-input v-model="search" size="large" placeholder="Type to search"/>
+                                <el-input v-model="search" size="large" placeholder="Type to search" @change="getUserData(1)"/>
                             </template>
                         </el-table-column>
 
                     </el-table>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <el-pagination
+                            v-model:current-page="currentPage"
+                            v-model:page-size="pageSize"
+                            :page-sizes="[10, 15, 20, 50]"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            :total="total"
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                        />
+                    </div>
 
                 </div>
             </div>
@@ -213,6 +217,10 @@ const loading = ref(false)
 const search = ref('')
 const tableData = ref([])
 
+const currentPage = ref(1)
+const pageSize = ref(15)
+const total = ref(0)
+
 const priceTax = ref('');
 const weekPriceTax = ref('');
 const monthPriceTax = ref('');
@@ -221,7 +229,7 @@ const oldPass = ref('');
 const formStatus = ref(true)
 const country = ref('')
 const supplier = ref('')
-const selectedVehicles = ref('')
+const selectedVehicles = ref([])
 const branch = ref('')
 const countries = {
     loading: ref(false),
@@ -248,22 +256,23 @@ const vehicles = {
     options: ref([]),
 };
 
-const getUserData = async (index) => {
+const getUserData = async (page = 1) => {
     try {
         loading.value = true
-        const params = {};
+        const params = {
+            page: page,
+            per_page: pageSize.value,
+        };
+        if (search.value) params.search = search.value
         if (country.value) params.country = country.value
         if (supplier.value) params.supplier = supplier.value
         if (branch.value) params.branch = branch.value
         if (selectedVehicles.value) params.selectedVehicles = selectedVehicles.value
 
-        console.log(branch.value)
-
         const response = await axios.get('/get/profit', {params: params});
         tableData.value = response.data.data
-        for (const key in tableData.value[index]) {
-            data.value[key] = tableData.value[index][key] || '';
-        }
+        total.value = response.data.total
+        currentPage.value = page
     } catch (error) {
         console.error(error);
     } finally {
@@ -273,20 +282,6 @@ const getUserData = async (index) => {
 
 
 
-const filterTableData = computed(() => {
-
-    const dataArray = Array.isArray(tableData.value) ? tableData.value : [];
-
-    console.log("here")
-    return dataArray.filter((data) =>
-            !search.value
-        ||   !country.value
-        || (data.vehicle_name && data.vehicle_name.toLowerCase().includes(search.value.toLowerCase()) )
-        || (data.vehicle_name && data.vehicle_name.toLowerCase().includes(country.value.toLowerCase()) )
-        || (data.branch_name && data.branch_name.toLowerCase().includes(search.value.toLowerCase()))
-        || (data.branch_country && data.branch_country.toLowerCase().includes(search.value.toLowerCase()))
-    );
-})
 
 
 const upload = async () => {
@@ -344,10 +339,18 @@ const upload = async () => {
         $toast.error(error.message, {position: 'top'});
 
     } finally {
-        getUserData();
+        getUserData(currentPage.value);
     }
 }
 
+const handleSizeChange = (val) => {
+    pageSize.value = val;
+    getUserData(1);
+}
+
+const handleCurrentChange = (val) => {
+    getUserData(val);
+}
 
 const fetchCountries = async () => {
     countries.loading.value = true;
@@ -405,14 +408,24 @@ const updateSingleVehicle = async ($index) => {
     } catch (error) {
         console.error(error);
     } finally {
-        getUserData();
+        getUserData(currentPage.value);
     }
 }
+const handleCountryChange = () => {
+    supplier.value = '';
+    branch.value = '';
+    selectedVehicles.value = [];
+    suppliers.list.value = [];
+    branches.list.value = [];
+    vehicles.list.value = [];
+    getSuppliers();
+}
+
 const getSuppliers = async () => {
     try {
         suppliers.loading.value = true
         if (country.value) {
-            const response = await axios.get(`get/suppliers`, {
+            const response = await axios.get('get/suppliers', {
                 params: {
                     'country': country.value
                 }
@@ -423,7 +436,8 @@ const getSuppliers = async () => {
                 label: `${item.name}`,
                 id: `${item.id}`,
             }))
-
+        } else {
+            suppliers.list.value = [];
         }
     } catch (error) {
         console.error(error)
@@ -432,45 +446,74 @@ const getSuppliers = async () => {
     }
 }
 
+const handleSupplierChange = () => {
+    branch.value = '';
+    selectedVehicles.value = [];
+    branches.list.value = [];
+    vehicles.list.value = [];
+    getBranches();
+}
+
 const getBranches = async () => {
     try {
-        const response = await axios.get('get/branches', {
-            params: {
-                'company_id': supplier.value
-            }
-        });
-        branches.all.value = response.data
-        branches.list.value = branches.all.value.map((item) => ({
-            value: `${item.name}`,
-            label: `${item.name}`,
-            id: `${item.id}`,
-        }))
+        branches.loading.value = true
+        if (supplier.value) {
+            const response = await axios.get('get/branches', {
+                params: {
+                    'company_id': supplier.value,
+                    'country': country.value
+                }
+            });
+            branches.all.value = response.data
+            branches.list.value = branches.all.value.map((item) => ({
+                value: `${item.name}`,
+                label: `${item.name}`,
+                id: `${item.id}`,
+            }))
+        } else {
+            branches.list.value = [];
+        }
     } catch (error) {
         console.error(error);
+    } finally {
+        branches.loading.value = false
     }
 };
 
+const handleBranchChange = () => {
+    selectedVehicles.value = [];
+    vehicles.list.value = [];
+    getVehicles();
+}
+
 const getVehicles = async () => {
     try {
-        const response = await axios.get('get/vehicles', {
-            params: {
-                'branch_id': branch.value,
-                'supplier': supplier.value
-            }
-        });
-        vehicles.all.value = response.data
-        vehicles.list.value = vehicles.all.value.map((item) => ({
-            value: `${item.name}`,
-            label: `${item.name}`,
-            id: `${item.id}`,
-            photo: `${item.photo}`,
-        }))
+        vehicles.loading.value = true
+        if (branch.value) {
+            const response = await axios.get('get/vehicles', {
+                params: {
+                    'branch_id': branch.value,
+                    'supplier': supplier.value
+                }
+            });
+            vehicles.all.value = response.data
+            vehicles.list.value = vehicles.all.value.map((item) => ({
+                value: `${item.name}`,
+                label: `${item.name}`,
+                id: `${item.id}`,
+                photo: `${item.photo}`,
+            }))
+        } else {
+            vehicles.list.value = [];
+        }
     } catch (error) {
         console.error(error);
+    } finally {
+        vehicles.loading.value = false
     }
 };
 onMounted(() => {
-    getUserData();
+    getUserData(1);
     fetchCountries()
 });
 

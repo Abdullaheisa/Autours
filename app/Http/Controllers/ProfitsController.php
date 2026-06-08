@@ -27,9 +27,7 @@ class ProfitsController extends Controller
 
             }
             if ($request->has('branch')) {
-                $branchIds = Branch::query()->select(['id'])->where('id', $request->branch)->first();
-                $vehicles = Vehicle::query()->whereIn('pickup_loc', $branchIds)->get();
-
+                $vehicles = Vehicle::query()->where('pickup_loc', $request->branch)->get();
             }
             if ($request->has('selectedVehicles')) {
                 $vehicles = Vehicle::query()->whereIn('id', explode(',',$request->selectedVehicles ))->get();
@@ -61,13 +59,15 @@ class ProfitsController extends Controller
     public function show(Request $request)
     {
         try {
-            $query = Vehicle::query()->leftJoin('profits', 'profits.vehicle_id', '=','vehicles.id' );
+            $query = Vehicle::query()->leftJoin('profits', 'profits.vehicle_id', '=', 'vehicles.id');
 
             if ($request->has('supplier')) {
                 $query->where('vehicles.supplier', $request->supplier);
-            } elseif (auth()->user() && auth()->user()->role == 'active_supplier') {
-                $query->where('supplier_id', auth()->user()->id);
-
+            } else {
+                $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+                if ($user && $user->role == 'active_supplier') {
+                    $query->where('supplier_id', $user->id);
+                }
             }
 
             if ($request->has('branch')) {
@@ -83,8 +83,25 @@ class ProfitsController extends Controller
             if ($request->has('country')) {
                 $query->where('branches.country', $request->country);
             }
+
+            if ($request->has('search')) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('vehicles.name', 'LIKE', '%' . $search . '%')
+                      ->orWhere('branches.name', 'LIKE', '%' . $search . '%')
+                      ->orWhere('branches.country', 'LIKE', '%' . $search . '%');
+                });
+            }
+
+            if ($request->has('no_profit') && $request->no_profit === 'true') {
+                $query->whereNull('profits.vehicle_id');
+            }
+
+            $query->orderBy('vehicles.id', 'desc');
+
             $data = $query->select([
                 'vehicles.id as vehicle_id',
+                'vehicles.supplier as supplier',
                 'profits.per_day_profit',
                 'profits.per_week_profit',
                 'profits.per_month_profit',
@@ -93,19 +110,15 @@ class ProfitsController extends Controller
                 'vehicles.name as vehicle_name',
                 'branches.name as branch_name',
                 'branches.country as branch_country',
+            ])->paginate($request->get('per_page', 15));
 
-            ])->get();
-            return response()->json([
-                'data' => $data,
-                'supplier_id' => auth()->user()->id,
-                'message' => 'profits returned successfully'
-            ], 200);
+            return response()->json($data, 200);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("ProfitsController show error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             return response()->json([
                 'data' => $e->getMessage(),
-                'message' => 'there is an error'
+                'message' => 'there is an error: ' . $e->getMessage()
             ], StatusCodes::SERVER_ERROR);
         }
     }
-
 }

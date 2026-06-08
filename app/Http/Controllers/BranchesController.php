@@ -11,6 +11,7 @@ use App\Models\Vehicle;
 use App\Models\Branch;
 use App\Models\VehiclesPhotos;
 use App\Models\Rental;
+use App\Services\BranchNormalizationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Http\RedirectResponse;
@@ -48,12 +49,14 @@ class BranchesController extends Controller
     {
         try {
             $branch = Branch::query()->find($id);
-            $ad = explode(',',$branch->location);
-            if(count($ad) > 0 ) {
-                if($branch->location_type == 'Airport')
-                $branch->abriviation = $ad[count($ad) - 1];
-                else
-                    $branch->abriviation = null;
+            if (empty($branch->abriviation)) {
+                $ad = explode(',', $branch->location);
+                if (count($ad) > 0) {
+                    if ($branch->location_type == 'Airport')
+                        $branch->abriviation = trim($ad[count($ad) - 1]);
+                    else
+                        $branch->abriviation = null;
+                }
             }
             return response()->json([
                 'data' => $branch
@@ -87,7 +90,20 @@ class BranchesController extends Controller
             $branch->location_type = $request->pickup_type;
             $branch->lat = $request->lat;
             $branch->lng = $request->lng;
+            $branch->abriviation = $request->abriviation;
             $branch->save();
+
+            // Normalize branch name/location against canonical airports
+            $normalizer = new BranchNormalizationService();
+            $normData = $normalizer->normalize(
+                $branch->name,
+                $branch->city ?? '',
+                $branch->country ?? '',
+                $branch->station_id,
+                $branch->abriviation
+            );
+            $branch->update($normData);
+
             return response()->json([
                 'data' => $branch,
                 'status' => true,

@@ -229,11 +229,12 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
      * Find and set vehicle photo based on name matching
      * Photo is REQUIRED - database has NOT NULL constraint
      */
-    protected function setVehiclePhoto(Vehicle $vehicle, string $vehicleName, int $rowNumber): void
+    protected function setVehiclePhoto(Vehicle $vehicle, ?string $vehicleName, int $rowNumber): void
     {
+        $vehicleName = $vehicleName ?? 'Unknown Vehicle';
         // Try exact match first
         $photo = VehiclesPhotos::query()
-            ->where('name', 'ilike', '%' . trim(strtolower($vehicleName)) . '%')
+            ->where('name', 'like', '%' . trim(strtolower($vehicleName)) . '%')
             ->first();
 
         // If no exact match, try matching just the car model (first two words)
@@ -242,7 +243,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             if (count($nameParts) >= 2) {
                 $shortName = $nameParts[0] . ' ' . $nameParts[1];
                 $photo = VehiclesPhotos::query()
-                    ->where('name', 'ilike', '%' . strtolower($shortName) . '%')
+                    ->where('name', 'like', '%' . strtolower($shortName) . '%')
                     ->first();
             }
         }
@@ -253,7 +254,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             if (count($nameParts) >= 1) {
                 $brandName = $nameParts[0];
                 $photo = VehiclesPhotos::query()
-                    ->where('name', 'ilike', '%' . strtolower($brandName) . '%')
+                    ->where('name', 'like', '%' . strtolower($brandName) . '%')
                     ->first();
             }
         }
@@ -280,7 +281,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
 
         $category = Category::query()
-            ->where('name', 'ilike', '%' . trim($categoryName) . '%')
+            ->where('name', 'like', '%' . trim($categoryName) . '%')
             ->first();
 
         if ($category === null) {
@@ -479,7 +480,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
     protected function findSpecification(string $namePattern): ?Specification
     {
         return Specification::query()
-            ->where('name', 'ilike', '%' . $namePattern . '%')
+            ->where('name', 'like', '%' . $namePattern . '%')
             ->first();
     }
 
@@ -507,7 +508,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
 
         $locationType = LocationType::query()
-            ->where('name', 'ilike', '%' . strtolower(trim($locationTypeName)) . '%')
+            ->where('name', 'like', '%' . strtolower(trim($locationTypeName)) . '%')
             ->first();
 
         if ($locationType) {
@@ -529,7 +530,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
 
         $fuelPolicy = FuelPolicy::query()
-            ->where('name', 'ilike', '%' . strtolower(trim($fuelPolicyName)) . '%')
+            ->where('name', 'like', '%' . strtolower(trim($fuelPolicyName)) . '%')
             ->first();
 
         if ($fuelPolicy) {

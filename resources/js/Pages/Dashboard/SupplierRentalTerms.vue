@@ -44,11 +44,11 @@
                                 <div class="row" style="height: 300px;">
                                     <div class="formbold-mb-3 col-6">
                                         <label class="formbold-form-label"> Title </label>
-                                        <Editor v-model="form.title" type="text"   style="height: 200px;" required/>
+                                        <Editor v-model="form.title" type="text"   style="height: 200px;"/>
                                     </div>
                                     <div class="formbold-mb-3 col-6 position-relative">
                                         <label class="formbold-form-label"> Description </label>
-                                        <Editor v-model="form.description" type="text"  style="height: 200px;" required/>
+                                        <Editor v-model="form.description" type="text"  style="height: 200px;"/>
                                     </div>
                                 </div>
                         <el-form-item class="mt-5">

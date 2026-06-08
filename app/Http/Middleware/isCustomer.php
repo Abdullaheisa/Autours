@@ -17,9 +17,15 @@ class isCustomer
      */
     public function handle(Request $request, Closure $next)
     {
-        if(Auth::check() && Auth::user()->role == 'customer'){
+        $user = Auth::guard('sanctum')->user() ?? Auth::user();
+        if ($user && $user->role == 'customer') {
+            if (Auth::guard('sanctum')->check()) {
+                Auth::shouldUse('sanctum');
+            } else {
+                Auth::setUser($user);
+            }
             return $next($request);
-        }else{
+        } else {
             return abort(401, 'Unauthorized');
         }
     }
