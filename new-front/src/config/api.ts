@@ -17,4 +17,6 @@ export const CLIENT_API_BASE = '/api/backend';
 // 3. For Server Components ("use server" or default App Router components)
 // Server components run in a Node environment and do not care about CORS. 
 // To save proxy overhead, they should directly call the actual Backend URL.
-export const SERVER_API_BASE = `${BACKEND_URL}/api`;
+export const SERVER_API_BASE = BACKEND_URL.includes('autours.net')
+    ? `${BACKEND_URL}/api/backend/api`
+    : `${BACKEND_URL}/api`;

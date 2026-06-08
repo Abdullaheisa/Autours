@@ -83,13 +83,11 @@ class BlogController extends Controller
                 $q->where('is_published', true)
                   ->where(function ($sub) use ($now) {
                       $sub->whereNull('published_at')
-                          ->orWhere('published_at', '=', '')
                           ->orWhere('published_at', '<=', $now);
                   });
-            })->orWhere(function ($q) {
+            })->orWhere(function ($q) use ($now) {
                 $q->whereNotNull('published_at')
-                  ->where('published_at', '!=', '')
-                  ->where('published_at', '<=', now()->timezone('+03:00')->format('Y-m-d H:i:s'));
+                  ->where('published_at', '<=', $now);
             })->with('category');
 
             // Filter by category if provided

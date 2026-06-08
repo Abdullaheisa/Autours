@@ -437,12 +437,15 @@ Route::inertia('/where-we-are', 'WhereWeAre' );
 Route::get('/blogs', function() {
     return \Inertia\Inertia::render('Blogs/Blogs');
 });
+Route::redirect('/blog', '/blogs', 301);
+
 Route::get('/blogs/{slug}', function($slug) {
     $blog = \App\Models\Blog::where('slug', $slug)->firstOrFail();
     return \Inertia\Inertia::render('Blogs/BlogDetails', [
         'initialBlog' => $blog
     ]);
 });
+Route::redirect('/blog/{slug}', '/blogs/{slug}', 301);
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::post('/send-email',[SubscriberController::class,'sendEmail']);
 
