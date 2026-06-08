@@ -1,7 +1,8 @@
 "use client";
 
-import { Search, X, Menu } from "lucide-react";
+import { Search, X, Menu, Home } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 import NotificationBell from "@/app/admin/components/notifications/NotificationBell";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -32,7 +33,7 @@ export default function Header({ title = "Dashboard", onMenuClick }: HeaderProps
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
       <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-8">
         {/* Left */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
@@ -40,6 +41,15 @@ export default function Header({ title = "Dashboard", onMenuClick }: HeaderProps
           >
             <Menu size={20} />
           </button>
+          {/* Back to Home */}
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-600 bg-gray-50 hover:bg-primary hover:text-gray-900 border border-gray-200 hover:border-primary rounded-xl transition-all duration-200 group"
+            title="Back to Website"
+          >
+            <Home size={15} className="text-gray-500 group-hover:text-gray-900 transition-colors" />
+            <span className="hidden sm:inline">Website</span>
+          </Link>
           <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{title}</h1>
         </div>
 

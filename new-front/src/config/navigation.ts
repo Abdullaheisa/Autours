@@ -1,7 +1,7 @@
 export const navigationLinks = [
   { label: 'Home', href: '/' },
   { label: 'Search', href: '/search' },
-  { label: 'Blog', href: '/blog' },
+  { label: 'Blog', href: '/blogs' },
   { label: 'Admin', href: '/admin' },
   { label: 'Company Dashboard', href: '/company-dashboard' },
 ];

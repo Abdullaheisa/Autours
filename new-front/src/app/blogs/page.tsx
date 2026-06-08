@@ -47,12 +47,12 @@ export const metadata: Metadata = {
   title: 'Autours Blog | Travel Tips, Destination Guides, and Car Rental Insights',
   description: 'Discover the latest travel tips, destination guides, and expert car rental insights from Autours. Stay informed and save more on your next trip.',
   alternates: {
-    canonical: '/blog',
+    canonical: '/blogs',
   },
   openGraph: {
     title: 'Autours Blog | Travel Tips, Destination Guides, and Car Rental Insights',
     description: 'Discover the latest travel tips, destination guides, and expert car rental insights from Autours. Stay informed and save more on your next trip.',
-    url: '/blog',
+    url: '/blogs',
     type: 'website',
     images: [
       {
@@ -86,7 +86,7 @@ export default async function BlogPage() {
     "@type": "Blog",
     "name": "Autours Blog",
     "description": "Travel tips, destination guides, and expert car rental insights.",
-    "url": `${siteConfig.url}/blog`,
+    "url": `${siteConfig.url}/blogs`,
   };
 
   return (

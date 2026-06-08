@@ -34,8 +34,8 @@ const footerLinks = {
     { name: 'Manage Booking', href: '/login' },
     { name: 'FAQ', href: '#faq' },
     { name: 'Subscribe', href: '/subscribe' },
-    { name: 'Why Autours?', href: '/why-autours' },
-    { name: 'Our Blogs', href: '/blog' },
+    { name: 'Why Autours?', href: '/why_autours' },
+    { name: 'Our Blogs', href: '/blogs' },
   ],
   Supplier: [
     { name: 'Be Supplier', href: '/be-supplier' },

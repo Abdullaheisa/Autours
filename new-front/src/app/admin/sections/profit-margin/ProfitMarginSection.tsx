@@ -28,7 +28,7 @@ interface VehicleProfit {
   hasMargin?: boolean;
 }
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 12;
 
 export default function ProfitMarginsPage() {
   // Filters State

@@ -88,7 +88,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', newPage.toString());
-    router.push(`/blog?${params.toString()}`);
+    router.push(`/blogs?${params.toString()}`);
     document.getElementById('blog-grid-top')?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -124,7 +124,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
               className="bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 group flex flex-col"
             >
               <Link
-                href={`/blog/${post.slug || post.id}`}
+                href={`/blogs/${post.slug || post.id}`}
                 className="block relative h-48 overflow-hidden focus:outline-none focus:ring-4 focus:ring-primary"
                 aria-label={`Read full article: ${post.title}`}
               >
@@ -160,7 +160,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
                   </div>
                 </div>
 
-                <Link href={`/blog/${post.slug || post.id}`} className="focus:outline-none focus:underline" aria-hidden="true" tabIndex={-1}>
+                <Link href={`/blogs/${post.slug || post.id}`} className="focus:outline-none focus:underline" aria-hidden="true" tabIndex={-1}>
                   <h2 className="text-lg font-black text-gray-900 mb-3 line-clamp-2 hover:text-primary transition-colors leading-tight">
                     {post.title}
                   </h2>
@@ -172,7 +172,7 @@ function BlogListInner({ initialPosts, initialPagination }: { initialPosts: any[
 
                 <div className="mt-auto">
                   <Link
-                    href={`/blog/${post.slug || post.id}`}
+                    href={`/blogs/${post.slug || post.id}`}
                     className="inline-flex items-center gap-1.5 text-xs font-black text-gray-900 uppercase tracking-widest hover:gap-2 transition-all focus:outline-none focus:text-primary"
                   >
                     Read More

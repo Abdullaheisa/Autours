@@ -110,7 +110,7 @@ class ProfitsController extends Controller
                 'vehicles.name as vehicle_name',
                 'branches.name as branch_name',
                 'branches.country as branch_country',
-            ])->paginate($request->get('per_page', 15));
+            ])->paginate($request->get('per_page', 12));
 
             return response()->json($data, 200);
         } catch (\Exception $e) {

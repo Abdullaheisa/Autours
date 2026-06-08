@@ -27,8 +27,6 @@ interface VehicleProfitTableProps {
   onClearFilters: () => void;
 }
 
-const ITEMS_PER_PAGE = 5;
-
 export default function VehicleProfitTable({
   vehicles,
   onUpdateVehicle,
@@ -36,16 +34,10 @@ export default function VehicleProfitTable({
   onClearFilters,
 }: VehicleProfitTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Refs for double scrollbar synchronization
   const topScrollRef = useRef<HTMLDivElement>(null);
   const tableScrollRef = useRef<HTMLDivElement>(null);
-
-  // Reset page when vehicles array changes
-  useMemo(() => {
-    setCurrentPage(1);
-  }, [vehicles]);
 
   // Filter by search
   const filteredVehicles = useMemo(() => {
@@ -60,12 +52,8 @@ export default function VehicleProfitTable({
     );
   }, [vehicles, searchQuery]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE);
-  const paginatedVehicles = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredVehicles.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredVehicles, currentPage]);
+  // Use all filtered vehicles without slicing (pagination is handled by the parent)
+  const paginatedVehicles = filteredVehicles;
 
   // Synchronize scrolling of top mirror scrollbar with main table scrollbar
   useEffect(() => {
@@ -103,11 +91,6 @@ export default function VehicleProfitTable({
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
   };
 
   if (vehicles.length === 0) {
@@ -278,27 +261,11 @@ export default function VehicleProfitTable({
             </table>
           </div>
 
-          {/* Footer with Pagination */}
-          <div className="px-4 sm:px-5 lg:px-6 py-3 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Footer */}
+          <div className="px-4 sm:px-5 lg:px-6 py-3 border-t border-gray-100 bg-gray-50/30 flex items-center justify-between gap-3">
             <p className="text-xs text-gray-500">
-              Showing{" "}
-              <span className="font-medium text-gray-900">
-                {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filteredVehicles.length)}
-              </span>{" "}
-              -{" "}
-              <span className="font-medium text-gray-900">
-                {Math.min(currentPage * ITEMS_PER_PAGE, filteredVehicles.length)}
-              </span>{" "}
-              of <span className="font-medium text-gray-900">{filteredVehicles.length}</span> vehicles
+              Showing <span className="font-medium text-gray-900">{filteredVehicles.length}</span> vehicle(s)
             </p>
-
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
           </div>
         </>
       )}

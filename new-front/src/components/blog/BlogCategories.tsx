@@ -41,7 +41,7 @@ export default function BlogCategories() {
         {categories.map((cat: any) => (
           <Link
             key={cat.id}
-            href={`/blog?category_id=${cat.id}`}
+            href={`/blogs?category_id=${cat.id}`}
             className="flex items-center gap-3 group"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 transition-transform group-hover:scale-125"></span>

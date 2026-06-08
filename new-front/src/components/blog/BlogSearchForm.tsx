@@ -51,7 +51,7 @@ function BlogSearchFormInner() {
       params.delete('category_id');
     }
 
-    router.push(`/blog?${params.toString()}`);
+    router.push(`/blogs?${params.toString()}`);
   };
 
   return (

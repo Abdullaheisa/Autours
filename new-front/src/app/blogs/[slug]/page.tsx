@@ -89,12 +89,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: safeDescription,
     keywords: post.tags ? post.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : undefined,
     alternates: {
-      canonical: `/blog/${post.slug || post.id}`,
+      canonical: `/blogs/${post.slug || post.id}`,
     },
     openGraph: {
       title: post.title,
       description: safeDescription,
-      url: `/blog/${post.slug || post.id}`,
+      url: `/blogs/${post.slug || post.id}`,
       type: 'article',
       publishedTime: post.created_at,
       authors: [post.author || 'Autours'],
@@ -179,7 +179,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="mb-5">
-          <Link href="/blog" className="inline-flex items-center gap-2 text-gray-700 font-bold text-sm uppercase tracking-wider hover:text-gray-900 transition-all focus:outline-none focus:underline">
+          <Link href="/blogs" className="inline-flex items-center gap-2 text-gray-700 font-bold text-sm uppercase tracking-wider hover:text-gray-900 transition-all focus:outline-none focus:underline">
             <ArrowLeft size={16} className="text-primary" aria-hidden="true" /> Back to Blog
           </Link>
         </div>
@@ -233,7 +233,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
               </div>
             </header>
 
-            <ShareButtons url={`${siteConfig.url}/blog/${post.slug || post.id}`} title={post.title} />
+            <ShareButtons url={`${siteConfig.url}/blogs/${post.slug || post.id}`} title={post.title} />
 
             <div 
               className="prose prose-base max-w-none text-gray-800 leading-relaxed space-y-4
@@ -273,7 +273,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
                   {relatedPosts.map((rp: any) => (
                     <Link
                       key={rp.id}
-                      href={`/blog/${rp.slug || rp.id}`}
+                      href={`/blogs/${rp.slug || rp.id}`}
                       className="flex gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                     >
                       <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-50 border border-gray-100">

@@ -18,7 +18,7 @@ function BlogSearchSidebarInner() {
     if (search.trim()) {
       params.set('search', search.trim());
     }
-    router.push(`/blog?${params.toString()}`);
+    router.push(`/blogs?${params.toString()}`);
   };
 
   return (
