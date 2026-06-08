@@ -228,7 +228,7 @@ Route::get('results', [VehicleController::class, 'index'])->name('results');
 
 Route::inertia('/supplier/login', 'Auth/SupplierLogin');
 Route::inertia('/supplier/signup', 'Auth/SupplierRegister');
-Route::get('/login', [LoginController::class, 'create'])->name('/login');
+Route::get('/login', [LoginController::class, 'create'])->name('login');
 Route::post('/login', [LoginController::class, 'store']);
 Route::get('logout', [LoginController::class, 'logout']);
 
