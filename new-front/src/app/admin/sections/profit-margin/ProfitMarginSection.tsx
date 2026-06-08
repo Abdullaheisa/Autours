@@ -131,15 +131,15 @@ export default function ProfitMarginsPage() {
 
     profitApi.getAll(params)
       .then((res: any) => {
-        // Backend returns Laravel paginated: { data:[...], total, last_page, current_page }
-        const raw = res?.data ?? res;
-        const items: any[] = Array.isArray(raw?.data) ? raw.data
-          : Array.isArray(raw) ? raw
+        // apiClient.get() unwraps axios response.data, so res IS the Laravel paginator:
+        // { data: [...items], current_page, last_page, total, per_page, ... }
+        const items: any[] = Array.isArray(res?.data) ? res.data
+          : Array.isArray(res) ? res
           : [];
 
-        setTotalPages(raw?.last_page || 1);
-        setTotalCount(raw?.total || items.length);
-        setCurrentPage(raw?.current_page || page);
+        setTotalPages(res?.last_page || 1);
+        setTotalCount(res?.total || items.length);
+        setCurrentPage(res?.current_page || page);
 
         setVehicles(items.map((item: any) => ({
           id: item.vehicle_id ?? item.id,
