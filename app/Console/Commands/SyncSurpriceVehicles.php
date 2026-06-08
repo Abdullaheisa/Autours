@@ -721,14 +721,14 @@ class SyncSurpriceVehicles extends Command
         };
     }
 
-    /**
-     * Download an external image and save it to public/img/vehicles/.
-     */
     private function downloadImage(?string $url, string $groupId): ?string
     {
         if (empty($url)) {
             return null;
         }
+
+        $url = trim($url);
+        $url = str_replace(' ', '%20', $url);
 
         if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
             return $url;
