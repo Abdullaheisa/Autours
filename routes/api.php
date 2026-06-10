@@ -8,6 +8,9 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\Api\ExternalAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ContestController;
+use App\Http\Controllers\Api\AdminContestController;
+use App\Http\Controllers\Api\SupplierIntelligenceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +43,16 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/jimpisoft/refresh-prices', [VehicleController::class, 'refreshJimpisoftPrices'])->name('jimpisoft.refresh-prices');
 Route::post('/emr/refresh-prices', [VehicleController::class, 'refreshEmrPrices'])->name('emr.refresh-prices');
 Route::post('/surprice/refresh-prices', [VehicleController::class, 'refreshSurpricePrices'])->name('surprice.refresh-prices');
+
+/*
+|--------------------------------------------------------------------------
+| Contest Popup API Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('contest')->group(function () {
+    Route::get('/settings', [ContestController::class, 'getSettings']);
+    Route::post('/register', [ContestController::class, 'registerUser']);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -119,6 +132,17 @@ Route::prefix('supplier')->middleware(['auth:sanctum', 'active_supplier'])->grou
 Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     
+    // Contest Control
+    Route::get('/contest/settings', [AdminContestController::class, 'getSettings']);
+    Route::put('/contest/settings', [AdminContestController::class, 'updateSettings']);
+    Route::post('/contest/reset', [AdminContestController::class, 'resetCampaign']);
+    Route::get('/contest/registrations', [AdminContestController::class, 'getRegistrations']);
+    Route::delete('/contest/registrations/{id}', [AdminContestController::class, 'deleteRegistration']);
+
+    // Supplier Intelligence
+    Route::get('/supplier-intelligence', [SupplierIntelligenceController::class, 'index']);
+    Route::patch('/supplier-intelligence/{id}/negotiation', [SupplierIntelligenceController::class, 'updateNegotiation']);
+
     // Customers
     Route::get('/get/customers', [\App\Http\Controllers\UserController::class, 'getCustomers']);
     Route::post('/delete/customers', [\App\Http\Controllers\UserController::class, 'deleteCustomer']);

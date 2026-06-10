@@ -147,6 +147,12 @@ const mockFetchSupplierAnalytics = async (
           totalSuppliers: new Set(data.map((d) => d.name)).size,
           totalCars: data.length,
         },
+        pagination: {
+          current_page: filters.page || 1,
+          last_page: 1,
+          total: data.length,
+          per_page: filters.per_page || 20,
+        }
       });
     }, 800);
   });
@@ -158,7 +164,7 @@ const mockUpdateNegotiation = async (
 ): Promise<{ success: boolean; data: any }> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({ success: true, data: { supplierId, ...payload } });
+      resolve({ success: true, data: { id: supplierId, ...payload } });
     }, 500);
   });
 };

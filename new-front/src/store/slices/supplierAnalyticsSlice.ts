@@ -21,7 +21,14 @@ interface SupplierAnalyticsState {
     category: string;
     carType: string;
     searchQuery: string;
+    page: number;
   };
+  pagination: {
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+  } | null;
 }
 
 const initialState: SupplierAnalyticsState = {
@@ -35,7 +42,9 @@ const initialState: SupplierAnalyticsState = {
     category: "All",
     carType: "All",
     searchQuery: "",
+    page: 1,
   },
+  pagination: null,
 };
 
 export const loadSupplierAnalytics = createAsyncThunk(
@@ -72,14 +81,16 @@ const supplierAnalyticsSlice = createSlice({
         state.loading = false;
         state.data = action.payload.data;
         state.stats = action.payload.stats;
+        state.pagination = action.payload.pagination || null;
       })
       .addCase(loadSupplierAnalytics.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to load data";
       })
       .addCase(updateNegotiation.fulfilled, (state, action) => {
-        const { supplierId, ...updates } = action.payload;
-        const index = state.data.findIndex(s => s.id === supplierId);
+        const { id, supplierId, ...updates } = action.payload;
+        const targetId = id || supplierId;
+        const index = state.data.findIndex(s => s.id === targetId);
         if (index !== -1) {
           state.data[index] = { ...state.data[index], ...updates };
         }

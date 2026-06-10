@@ -23,7 +23,10 @@ class Vehicle extends Model
         'category',
         'specifications',
         'description',
-        'fuel_policy_id'
+        'fuel_policy_id',
+        'negotiation_status',
+        'negotiation_notes',
+        'negotiation_priority'
     ];
 
     protected $casts = [

@@ -14,13 +14,13 @@ import * as XLSX from "xlsx";
 
 export default function SupplierIntelligencePage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, data, stats, filters, error } = useSelector((state: RootState) => state.supplierAnalytics);
+  const { loading, data, stats, filters, error, pagination } = useSelector((state: RootState) => state.supplierAnalytics);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
   const handleFilterChange = (key: string, value: string) => {
-    dispatch(setFilters({ [key]: value }));
+    dispatch(setFilters({ [key]: value, page: 1 }));
   };
 
   const handleSearch = () => {
@@ -204,6 +204,37 @@ export default function SupplierIntelligencePage() {
             </div>
 
             <SupplierTable data={data} onNegotiate={handleNegotiate} />
+
+            {/* Pagination Controls */}
+            {pagination && pagination.last_page > 1 && (
+              <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 rounded-b-2xl">
+                <span className="text-sm text-gray-500">
+                  Showing page {pagination.current_page} of {pagination.last_page} ({pagination.total} total)
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      dispatch(setFilters({ page: pagination.current_page - 1 }));
+                      dispatch(loadSupplierAnalytics({ ...filters, page: pagination.current_page - 1 }));
+                    }}
+                    disabled={pagination.current_page === 1}
+                    className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => {
+                      dispatch(setFilters({ page: pagination.current_page + 1 }));
+                      dispatch(loadSupplierAnalytics({ ...filters, page: pagination.current_page + 1 }));
+                    }}
+                    disabled={pagination.current_page === pagination.last_page}
+                    className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
