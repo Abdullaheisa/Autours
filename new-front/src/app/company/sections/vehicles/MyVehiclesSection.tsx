@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, Filter, Edit2, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Search, Plus, Filter, Edit2, Trash2, Loader2, AlertTriangle, X, ChevronDown, Globe, Building2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import Pagination from "@/components/ui/Pagination";
@@ -85,6 +85,168 @@ function DeleteModal({
   );
 }
 
+// ─── Searchable Dropdown ──────────────────────────────────────────────
+function SearchableDropdown({
+  placeholder,
+  value,
+  options,
+  onChange,
+  icon: Icon,
+  disabled = false,
+}: {
+  placeholder: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (val: string) => void;
+  icon?: React.ElementType;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Focus input when opens
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return options;
+    return options.filter((o) =>
+      o.label.toLowerCase().includes(query.toLowerCase())
+    );
+  }, [options, query]);
+
+  const selectedLabel = options.find((o) => o.value === value)?.label;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled) {
+            setOpen((prev) => !prev);
+            setQuery("");
+          }
+        }}
+        className={`w-full flex items-center gap-2 pl-3 pr-3 py-2.5 bg-gray-50 border rounded-xl text-sm transition-all
+          ${open ? "border-primary-400 ring-2 ring-primary-100" : "border-gray-200"}
+          ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-gray-300 cursor-pointer"}
+          ${value ? "text-gray-900" : "text-gray-400"}
+        `}
+      >
+        {Icon && <Icon size={15} className={`shrink-0 ${value ? "text-primary-500" : "text-gray-400"}`} />}
+        <span className="flex-1 text-left truncate font-medium">
+          {selectedLabel || placeholder}
+        </span>
+        {value ? (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange("");
+              setOpen(false);
+              setQuery("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.stopPropagation();
+                onChange("");
+                setOpen(false);
+                setQuery("");
+              }
+            }}
+            className="shrink-0 w-4 h-4 rounded-full bg-gray-200 hover:bg-red-100 flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
+          >
+            <X size={10} />
+          </span>
+        ) : (
+          <ChevronDown
+            size={15}
+            className={`shrink-0 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          />
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-[100] overflow-hidden">
+          {/* Search input */}
+          <div className="p-2 border-b border-gray-100">
+            <div className="relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
+              />
+            </div>
+          </div>
+
+          {/* Options list */}
+          <div className="max-h-52 overflow-y-auto">
+            {/* All / Reset option */}
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+                setQuery("");
+              }}
+              className={`w-full px-3 py-2.5 text-left text-xs font-bold transition-colors border-b border-gray-50
+                ${!value ? "bg-primary-50 text-primary-700" : "text-gray-400 hover:bg-gray-50"}`}
+            >
+              All {placeholder.replace("Filter by ", "")}s
+            </button>
+
+            {filtered.length === 0 ? (
+              <div className="px-3 py-4 text-center text-xs text-gray-400">No results found</div>
+            ) : (
+              filtered.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                  className={`w-full px-3 py-2.5 text-left text-sm transition-colors
+                    ${value === opt.value
+                      ? "bg-primary-50 text-primary-700 font-bold"
+                      : "text-gray-700 hover:bg-gray-50 font-medium"
+                    }`}
+                >
+                  {opt.label}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────
 export default function MyVehiclesSection({
   onEditVehicle,
@@ -106,6 +268,57 @@ export default function MyVehiclesSection({
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+
+  // ─── Branches & filter state ─────────────────────────────────────
+  const [branches, setBranches] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
+
+  // Fetch branches once on mount
+  useEffect(() => {
+    supplierApi
+      .getBranches()
+      .then((res: any) => {
+        const data = res?.data?.data || res?.data || [];
+        if (Array.isArray(data)) setBranches(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Unique countries from branches
+  const countryOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [];
+    branches.forEach((b: any) => {
+      const country = (b.country || "").trim();
+      if (country && !seen.has(country)) {
+        seen.add(country);
+        opts.push({ value: country, label: country });
+      }
+    });
+    return opts.sort((a, b) => a.label.localeCompare(b.label));
+  }, [branches]);
+
+  // Branch options – filtered by selected country
+  const branchOptions = useMemo(() => {
+    const filtered = selectedCountry
+      ? branches.filter((b: any) => (b.country || "").trim() === selectedCountry)
+      : branches;
+    return filtered.map((b: any) => ({
+      value: String(b.id),
+      label: b.name || b.location || `Branch #${b.id}`,
+    }));
+  }, [branches, selectedCountry]);
+
+  // When country changes, reset branch if it no longer belongs to that country
+  useEffect(() => {
+    if (selectedBranch && selectedCountry) {
+      const branchObj = branches.find((b: any) => String(b.id) === selectedBranch);
+      if (branchObj && (branchObj.country || "").trim() !== selectedCountry) {
+        setSelectedBranch("");
+      }
+    }
+  }, [selectedCountry, selectedBranch, branches]);
 
   const fetchVehicles = async (page: number = 1) => {
     setIsLoading(true);
@@ -138,28 +351,72 @@ export default function MyVehiclesSection({
     fetchVehicles(currentPage);
   }, [currentPage]);
 
-  // Reset to page 1 when search changes
+  // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [localSearch, searchQuery]);
+  }, [localSearch, searchQuery, selectedCountry, selectedBranch]);
 
-  // Client-side filter for search (applied on top of server-side page)
+  // ─── Helper: get branch id from vehicle ─────────────────────────
+  const getVehicleBranchId = (v: any): string => {
+    // pickup_loc can be object {id, ...} or a raw id
+    if (v.pickup_loc) {
+      if (typeof v.pickup_loc === "object" && v.pickup_loc !== null) {
+        return String(v.pickup_loc.id ?? "");
+      }
+      return String(v.pickup_loc);
+    }
+    if (v.branch) {
+      if (typeof v.branch === "object" && v.branch !== null) {
+        return String(v.branch.id ?? "");
+      }
+      return String(v.branch);
+    }
+    if (v.branch_id) return String(v.branch_id);
+    return "";
+  };
+
+  // ─── Helper: get branch country ──────────────────────────────────
+  const getVehicleCountry = (v: any): string => {
+    const branchId = getVehicleBranchId(v);
+    if (!branchId) return "";
+    const branchObj = branches.find((b: any) => String(b.id) === branchId);
+    return (branchObj?.country || "").trim();
+  };
+
+  // ─── Client-side filtering ──────────────────────────────────────
   const filteredVehicles = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();
-    if (!query) return items;
-    return items.filter((v) => {
-      const catName = typeof v.category === "object" ? v.category?.name : v.category;
-      return (
-        v.name?.toLowerCase().includes(query) ||
-        String(catName || "")?.toLowerCase().includes(query)
-      );
-    });
-  }, [items, searchQuery, localSearch]);
 
-  // Use server-supplied pagination unless user is searching (then paginate client-side)
-  const isSearching = !!(searchQuery || localSearch);
-  const effectiveTotalPages = isSearching ? Math.ceil(filteredVehicles.length / itemsPerPage) : totalPages;
-  const paginatedVehicles = isSearching
+    return items.filter((v) => {
+      // Name / category search
+      if (query) {
+        const catName = typeof v.category === "object" ? v.category?.name : v.category;
+        const matchesSearch =
+          v.name?.toLowerCase().includes(query) ||
+          String(catName || "")?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // Branch filter
+      if (selectedBranch) {
+        const vehicleBranchId = getVehicleBranchId(v);
+        if (vehicleBranchId !== selectedBranch) return false;
+      }
+
+      // Country filter (only when no branch selected to avoid double-filter)
+      if (selectedCountry && !selectedBranch) {
+        const vehicleCountry = getVehicleCountry(v);
+        if (vehicleCountry !== selectedCountry) return false;
+      }
+
+      return true;
+    });
+  }, [items, searchQuery, localSearch, selectedBranch, selectedCountry, branches]);
+
+  // Use server-supplied pagination unless user is filtering (then paginate client-side)
+  const isFiltering = !!(searchQuery || localSearch || selectedBranch || selectedCountry);
+  const effectiveTotalPages = isFiltering ? Math.ceil(filteredVehicles.length / itemsPerPage) : totalPages;
+  const paginatedVehicles = isFiltering
     ? filteredVehicles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     : filteredVehicles;
 
@@ -210,6 +467,8 @@ export default function MyVehiclesSection({
     return getVehicleImageUrl(img);
   };
 
+  const hasActiveFilters = !!(selectedCountry || selectedBranch);
+
   return (
     <SectionLayout>
       {/* Delete Confirmation Modal */}
@@ -233,23 +492,98 @@ export default function MyVehiclesSection({
         } : undefined}
       />
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 flex items-center gap-4 mt-4">
-        <div className="relative flex-1 group">
-          <Search
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors"
-            size={18}
+      {/* ── Filter Bar ── */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-4 mt-4 space-y-3">
+        {/* Row 1: Search */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 group">
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search by vehicle name, category or year..."
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+            />
+          </div>
+          {/* Filter icon – shows active indicator */}
+          <div className="relative">
+            <button className={`p-3 border rounded-xl transition-all ${hasActiveFilters ? "bg-primary-50 border-primary-200 text-primary-600" : "bg-gray-50 border-gray-200 text-gray-400 hover:text-primary-600 hover:border-primary-200"}`}>
+              <Filter size={20} />
+            </button>
+            {hasActiveFilters && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary-500 rounded-full border-2 border-white" />
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: Country + Branch dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Country */}
+          <SearchableDropdown
+            placeholder="Filter by Country"
+            value={selectedCountry}
+            options={countryOptions}
+            onChange={(val) => {
+              setSelectedCountry(val);
+              setSelectedBranch(""); // reset branch when country changes
+            }}
+            icon={Globe}
           />
-          <input
-            type="text"
-            placeholder="Search by vehicle name, category or year..."
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+
+          {/* Branch */}
+          <SearchableDropdown
+            placeholder="Filter by Branch"
+            value={selectedBranch}
+            options={branchOptions}
+            onChange={setSelectedBranch}
+            icon={Building2}
+            disabled={branchOptions.length === 0 && !selectedCountry}
           />
         </div>
-        <button className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-          <Filter size={20} />
-        </button>
+
+        {/* Active filters chips */}
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 flex-wrap pt-1">
+            <span className="text-xs text-gray-400 font-medium">Active filters:</span>
+            {selectedCountry && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-bold rounded-lg border border-primary-100">
+                <Globe size={11} />
+                {selectedCountry}
+                <button
+                  onClick={() => setSelectedCountry("")}
+                  className="ml-0.5 hover:text-primary-900 transition-colors"
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            )}
+            {selectedBranch && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-bold rounded-lg border border-primary-100">
+                <Building2 size={11} />
+                {branchOptions.find((b) => b.value === selectedBranch)?.label || selectedBranch}
+                <button
+                  onClick={() => setSelectedBranch("")}
+                  className="ml-0.5 hover:text-primary-900 transition-colors"
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setSelectedCountry("");
+                setSelectedBranch("");
+              }}
+              className="text-xs text-gray-400 hover:text-red-500 font-medium underline transition-colors"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -366,13 +700,19 @@ export default function MyVehiclesSection({
                             <Search size={32} />
                           </div>
                           <p className="text-gray-500 font-medium">
-                            No vehicles found matching your search.
+                            {hasActiveFilters
+                              ? "No vehicles found for the selected filters."
+                              : "No vehicles found matching your search."}
                           </p>
                           <button
-                            onClick={() => setLocalSearch("")}
+                            onClick={() => {
+                              setLocalSearch("");
+                              setSelectedCountry("");
+                              setSelectedBranch("");
+                            }}
                             className="text-primary-600 font-bold text-sm hover:underline"
                           >
-                            Clear search
+                            Clear all filters
                           </button>
                         </div>
                       </td>
@@ -388,8 +728,8 @@ export default function MyVehiclesSection({
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 px-6 py-4 bg-gray-50/30">
               <span className="text-xs font-bold text-gray-500">
                 Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                {Math.min(currentPage * itemsPerPage, isSearching ? filteredVehicles.length : totalCount)} of{" "}
-                {isSearching ? filteredVehicles.length : totalCount} vehicles
+                {Math.min(currentPage * itemsPerPage, isFiltering ? filteredVehicles.length : totalCount)} of{" "}
+                {isFiltering ? filteredVehicles.length : totalCount} vehicles
               </span>
               <Pagination
                 currentPage={currentPage}
