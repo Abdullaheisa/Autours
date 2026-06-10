@@ -165,7 +165,7 @@ class VehicleController extends Controller
                 $branches = Branch::query()->where('location', $city)->get();
             }
 
-            $suppliers = User::query()->whereIn('id', $branches->pluck('company_id'))->get();
+            $suppliers = User::query()->whereIn('id', $branches->pluck('company_id'))->where('role', 'active_supplier')->get();
             $paymentMethods = PaymentMethod::query()->whereIn('id', PaymentMethodSupplier::query()->whereIn('supplier_id', $branches->pluck('company_id')->toArray())->get()->pluck('payment_method_id')->toArray())->get();
             $vehicles = $query->where('activation', true)->has('profit')->get();
 
@@ -195,6 +195,11 @@ class VehicleController extends Controller
                     }
                 }
             }
+
+            $paymentMethods = $paymentMethods->filter(function($method) {
+                return $method->vehicle_count > 0;
+            })->values();
+
             $categoryIds = $vehicles->pluck('category')->unique()->filter()->values()->toArray();
             $categories = Category::query()
                 ->whereIn('id', $categoryIds)
@@ -217,6 +222,11 @@ class VehicleController extends Controller
                     }
                 }
             }
+
+            $suppliers = $suppliers->filter(function($supplier) {
+                return $supplier->vehicle_count > 0;
+            })->values();
+
             $startDate = Carbon::parse($dateFrom);
             $endDate = Carbon::parse($dateTo);
 
