@@ -124,6 +124,8 @@ export interface FilterPayload extends SearchPayload {
   specifications?: { name: string; option: string[] }[];
   rating?: number;
   sortBy?: string;
+  page?: number;
+  per_page?: number;
 }
 
 export interface FilterResponse {
@@ -134,6 +136,9 @@ export interface FilterResponse {
   min: number;
   filteredCategories?: { id: number; name: string; vehicle_count: number; photo?: string }[];
   filteredSuppliers?: { id: number; name: string; vehicle_count: number; logo?: string }[];
+  current_page?: number;
+  last_page?: number;
+  total?: number;
 }
 
 export interface LocationBranch {
@@ -144,4 +149,5 @@ export interface LocationBranch {
   adresse?: string;
   location_address?: string;
   location_type?: string;
+  abriviation?: string;
 }

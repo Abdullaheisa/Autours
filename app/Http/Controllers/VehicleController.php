@@ -271,21 +271,6 @@ class VehicleController extends Controller
             }
 
             $count = $vehicles->count();
-
-            foreach ($vehicles as $vehicle) {
-                $supplierId = $vehicle->supplier instanceof User ? $vehicle->supplier->id : $vehicle->getAttributes()['supplier'];
-                $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicle->id]);
-                $vehicle->setAttribute('promos', array_map(function($p) { return $p->promotion; }, $promos));
-                $rentals = Rental::query()->where('supplier_id', $supplierId)->with('rentalRates.question')->whereNotNull('rate')->get();
-                $vehicle->setAttribute('questions_rate', DB::select('SELECT objective, sum(rental_rates.rate)/count(rental_rates.id)  as total_rate FROM rentals
-                                        JOIN rental_rates on rental_rates.rental_id = rentals.id
-                                        JOIN rate_questions on rate_questions.id = rental_rates.question_id
-                                        WHERE supplier_id = :supplier_id
-                                        Group By rate_questions.objective', ['supplier_id' => $supplierId]));
-                $vehicle->setAttribute('supplier_rate', round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1));
-                $vehicle->setAttribute('supplier_number_of_reviews', $rentals->count());
-                $vehicle->setAttribute('rental_terms', SupplierRentalTerm::query()->where('supplier_id', $supplierId)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get());
-            }
             $vehicles = $vehicles->toArray();
 
 
@@ -301,12 +286,55 @@ class VehicleController extends Controller
                 $locationName = $cityBranch ? $cityBranch->name : $location;
             }
 
+            $page = (int) $request->input('page', 1);
+            $perPage = (int) $request->input('per_page', 15);
+            $lastPage = ceil($count / $perPage) ?: 1;
+            $paginatedVehicles = array_slice($vehicles, ($page - 1) * $perPage, $perPage);
+
+            // Inject expensive metadata only for paginated subset
+            $supplierCache = [];
+
+            foreach ($paginatedVehicles as &$vehicleArr) {
+                $vehicleId = $vehicleArr['id'];
+                $supplierId = is_array($vehicleArr['supplier']) ? $vehicleArr['supplier']['id'] : $vehicleArr['supplier'];
+
+                $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicleId]);
+                $vehicleArr['promos'] = array_map(function($p) { return $p->promotion; }, $promos);
+
+                if (!isset($supplierCache[$supplierId])) {
+                    $rentals = Rental::query()->where('supplier_id', $supplierId)->with('rentalRates.question')->whereNotNull('rate')->get();
+                    
+                    $questionsRate = DB::select('SELECT objective, sum(rental_rates.rate)/count(rental_rates.id)  as total_rate FROM rentals
+                                            JOIN rental_rates on rental_rates.rental_id = rentals.id
+                                            JOIN rate_questions on rate_questions.id = rental_rates.question_id
+                                            WHERE supplier_id = :supplier_id
+                                            Group By rate_questions.objective', ['supplier_id' => $supplierId]);
+                                            
+                    $supplierRate = round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1);
+                    $supplierReviewsCount = $rentals->count();
+                    $rentalTerms = SupplierRentalTerm::query()->where('supplier_id', $supplierId)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get()->toArray();
+                    
+                    $supplierCache[$supplierId] = [
+                        'questions_rate' => $questionsRate,
+                        'supplier_rate' => $supplierRate,
+                        'supplier_number_of_reviews' => $supplierReviewsCount,
+                        'rental_terms' => $rentalTerms,
+                    ];
+                }
+
+                $vehicleArr['questions_rate'] = $supplierCache[$supplierId]['questions_rate'];
+                $vehicleArr['supplier_rate'] = $supplierCache[$supplierId]['supplier_rate'];
+                $vehicleArr['supplier_number_of_reviews'] = $supplierCache[$supplierId]['supplier_number_of_reviews'];
+                $vehicleArr['rental_terms'] = $supplierCache[$supplierId]['rental_terms'];
+            }
+            unset($vehicleArr);
+
             return [
                 'location' => $locationName,
                 'location_id' => is_numeric($location) ? (int)$location : null,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
-                'filteredVehicles' => $vehicles,
+                'filteredVehicles' => $paginatedVehicles,
                 'filteredCategories' => $categories,
                 'filteredSuppliers' => $suppliers,
                 'filteredLocationTypes' => $locationTypes,
@@ -315,7 +343,10 @@ class VehicleController extends Controller
                 'max' => $maxPrice,
                 'min' => $minPrice,
                 'priceTax' => $priceTax,
-                'daysNumber' => $diffInDays
+                'daysNumber' => $diffInDays,
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'total' => $count
             ];
         } catch (\Exception $e) {
             return response()->json([

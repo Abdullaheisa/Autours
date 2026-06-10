@@ -18,11 +18,11 @@ export const vehicleMapper = {
 
     const mappedSpecs = Array.isArray(specs)
       ? specs.map((s: any) => ({
-          id: s.id,
-          name: s.name || '',
-          option: s.pivot?.value || s.value || '',
-          icon: s.icon || '',
-        }))
+        id: s.id,
+        name: s.name || '',
+        option: s.pivot?.value || s.value || '',
+        icon: s.icon || '',
+      }))
       : [];
 
     return {
@@ -56,7 +56,7 @@ export const vehicleMapper = {
         instant_confirmation: !!(raw.instant_confirmation ?? supplierData.instant_confirmation),
         lat: parseFloat(branch.lat || supplierData.lat) || 0,
         lng: parseFloat(branch.lng || supplierData.lng) || 0,
-        address: branch.adresse || supplierData.address || '',
+        address: branch.address || branch.location_address || branch.adresse || supplierData.address || '',
       },
       included: (raw.included || raw.inclusions || []).map((inc: any, index: number) => ({
         id: inc.id || index,
@@ -77,8 +77,8 @@ export const vehicleMapper = {
       instant_confirmation: raw.instant_confirmation !== undefined
         ? !!raw.instant_confirmation
         : (supplierData.instant_confirmation !== undefined
-            ? !!supplierData.instant_confirmation
-            : true),
+          ? !!supplierData.instant_confirmation
+          : true),
       promos: raw.promos || [],
     };
   },

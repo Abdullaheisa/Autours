@@ -48,6 +48,9 @@ interface SearchState {
   filterError: string | null;
   hasSearched: boolean;
   fetchedCurrency?: string;
+  currentPage: number;
+  totalPages: number;
+  perPage: number;
 }
 
 const initialState: SearchState = {
@@ -86,6 +89,9 @@ const initialState: SearchState = {
   filterError: null,
   hasSearched: false,
   fetchedCurrency: 'AED',
+  currentPage: 1,
+  totalPages: 1,
+  perPage: 15,
 };
 
 export const initiateSearch = createAsyncThunk(
@@ -114,6 +120,7 @@ const searchSlice = createSlice({
     },
     setFilterParams: (state, action: PayloadAction<Partial<FilterParams>>) => {
       state.filterParams = { ...state.filterParams, ...action.payload };
+      state.currentPage = 1; // Reset to page 1 on filter change
     },
     toggleFilterParam: (state, action: PayloadAction<{ key: keyof FilterParams; value: string }>) => {
       const { key, value } = action.payload;
@@ -127,6 +134,10 @@ const searchSlice = createSlice({
           (state.filterParams as any)[key] = [...arr, value];
         }
       }
+      state.currentPage = 1; // Reset to page 1 on filter toggle
+    },
+    setPage: (state, action: PayloadAction<number>) => {
+      state.currentPage = action.payload;
     },
     resetFilters: (state) => {
       state.filterParams = initialState.filterParams;
@@ -171,6 +182,9 @@ const searchSlice = createSlice({
         state.maxPrice = action.payload.max;
         state.minPrice = action.payload.min;
         state.fetchedCurrency = action.meta?.arg?.currency || 'AED';
+        
+        state.currentPage = action.payload.current_page || 1;
+        state.totalPages = action.payload.last_page || Math.ceil(state.count / state.perPage) || 1;
 
         const hasActiveFilters =
           state.filterParams.category.length > 0 ||
@@ -206,6 +220,7 @@ export const {
   resetSearch,
   clearErrors,
   applyLocalFilters,
+  setPage,
 } = searchSlice.actions;
 
 export default searchSlice.reducer;

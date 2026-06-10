@@ -36,6 +36,9 @@ export const vehicleApi = {
         logo: s.logo || '',
         vehicle_count: s.vehicle_count ?? 0,
       })),
+      current_page: response.current_page || 1,
+      last_page: response.last_page || response.total_pages || 1,
+      total: response.total || response.count || 0,
     };
   },
 

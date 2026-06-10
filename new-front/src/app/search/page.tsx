@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Car, AlertCircle, Search, X, ChevronDown } from 'lucide-react'; // ضفنا ChevronDown
+import { Car, AlertCircle, Search, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import Stepper from './components/Stepper';
@@ -15,7 +15,7 @@ import CarCard from './components/CarCard';
 import CarCardSkeleton from './components/CarCardSkeleton';
 import CategoryFilterBar from './components/CategoryFilterBar';
 import { RootState, AppDispatch } from '@/store';
-import { setSearchParams, fetchVehicles } from '@/store/slices/searchSlice';
+import { setSearchParams, fetchVehicles, setPage } from '@/store/slices/searchSlice';
 import type { FilterPayload } from '@/types';
 import { FILTER_SPEC_NAMES } from '@/constants/filterSpecNames';
 
@@ -25,8 +25,7 @@ function SearchPageContent() {
   const currencyCode = useSelector((state: RootState) => state.currency.code);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   
-  // 🚀 TBT Fix: التحكم في عدد العربيات المعروضة لتخفيف الـ DOM
-  const [visibleCount, setVisibleCount] = useState(10); 
+
 
   const {
     searchParams,
@@ -38,14 +37,22 @@ function SearchPageContent() {
     isFiltering,
     filterError,
     hasSearched,
+    currentPage,
+    totalPages,
+    perPage,
   } = useSelector((state: RootState) => state.search);
 
   const searchParamsRef = useRef(searchParams);
   const filterParamsRef = useRef(filterParams);
   const currencyCodeRef = useRef(currencyCode);
+  const currentPageRef = useRef(currentPage);
+  const perPageRef = useRef(perPage);
+  
   searchParamsRef.current = searchParams;
   filterParamsRef.current = filterParams;
   currencyCodeRef.current = currencyCode;
+  currentPageRef.current = currentPage;
+  perPageRef.current = perPage;
 
   const buildFilterPayload = useCallback((): FilterPayload | null => {
     const sp = searchParamsRef.current;
@@ -61,6 +68,8 @@ function SearchPageContent() {
       time_from: sp.startTime || '10:00',
       time_to: sp.endTime || '10:00',
       currency: ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD'].includes(cc) ? cc : 'AED',
+      page: currentPageRef.current,
+      per_page: perPageRef.current,
     };
 
     if (fp.category.length > 0) {
@@ -183,15 +192,13 @@ function SearchPageContent() {
     }
     doFetchVehicles();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backendFiltersStr]);
+  }, [backendFiltersStr, currentPage]);
 
   const handleFilterChange = useCallback(() => {
-    setVisibleCount(10); // 🚀 TBT Fix: تصفير العداد عند تغيير الفلاتر
     doFetchVehicles();
   }, [doFetchVehicles]);
 
   const handleReSearch = useCallback(() => {
-    setVisibleCount(10); // 🚀 TBT Fix
     setTimeout(() => { doFetchVehicles(); }, 100);
     setIsSearchDrawerOpen(false);
   }, [doFetchVehicles]);
@@ -278,10 +285,7 @@ function SearchPageContent() {
     return result;
   }, [vehicles, filterParams]);
 
-  // 🚀 TBT Fix: تقطيع المصفوفة لعرض عدد محدد فقط
-  const currentlyVisibleVehicles = useMemo(() => {
-    return displayedVehicles.slice(0, visibleCount);
-  }, [displayedVehicles, visibleCount]);
+
 
   const hasValidSearch = searchParams.location && searchParams.dateFrom && searchParams.dateTo;
 
@@ -367,18 +371,66 @@ function SearchPageContent() {
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}
                     className="space-y-4"
                   >
-                    {currentlyVisibleVehicles.map((vehicle) => (
+                    {displayedVehicles.map((vehicle) => (
                       <CarCard key={vehicle.id} vehicle={vehicle} daysNumber={daysNumber} />
                     ))}
                     
-                    {/* 🚀 TBT Fix: زرار عرض المزيد */}
-                    {visibleCount < displayedVehicles.length && (
-                      <div className="pt-4 flex justify-center">
+                    {/* Pagination UI */}
+                    {totalPages > 1 && (
+                      <div className="pt-6 pb-4 flex justify-center items-center gap-2">
                         <button 
-                          onClick={() => setVisibleCount(prev => prev + 10)}
-                          className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-800 rounded-xl font-black text-sm hover:border-[var(--primary)] hover:bg-gray-50 transition-all flex items-center gap-2"
+                          onClick={() => dispatch(setPage(Math.max(1, currentPage - 1)))}
+                          disabled={currentPage === 1}
+                          className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                          aria-label="Previous page"
                         >
-                          Show More Cars <ChevronDown size={16} />
+                          <ChevronLeft size={20} />
+                        </button>
+                        
+                        <div className="flex items-center gap-1.5 px-2">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                            .map((page, i, arr) => {
+                              if (i > 0 && arr[i - 1] !== page - 1) {
+                                return (
+                                  <div key={`ellipsis-${page}`} className="flex items-center gap-1.5">
+                                    <span className="text-gray-400">...</span>
+                                    <button
+                                      onClick={() => dispatch(setPage(page))}
+                                      className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-black transition-all shadow-sm ${
+                                        currentPage === page 
+                                          ? 'bg-[var(--primary)] text-gray-900 border-none' 
+                                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)]'
+                                      }`}
+                                    >
+                                      {page}
+                                    </button>
+                                  </div>
+                                );
+                              }
+                              return (
+                                <button
+                                  key={page}
+                                  onClick={() => dispatch(setPage(page))}
+                                  className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-black transition-all shadow-sm ${
+                                    currentPage === page 
+                                      ? 'bg-[var(--primary)] text-gray-900 border-none' 
+                                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)]'
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              );
+                          })}
+                        </div>
+
+                        <button 
+                          onClick={() => dispatch(setPage(Math.min(totalPages, currentPage + 1)))}
+                          disabled={currentPage === totalPages}
+                          className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                          aria-label="Next page"
+                        >
+                          <ChevronRight size={20} />
                         </button>
                       </div>
                     )}
