@@ -115,7 +115,9 @@ class VehicleController extends Controller
                     'status' => false
                 ]);
             }
-            $query = $filteredVehicles->with('category', 'fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'profit', 'included', 'branch', 'locationType', 'specifications');
+            $query = $filteredVehicles->whereHas('supplierUser', function($q) {
+                $q->where('role', 'active_supplier');
+            })->with('category', 'fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'profit', 'included', 'branch', 'locationType', 'specifications');
 
             if ($request->category) {
                 $query->whereIn('category', $request->category);
@@ -338,10 +340,9 @@ class VehicleController extends Controller
 //
 //         }
 
-//         $vehicles = $vehicles->where(function ($query) use ($startDate, $endDate) {
-//             $query->where('start_date', '<=', $startDate)
-//                   ->where('end_date', '>=', $endDate);
-//         });
+        $vehicles = $vehicles->whereHas('supplierUser', function($q) {
+            $q->where('role', 'active_supplier');
+        })->where('activation', true);
 
         $results = $vehicles->with(['category', 'supplierUser'])->get();
 
@@ -942,7 +943,18 @@ class VehicleController extends Controller
 
             $location = $request->location ?? $request->pickupLoc;
             $currency = $request->currency;
-            $selectedVehicle = Vehicle::where('id', $request->id)->with('locationType','category', 'fuelPolicy', 'branch', 'included', 'specifications', 'supplierUser.fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'fuelPolicy')->first();
+            $selectedVehicle = Vehicle::where('id', $request->id)
+                ->whereHas('supplierUser', function($q) {
+                    $q->where('role', 'active_supplier');
+                })
+                ->with('locationType','category', 'fuelPolicy', 'branch', 'included', 'specifications', 'supplierUser.fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'fuelPolicy')->first();
+
+            if (!$selectedVehicle) {
+                return response()->json([
+                    'message' => 'Vehicle not found or supplier is inactive.',
+                    'status' => false
+                ], 404);
+            }
 
             if ($location && $selectedVehicle) {
                 $selectedVehicle->available_branches = $selectedVehicle->branch ? collect([$selectedVehicle->branch]) : collect([]);
