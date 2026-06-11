@@ -71,6 +71,19 @@ export default function ContestPopup() {
     };
   }, [mounted, isVisible]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !forceInteraction) {
+        setIsVisible(false);
+      }
+    };
+
+    if (isVisible) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isVisible, forceInteraction]);
+
   const handleClose = () => {
     if (forceInteraction) return; // cannot close if forced
     setIsVisible(false);

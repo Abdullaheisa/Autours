@@ -2,28 +2,22 @@ import type { LocationBranch } from '@/types';
 
 /** Full address line shown in dropdowns (not country / city summary). */
 export function getLocationDisplayLabel(loc: LocationBranch): string {
-  let label = '';
-  const adresse = loc.adresse?.trim();
+  const name = loc.name?.trim() || '';
+  let addressPart = loc.adresse?.trim() || (loc as { location_address?: string }).location_address?.trim() || loc.location?.trim() || '';
 
-  if (adresse) {
-    label = adresse.replace(/\n/g, ', ');
-  } else {
-    const locationAddress = (loc as { location_address?: string }).location_address?.trim();
-    if (locationAddress) {
-      label = locationAddress;
+  if (addressPart) {
+    addressPart = addressPart.replace(/\n/g, ', ');
+  }
+
+  let label = '';
+  if (name && addressPart && name !== addressPart) {
+    if (!addressPart.toLowerCase().includes(name.toLowerCase())) {
+      label = `${name}, ${addressPart}`;
     } else {
-      const location = loc.location?.trim();
-      if (!location) {
-        label = loc.name?.trim() || '';
-      } else {
-        const parts = location.split(',').map((p) => p.trim()).filter(Boolean);
-        if (parts.length >= 2) {
-          label = parts.slice(1).join(', ');
-        } else {
-          label = location;
-        }
-      }
+      label = addressPart;
     }
+  } else {
+    label = name || addressPart;
   }
 
   return loc.abriviation ? `${label} - ${loc.abriviation}` : label;
