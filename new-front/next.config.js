@@ -26,6 +26,10 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: '/sitemap',
+        destination: '/sitemap.xml',
+      },
+      {
         source: '/api/backend/:path*', // أي طلب بيبدأ بـ /api/backend
         destination: `${backendUrl}/:path*`, // هيتحول للرابط ده في السيرفر بدون إضافة /api/
       },

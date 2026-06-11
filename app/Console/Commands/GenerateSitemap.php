@@ -33,7 +33,7 @@ class GenerateSitemap extends Command
     {
         try {
             $xml = $this->buildXml();
-            $path = public_path('sitemap.xml');
+            $path = base_path('new-front/public/sitemap.xml');
 
             file_put_contents($path, $xml);
 
@@ -70,7 +70,7 @@ class GenerateSitemap extends Command
                     $lastModified = $blog->updated_at ?? $blog->created_at;
 
                     $urls[] = [
-                        'loc'        => url('/blogs/' . $blog->slug),
+                        'loc'        => $this->getFrontendUrl('/blogs/' . $blog->slug),
                         'lastmod'    => $lastModified ? $lastModified->toAtomString() : null,
                         'changefreq' => 'weekly',
                         'priority'   => '0.70',
@@ -90,7 +90,7 @@ class GenerateSitemap extends Command
                     $lastModified = $category->updated_at ?? $category->created_at;
 
                     $urls[] = [
-                        'loc'        => url('/blogs?category=' . $category->id),
+                        'loc'        => $this->getFrontendUrl('/blogs?category=' . $category->id),
                         'lastmod'    => $lastModified ? $lastModified->toAtomString() : null,
                         'changefreq' => 'weekly',
                         'priority'   => '0.60',
@@ -128,6 +128,15 @@ class GenerateSitemap extends Command
     }
 
     /**
+     * Get the frontend URL.
+     */
+    private function getFrontendUrl(string $path = ''): string
+    {
+        $baseUrl = config('app.frontend_url', 'https://www.autours.net');
+        return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
+    }
+
+    /**
      * Static/public pages that never change.
      *
      * @return array<int, array<string, string|null>>
@@ -136,37 +145,37 @@ class GenerateSitemap extends Command
     {
         return [
             [
-                'loc'        => url('/'),
+                'loc'        => $this->getFrontendUrl('/'),
                 'changefreq' => 'daily',
                 'priority'   => '1.00',
             ],
             [
-                'loc'        => url('/v2'),
+                'loc'        => $this->getFrontendUrl('/v2'),
                 'changefreq' => 'weekly',
                 'priority'   => '0.80',
             ],
             [
-                'loc'        => url('/about-us'),
+                'loc'        => $this->getFrontendUrl('/about-us'),
                 'changefreq' => 'monthly',
                 'priority'   => '0.70',
             ],
             [
-                'loc'        => url('/why_autours'),
+                'loc'        => $this->getFrontendUrl('/why_autours'),
                 'changefreq' => 'monthly',
                 'priority'   => '0.70',
             ],
             [
-                'loc'        => url('/where-we-are'),
+                'loc'        => $this->getFrontendUrl('/where-we-are'),
                 'changefreq' => 'monthly',
                 'priority'   => '0.70',
             ],
             [
-                'loc'        => url('/contact-us'),
+                'loc'        => $this->getFrontendUrl('/contact-us'),
                 'changefreq' => 'monthly',
                 'priority'   => '0.60',
             ],
             [
-                'loc'        => url('/blogs'),
+                'loc'        => $this->getFrontendUrl('/blogs'),
                 'changefreq' => 'daily',
                 'priority'   => '0.90',
             ],

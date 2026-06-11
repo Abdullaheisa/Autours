@@ -125,7 +125,7 @@ const searchSlice = createSlice({
     toggleFilterParam: (state, action: PayloadAction<{ key: keyof FilterParams; value: string }>) => {
       const { key, value } = action.payload;
       const current = state.filterParams[key];
-      
+
       if (Array.isArray(current)) {
         const arr = current as any[];
         if (arr.includes(value)) {
@@ -169,20 +169,34 @@ const searchSlice = createSlice({
         state.searchError = action.payload as string;
       })
       // تفعيل كود جلب البيانات وحل مشكلة الـ Hydration والإيرور (action: any)
-      .addCase(fetchVehicles.pending, (state) => {
+      .addCase(fetchVehicles.pending, (state, action) => {
         state.isFiltering = true;
         state.filterError = null;
+        if (action.meta.arg.page === 1) {
+          state.vehicles = [];
+        }
       })
       .addCase(fetchVehicles.fulfilled, (state, action: any) => {
         state.isFiltering = false;
         state.hasSearched = true;
-        state.vehicles = action.payload.filteredVehicles || [];
+
+        const newVehicles = action.payload.filteredVehicles || [];
+        const currentPage = action.payload.current_page || 1;
+
+        if (currentPage === 1) {
+          state.vehicles = newVehicles;
+        } else {
+          const existingIds = new Set(state.vehicles.map(v => v.id));
+          const uniqueNewVehicles = newVehicles.filter((v: any) => !existingIds.has(v.id));
+          state.vehicles = [...state.vehicles, ...uniqueNewVehicles];
+        }
+
         state.count = action.payload.count;
         state.daysNumber = action.payload.daysNumber;
         state.maxPrice = action.payload.max;
         state.minPrice = action.payload.min;
         state.fetchedCurrency = action.meta?.arg?.currency || 'AED';
-        
+
         state.currentPage = action.payload.current_page || 1;
         state.totalPages = action.payload.last_page || Math.ceil(state.count / state.perPage) || 1;
 

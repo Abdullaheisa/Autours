@@ -24,7 +24,7 @@ function SearchPageContent() {
   const urlParams = useSearchParams();
   const currencyCode = useSelector((state: RootState) => state.currency.code);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
-  
+
 
 
   const {
@@ -40,6 +40,7 @@ function SearchPageContent() {
     currentPage,
     totalPages,
     perPage,
+    count,
   } = useSelector((state: RootState) => state.search);
 
   const searchParamsRef = useRef(searchParams);
@@ -47,7 +48,7 @@ function SearchPageContent() {
   const currencyCodeRef = useRef(currencyCode);
   const currentPageRef = useRef(currentPage);
   const perPageRef = useRef(perPage);
-  
+
   searchParamsRef.current = searchParams;
   filterParamsRef.current = filterParams;
   currencyCodeRef.current = currencyCode;
@@ -88,7 +89,7 @@ function SearchPageContent() {
       const mappedPaymentIds = fp.paymentType
         .map((name: string) => PAYMENT_METHOD_MAP[name] || parseInt(name, 10))
         .filter((id: number) => !isNaN(id) && id > 0);
-        
+
       if (mappedPaymentIds.length > 0) {
         payload.payment_methods = mappedPaymentIds;
       }
@@ -101,11 +102,11 @@ function SearchPageContent() {
         'Airport': 2,
         'Meet & Greet': 3,
       };
-      
+
       const mappedIds = fp.locationType
         .map((name: string) => LOCATION_TYPE_MAP[name] || parseInt(name, 10))
         .filter((id: number) => !isNaN(id) && id > 0);
-        
+
       if (mappedIds.length > 0) {
         payload.location_type_id = mappedIds;
       }
@@ -117,24 +118,24 @@ function SearchPageContent() {
 
     // 🚀 SPECIFICATIONS FIX: Strictly formatted array of objects, skipping empty arrays
     const specifications: { name: string; option: string[] }[] = [];
-    
+
     if (fp.seats && fp.seats.length > 0) specifications.push({ name: FILTER_SPEC_NAMES.seats, option: fp.seats });
     if (fp.doors && fp.doors.length > 0) specifications.push({ name: FILTER_SPEC_NAMES.doors, option: fp.doors });
-    
+
     if (fp.transmission && fp.transmission.length > 0) {
       specifications.push({ name: FILTER_SPEC_NAMES.transmission, option: fp.transmission });
     }
-    
+
     if (fp.fuelType && fp.fuelType.length > 0) {
       const mappedFuel = fp.fuelType.map(f => f === 'Hybrid' ? 'Hybrid Petrol & Gas' : f);
       specifications.push({ name: FILTER_SPEC_NAMES.fuelType, option: mappedFuel });
     }
-    
+
     if (fp.suitcases && fp.suitcases.length > 0) {
       const mappedSuitcases = fp.suitcases.map(s => s === 'Large' ? 'large' : s);
       specifications.push({ name: FILTER_SPEC_NAMES.suitcases, option: mappedSuitcases });
     }
-    
+
     // Only send Air Conditioning if explicitly requested (ignore "No Air Conditioning" as it's not a DB feature)
     if (fp.airConditioning === 'Air Conditioning') {
       specifications.push({ name: FILTER_SPEC_NAMES.airConditioning, option: ['cool & Heat', 'Air Conditioning', 'Yes'] });
@@ -143,7 +144,7 @@ function SearchPageContent() {
     if (specifications.length > 0) {
       payload.specifications = specifications;
     }
-    
+
     if (fp.rating !== null && fp.rating !== undefined) payload.rating = fp.rating;
     if (fp.sortBy) payload.sortBy = fp.sortBy;
 
@@ -154,7 +155,7 @@ function SearchPageContent() {
     const payload = buildFilterPayload();
     if (payload) {
 
-      
+
       dispatch(fetchVehicles(payload));
     }
   }, [buildFilterPayload, dispatch]);
@@ -176,7 +177,7 @@ function SearchPageContent() {
     if (searchParams.location && searchParams.dateFrom && searchParams.dateTo) {
       doFetchVehicles();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.location, searchParams.dateFrom, searchParams.dateTo]);
 
   const backendFiltersStr = useMemo(() => {
@@ -191,7 +192,7 @@ function SearchPageContent() {
       return;
     }
     doFetchVehicles();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backendFiltersStr, currentPage]);
 
   const handleFilterChange = useCallback(() => {
@@ -220,13 +221,13 @@ function SearchPageContent() {
       if (!selectedOptions || selectedOptions.length === 0) return true;
       const vehicleSpec = vehicle.specifications?.find((s: any) => s.name === specName);
       if (!vehicleSpec) return false;
-      
+
       const val = vehicleSpec.option || vehicleSpec.value;
       if (!val) return false;
-      
+
       // Strict exact match
       if (selectedOptions.includes(val)) return true;
-      
+
       // Fallback: Handle numerical matches (e.g., '4' vs '4 Seats') just in case
       return selectedOptions.some(opt => String(opt).trim() === String(val).trim() || String(val).includes(String(opt).trim()));
     };
@@ -328,7 +329,7 @@ function SearchPageContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-black text-gray-900 tracking-tight">
-                    {isFiltering ? 'Searching...' : `${displayedVehicles.length} Cars Available`}
+                    {isFiltering && displayedVehicles.length === 0 ? 'Searching...' : `Showing ${displayedVehicles.length} of ${count || displayedVehicles.length} Cars`}
                   </h2>
                   <p className="text-xs font-semibold text-gray-500 mt-0.5"> {/* 🚀 Accessibility Fix */}
                     {searchParams.locationLabel || searchParams.location} • {daysNumber} {daysNumber === 1 ? 'day' : 'days'}
@@ -342,7 +343,7 @@ function SearchPageContent() {
                 )}
               </div>
 
-              {isFiltering && (
+              {isFiltering && displayedVehicles.length === 0 && (
                 <div className="space-y-4">
                   {Array.from({ length: 4 }).map((_, i) => <CarCardSkeleton key={i} />)}
                 </div>
@@ -364,7 +365,7 @@ function SearchPageContent() {
                 </div>
               )}
 
-              {!isFiltering && !filterError && displayedVehicles.length > 0 && (
+              {!filterError && displayedVehicles.length > 0 && (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`vehicles-${displayedVehicles.length}-${filterParams.priceRange}`}
@@ -374,63 +375,21 @@ function SearchPageContent() {
                     {displayedVehicles.map((vehicle) => (
                       <CarCard key={vehicle.id} vehicle={vehicle} daysNumber={daysNumber} />
                     ))}
-                    
-                    {/* Pagination UI */}
-                    {totalPages > 1 && (
-                      <div className="pt-6 pb-4 flex justify-center items-center gap-2">
-                        <button 
-                          onClick={() => dispatch(setPage(Math.max(1, currentPage - 1)))}
-                          disabled={currentPage === 1}
-                          className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-                          aria-label="Previous page"
-                        >
-                          <ChevronLeft size={20} />
-                        </button>
-                        
-                        <div className="flex items-center gap-1.5 px-2">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                            .map((page, i, arr) => {
-                              if (i > 0 && arr[i - 1] !== page - 1) {
-                                return (
-                                  <div key={`ellipsis-${page}`} className="flex items-center gap-1.5">
-                                    <span className="text-gray-400">...</span>
-                                    <button
-                                      onClick={() => dispatch(setPage(page))}
-                                      className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-black transition-all shadow-sm ${
-                                        currentPage === page 
-                                          ? 'bg-[var(--primary)] text-gray-900 border-none' 
-                                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)]'
-                                      }`}
-                                    >
-                                      {page}
-                                    </button>
-                                  </div>
-                                );
-                              }
-                              return (
-                                <button
-                                  key={page}
-                                  onClick={() => dispatch(setPage(page))}
-                                  className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-black transition-all shadow-sm ${
-                                    currentPage === page 
-                                      ? 'bg-[var(--primary)] text-gray-900 border-none' 
-                                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)]'
-                                  }`}
-                                >
-                                  {page}
-                                </button>
-                              );
-                          })}
-                        </div>
 
-                        <button 
-                          onClick={() => dispatch(setPage(Math.min(totalPages, currentPage + 1)))}
-                          disabled={currentPage === totalPages}
-                          className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-                          aria-label="Next page"
+                    {/* See More Button */}
+                    {currentPage < totalPages && (
+                      <div className="pt-6 pb-4 flex justify-center items-center">
+                        <button
+                          onClick={() => dispatch(setPage(currentPage + 1))}
+                          disabled={isFiltering}
+                          className="px-10 py-3.5 bg-white border border-gray-200 text-gray-800 font-bold rounded-xl shadow-sm hover:bg-gray-50 hover:text-[var(--primary)] hover:border-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                         >
-                          <ChevronRight size={20} />
+                          {isFiltering ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                              Loading...
+                            </>
+                          ) : 'See More'}
                         </button>
                       </div>
                     )}
