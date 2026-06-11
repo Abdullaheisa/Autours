@@ -12,6 +12,8 @@ import {
   ListOrdered,
   Link2,
   Table,
+  Image as ImageIcon,
+  Code,
 } from 'lucide-react';
 
 export interface RichTextEditorProps {
@@ -52,6 +54,12 @@ export default function RichTextEditor({
   const [tableRows, setTableRows] = useState('2');
   const [tableCols, setTableCols] = useState('2');
 
+  const [isSourceMode, setIsSourceMode] = useState(false);
+
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageAlt, setImageAlt] = useState('');
+
   const savedRangeRef = useRef<Range | null>(null);
 
   const saveSelection = useCallback(() => {
@@ -76,7 +84,7 @@ export default function RichTextEditor({
   const checkActiveFormats = useCallback(() => {
     saveSelection();
     if (document.activeElement !== editorRef.current) return;
-    
+
     setActiveFormats({
       bold: document.queryCommandState('bold'),
       italic: document.queryCommandState('italic'),
@@ -102,7 +110,7 @@ export default function RichTextEditor({
     if (el.innerHTML !== (value || '')) {
       el.innerHTML = value || '';
     }
-  }, [value]);
+  }, [value, isSourceMode]);
 
   const syncContent = useCallback(() => {
     onChange(editorRef.current?.innerHTML || '');
@@ -168,9 +176,23 @@ export default function RichTextEditor({
     setTableModalOpen(false);
   };
 
-  const getBtnClass = (isActive: boolean) => 
-    `p-2 rounded-lg transition-colors disabled:opacity-40 ${
-      isActive ? 'bg-primary text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'
+  const handleImage = () => {
+    saveSelection();
+    setImageUrl('');
+    setImageAlt('');
+    setImageModalOpen(true);
+  };
+
+  const submitImage = () => {
+    if (imageUrl) {
+      const imgHTML = `<img src="${imageUrl}" alt="${imageAlt}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;" />`;
+      runCommand('insertHTML', imgHTML);
+    }
+    setImageModalOpen(false);
+  };
+
+  const getBtnClass = (isActive: boolean) =>
+    `p-2 rounded-lg transition-colors disabled:opacity-40 ${isActive ? 'bg-primary text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'
     }`;
 
   return (
@@ -317,23 +339,56 @@ export default function RichTextEditor({
         >
           <Table size={14} />
         </button>
+        <button
+          type="button"
+          className={getBtnClass(false)}
+          title="Insert image"
+          onMouseDown={(e) => handleToolbarMouseDown(e, handleImage)}
+        >
+          <ImageIcon size={14} />
+        </button>
+
+        <div className="w-px h-5 bg-gray-300 mx-0.5" />
+
+        <button
+          type="button"
+          className={getBtnClass(isSourceMode)}
+          title="Source Code"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setIsSourceMode(!isSourceMode);
+          }}
+        >
+          <Code size={14} />
+        </button>
       </div>
 
-      <div
-        id={id}
-        ref={editorRef}
-        contentEditable
-        role="textbox"
-        aria-multiline
-        suppressContentEditableWarning
-        onInput={() => { syncContent(); checkActiveFormats(); }}
-        onKeyUp={checkActiveFormats}
-        onMouseUp={checkActiveFormats}
-        onBlur={syncContent}
-        data-placeholder={placeholder}
-        className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-white"
-        style={{ minHeight }}
-      />
+      {isSourceMode ? (
+        <textarea
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-gray-50 font-mono resize-y"
+          style={{ minHeight }}
+        />
+      ) : (
+        <div
+          id={id}
+          ref={editorRef}
+          contentEditable
+          role="textbox"
+          aria-multiline
+          suppressContentEditableWarning
+          onInput={() => { syncContent(); checkActiveFormats(); }}
+          onKeyUp={checkActiveFormats}
+          onMouseUp={checkActiveFormats}
+          onBlur={syncContent}
+          data-placeholder={placeholder}
+          className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-white"
+          style={{ minHeight }}
+        />
+      )}
 
       {/* Link Modal */}
       {linkModalOpen && (
@@ -396,6 +451,44 @@ export default function RichTextEditor({
             <div className="flex justify-end gap-2">
               <button onClick={() => setTableModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl">Cancel</button>
               <button onClick={submitTable} className="px-4 py-2 text-sm font-bold bg-primary text-gray-900 rounded-xl hover:bg-primary-600">Insert</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {imageModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 border border-gray-100">
+            <h3 className="text-sm font-bold text-gray-900 mb-3">Insert Image</h3>
+            <div className="mb-3">
+              <label className="block text-xs font-bold text-gray-700 mb-1">Image URL</label>
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                autoFocus
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-gray-700 mb-1">Alt Text</label>
+              <input
+                type="text"
+                value={imageAlt}
+                onChange={(e) => setImageAlt(e.target.value)}
+                placeholder="Image description"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submitImage();
+                  if (e.key === 'Escape') setImageModalOpen(false);
+                }}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setImageModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl">Cancel</button>
+              <button onClick={submitImage} className="px-4 py-2 text-sm font-bold bg-primary text-gray-900 rounded-xl hover:bg-primary-600">Insert</button>
             </div>
           </div>
         </div>
