@@ -109,9 +109,16 @@ export default function BlogDetails({ blog, onBack, onEdit }: BlogDetailsProps) 
             </p>
 
             {blog.content ? (
-              <div className="prose max-w-none text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
-                {blog.content}
-              </div>
+              <div 
+                className="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4
+                  prose-headings:font-bold prose-headings:text-gray-900 
+                  prose-strong:font-bold prose-strong:text-gray-900 
+                  prose-table:w-full prose-table:border-collapse prose-table:my-6
+                  prose-th:bg-gray-100 prose-th:border prose-th:border-gray-200 prose-th:p-2 prose-th:text-left
+                  prose-td:border prose-td:border-gray-200 prose-td:p-2
+                  [!&_*]:font-inherit overflow-x-auto"
+                dangerouslySetInnerHTML={{ __html: blog.content }}
+              />
             ) : (
               <div className="space-y-5 text-gray-700">
                 <p>In today's fast-paced world, choosing the right car rental option in the UAE can be a daunting task. Whether you're a resident or a tourist, understanding the nuances between daily and monthly rentals is crucial for maximizing value and convenience.</p>

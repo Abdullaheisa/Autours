@@ -40,8 +40,13 @@ export const supplierApi = {
   updateIntegrationSettings: (data: { integration: boolean; webhook_url?: string }) =>
     apiClient.put('/api/external/supplier/integration-settings', data),
 
-  getVehicles: (page: number = 1, perPage: number = 15) =>
-    apiClient.get<VehicleListResponse>(`/api/external/supplier/vehicles?page=${page}&per_page=${perPage}`),
+  getVehicles: (page: number = 1, perPage: number = 15, filters?: { branch_id?: string; country?: string; search?: string }) => {
+    let url = `/api/external/supplier/vehicles?page=${page}&per_page=${perPage}`;
+    if (filters?.branch_id) url += `&branch_id=${filters.branch_id}`;
+    if (filters?.country)   url += `&country=${encodeURIComponent(filters.country)}`;
+    if (filters?.search)    url += `&search=${encodeURIComponent(filters.search)}`;
+    return apiClient.get<VehicleListResponse>(url);
+  },
 
   createVehicle: (data: FormData | any) => {
     return apiClient.post('/api/external/supplier/vehicles', cleanPayload(data));

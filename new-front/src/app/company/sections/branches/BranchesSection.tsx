@@ -417,6 +417,29 @@ export default function BranchesSection() {
     }
   };
 
+  // ── Toggle Activation ──────────────────────
+  const handleToggleActivation = async (branch: Branch) => {
+    const newStatus = branch.status === "active" ? "inactive" : "active";
+    // Optimistic update
+    setBranches((prev) =>
+      prev.map((b) => b.id === branch.id ? { ...b, status: newStatus } : b)
+    );
+    try {
+      await branchApi.toggleActivation(branch.id, newStatus === "active");
+      toast.success(
+        newStatus === "active"
+          ? `"${branch.name}" is now active.`
+          : `"${branch.name}" is now inactive. Its vehicles are hidden from users.`
+      );
+    } catch {
+      // Roll back
+      setBranches((prev) =>
+        prev.map((b) => b.id === branch.id ? { ...b, status: branch.status } : b)
+      );
+      toast.error("Failed to update branch status.");
+    }
+  };
+
   // ── Delete ─────────────────────────────────
   const handleDelete = (id: number) => {
     toast(
@@ -538,6 +561,9 @@ export default function BranchesSection() {
                   <th className="text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-8 py-5">
                     Location
                   </th>
+                  <th className="text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-8 py-5">
+                    Status
+                  </th>
                   <th className="text-right text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-8 py-5">
                     Actions
                   </th>
@@ -546,7 +572,7 @@ export default function BranchesSection() {
               <tbody className="divide-y divide-gray-100">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-16 text-center">
+                    <td colSpan={6} className="px-8 py-16 text-center">
                       <div className="flex items-center justify-center gap-2 text-gray-400">
                         <Loader2 size={18} className="animate-spin" />
                         <span className="text-sm">Loading branches…</span>
@@ -556,7 +582,7 @@ export default function BranchesSection() {
                 ) : paginatedBranches.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       className="px-8 py-16 text-center text-gray-400 text-sm"
                     >
                       No branches found.
@@ -583,6 +609,29 @@ export default function BranchesSection() {
                             <MapPin size={12} />
                           </div>
                           {branch.location}
+                        </div>
+                      </td>
+                      {/* ── Status toggle ── */}
+                      <td className="px-8 py-5">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <button
+                            onClick={() => handleToggleActivation(branch)}
+                            title={branch.status === "active" ? "Click to deactivate" : "Click to activate"}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full shadow-inner transition-colors duration-300 ${
+                              branch.status === "active" ? "bg-emerald-500" : "bg-gray-300"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${
+                                branch.status === "active" ? "translate-x-6" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                          <span className={`text-[10px] font-black uppercase tracking-wider ${
+                            branch.status === "active" ? "text-emerald-600" : "text-gray-400"
+                          }`}>
+                            {branch.status === "active" ? "Active" : "Inactive"}
+                          </span>
                         </div>
                       </td>
                       <td className="px-8 py-5">

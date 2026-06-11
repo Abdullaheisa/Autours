@@ -608,7 +608,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="mx-5 mb-2 flex relative">
-          <div className="w-[70%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-5 gap-y-3 flex-wrap">
+          <div className="w-[70%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-7 gap-y-5 flex-wrap">
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               {carData.supplier.logo ? (
                 <Image
@@ -698,7 +698,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="flex">
-          <div className='flex bg-green-100/35 rounded-xl mx-4 mb-4 w-[75%]'>
+          <div className='flex bg-green-100/35 rounded-xl mx-4 mb-4 w-[70%]'>
             <div className="w-[50%] p-5 pt-3">
               <div className="mb-2">
                 <h4 className="text-xs font-black text-green-700">What is Included!</h4>

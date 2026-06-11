@@ -194,6 +194,8 @@ export const branchApi = {
   getById: (id: number) => apiClient.get(`/branches/edit/${id}`),
   update: (data: unknown) => apiClient.post("/branches/update", data),
   delete: (data: unknown) => apiClient.post("/api/supplier/delete/branches", data),
+  toggleActivation: (id: number, activation: boolean) =>
+    apiClient.post("/branches/update", { id, activation }),
 };
 
 // Vehicle Management API (Supplier)

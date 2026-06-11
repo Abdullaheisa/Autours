@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Search, Plus, Filter, Edit2, Trash2, Loader2, AlertTriangle, X, ChevronDown, Globe, Building2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -320,10 +320,15 @@ export default function MyVehiclesSection({
     }
   }, [selectedCountry, selectedBranch, branches]);
 
-  const fetchVehicles = async (page: number = 1) => {
+  const fetchVehicles = async (page: number = 1, overrideFilters?: { branch_id?: string; country?: string; search?: string }) => {
     setIsLoading(true);
     try {
-      const response = await supplierApi.getVehicles(page, itemsPerPage);
+      const filters = overrideFilters ?? {
+        branch_id: selectedBranch || undefined,
+        country: selectedCountry || undefined,
+        search: (localSearch || searchQuery) || undefined,
+      };
+      const response = await supplierApi.getVehicles(page, itemsPerPage, filters);
       const raw: any = response?.data;
       // Backend returns paginated: { data: [...], total, last_page, ... }
       if (raw && Array.isArray(raw.data)) {
@@ -347,78 +352,76 @@ export default function MyVehiclesSection({
     }
   };
 
+  // Re-fetch from server when filters or page change
   useEffect(() => {
     fetchVehicles(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
-  // Reset to page 1 when search or filters change
+  // Reset to page 1 and re-fetch when filters/search change
   useEffect(() => {
     setCurrentPage(1);
+    fetchVehicles(1, {
+      branch_id: selectedBranch || undefined,
+      country: selectedCountry || undefined,
+      search: (localSearch || searchQuery) || undefined,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localSearch, searchQuery, selectedCountry, selectedBranch]);
 
-  // ─── Helper: get branch id from vehicle ─────────────────────────
-  const getVehicleBranchId = (v: any): string => {
-    // pickup_loc can be object {id, ...} or a raw id
-    if (v.pickup_loc) {
-      if (typeof v.pickup_loc === "object" && v.pickup_loc !== null) {
-        return String(v.pickup_loc.id ?? "");
-      }
-      return String(v.pickup_loc);
+  // ─── Helper: get branch label from vehicle ───────────────────────
+  const getVehicleBranchLabel = (v: any): string => {
+    // Try to read branch info embedded in vehicle object
+    if (v.pickup_loc && typeof v.pickup_loc === "object") {
+      return v.pickup_loc.name || v.pickup_loc.location || v.pickup_loc.address || "";
     }
-    if (v.branch) {
-      if (typeof v.branch === "object" && v.branch !== null) {
-        return String(v.branch.id ?? "");
-      }
-      return String(v.branch);
+    if (v.branch && typeof v.branch === "object") {
+      return v.branch.name || v.branch.location || v.branch.address || "";
     }
-    if (v.branch_id) return String(v.branch_id);
+    // Fallback: look up in branches list
+    const rawId =
+      (typeof v.pickup_loc === "number" || typeof v.pickup_loc === "string" ? String(v.pickup_loc) : null) ||
+      (typeof v.branch === "number" || typeof v.branch === "string" ? String(v.branch) : null) ||
+      (v.branch_id ? String(v.branch_id) : null);
+    if (rawId) {
+      const found = branches.find((b: any) => String(b.id) === rawId);
+      if (found) return found.name || found.location || found.address || `Branch #${rawId}`;
+    }
     return "";
   };
 
-  // ─── Helper: get branch country ──────────────────────────────────
-  const getVehicleCountry = (v: any): string => {
-    const branchId = getVehicleBranchId(v);
-    if (!branchId) return "";
-    const branchObj = branches.find((b: any) => String(b.id) === branchId);
-    return (branchObj?.country || "").trim();
+  // ─── Helper: is the vehicle's branch active? ────────────────
+  const isVehicleBranchActive = (v: any): boolean => {
+    // Check branch activation embedded in vehicle
+    if (v.pickup_loc && typeof v.pickup_loc === "object" && "activation" in v.pickup_loc) {
+      const a = v.pickup_loc.activation;
+      return a === 1 || a === true || a === "1" || a === "true";
+    }
+    if (v.branch && typeof v.branch === "object" && "activation" in v.branch) {
+      const a = v.branch.activation;
+      return a === 1 || a === true || a === "1" || a === "true";
+    }
+    // Fallback: look up in branches list
+    const rawId =
+      (typeof v.pickup_loc === "number" || typeof v.pickup_loc === "string" ? String(v.pickup_loc) : null) ||
+      (typeof v.branch === "number" || typeof v.branch === "string" ? String(v.branch) : null) ||
+      (v.branch_id ? String(v.branch_id) : null);
+    if (rawId) {
+      const found = branches.find((b: any) => String(b.id) === rawId);
+      if (found) {
+        const a = found.activation;
+        return a === 1 || a === true || a === "1" || a === "true";
+      }
+    }
+    // If we can't determine, assume active
+    return true;
   };
 
-  // ─── Client-side filtering ──────────────────────────────────────
-  const filteredVehicles = useMemo(() => {
-    const query = (searchQuery || localSearch).toLowerCase();
-
-    return items.filter((v) => {
-      // Name / category search
-      if (query) {
-        const catName = typeof v.category === "object" ? v.category?.name : v.category;
-        const matchesSearch =
-          v.name?.toLowerCase().includes(query) ||
-          String(catName || "")?.toLowerCase().includes(query);
-        if (!matchesSearch) return false;
-      }
-
-      // Branch filter
-      if (selectedBranch) {
-        const vehicleBranchId = getVehicleBranchId(v);
-        if (vehicleBranchId !== selectedBranch) return false;
-      }
-
-      // Country filter (only when no branch selected to avoid double-filter)
-      if (selectedCountry && !selectedBranch) {
-        const vehicleCountry = getVehicleCountry(v);
-        if (vehicleCountry !== selectedCountry) return false;
-      }
-
-      return true;
-    });
-  }, [items, searchQuery, localSearch, selectedBranch, selectedCountry, branches]);
-
-  // Use server-supplied pagination unless user is filtering (then paginate client-side)
-  const isFiltering = !!(searchQuery || localSearch || selectedBranch || selectedCountry);
-  const effectiveTotalPages = isFiltering ? Math.ceil(filteredVehicles.length / itemsPerPage) : totalPages;
-  const paginatedVehicles = isFiltering
-    ? filteredVehicles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    : filteredVehicles;
+  // Server handles filtering — items are already filtered.
+  // We keep a thin client-side pass only as a safety net for instant UI feedback.
+  const filteredVehicles = items; // server already filtered
+  const effectiveTotalPages = totalPages;
+  const paginatedVehicles = items;
 
   const handleDeleteClick = (vehicle: any) => {
     setDeleteModal({ id: vehicle.id, name: vehicle.name || "this vehicle" });
@@ -605,6 +608,9 @@ export default function MyVehiclesSection({
                       Category
                     </th>
                     <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">
+                      Branch / Location
+                    </th>
+                    <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">
                       Daily Price
                     </th>
                     <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">
@@ -638,7 +644,15 @@ export default function MyVehiclesSection({
                               <span className="text-xs text-gray-400 font-bold">No img</span>
                             )}
                           </div>
-                          <span className="font-bold text-gray-900 text-sm">{vehicle.name}</span>
+                          <div className="flex flex-col gap-1">
+                            <span className="font-bold text-gray-900 text-sm">{vehicle.name}</span>
+                            {!isVehicleBranchActive(vehicle) && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-[10px] font-black uppercase tracking-wide">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                Branch Inactive — Hidden from users
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -647,6 +661,31 @@ export default function MyVehiclesSection({
                             ? vehicle.category?.name
                             : vehicle.category}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {(() => {
+                          const label = getVehicleBranchLabel(vehicle);
+                          const country =
+                            (vehicle.pickup_loc?.country) ||
+                            (vehicle.branch?.country) ||
+                            "";
+                          return label ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="flex items-center gap-1 text-xs font-bold text-gray-700">
+                                <Building2 size={12} className="text-primary-400 shrink-0" />
+                                {label}
+                              </span>
+                              {country && (
+                                <span className="flex items-center gap-1 text-[11px] text-gray-400 font-medium">
+                                  <Globe size={11} className="shrink-0" />
+                                  {country}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-300 italic">—</span>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 font-bold">
                         {vehicle.price ? `$${vehicle.price}` : "N/A"}
@@ -694,7 +733,7 @@ export default function MyVehiclesSection({
                   ))}
                   {filteredVehicles.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-20 text-center">
+                      <td colSpan={6} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center gap-3">
                           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
                             <Search size={32} />
@@ -728,8 +767,8 @@ export default function MyVehiclesSection({
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 px-6 py-4 bg-gray-50/30">
               <span className="text-xs font-bold text-gray-500">
                 Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                {Math.min(currentPage * itemsPerPage, isFiltering ? filteredVehicles.length : totalCount)} of{" "}
-                {isFiltering ? filteredVehicles.length : totalCount} vehicles
+                {Math.min(currentPage * itemsPerPage, totalCount)} of{" "}
+                {totalCount} vehicles
               </span>
               <Pagination
                 currentPage={currentPage}
