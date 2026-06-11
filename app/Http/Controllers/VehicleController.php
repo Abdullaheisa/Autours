@@ -167,11 +167,39 @@ class VehicleController extends Controller
 
             $suppliers = User::query()->whereIn('id', $branches->pluck('company_id'))->where('role', 'active_supplier')->get();
             $paymentMethods = PaymentMethod::query()->whereIn('id', PaymentMethodSupplier::query()->whereIn('supplier_id', $branches->pluck('company_id')->toArray())->get()->pluck('payment_method_id')->toArray())->get();
-            $vehicles = $query->where('activation', true)->has('profit')->get();
+            $vehicles = $query->where('activation', true)->has('profit')->orderBy('id', 'asc')->get();
 
+            // Group vehicles to ensure sidebar aggregates only count unique models
+            $groupedVehicles = collect();
+            $groupedKeys = [];
             foreach ($vehicles as $vehicle) {
-                $vehicle->available_branches = $vehicle->branch ? collect([$vehicle->branch]) : collect([]);
+                $supplierId = $vehicle->supplier instanceof User ? $vehicle->supplier->id : ($vehicle->getAttributes()['supplier'] ?? '');
+                $categoryId = $vehicle->getAttributes()['category'] ?? '';
+                $key = strtolower(trim($vehicle->name)) . '|' . $supplierId . '|' . $categoryId;
+                
+                if (!isset($groupedKeys[$key])) {
+                    $vehicle->setAttribute('available_branches', $vehicle->branch ? [$vehicle->branch->toArray()] : []);
+                    $vehicle->setAttribute('branch_vehicle_ids', $vehicle->branch ? [$vehicle->branch->id => $vehicle->id] : []);
+                    $groupedKeys[$key] = $vehicle;
+                    $groupedVehicles->push($vehicle);
+                } else {
+                    $existing = $groupedKeys[$key];
+                    if ($vehicle->branch) {
+                        $existingBranches = $existing->getAttributes()['available_branches'] ?? [];
+                        $existingBranchIds = array_column($existingBranches, 'id');
+                        
+                        if (!in_array($vehicle->branch->id, $existingBranchIds)) {
+                            $existingBranches[] = $vehicle->branch->toArray();
+                            $existing->setAttribute('available_branches', $existingBranches);
+                            
+                            $branchVehicleIds = $existing->getAttributes()['branch_vehicle_ids'] ?? [];
+                            $branchVehicleIds[$vehicle->branch->id] = $vehicle->id;
+                            $existing->setAttribute('branch_vehicle_ids', $branchVehicleIds);
+                        }
+                    }
+                }
             }
+            $vehicles = $groupedVehicles;
 
             $locationTypeIds = $vehicles->flatMap(function ($vehicle) {
                 return $vehicle->locationType->pluck('id');
@@ -270,8 +298,8 @@ class VehicleController extends Controller
                 })->values();
             }
 
-            $count = $vehicles->count();
             $vehicles = $vehicles->toArray();
+            $count = count($vehicles);
 
 
             usort($vehicles, function ($a, $b) {

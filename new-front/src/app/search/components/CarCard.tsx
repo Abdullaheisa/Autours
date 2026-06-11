@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
@@ -21,6 +21,7 @@ interface CarCardProps {
   vehicle: Vehicle;
   daysNumber: number;
   hideBookingControls?: boolean;
+  preselectedBookId?: string | null;
 }
 
 function PickupIcon({ pickupType }: { pickupType: string }) {
@@ -46,13 +47,35 @@ function PickupLabel({ pickupType }: { pickupType: string }) {
   return pickupType.charAt(0).toUpperCase() + pickupType.slice(1);
 }
 
-export default function CarCard({ vehicle, daysNumber, hideBookingControls = false }: CarCardProps) {
+export default function CarCard({ vehicle, daysNumber, hideBookingControls = false, preselectedBookId = null }: CarCardProps) {
   const [showTerms, setShowTerms] = useState(false);
   const [showAllInclusions, setShowAllInclusions] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
   const [showInstantTooltip, setShowInstantTooltip] = useState(false);
   const [imgError, setImgError] = useState(false);
+
+  const availableBranches = (vehicle as any).available_branches || [];
+  const branchVehicleIds = (vehicle as any).branch_vehicle_ids || {};
+
+  const computedBranchId = useMemo(() => {
+    if (preselectedBookId && Object.keys(branchVehicleIds).length > 0) {
+      const match = Object.entries(branchVehicleIds).find(
+        ([_, vId]) => String(vId) === String(preselectedBookId)
+      );
+      if (match) return Number(match[0]);
+    }
+    return availableBranches.length > 0 ? availableBranches[0].id : null;
+  }, [preselectedBookId, branchVehicleIds, availableBranches]);
+
+  const [selectedBranchId, setSelectedBranchId] = useState<number | null>(computedBranchId);
+
+  // Sync state if computed branch ID changes (e.g. if branchVehicleIds was empty on first render)
+  useEffect(() => {
+    if (computedBranchId) {
+      setSelectedBranchId(computedBranchId);
+    }
+  }, [computedBranchId]);
 
   // The backend attaches rental_terms as an array [{title, description}] directly on each vehicle from filter/vehicles response (VehicleController line 275)
   const rawTerms: any[] = Array.isArray((vehicle as any).rental_terms) && (vehicle as any).rental_terms.length > 0
@@ -125,7 +148,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
     const imgSource = vehicle.photo || vehicle.image || targets.map(t => t.photo || t.image || t.car_photo || t.main_image || t.thumbnail || t.car_image).find(Boolean);
     const supplierSource = targets.map(t => t.supplier || t.company || t.rental_company).find(Boolean);
-    
+
     let logoStr = supplierSource?.logo || vehicle.supplier?.logo;
     if (!logoStr && supplierSource) {
       const sId = typeof supplierSource === 'object' ? supplierSource.id : supplierSource;
@@ -135,7 +158,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       }
     }
 
-    const locTypeFromArr = Array.isArray(v.locationType) && v.locationType.length > 0 
+    const locTypeFromArr = Array.isArray(v.locationType) && v.locationType.length > 0
       ? v.locationType[0].name || v.locationType[0].type
       : null;
 
@@ -187,8 +210,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             : Array.isArray(supplierSource?.rentalTerms)
               ? supplierSource.rentalTerms
               : [],
-        instantConfirmation: (vehicle.instant_confirmation !== undefined && vehicle.instant_confirmation !== null) 
-          ? (vehicle.instant_confirmation == 1 || vehicle.instant_confirmation == true) 
+        instantConfirmation: (vehicle.instant_confirmation !== undefined && vehicle.instant_confirmation !== null)
+          ? (vehicle.instant_confirmation == 1 || vehicle.instant_confirmation == true)
           : (supplierSource?.instant_confirmation !== undefined && supplierSource?.instant_confirmation !== null)
             ? (supplierSource.instant_confirmation == 1 || supplierSource.instant_confirmation == true)
             : (supplierSource?.instantConfirmation ?? true),
@@ -219,7 +242,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     : carData.inclusions.slice(0, 4);
 
   const promosList = carData.promos || [];
-  
+
   let mainHighlight: string | null = null;
   let hiddenPromos: string[] = [];
 
@@ -254,10 +277,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             alt={carData.name}
             width={260}
             height={150}
-            priority 
+            priority
             fetchPriority="high"
             className="w-full max-w-[240px] md:max-w-[260px] h-auto max-h-[140px] md:max-h-[150px] object-contain"
-            onError={() => setImgError(true)} 
+            onError={() => setImgError(true)}
           />
         </div>
 
@@ -325,7 +348,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   width={80}
                   height={40}
                   className="h-10 w-auto max-w-[80px] object-contain"
-                  unoptimized 
+                  unoptimized
                 />
               ) : (
                 <span className="text-[10px] font-bold text-gray-600">N/A</span>
@@ -353,7 +376,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
                 <img src={assets.icons.instant} alt="" className="w-4 h-4 object-contain shrink-0" aria-hidden="true" />
                 <span className="text-[10px] md:text-xs font-black text-gray-700">Instant confirmation</span>
-                              <div
+                <div
                   className="relative"
                   onMouseEnter={() => setShowInstantTooltip(true)}
                   onMouseLeave={() => setShowInstantTooltip(false)}
@@ -452,8 +475,12 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     <Globe size={16} className="text-blue-600" />
                   </button>
                   <div>
-                    <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Address: </span>
-                    <span className="text-sm font-black text-gray-800">{carData.supplier.address}</span>
+                    <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Address: {availableBranches.length} branches </span>
+                    <span className="text-sm font-black text-gray-800">
+                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
+                        availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                        carData.supplier.address}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -486,13 +513,29 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
             {!hideBookingControls && (
-              <Link
-                href={`/booking?vehicleId=${vehicle.id}`}
-                className="px-6 md:px-8 py-3 md:py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
-              >
-                Book Now
-                <span className="sr-only"> for {carData.name}</span>
-              </Link>
+              <div className="flex flex-col items-end gap-2">
+                {availableBranches.length > 1 && (
+                  <select
+                    value={selectedBranchId || ''}
+                    onChange={(e) => setSelectedBranchId(Number(e.target.value))}
+                    className="text-xs p-1.5 border border-gray-200 rounded-md bg-gray-50 font-medium text-gray-700 outline-none focus:border-blue-400 min-w-[140px] max-w-[200px]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {availableBranches.map((b: any) => (
+                      <option key={b.id} value={b.id}>
+                        Pickup: {b.name || b.location}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <Link
+                  href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                  className="px-6 md:px-8 py-3 md:py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
+                >
+                  Book Now
+                  <span className="sr-only"> for {carData.name}</span>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -506,7 +549,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               alt={carData.name}
               width={300}
               height={200}
-              priority 
+              priority
               fetchPriority="high"
               className="w-full h-auto max-h-[200px] object-contain"
               onError={() => setImgError(true)}
@@ -600,7 +643,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1.5 shrink-0">
                 <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
                 <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
-                                <div
+                <div
                   className="relative"
                   onMouseEnter={() => setShowInstantTooltip(true)}
                   onMouseLeave={() => setShowInstantTooltip(false)}
@@ -627,7 +670,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             )}
           </div>
-          
+
           {mainHighlight && (
             <div className="flex-1 flex items-center justify-start pl-3 gap-2 relative min-w-0">
               <div className="flex items-start gap-1.5 text-green-700 min-w-0">
@@ -681,7 +724,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <button onClick={openMap} className="shrink-0 pt-0.5"><Globe size={14} className="text-blue-600" /></button>
                 <div className="flex items-start gap-1.5">
                   <span className="text-[10px] font-black text-gray-600 uppercase tracking-wider shrink-0">Address</span>
-                  <span className="text-xs font-black text-gray-800">{carData.supplier.address}</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-black text-gray-800">
+                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
+                      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                      carData.supplier.address}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
@@ -710,13 +759,29 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
 
             {!hideBookingControls && (
-              <Link
-                href={`/booking?vehicleId=${vehicle.id}`}
-                className="w-full py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-lg uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg"
-              >
-                Book Now
-                <span className="sr-only"> for {carData.name}</span>
-              </Link>
+              <div className="w-full flex flex-col gap-2">
+                {availableBranches.length > 1 && (
+                  <select
+                    value={selectedBranchId || ''}
+                    onChange={(e) => setSelectedBranchId(Number(e.target.value))}
+                    className="w-full text-xs p-2 border border-gray-200 rounded-lg bg-gray-50 font-bold text-gray-700 outline-none focus:border-blue-400"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {availableBranches.map((b: any) => (
+                      <option key={b.id} value={b.id}>
+                        Pickup: {b.name || b.location}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <Link
+                  href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                  className="w-full py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-lg uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg"
+                >
+                  Book Now
+                  <span className="sr-only"> for {carData.name}</span>
+                </Link>
+              </div>
             )}
           </div>
         </div>

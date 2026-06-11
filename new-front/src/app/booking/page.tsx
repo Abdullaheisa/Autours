@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useCallback, useState } from 'react';
+import { Suspense, useEffect, useCallback, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '@/components/shared/layout/Navbar';
@@ -196,10 +196,66 @@ function BookingContent() {
   const [showCodeDropdown, setShowCodeDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
-  // ── Price calculation ────────────────────────────────────────────────────────
-  const selectedVehicle = vehicles.find((v: Vehicle) => v.id.toString() === vehicleId) || vehicles[0];
+  // ── Vehicle selection (locked to prevent re-fetch swaps) ─────────────────────
+  const bookId = searchParams.get('bookId');
+  const [lockedVehicle, setLockedVehicle] = useState<Vehicle | null>(null);
+  const hasLockedRef = useRef(false);
 
-  // Compute display price: use getVehicleDisplayPrice to unify conversion logic and prevent double conversion
+  // When vehicles list updates (initial load or re-fetch), find/update the selected vehicle
+  useEffect(() => {
+    if (!vehicles.length) return;
+
+    if (!hasLockedRef.current) {
+      // First time: find by ID, bookId, or branch_vehicle_ids
+      let found: Vehicle | null = null;
+
+      // 1. Exact match on vehicleId
+      if (vehicleId) {
+        found = vehicles.find((v: Vehicle) => v.id.toString() === vehicleId) || null;
+      }
+
+      // 2. Exact match on bookId
+      if (!found && bookId) {
+        found = vehicles.find((v: Vehicle) => v.id.toString() === bookId) || null;
+      }
+
+      // 3. Check inside branch_vehicle_ids
+      if (!found) {
+        for (const v of vehicles) {
+          const bvIds = (v as any).branch_vehicle_ids;
+          if (!bvIds || typeof bvIds !== 'object') continue;
+          const vals = Object.values(bvIds).map((id: any) => String(id));
+          if ((vehicleId && vals.includes(vehicleId)) || (bookId && vals.includes(bookId))) {
+            found = v;
+            break;
+          }
+        }
+      }
+
+      // 4. Fallback: first vehicle
+      if (!found) found = vehicles[0];
+
+      if (found) {
+        hasLockedRef.current = true;
+        setLockedVehicle(found);
+      }
+    } else {
+      // Already locked: update pricing by finding the same car by name
+      const lockedName = lockedVehicle?.name;
+      if (lockedName) {
+        const updated = vehicles.find((v: Vehicle) => v.name === lockedName);
+        if (updated) {
+          setLockedVehicle(updated);
+        }
+        // If not found by name, keep showing the old locked vehicle (don't swap)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehicles]);
+
+  const selectedVehicle = lockedVehicle || vehicles[0] || null;
+
+  // ── Price calculation ────────────────────────────────────────────────────────
   const totalPrice = selectedVehicle
     ? getVehicleDisplayPrice(selectedVehicle, currencyCode as Currency, allRates, daysNumber || 1, fetchedCurrency)
     : 0;
@@ -278,16 +334,18 @@ function BookingContent() {
 
       // Step 2: Book vehicle
       const backendCurrency = SUPPORTED_BACKEND_CURRENCIES.includes(currencyCode) ? currencyCode : 'AED';
+      const actualVehicleToBook = searchParams.get('bookId') || selectedVehicle.id;
+
       await toast.promise(
         bookingApi.create({
-          id: selectedVehicle.id,
+          id: actualVehicleToBook,
           pickupLoc: searchStateParams.location,
           date_from: searchStateParams.dateFrom,
           date_to: searchStateParams.dateTo,
           time_from: searchStateParams.startTime || '10:00',
           time_to: searchStateParams.endTime || '10:00',
           currency: backendCurrency,
-          vehicle: selectedVehicle.id,
+          vehicle: actualVehicleToBook,
           price: selectedVehicle.final_price,
         }),
         {
@@ -308,6 +366,8 @@ function BookingContent() {
   };
 
   // ── Render ───────────────────────────────────────────────────────────────────
+  const actualVehicleToBook = searchParams.get('bookId') || selectedVehicle?.id?.toString() || vehicleId || '';
+
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-10">
 
@@ -315,7 +375,7 @@ function BookingContent() {
       <div className="lg:hidden mb-6 space-y-4">
         <SearchSummary hideEditButton={true} forceMobileLayout={true} />
         {selectedVehicle && (
-          <CarCard vehicle={selectedVehicle} daysNumber={daysNumber} hideBookingControls={true} />
+          <CarCard vehicle={selectedVehicle} daysNumber={daysNumber} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
         )}
       </div>
 
@@ -367,7 +427,7 @@ function BookingContent() {
           {/* Desktop Car Card */}
           <div className="hidden lg:block">
             {selectedVehicle ? (
-              <CarCard vehicle={selectedVehicle} daysNumber={daysNumber} hideBookingControls={true} />
+              <CarCard vehicle={selectedVehicle} daysNumber={daysNumber} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
             ) : (
               <div className="p-8 bg-white rounded-2xl border border-gray-100 text-center text-gray-500">
                 No vehicle selected.

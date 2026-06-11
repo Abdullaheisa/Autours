@@ -31,6 +31,9 @@ export async function POST(request: Request) {
     });
 
     const data = await backendResponse.json().catch(() => ({}));
+    if (data.filteredVehicles && data.filteredVehicles.length > 0) {
+      console.log('Backend returned vehicle 1 branches:', data.filteredVehicles[0].available_branches?.length || 0);
+    }
     return NextResponse.json(data, { status: backendResponse.status });
   } catch (error: any) {
     console.error('Proxy Filter Error:', error);

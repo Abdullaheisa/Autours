@@ -80,6 +80,8 @@ export const vehicleMapper = {
           ? !!supplierData.instant_confirmation
           : true),
       promos: raw.promos || [],
+      available_branches: raw.available_branches || [],
+      branch_vehicle_ids: raw.branch_vehicle_ids || {},
     };
   },
 
