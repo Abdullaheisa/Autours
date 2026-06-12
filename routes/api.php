@@ -318,3 +318,11 @@ Route::get('get/fuel-policies', [\App\Http\Controllers\FuelPolicyController::cla
 Route::get('get/included', [\App\Http\Controllers\IncludedController::class, 'index']);
 Route::post('send-email', [\App\Http\Controllers\SubscriberController::class, 'sendEmail']);
 
+// Rating / Reviews
+Route::get('/get/rating/questions', [\App\Http\Controllers\RatesController::class, 'index']);
+Route::post('/rating', [\App\Http\Controllers\RatesController::class, 'store']);
+
+// Booking Invoice (Sanctum protected)
+Route::get('/invoice/booking/{id}', [\App\Http\Controllers\BookingsController::class, 'bookingInvoice'])->middleware('auth:sanctum');
+
+

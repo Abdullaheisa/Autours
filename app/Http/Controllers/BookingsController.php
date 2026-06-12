@@ -195,6 +195,8 @@ class BookingsController extends Controller
         if ($role === 'active_supplier' || $role === 'under_review') {
             $vehicles = Vehicle::where('supplier', $id)->pluck('id')->unique();
             $rentals->whereIn('vehicle_id', $vehicles);
+        } elseif ($role !== 'admin') {
+            $rentals->where('customer_id', $id);
         }
 
         $data = $rentals->with('vehicle.supplierUser', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')

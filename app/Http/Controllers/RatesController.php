@@ -53,7 +53,7 @@ class RatesController extends Controller
                 ], StatusCodes::BAD_REQUEST);
             }
             return response()->json([
-                "success" => false,
+                "success" => true,
                 "data" => [
                     "questions" => RateQuestion::query()->orderBy('id')->get(),
                     "rental" => Rental::query()->with(['vehicle', 'supplier'])->find($request->id),

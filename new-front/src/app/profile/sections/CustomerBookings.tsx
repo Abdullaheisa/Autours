@@ -30,8 +30,12 @@ export default function CustomerBookings() {
   const fetchRentals = async () => {
     try {
       setLoading(true);
-      const res: any = await rentalApi.getAll();
-      const allRentals = res?.rentals || res?.data?.rentals || [];
+      const res: any = await rentalApi.getAll({ per_page: 100 });
+      const raw = res?.data ?? res;
+      const allRentals = Array.isArray(raw?.data) ? raw.data
+        : Array.isArray(raw?.rentals) ? raw.rentals
+        : Array.isArray(raw) ? raw
+        : [];
       // Backend returns all rentals if user is customer, so filter locally:
       const userRentals = allRentals.filter(
         (r: any) => String(r.customer_id) === String(sessionUser?.id)
