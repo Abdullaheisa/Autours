@@ -82,6 +82,10 @@ export default function PromosSection() {
     return promos.filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query));
   }, [promos, searchQuery, localSearch]);
 
+  const otherActivePromo = useMemo(() => {
+    return promos.find(p => p.promoted && p.id !== currentPromo?.id);
+  }, [promos, currentPromo]);
+
   const totalPages = Math.ceil(filteredPromos.length / itemsPerPage);
   const paginatedPromos = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -458,6 +462,19 @@ export default function PromosSection() {
 
               {/* Body */}
               <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar">
+                {otherActivePromo && (
+                  <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                    <div>
+                      <p className="text-xs font-bold text-amber-800">
+                        ملاحظة: تفعيل هذا البرومو سيؤدي تلقائياً إلى إلغاء برومو "{otherActivePromo.name}".
+                      </p>
+                      <p className="text-[11px] text-amber-750 mt-1">
+                        Note: Promoting this feature will automatically deactivate "{otherActivePromo.name}". Only one promo can be active per company.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {isLoadingVehicles ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-400">
                     <Loader2 size={24} className="animate-spin text-primary" />

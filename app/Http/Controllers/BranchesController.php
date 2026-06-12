@@ -76,21 +76,34 @@ class BranchesController extends Controller
 
     public function update(Request $request)
     {
-
         try {
-            $branch = Branch::query()->find( $request->id);
-            $branch->name = $request->name;
-            $branch->location = $request->location;
-            $branch->adresse = $request->adresse;
-            $branch->email = $request->email;
-            $branch->phone = $request->phone;
-            $branch->country = $request->country;
-            $branch->city = $request->city;
-            $branch->currency = $request->currency;
-            $branch->location_type = $request->pickup_type;
-            $branch->lat = $request->lat;
-            $branch->lng = $request->lng;
-            $branch->abriviation = $request->abriviation;
+            $branch = Branch::query()->find($request->id);
+            if (!$branch) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Branch not found'
+                ], 404);
+            }
+
+            // Support partial updates, like activation toggle
+            if ($request->has('activation')) {
+                $branch->activation = $request->boolean('activation');
+            }
+
+            if ($request->has('name')) $branch->name = $request->name;
+            if ($request->has('location')) $branch->location = $request->location;
+            if ($request->has('adresse')) $branch->adresse = $request->adresse;
+            if ($request->has('email')) $branch->email = $request->email;
+            if ($request->has('phone')) $branch->phone = $request->phone;
+            if ($request->has('country')) $branch->country = $request->country;
+            if ($request->has('city')) $branch->city = $request->city;
+            if ($request->has('currency')) $branch->currency = $request->currency;
+            if ($request->has('pickup_type')) $branch->location_type = $request->pickup_type;
+            if ($request->has('location_type')) $branch->location_type = $request->location_type;
+            if ($request->has('lat')) $branch->lat = $request->lat;
+            if ($request->has('lng')) $branch->lng = $request->lng;
+            if ($request->has('abriviation')) $branch->abriviation = $request->abriviation;
+            
             $branch->save();
 
             // Normalize branch name/location against canonical airports
@@ -115,7 +128,6 @@ class BranchesController extends Controller
                 'error' => 'something went wrong'
             ], StatusCodes::SERVER_ERROR);
         }
-
     }
 
 

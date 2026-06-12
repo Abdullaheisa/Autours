@@ -65,29 +65,33 @@ class DashboardController extends Controller
                                              ",
                 ['supplier_id' => $supplierId]);
 
+            $isSqlite = DB::getDriverName() === 'sqlite';
+            $yearSql = $isSqlite ? "strftime('%Y', created_at)" : "DATE_FORMAT(created_at, '%Y')";
+            $monthSql = $isSqlite ? "strftime('%m', created_at)" : "DATE_FORMAT(created_at, '%m')";
+
             $NumberOfActiveVehicles = new stdClass();
-            $NumberOfActiveVehicles->currentYear = DB::select('SELECT strftime(\'%Y\', created_at) as year,COUNT(*) as count FROM vehicles
+            $NumberOfActiveVehicles->currentYear = DB::select("SELECT {$yearSql} as year, COUNT(*) as count FROM vehicles
                                                                     WHERE activation = :activation
                                                                     AND supplier = :supplier_id
-                                                                    AND strftime(\'%Y\', created_at) = :year
-                                                                    GROUP BY strftime(\'%Y\', created_at)
-                                                   ',
+                                                                    AND {$yearSql} = :year
+                                                                    GROUP BY {$yearSql}
+                                                   ",
                 ['activation'=> true, 'supplier_id' => $supplierId, 'year'=> (string)Carbon::now()->year]);
 
 
-            $NumberOfActiveVehicles->monthly = DB::select('SELECT strftime(\'%m\', created_at) as month,COUNT(*) as count FROM vehicles
+            $NumberOfActiveVehicles->monthly = DB::select("SELECT {$monthSql} as month, COUNT(*) as count FROM vehicles
                                                   WHERE activation = :activation
                                                   AND supplier = :supplier_id
-                                                   GROUP BY strftime(\'%m\', created_at)',
+                                                   GROUP BY {$monthSql}",
                 ['activation'=> true, 'supplier_id' => $supplierId]);
             $numberOfRentalsMonthly = new stdClass();
-            $numberOfRentalsMonthly->cancelled = DB::select('SELECT COUNT(*) as count, strftime(\'%m\', created_at) AS month FROM rentals
+            $numberOfRentalsMonthly->cancelled = DB::select("SELECT COUNT(*) as count, {$monthSql} AS month FROM rentals
                                                                     WHERE order_status = :cancelled AND supplier_id  = :supplier_id
-                                                                    GROUP BY strftime(\'%m\', created_at)',
+                                                                    GROUP BY {$monthSql}",
                 ['supplier_id' => $supplierId,'cancelled'=> RentalStatuses::CANCELED]);
-            $numberOfRentalsMonthly->done = DB::select('SELECT COUNT(*) as count, strftime(\'%m\', created_at) AS month FROM rentals
+            $numberOfRentalsMonthly->done = DB::select("SELECT COUNT(*) as count, {$monthSql} AS month FROM rentals
                                                                     WHERE order_status <> :cancelled AND supplier_id  = :supplier_id
-                                                                    GROUP BY strftime(\'%m\', created_at)',
+                                                                    GROUP BY {$monthSql}",
                 ['supplier_id' => $supplierId,'cancelled'=> RentalStatuses::CANCELED]);
             
             $charts->supplierRevenue = $supplierRevenue;
@@ -141,27 +145,31 @@ class DashboardController extends Controller
                                              ORDER BY supplier_id desc
                                              ");
 
+            $isSqlite = DB::getDriverName() === 'sqlite';
+            $yearSql = $isSqlite ? "strftime('%Y', created_at)" : "DATE_FORMAT(created_at, '%Y')";
+            $monthSql = $isSqlite ? "strftime('%m', created_at)" : "DATE_FORMAT(created_at, '%m')";
+
             $NumberOfActiveSuppliers = new stdClass();
-            $NumberOfActiveSuppliers->currentYear = DB::select('SELECT strftime(\'%Y\', created_at) as year,COUNT(*) as count FROM users
+            $NumberOfActiveSuppliers->currentYear = DB::select("SELECT {$yearSql} as year, COUNT(*) as count FROM users
                                                                     WHERE role = :role
-                                                                    AND strftime(\'%Y\', created_at) = :year
-                                                                    GROUP BY strftime(\'%Y\', created_at)
-                                                   ',
+                                                                    AND {$yearSql} = :year
+                                                                    GROUP BY {$yearSql}
+                                                   ",
                 ['role'=> 'active_supplier', 'year'=> (string)Carbon::now()->year]);
 
 
-            $NumberOfActiveSuppliers->monthly = DB::select('SELECT strftime(\'%m\', created_at) as month,COUNT(*) as count FROM users
+            $NumberOfActiveSuppliers->monthly = DB::select("SELECT {$monthSql} as month, COUNT(*) as count FROM users
                                                   WHERE role = :role
-                                                   GROUP BY strftime(\'%m\', created_at)',
+                                                   GROUP BY {$monthSql}",
                                                  ['role'=> 'active_supplier']);
             $numberOfRentalsMonthly = new stdClass();
-            $numberOfRentalsMonthly->cancelled = DB::select('SELECT COUNT(*) as count, strftime(\'%m\', created_at) AS month FROM rentals
+            $numberOfRentalsMonthly->cancelled = DB::select("SELECT COUNT(*) as count, {$monthSql} AS month FROM rentals
                                                                     WHERE order_status = :cancelled
-                                                                    GROUP BY strftime(\'%m\', created_at)',
+                                                                    GROUP BY {$monthSql}",
                 ['cancelled'=> RentalStatuses::CANCELED]);
-            $numberOfRentalsMonthly->done = DB::select('SELECT COUNT(*) as count, strftime(\'%m\', created_at) AS month FROM rentals
+            $numberOfRentalsMonthly->done = DB::select("SELECT COUNT(*) as count, {$monthSql} AS month FROM rentals
                                                                     WHERE order_status <> :cancelled
-                                                                    GROUP BY strftime(\'%m\', created_at)',
+                                                                    GROUP BY {$monthSql}",
                 ['cancelled'=> RentalStatuses::CANCELED]);
                 
             $charts->supplierRevenue = $supplierRevenue;

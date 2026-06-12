@@ -24,7 +24,8 @@ class Branch extends Model
         'lat',
         'lng',
         'location_type',
-        'abriviation'
+        'abriviation',
+        'activation'
     ];
 
     public function company() {

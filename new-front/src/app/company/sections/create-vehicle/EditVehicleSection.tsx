@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Car, MapPin, Tag, DollarSign, ShieldCheck, Settings,
   ChevronDown, ChevronUp, Check, X, Info, Image as ImageIcon,
   Wind, DoorOpen, Fuel, Users, Luggage, Settings2, Loader2,
-  Gauge, Cog, Palette, Sparkles, Briefcase
+  Gauge, Cog, Palette, Sparkles, Briefcase, Search
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -40,12 +40,12 @@ const SectionCard = ({
   </div>
 );
 
-/** A <select> whose options carry a numeric/string ID as value and a display label */
+/** A searchable dropdown select field */
 const SelectField = ({
   label,
   value,
   onChange,
-  options,
+  options = [],
   placeholder = "Select...",
 }: {
   label: string;
@@ -53,24 +53,116 @@ const SelectField = ({
   onChange?: (val: string) => void;
   options?: { value: string; label: string }[];
   placeholder?: string;
-}) => (
-  <div className="space-y-2">
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">{label}</label>
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange?.(e.target.value)}
-        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 appearance-none transition-all cursor-pointer"
-      >
-        <option value="">{placeholder}</option>
-        {options?.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+}) => {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSearchQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery.trim()) return options;
+    return options.filter((opt) =>
+      opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [options, searchQuery]);
+
+  const selectedLabel = options.find((opt) => opt.value === value)?.label;
+
+  return (
+    <div className="space-y-2" ref={dropdownRef}>
+      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">{label}</label>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => {
+            setOpen((p) => !p);
+            setSearchQuery("");
+          }}
+          className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm transition-all text-left
+            ${open ? "border-primary-500 ring-2 ring-primary-500/10 bg-white" : "border-gray-200"}
+            ${value ? "text-gray-900 font-medium" : "text-gray-400"}
+          `}
+        >
+          <span className="truncate">{selectedLabel || placeholder}</span>
+          <ChevronDown
+            size={16}
+            className={`text-gray-400 transition-transform duration-200 shrink-0 ${open ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {open && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="p-2 border-b border-gray-100 flex items-center gap-2">
+              <Search size={14} className="text-gray-400 shrink-0 ml-1" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full px-2 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 focus:bg-white"
+              />
+            </div>
+
+            <div className="max-h-60 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  onChange?.("");
+                  setOpen(false);
+                  setSearchQuery("");
+                }}
+                className="w-full px-4 py-2.5 text-left text-xs font-bold border-b border-gray-50 text-gray-400 hover:bg-gray-50"
+              >
+                Clear selection
+              </button>
+
+              {filteredOptions.length === 0 ? (
+                <div className="px-4 py-4 text-center text-xs text-gray-400">No results found</div>
+              ) : (
+                filteredOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onChange?.(opt.value);
+                      setOpen(false);
+                      setSearchQuery("");
+                    }}
+                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors block truncate
+                      ${value === opt.value
+                        ? "bg-primary-50 text-primary-700 font-bold"
+                        : "text-gray-700 hover:bg-gray-50 font-medium"
+                      }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const PriceField = ({
   label,
@@ -146,6 +238,7 @@ const SpecIcon = ({ name }: { name: string }) => {
 // Main component
 // ─────────────────────────────────────────────
 export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: number, onBack: () => void }) {
+  const [photoSearch, setPhotoSearch] = useState("");
   // ── Form state ─────────────────────────────
   const [formData, setFormData] = useState({
     vehiclePhotoId: "",
@@ -272,6 +365,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
       }
       if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(e.target as Node)) {
         setFormData(p => ({ ...p, showVehicleDropdown: false }));
+        setPhotoSearch("");
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -285,6 +379,12 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
   const selectedFeatures = dynamicData.includedItems.filter(
     (item: any) => formData.includedFeatures.includes(item.id)
   );
+  const filteredPhotos = useMemo(() => {
+    if (!photoSearch.trim()) return dynamicData.photos;
+    return dynamicData.photos.filter((p: any) =>
+      p.name.toLowerCase().includes(photoSearch.toLowerCase())
+    );
+  }, [dynamicData.photos, photoSearch]);
 
   // ── Handlers ──────────────────────────────
   const handleFeatureToggle = (id: number) => {
@@ -298,6 +398,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
 
   const handleVehicleSelect = (photoId: string) => {
     setFormData(p => ({ ...p, vehiclePhotoId: photoId, showVehicleDropdown: false }));
+    setPhotoSearch("");
   };
 
   const handleSubmit = async () => {
@@ -442,7 +543,10 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
               {/* Trigger */}
               <button
                 type="button"
-                onClick={() => setFormData(p => ({ ...p, showVehicleDropdown: !p.showVehicleDropdown }))}
+                onClick={() => {
+                  setFormData(p => ({ ...p, showVehicleDropdown: !p.showVehicleDropdown }));
+                  setPhotoSearch("");
+                }}
                 className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 hover:bg-gray-100 transition-all"
               >
                 <span className={selectedPhoto ? "text-gray-900 font-medium" : "text-gray-400"}>
@@ -458,53 +562,66 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
 
               {/* Dropdown list */}
               {formData.showVehicleDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-80 overflow-y-auto">
-                  {dynamicData.photos.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-gray-400 text-sm">
-                      No vehicle photos found in library.
-                    </div>
-                  ) : (
-                    dynamicData.photos.map((photo: any) => {
-                      const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-                      let photoUrl = photo.photo || photo.image || photo.url || null;
-                      if (photoUrl && !photoUrl.startsWith('http') && !photoUrl.startsWith('data:') && !photoUrl.startsWith('/')) {
-                        photoUrl = `${backendBase}/img/vehicles/${photoUrl}`;
-                      }
-                      const catLabel = photo.category?.name || photo.category_name || "";
-                      const isSelected = formData.vehiclePhotoId === String(photo.id);
-                      return (
-                        <button
-                          type="button"
-                          key={photo.id}
-                          onClick={() => handleVehicleSelect(String(photo.id))}
-                          className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${
-                            isSelected ? "bg-primary-50/50" : ""
-                          }`}
-                        >
-                          <div className="w-16 h-12 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
-                            {photoUrl ? (
-                              <img src={photoUrl} alt={photo.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <Car size={16} />
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-80">
+                  {/* Photo Search Bar */}
+                  <div className="p-2 border-b border-gray-100 flex items-center gap-2">
+                    <Search size={14} className="text-gray-400 shrink-0 ml-1" />
+                    <input
+                      type="text"
+                      value={photoSearch}
+                      onChange={(e) => setPhotoSearch(e.target.value)}
+                      placeholder="Search photo..."
+                      className="w-full px-2 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500/20 focus:bg-white"
+                    />
+                  </div>
+                  <div className="overflow-y-auto flex-1">
+                    {filteredPhotos.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-gray-400 text-sm">
+                        No matching photos found in library.
+                      </div>
+                    ) : (
+                      filteredPhotos.map((photo: any) => {
+                        const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+                        let photoUrl = photo.photo || photo.image || photo.url || null;
+                        if (photoUrl && !photoUrl.startsWith('http') && !photoUrl.startsWith('data:') && !photoUrl.startsWith('/')) {
+                          photoUrl = `${backendBase}/img/vehicles/${photoUrl}`;
+                        }
+                        const catLabel = photo.category?.name || photo.category_name || "";
+                        const isSelected = formData.vehiclePhotoId === String(photo.id);
+                        return (
+                          <button
+                            type="button"
+                            key={photo.id}
+                            onClick={() => handleVehicleSelect(String(photo.id))}
+                            className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${
+                              isSelected ? "bg-primary-50/50" : ""
+                            }`}
+                          >
+                            <div className="w-16 h-12 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
+                              {photoUrl ? (
+                                <img src={photoUrl} alt={photo.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                  <Car size={16} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-bold truncate ${isSelected ? "text-primary-700" : "text-gray-900"}`}>
+                                {photo.name}
+                              </p>
+                              {catLabel && <p className="text-xs text-gray-500">{catLabel}</p>}
+                            </div>
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
+                                <Check size={12} className="text-white" strokeWidth={3} />
                               </div>
                             )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-bold truncate ${isSelected ? "text-primary-700" : "text-gray-900"}`}>
-                              {photo.name}
-                            </p>
-                            {catLabel && <p className="text-xs text-gray-500">{catLabel}</p>}
-                          </div>
-                          {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
-                              <Check size={12} className="text-white" strokeWidth={3} />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })
-                  )}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               )}
 

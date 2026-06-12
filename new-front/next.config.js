@@ -29,9 +29,17 @@ const nextConfig = {
         source: '/sitemap',
         destination: '/sitemap.xml',
       },
+      // Rule 1: endpoints that already have /api/ in them (e.g. /api/blogs, /api/auth/login)
+      // /api/backend/api/something → backendUrl/api/something  (no double /api/)
       {
-        source: '/api/backend/:path*', // أي طلب بيبدأ بـ /api/backend
-        destination: `${backendUrl}/:path*`, // هيتحول للرابط ده في السيرفر بدون إضافة /api/
+        source: '/api/backend/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+      // Rule 2: endpoints WITHOUT /api/ prefix (e.g. /get/locations, /get/countries)
+      // /api/backend/get/locations → backendUrl/api/get/locations
+      {
+        source: '/api/backend/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
       {
         source: '/api/external/:path*', // أي طلب بيبدأ بـ /api/external

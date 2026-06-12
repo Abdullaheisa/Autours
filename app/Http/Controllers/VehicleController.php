@@ -881,9 +881,32 @@ class VehicleController extends Controller
     {
         $supplier = $request->user();
 
-        $vehicles = Vehicle::query()
-            ->where('supplier', $supplier->id)
-            ->with(['category', 'branch', 'fuelPolicy', 'vehiclePhoto'])
+        $query = Vehicle::query()
+            ->where('supplier', $supplier->id);
+
+        if ($request->filled('branch_id')) {
+            $query->where('pickup_loc', $request->branch_id);
+        }
+
+        if ($request->filled('country')) {
+            $query->whereHas('branch', function ($q) use ($request) {
+                $q->where('country', $request->country);
+            });
+        }
+
+        if ($request->filled('address')) {
+            $query->whereHas('branch', function ($q) use ($request) {
+                $q->where('adresse', 'LIKE', '%' . $request->address . '%')
+                  ->orWhere('location', 'LIKE', '%' . $request->address . '%')
+                  ->orWhere('city', 'LIKE', '%' . $request->address . '%');
+            });
+        }
+
+        if ($request->filled('search')) {
+            $query->where('name', 'LIKE', '%' . $request->search . '%');
+        }
+
+        $vehicles = $query->with(['category', 'branch', 'fuelPolicy', 'vehiclePhoto'])
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 15));
 

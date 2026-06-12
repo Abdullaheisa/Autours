@@ -94,6 +94,12 @@ class PromosController extends Controller
                 }
             } else {
                 // Suppliers can only assign promos to their OWN vehicles
+
+                // Enforce single active promo rule: Delete any existing promos with a different included_id for this supplier
+                Promo::where('supplier_id', $user->id)
+                    ->where('included_id', '!=', $includedId)
+                    ->delete();
+
                 $existingVehicleIds = Promo::where('supplier_id', $user->id)
                     ->where('included_id', $includedId)
                     ->pluck('vehicle_id')

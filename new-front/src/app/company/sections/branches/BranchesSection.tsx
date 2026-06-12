@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   Plus, Search, MapPin, Building, Activity,
-  CalendarCheck, Filter, X, Loader2
+  CalendarCheck, Filter, X, Loader2, Globe, ChevronDown
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -21,6 +21,10 @@ interface Branch {
   address: string;
   location: string;
   status: "active" | "inactive";
+  city?: string;
+  phone?: string;
+  email?: string;
+  currency?: string;
 }
 
 interface BranchFormData {
@@ -46,6 +50,168 @@ const defaultForm: BranchFormData = {
   currency: "USD",
   activation: true,
 };
+
+// ─── Searchable Dropdown ──────────────────────────────────────────────
+function SearchableDropdown({
+  placeholder,
+  value,
+  options,
+  onChange,
+  icon: Icon,
+  disabled = false,
+}: {
+  placeholder: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (val: string) => void;
+  icon?: React.ElementType;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Focus input when opens
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return options;
+    return options.filter((o) =>
+      o.label.toLowerCase().includes(query.toLowerCase())
+    );
+  }, [options, query]);
+
+  const selectedLabel = options.find((o) => o.value === value)?.label;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled) {
+            setOpen((prev) => !prev);
+            setQuery("");
+          }
+        }}
+        className={`w-full flex items-center gap-2 pl-3 pr-3 py-2.5 bg-gray-50 border rounded-xl text-sm transition-all
+          ${open ? "border-primary-400 ring-2 ring-primary-100" : "border-gray-200"}
+          ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-gray-300 cursor-pointer"}
+          ${value ? "text-gray-900" : "text-gray-400"}
+        `}
+      >
+        {Icon && <Icon size={15} className={`shrink-0 ${value ? "text-primary-500" : "text-gray-400"}`} />}
+        <span className="flex-1 text-left truncate font-medium">
+          {selectedLabel || placeholder}
+        </span>
+        {value ? (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange("");
+              setOpen(false);
+              setQuery("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.stopPropagation();
+                onChange("");
+                setOpen(false);
+                setQuery("");
+              }
+            }}
+            className="shrink-0 w-4 h-4 rounded-full bg-gray-200 hover:bg-red-100 flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
+          >
+            <X size={10} />
+          </span>
+        ) : (
+          <ChevronDown
+            size={15}
+            className={`shrink-0 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          />
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-[100] overflow-hidden">
+          {/* Search input */}
+          <div className="p-2 border-b border-gray-100">
+            <div className="relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
+              />
+            </div>
+          </div>
+
+          {/* Options list */}
+          <div className="max-h-52 overflow-y-auto">
+            {/* All / Reset option */}
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+                setQuery("");
+              }}
+              className={`w-full px-3 py-2.5 text-left text-xs font-bold transition-colors border-b border-gray-50
+                ${!value ? "bg-primary-50 text-primary-700" : "text-gray-400 hover:bg-gray-50"}`}
+            >
+              All {placeholder.replace("Filter by ", "")}s
+            </button>
+
+            {filtered.length === 0 ? (
+              <div className="px-3 py-4 text-center text-xs text-gray-400">No results found</div>
+            ) : (
+              filtered.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                  className={`w-full px-3 py-2.5 text-left text-sm transition-colors
+                    ${value === opt.value
+                      ? "bg-primary-50 text-primary-700 font-bold"
+                      : "text-gray-700 hover:bg-gray-50 font-medium"
+                    }`}
+                >
+                  {opt.label}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────
 // Branch Modal (shared for Add & Edit)
@@ -238,9 +404,13 @@ export default function BranchesSection() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState(""); // "", "active", "inactive"
+  const [selectedAddress, setSelectedAddress] = useState("");
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [localSearch, searchQuery]);
+  }, [localSearch, searchQuery, selectedCountry, selectedStatus, selectedAddress]);
 
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -270,6 +440,10 @@ export default function BranchesSection() {
               address: b.adresse || b.location_address || b.address || "",
               location: b.location || b.name || "",
               status: (b.activation == 1 || b.activation == true || b.activation === '1' || b.activation === 'true') ? "active" : "inactive",
+              city: b.city || "",
+              phone: b.phone || "",
+              email: b.email || "",
+              currency: b.currency || "USD",
             }))
           );
         }
@@ -307,16 +481,51 @@ export default function BranchesSection() {
     [branches]
   );
 
-  // ── Search ─────────────────────────────────
+  // Unique countries from branches
+  const countryOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [];
+    branches.forEach((b: any) => {
+      const country = (b.country || "").trim();
+      if (country && !seen.has(country)) {
+        seen.add(country);
+        opts.push({ value: country, label: country });
+      }
+    });
+    return opts.sort((a, b) => a.label.localeCompare(b.label));
+  }, [branches]);
+
+  // Unique addresses from branches – filtered by selected country
+  const addressOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [];
+    const filtered = selectedCountry
+      ? branches.filter((b: any) => (b.country || "").trim() === selectedCountry)
+      : branches;
+    filtered.forEach((b: any) => {
+      const addr = (b.address || "").trim();
+      if (addr && !seen.has(addr)) {
+        seen.add(addr);
+        opts.push({ value: addr, label: addr });
+      }
+    });
+    return opts.sort((a, b) => a.label.localeCompare(b.label));
+  }, [branches, selectedCountry]);
+
+  // ── Search & Filter ────────────────────────
   const filteredBranches = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();
-    return branches.filter(
-      (b) =>
+    return branches.filter((b) => {
+      const matchesSearch =
         b.name.toLowerCase().includes(query) ||
         b.location.toLowerCase().includes(query) ||
-        b.address.toLowerCase().includes(query)
-    );
-  }, [branches, searchQuery, localSearch]);
+        b.address.toLowerCase().includes(query);
+      const matchesCountry = !selectedCountry || b.country === selectedCountry;
+      const matchesStatus = !selectedStatus || b.status === selectedStatus;
+      const matchesAddress = !selectedAddress || b.address === selectedAddress;
+      return matchesSearch && matchesCountry && matchesStatus && matchesAddress;
+    });
+  }, [branches, searchQuery, localSearch, selectedCountry, selectedStatus, selectedAddress]);
 
   const totalPages = Math.ceil(filteredBranches.length / itemsPerPage);
   const paginatedBranches = useMemo(() => {
@@ -330,28 +539,34 @@ export default function BranchesSection() {
     try {
       const res = await branchApi.getById(branch.id);
      
-      const data = (res as any)?.data?.data || (res as any)?.data || {};
+      // Handle both wrapped { data: { ... } } and unwrapped { ... } formats
+      let data = (res as any)?.data || res || {};
+      if (data.data && typeof data.data === 'object') {
+        data = data.data;
+      }
+
       setEditForm({
         name: data.name || branch.name,
         adresse: data.adresse || data.location_address || data.address || branch.address,
         location: data.location || branch.location,
         country: data.country || branch.country,
-        city: data.city || "",
-        phone: data.phone || "",
-        email: data.email || "",
-        currency: data.currency || "USD",
+        city: data.city || branch.city || "",
+        phone: data.phone || branch.phone || "",
+        email: data.email || branch.email || "",
+        currency: data.currency || branch.currency || "USD",
         activation: data.activation === 1 || data.activation === true || data.status === "active" || branch.status === "active",
       });
-    } catch {
+    } catch (err) {
+      console.error("Failed to fetch branch details:", err);
       setEditForm({
         name: branch.name,
         adresse: branch.address,
         location: branch.location,
         country: branch.country,
-        city: "",
-        phone: "",
-        email: "",
-        currency: "USD",
+        city: branch.city || "",
+        phone: branch.phone || "",
+        email: branch.email || "",
+        currency: branch.currency || "USD",
         activation: branch.status === "active",
       });
     }
@@ -522,8 +737,9 @@ export default function BranchesSection() {
         <StatsGrid stats={stats} />
       </div>
 
-      {/* Search bar */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 flex items-center gap-4">
+      {/* Search & Filter Controls */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+        {/* Search */}
         <div className="relative flex-1 group">
           <Search
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors"
@@ -534,12 +750,49 @@ export default function BranchesSection() {
             placeholder="Search branches by name, location or address..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+            className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
           />
         </div>
-        <button className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-          <Filter size={20} />
-        </button>
+
+        {/* Country Filter */}
+        <div className="w-full md:w-56">
+          <SearchableDropdown
+            placeholder="Filter by Country"
+            value={selectedCountry}
+            options={countryOptions}
+            onChange={(val) => {
+              setSelectedCountry(val);
+              setSelectedAddress("");
+            }}
+            icon={Globe}
+          />
+        </div>
+
+        {/* Address Filter */}
+        <div className="w-full md:w-56">
+          <SearchableDropdown
+            placeholder="Filter by Address"
+            value={selectedAddress}
+            options={addressOptions}
+            onChange={setSelectedAddress}
+            icon={MapPin}
+            disabled={addressOptions.length === 0 && !selectedCountry}
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="w-full md:w-48">
+          <SearchableDropdown
+            placeholder="Filter by Status"
+            value={selectedStatus}
+            options={[
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+            ]}
+            onChange={setSelectedStatus}
+            icon={Activity}
+          />
+        </div>
       </div>
 
       {/* Table */}

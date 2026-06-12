@@ -63391,27 +63391,7 @@
             "id": 7076,
             "name": "\u0624\u0624\u0624",
             "supplier": 5,
-            "activation": 1,
-            "rental_terms": [
-                {
-                    "title": "\u0646\u0646\u0646",
-                    "description": "\u0633\u0633\u0633"
-                },
-                {
-                    "title": "\u0649\u0629\u0628\u064a\u0633\u0628",
-                    "description": "\u0633\u064a\u0628\u064a\u0633\u0633"
-                },
-                {
-                    "title": "\u0634\u0633\u064a\u0628\u0644\u0624\u064a\u0631\u0644\u0628",
-                    "description": "\u0628\u064a\u0644\u0627\u0628\u064a\u0644"
-                }
-            ]
-        },
-        {
-            "id": 7077,
-            "name": "\u0635\u0635",
-            "supplier": 5,
-            "activation": 1,
+            "activation": 0,
             "rental_terms": [
                 {
                     "title": "\u0646\u0646\u0646",
@@ -63547,18 +63527,6 @@
             "id": 23,
             "name": "\u202aabdullah eissa\u202c\u200f",
             "email": "abdullaheissa033@gmail.com",
-            "role": "supplier"
-        },
-        {
-            "id": 24,
-            "name": "ahmed",
-            "email": "Jin@gmail.com",
-            "role": "under_review"
-        },
-        {
-            "id": 25,
-            "name": "ahmed",
-            "email": "Jin1@gmail.com",
             "role": "under_review"
         }
     ],

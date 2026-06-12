@@ -111,6 +111,8 @@ Route::prefix('supplier')->middleware(['auth:sanctum', 'active_supplier'])->grou
     Route::post('upload/branch', [\App\Http\Controllers\UserController::class, 'createBranch']);
     Route::get('get/branches', [\App\Http\Controllers\UserController::class, 'getBranch']);
     Route::post('delete/branches', [\App\Http\Controllers\UserController::class, 'deleteBranch']);
+    Route::get('branches/edit/{id}', [\App\Http\Controllers\BranchesController::class, 'show']);
+    Route::post('branches/update', [\App\Http\Controllers\BranchesController::class, 'update']);
 
     // Promos
     Route::get('promo', [\App\Http\Controllers\PromosController::class, 'index']);
@@ -314,3 +316,5 @@ Route::get('get/photos', [\App\Http\Controllers\VehicleController::class, 'getPh
 Route::get('get/currencies', [\App\Http\Controllers\CurrencyController::class, 'index']);
 Route::get('get/fuel-policies', [\App\Http\Controllers\FuelPolicyController::class, 'index']);
 Route::get('get/included', [\App\Http\Controllers\IncludedController::class, 'index']);
+Route::post('send-email', [\App\Http\Controllers\SubscriberController::class, 'sendEmail']);
+

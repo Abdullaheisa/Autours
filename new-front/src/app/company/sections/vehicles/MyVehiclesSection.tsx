@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Search, Plus, Filter, Edit2, Trash2, Loader2, AlertTriangle, X, ChevronDown, Globe, Building2 } from "lucide-react";
+import { Search, Plus, Filter, Edit2, Trash2, Loader2, AlertTriangle, X, ChevronDown, Globe, Building2, MapPin } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import Pagination from "@/components/ui/Pagination";
@@ -273,6 +273,7 @@ export default function MyVehiclesSection({
   const [branches, setBranches] = useState<any[]>([]);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState("");
 
   // Fetch branches once on mount
   useEffect(() => {
@@ -310,7 +311,24 @@ export default function MyVehiclesSection({
     }));
   }, [branches, selectedCountry]);
 
-  // When country changes, reset branch if it no longer belongs to that country
+  // Unique addresses from branches – filtered by selected country
+  const addressOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [];
+    const filtered = selectedCountry
+      ? branches.filter((b: any) => (b.country || "").trim() === selectedCountry)
+      : branches;
+    filtered.forEach((b: any) => {
+      const addr = (b.adresse || b.location_address || b.address || "").trim();
+      if (addr && !seen.has(addr)) {
+        seen.add(addr);
+        opts.push({ value: addr, label: addr });
+      }
+    });
+    return opts.sort((a, b) => a.label.localeCompare(b.label));
+  }, [branches, selectedCountry]);
+
+  // When country changes, reset branch/address if it no longer belongs to that country
   useEffect(() => {
     if (selectedBranch && selectedCountry) {
       const branchObj = branches.find((b: any) => String(b.id) === selectedBranch);
@@ -318,14 +336,21 @@ export default function MyVehiclesSection({
         setSelectedBranch("");
       }
     }
-  }, [selectedCountry, selectedBranch, branches]);
+    if (selectedAddress && selectedCountry) {
+      const addressObj = branches.find((b: any) => (b.adresse || b.location_address || b.address || "").trim() === selectedAddress);
+      if (addressObj && (addressObj.country || "").trim() !== selectedCountry) {
+        setSelectedAddress("");
+      }
+    }
+  }, [selectedCountry, selectedBranch, selectedAddress, branches]);
 
-  const fetchVehicles = async (page: number = 1, overrideFilters?: { branch_id?: string; country?: string; search?: string }) => {
+  const fetchVehicles = async (page: number = 1, overrideFilters?: { branch_id?: string; country?: string; address?: string; search?: string }) => {
     setIsLoading(true);
     try {
       const filters = overrideFilters ?? {
         branch_id: selectedBranch || undefined,
         country: selectedCountry || undefined,
+        address: selectedAddress || undefined,
         search: (localSearch || searchQuery) || undefined,
       };
       const response = await supplierApi.getVehicles(page, itemsPerPage, filters);
@@ -364,10 +389,11 @@ export default function MyVehiclesSection({
     fetchVehicles(1, {
       branch_id: selectedBranch || undefined,
       country: selectedCountry || undefined,
+      address: selectedAddress || undefined,
       search: (localSearch || searchQuery) || undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localSearch, searchQuery, selectedCountry, selectedBranch]);
+  }, [localSearch, searchQuery, selectedCountry, selectedBranch, selectedAddress]);
 
   // ─── Helper: get branch label from vehicle ───────────────────────
   const getVehicleBranchLabel = (v: any): string => {
@@ -470,7 +496,7 @@ export default function MyVehiclesSection({
     return getVehicleImageUrl(img);
   };
 
-  const hasActiveFilters = !!(selectedCountry || selectedBranch);
+  const hasActiveFilters = !!(selectedCountry || selectedBranch || selectedAddress);
 
   return (
     <SectionLayout>
@@ -523,8 +549,8 @@ export default function MyVehiclesSection({
           </div>
         </div>
 
-        {/* Row 2: Country + Branch dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Row 2: Country + Branch + Address dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Country */}
           <SearchableDropdown
             placeholder="Filter by Country"
@@ -533,8 +559,19 @@ export default function MyVehiclesSection({
             onChange={(val) => {
               setSelectedCountry(val);
               setSelectedBranch(""); // reset branch when country changes
+              setSelectedAddress(""); // reset address when country changes
             }}
             icon={Globe}
+          />
+
+          {/* Address */}
+          <SearchableDropdown
+            placeholder="Filter by Address"
+            value={selectedAddress}
+            options={addressOptions}
+            onChange={setSelectedAddress}
+            icon={MapPin}
+            disabled={addressOptions.length === 0 && !selectedCountry}
           />
 
           {/* Branch */}
@@ -564,6 +601,18 @@ export default function MyVehiclesSection({
                 </button>
               </span>
             )}
+            {selectedAddress && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-bold rounded-lg border border-primary-100">
+                <MapPin size={11} />
+                {selectedAddress}
+                <button
+                  onClick={() => setSelectedAddress("")}
+                  className="ml-0.5 hover:text-primary-900 transition-colors"
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            )}
             {selectedBranch && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-bold rounded-lg border border-primary-100">
                 <Building2 size={11} />
@@ -580,6 +629,7 @@ export default function MyVehiclesSection({
               onClick={() => {
                 setSelectedCountry("");
                 setSelectedBranch("");
+                setSelectedAddress("");
               }}
               className="text-xs text-gray-400 hover:text-red-500 font-medium underline transition-colors"
             >
