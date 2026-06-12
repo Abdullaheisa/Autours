@@ -41,7 +41,7 @@ class DashboardController extends Controller
             $totalRentals = Rental::where('supplier_id', $supplierId)->count();
             $totalVehicles = Vehicle::where('supplier', $supplierId)->count();
             $totalEarnings = Rental::where('supplier_id', $supplierId)
-                ->whereIn('order_status', ['confirmed', 'reconciled', RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
+                ->whereIn('order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
                 ->sum(DB::raw('CASE WHEN supplier_price > 0 THEN supplier_price ELSE price END'));
             $avgRatingVal = Rental::where('supplier_id', $supplierId)->whereNotNull('rate')->avg('rate');
             $avgRating = $avgRatingVal ? round($avgRatingVal, 1) : 4.8;
@@ -59,15 +59,17 @@ class DashboardController extends Controller
                                              JOIN users on users.id = rentals.supplier_id
                                              JOIN vehicles on vehicles.id = rentals.vehicle_id
                                              JOIN branches on branches.id = vehicles.pickup_loc
-                                             WHERE (order_status = 'confirmed' OR order_status = 'reconciled' OR order_status = '2' OR order_status = '7')
+                                             WHERE (order_status = 2 OR order_status = 7)
                                              AND supplier_id  = :supplier_id
                                              GROUP BY branches.name,vehicles.pickup_loc
                                              ",
                 ['supplier_id' => $supplierId]);
 
-            $isSqlite = DB::getDriverName() === 'sqlite';
-            $yearSql = $isSqlite ? "strftime('%Y', created_at)" : "DATE_FORMAT(created_at, '%Y')";
-            $monthSql = $isSqlite ? "strftime('%m', created_at)" : "DATE_FORMAT(created_at, '%m')";
+            $driver = DB::getDriverName();
+            $isSqlite = $driver === 'sqlite';
+            $isPgsql = $driver === 'pgsql';
+            $yearSql = $isSqlite ? "strftime('%Y', created_at)" : ($isPgsql ? "to_char(created_at, 'YYYY')" : "DATE_FORMAT(created_at, '%Y')");
+            $monthSql = $isSqlite ? "strftime('%m', created_at)" : ($isPgsql ? "to_char(created_at, 'MM')" : "DATE_FORMAT(created_at, '%m')");
 
             $NumberOfActiveVehicles = new stdClass();
             $NumberOfActiveVehicles->currentYear = DB::select("SELECT {$yearSql} as year, COUNT(*) as count FROM vehicles
@@ -128,7 +130,7 @@ class DashboardController extends Controller
             $totalCompanies = User::whereIn('role', ['active_supplier', 'under_review'])->count();
             $totalBookings = Rental::count();
             $totalCars = Vehicle::count();
-            $totalRevenue = Rental::whereIn('order_status', ['confirmed', 'reconciled', RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
+            $totalRevenue = Rental::whereIn('order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
                 ->sum(DB::raw('price - supplier_price'));
             
             $avgRatingVal = Rental::whereNotNull('rate')->avg('rate');
@@ -140,14 +142,16 @@ class DashboardController extends Controller
                                                 users.name as supplier_name
                                              FROM rentals
                                              JOIN users on users.id = rentals.supplier_id
-                                             WHERE (order_status = 'confirmed' OR order_status = 'reconciled' OR order_status = '2' OR order_status = '7')
+                                             WHERE (order_status = 2 OR order_status = 7)
                                              GROUP BY rentals.supplier_id,users.name
                                              ORDER BY supplier_id desc
                                              ");
 
-            $isSqlite = DB::getDriverName() === 'sqlite';
-            $yearSql = $isSqlite ? "strftime('%Y', created_at)" : "DATE_FORMAT(created_at, '%Y')";
-            $monthSql = $isSqlite ? "strftime('%m', created_at)" : "DATE_FORMAT(created_at, '%m')";
+            $driver = DB::getDriverName();
+            $isSqlite = $driver === 'sqlite';
+            $isPgsql = $driver === 'pgsql';
+            $yearSql = $isSqlite ? "strftime('%Y', created_at)" : ($isPgsql ? "to_char(created_at, 'YYYY')" : "DATE_FORMAT(created_at, '%Y')");
+            $monthSql = $isSqlite ? "strftime('%m', created_at)" : ($isPgsql ? "to_char(created_at, 'MM')" : "DATE_FORMAT(created_at, '%m')");
 
             $NumberOfActiveSuppliers = new stdClass();
             $NumberOfActiveSuppliers->currentYear = DB::select("SELECT {$yearSql} as year, COUNT(*) as count FROM users
@@ -191,6 +195,7 @@ class DashboardController extends Controller
                 "data" => $charts,
             ]);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage() . "\n" . $e->getTraceAsString());
             return response()->json([
                 "status" => false,
                 "message" => $e->getMessage(),
