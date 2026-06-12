@@ -309,7 +309,7 @@ class UserController extends Controller
                     'message' => 'no logged in User'
                 ], StatusCodes::FORBIDDEN);
             }
-            $user->rentals = Rental::query()->where('customer_id', $user->id)->with(['vehicle.supplier', 'vehicle.branch', 'status'])->orderBy('id', 'desc')->get();
+            $user->rentals = Rental::query()->where('customer_id', $user->id)->with(['vehicle.supplierUser', 'vehicle.branch', 'status'])->orderBy('id', 'desc')->get();
             return response()->json([
                 'data' => $user
             ]);

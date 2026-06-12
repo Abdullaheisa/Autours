@@ -135,7 +135,7 @@ class BookingsController extends Controller
         if ($request->has('has_review')) {
             $rentals->whereHas('rentalRates');
         }
-        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')->orderBy('id', 'desc')->paginate($request->get('per_page', 20));
+        $data = $rentals->with('vehicle.supplierUser', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')->orderBy('id', 'desc')->paginate($request->get('per_page', 20));
 
         return response()->json($data);
     }
@@ -197,7 +197,7 @@ class BookingsController extends Controller
             $rentals->whereIn('vehicle_id', $vehicles);
         }
 
-        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')
+        $data = $rentals->with('vehicle.supplierUser', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')
                         ->orderBy('id', 'desc')
                         ->paginate($request->get('per_page', 20));
 
