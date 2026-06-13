@@ -34,6 +34,17 @@ export default function DynamicBanners() {
       .catch(() => {/* fallback */});
   }, []);
 
+  const getUserCountry = async () => {
+    try {
+      const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+      const data = await res.json();
+      return data.country || '';
+    } catch (e) {
+      console.warn('Failed to detect country automatically', e);
+      return '';
+    }
+  };
+
   const handleSupplierSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supplierEmail) {
@@ -42,7 +53,8 @@ export default function DynamicBanners() {
     }
     setSupplierLoading(true);
     try {
-      await subscriberApi.sendEmail({ email: supplierEmail, type: 'supplier' });
+      const country = await getUserCountry();
+      await subscriberApi.sendEmail({ email: supplierEmail, type: 'supplier', country });
       toast.success('Supplier subscription submitted successfully!');
       setSupplierEmail('');
     } catch (err: any) {
@@ -60,7 +72,8 @@ export default function DynamicBanners() {
     }
     setCinemaLoading(true);
     try {
-      await subscriberApi.sendEmail({ email: cinemaEmail, type: 'offers' });
+      const country = await getUserCountry();
+      await subscriberApi.sendEmail({ email: cinemaEmail, type: 'offers', country });
       toast.success('Cinema offers subscription successful!');
       setCinemaEmail('');
     } catch (err: any) {

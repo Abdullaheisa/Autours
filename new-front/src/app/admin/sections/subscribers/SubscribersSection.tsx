@@ -28,24 +28,10 @@ export default function SubscribersSection() {
       const res: any = await subscriberApi.getAll();
       const list = res?.data || res || [];
       setItems(list.map((r: any) => {
-        let mappedCountry = r.country;
-        if (!mappedCountry && r.email) {
-          const email = r.email.toLowerCase();
-          if (email.endsWith('.ae') || email.includes('uae')) mappedCountry = 'UAE';
-          else if (email.endsWith('.sa') || email.includes('saudi')) mappedCountry = 'Saudi';
-          else if (email.endsWith('.eg') || email.includes('egypt')) mappedCountry = 'Egypt';
-          else if (email.endsWith('.qa') || email.includes('qatar')) mappedCountry = 'Qatar';
-          else if (email.endsWith('.kw') || email.includes('kuwait')) mappedCountry = 'Kuwait';
-          else if (email.endsWith('.bh') || email.includes('bahrain')) mappedCountry = 'Bahrain';
-          else {
-            const countryOptions = ['UAE', 'Saudi', 'Egypt', 'Qatar', 'Kuwait', 'Bahrain'];
-            mappedCountry = countryOptions[r.id % countryOptions.length];
-          }
-        }
         return {
           id: r.id,
           email: r.email,
-          country: mappedCountry || "Unknown",
+          country: r.country || null,
           type: r.type || "offers",
         };
       }));

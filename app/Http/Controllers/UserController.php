@@ -386,13 +386,17 @@ class UserController extends Controller
     {
         try {
             $user = User::query()->where('email', $request->email)->first();
-            $forgetPasswordLink = url('/') . '/new-password-form?key=' . base64_encode(encrypt($request->email . ',' . Carbon::now()->toDateString(), env('APP_KEY')));
-            $user->password_reset_key = $forgetPasswordLink;
+            if ($user) {
+                $key = base64_encode(encrypt($request->email . ',' . Carbon::now()->toDateString(), env('APP_KEY')));
+                $forgetPasswordLink = url('/') . '/new-password-form?key=' . $key;
+                
+                $user->password_reset_key = $key;
+                $user->save();
+                
+                $user->setNewPasswordLink = $forgetPasswordLink;
 
-            $user->save();
-            $user->setNewPasswordLink = $forgetPasswordLink;
-
-            event(new ForgetPasswordEmail($user));
+                \Illuminate\Support\Facades\Mail::to($user->email)->send(new ForgetPasswordEmail(json_encode(['user' => $user])));
+            }
             return response()->json([
                 'status' => true,
             ]);
@@ -423,7 +427,7 @@ class UserController extends Controller
                 ], StatusCodes::FORBIDDEN);
             }
             $user = User::query()->where('email', $email)->first();
-            if (is_null($user) || is_null($user->password_reset_key) || $user->password_reset_key != $request->key) {
+            if (is_null($user) || is_null($user->password_reset_key) || ($user->password_reset_key != $request->key && !str_ends_with($user->password_reset_key, $request->key))) {
                 return response()->json([
                     'status' => false,
                     'message' => ''
@@ -461,7 +465,7 @@ class UserController extends Controller
                 ], StatusCodes::FORBIDDEN);
             }
             $user = User::query()->where('email', $email)->first();
-            if (is_null($user)) {
+            if (is_null($user) || is_null($user->password_reset_key) || ($user->password_reset_key != $request->key && !str_ends_with($user->password_reset_key, $request->key))) {
                 return response()->json([
                     'status' => false,
                     'message' => ''
