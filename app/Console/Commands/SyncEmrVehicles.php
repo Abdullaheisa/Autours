@@ -252,6 +252,16 @@ class SyncEmrVehicles extends Command
         $progress30->finish();
         $this->newLine();
 
+        // Load branch currencies
+        $branchCurrencies = Branch::whereIn('id', array_values($filteredStationMap))
+            ->pluck('currency', 'id')
+            ->toArray();
+
+        // Load exchange rates from TRY
+        $ratesFromTry = \App\Models\CurrencyRate::where('currency_from', 'TRY')
+            ->pluck('rate', 'currency_to')
+            ->toArray();
+
         // Combine prices into a single structure
         $stationPrices = [];
         foreach ($filteredStationMap as $stationId => $branchId) {
@@ -259,15 +269,21 @@ class SyncEmrVehicles extends Command
             $groups7 = $stationPrices7[$branchId] ?? [];
             $groups30 = $stationPrices30[$branchId] ?? [];
             
+            $branchCurrency = $branchCurrencies[$branchId] ?? 'EUR';
+            $multiplier = 1.0;
+            if ($branchCurrency !== 'TRY' && $branchCurrency !== 'TL') {
+                $multiplier = $ratesFromTry[$branchCurrency] ?? 1.0;
+            }
+
             foreach ($groups1 as $groupId => $priceData) {
                 $baseDayValue = $priceData['day_value'] ?? 0;
                 $dayValue7 = $groups7[$groupId]['day_value'] ?? $baseDayValue;
                 $dayValue30 = $groups30[$groupId]['day_value'] ?? $baseDayValue;
                 
                 if ($baseDayValue > 0) {
-                    $priceData['day_value'] = $baseDayValue;
-                    $priceData['week_price'] = round($dayValue7 * 7, 2);
-                    $priceData['month_price'] = round($dayValue30 * 30, 2);
+                    $priceData['day_value'] = round($baseDayValue * $multiplier, 2);
+                    $priceData['week_price'] = round(($dayValue7 * 7) * $multiplier, 2);
+                    $priceData['month_price'] = round(($dayValue30 * 30) * $multiplier, 2);
                     $stationPrices[$branchId][$groupId] = $priceData;
                 }
             }

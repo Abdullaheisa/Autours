@@ -473,7 +473,14 @@ class VehicleController extends Controller
             }
 
             if ($request->has('description')) {
-                $existingVehicle->description = $request->description;
+                $newDescription = (string) $request->description;
+                if ($existingVehicle->description && preg_match('/(\[(?:SURPRICE-GROUP-ID|JIMPI-GROUP-ID|EMR-GROUP-ID|RENTLY-MODEL-ID):[^\]]+\])/', $existingVehicle->description, $matches)) {
+                    $tag = $matches[1];
+                    if (!str_contains($newDescription, $tag)) {
+                        $newDescription = $tag . ' ' . ltrim($newDescription);
+                    }
+                }
+                $existingVehicle->description = $newDescription;
             }
 
             if ($request->has('price')) {
