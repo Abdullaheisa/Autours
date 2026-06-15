@@ -601,10 +601,12 @@ class SyncEmrVehicles extends Command
             ];
         }
 
+        $sipp = (string) ($group['sipp'] ?? '');
+
         // --- Transmission ---
-        $transmission = (string) ($group['transmission'] ?? '');
-        if (! empty($transmission) && isset($this->specDefinitions['Transmission'])) {
-            $transValue = $this->normalizeTransmission($transmission);
+        if (isset($this->specDefinitions['Transmission'])) {
+            $transmission = (string) ($group['transmission'] ?? '');
+            $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : ($transmission ? $this->normalizeTransmission($transmission) : 'Manual Transmission');
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Transmission',
@@ -634,7 +636,7 @@ class SyncEmrVehicles extends Command
         // --- Air Conditioner (default to available) ---
         if (isset($this->specDefinitions['Air Conditioner'])) {
             $acOptions = $this->specDefinitions['Air Conditioner']['options'] ?? [];
-            $acValue = $acOptions[0] ?? 'cool & Heat';
+            $acValue = $sipp ? \App\Services\SippDecoder::getLocalAcName($sipp) : ($acOptions[0] ?? 'cool & Heat');
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Air Conditioner',
@@ -646,9 +648,9 @@ class SyncEmrVehicles extends Command
         }
 
         // --- Fuel ---
-        $fuel = (string) ($group['fuel'] ?? '');
-        if (! empty($fuel) && isset($this->specDefinitions['Fuel'])) {
-            $fuelType = $this->normalizeFuel($fuel);
+        if (isset($this->specDefinitions['Fuel'])) {
+            $fuel = (string) ($group['fuel'] ?? '');
+            $fuelType = $sipp ? \App\Services\SippDecoder::getLocalFuelName($sipp) : ($fuel ? $this->normalizeFuel($fuel) : 'Petrol');
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Fuel',
@@ -669,32 +671,7 @@ class SyncEmrVehicles extends Command
      */
     private function resolveCategoryFromSipp(string $sipp): int
     {
-        $firstLetter = strtoupper(substr($sipp, 0, 1));
-
-        $acrissMap = [
-            'M' => 'Mini',
-            'N' => 'Mini',
-            'E' => 'Economy',
-            'H' => 'Economy',
-            'C' => 'Standard',
-            'D' => 'Standard',
-            'I' => 'Standard',
-            'J' => 'Standard',
-            'S' => 'Standard',
-            'T' => 'Standard',
-            'F' => 'Full Size',
-            'G' => 'Full Size',
-            'P' => 'Luxury',
-            'U' => 'Luxury',
-            'L' => 'Luxury',
-            'W' => 'Luxury',
-            'X' => 'SUV',
-            'R' => 'SUV',
-            'K' => 'Minivan',
-            'V' => 'Minivan',
-        ];
-
-        $categoryName = $acrissMap[$firstLetter] ?? null;
+        $categoryName = \App\Services\SippDecoder::getLocalCategoryName($sipp);
 
         if ($categoryName !== null) {
             $category = \App\Models\Category::where('name', $categoryName)->first();

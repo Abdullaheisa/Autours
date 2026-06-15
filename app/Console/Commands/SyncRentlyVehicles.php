@@ -318,13 +318,15 @@ class SyncRentlyVehicles extends Command
             $records[] = ['vehicle_id' => $vehicle->id, 'name' => 'Number of seats', 'value' => (string)$model['passangers'], 'icon' => $this->specDefinitions['Number of seats']['icon'], 'created_at' => $now, 'updated_at' => $now];
         }
 
-        if (isset($model['transmissionType']) && isset($this->specDefinitions['Transmission'])) {
-            $val = ($model['transmissionType'] === 'Automatic') ? 'Automatic Transmission' : 'Manual Transmission';
+        $sipp = (string) ($model['sipp'] ?? '');
+
+        if (isset($this->specDefinitions['Transmission'])) {
+            $val = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : (($model['transmissionType'] ?? '') === 'Automatic' ? 'Automatic Transmission' : 'Manual Transmission');
             $records[] = ['vehicle_id' => $vehicle->id, 'name' => 'Transmission', 'value' => $val, 'icon' => $this->specDefinitions['Transmission']['icon'], 'created_at' => $now, 'updated_at' => $now];
         }
 
         if (isset($this->specDefinitions['Air Conditioner'])) {
-            $val = ($model['hasAirCondition'] ?? true) ? 'cool & Heat' : 'No AC';
+            $val = $sipp ? \App\Services\SippDecoder::getLocalAcName($sipp) : (($model['hasAirCondition'] ?? true) ? 'cool & Heat' : 'No AC');
             $records[] = ['vehicle_id' => $vehicle->id, 'name' => 'Air Conditioner', 'value' => $val, 'icon' => $this->specDefinitions['Air Conditioner']['icon'], 'created_at' => $now, 'updated_at' => $now];
         }
 
@@ -335,7 +337,8 @@ class SyncRentlyVehicles extends Command
         }
 
         if (isset($this->specDefinitions['Fuel'])) {
-            $records[] = ['vehicle_id' => $vehicle->id, 'name' => 'Fuel', 'value' => 'Petrol', 'icon' => $this->specDefinitions['Fuel']['icon'], 'created_at' => $now, 'updated_at' => $now];
+            $val = $sipp ? \App\Services\SippDecoder::getLocalFuelName($sipp) : 'Petrol';
+            $records[] = ['vehicle_id' => $vehicle->id, 'name' => 'Fuel', 'value' => $val, 'icon' => $this->specDefinitions['Fuel']['icon'], 'created_at' => $now, 'updated_at' => $now];
         }
 
         if (!empty($records)) {
@@ -345,16 +348,7 @@ class SyncRentlyVehicles extends Command
 
     private function resolveCategoryFromSipp(string $sipp): int
     {
-        $firstLetter = strtoupper(substr($sipp, 0, 1));
-        $acrissMap = [
-            'M' => 'Mini', 'N' => 'Mini', 'E' => 'Economy', 'H' => 'Economy',
-            'C' => 'Standard', 'D' => 'Standard', 'I' => 'Standard', 'J' => 'Standard',
-            'S' => 'Standard', 'T' => 'Standard', 'F' => 'Full Size', 'G' => 'Full Size',
-            'P' => 'Luxury', 'U' => 'Luxury', 'L' => 'Luxury', 'W' => 'Luxury',
-            'X' => 'SUV', 'R' => 'SUV', 'K' => 'Minivan', 'V' => 'Minivan',
-        ];
-
-        $categoryName = $acrissMap[$firstLetter] ?? 'Economy';
+        $categoryName = \App\Services\SippDecoder::getLocalCategoryName($sipp);
         $category = \App\Models\Category::where('name', $categoryName)->first();
         return $category ? $category->id : (\App\Models\Category::first()?->id ?? 1);
     }

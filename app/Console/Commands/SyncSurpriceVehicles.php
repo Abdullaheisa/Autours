@@ -599,10 +599,11 @@ class SyncSurpriceVehicles extends Command
             ];
         }
 
+        $sipp = (string) ($vehicleInfo['code'] ?? '');
+
         // --- Transmission ---
-        $transmission = (string) ($vehicleInfo['transmissionType'] ?? '');
-        if (! empty($transmission) && isset($this->specDefinitions['Transmission'])) {
-            $transValue = str_contains(strtolower($transmission), 'auto') ? 'Automatic Transmission' : 'Manual Transmission';
+        if (isset($this->specDefinitions['Transmission'])) {
+            $transValue = \App\Services\SippDecoder::getLocalTransmissionName($sipp);
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Transmission',
@@ -629,8 +630,7 @@ class SyncSurpriceVehicles extends Command
 
         // --- Air Conditioner ---
         if (isset($this->specDefinitions['Air Conditioner'])) {
-            $acOptions = $this->specDefinitions['Air Conditioner']['options'] ?? [];
-            $acValue = $acOptions[0] ?? 'cool & Heat';
+            $acValue = \App\Services\SippDecoder::getLocalAcName($sipp);
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Air Conditioner',
@@ -642,9 +642,9 @@ class SyncSurpriceVehicles extends Command
         }
 
         // --- Fuel ---
-        $fuelId = $vehicleInfo['sippFuelId'] ?? '';
-        if (! empty($fuelId) && isset($this->specDefinitions['Fuel'])) {
-            $fuelType = $this->resolveFuelType((string) $fuelId);
+        if (isset($this->specDefinitions['Fuel'])) {
+            $fuelId = $vehicleInfo['sippFuelId'] ?? '';
+            $fuelType = $fuelId ? $this->resolveFuelType((string) $fuelId) : \App\Services\SippDecoder::getLocalFuelName($sipp);
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Fuel',
@@ -665,33 +665,8 @@ class SyncSurpriceVehicles extends Command
      */
     private function resolveCategoryFromSipp(string $sipp): int
     {
-        $firstLetter = strtoupper(substr($sipp, 0, 1));
-
-        $acrissMap = [
-            'M' => 'Mini',
-            'N' => 'Mini',
-            'E' => 'Economy',
-            'H' => 'Economy',
-            'C' => 'Standard',
-            'D' => 'Standard',
-            'I' => 'Standard',
-            'J' => 'Standard',
-            'S' => 'Standard',
-            'T' => 'Standard',
-            'F' => 'Full Size',
-            'G' => 'Full Size',
-            'P' => 'Luxury',
-            'U' => 'Luxury',
-            'L' => 'Luxury',
-            'W' => 'Luxury',
-            'X' => 'SUV',
-            'R' => 'SUV',
-            'K' => 'Minivan',
-            'V' => 'Minivan',
-        ];
-
-        $categoryName = $acrissMap[$firstLetter] ?? null;
-
+        $categoryName = \App\Services\SippDecoder::getLocalCategoryName($sipp);
+        
         if ($categoryName !== null) {
             $category = \App\Models\Category::where('name', $categoryName)->first();
             if ($category) {
@@ -722,14 +697,7 @@ class SyncSurpriceVehicles extends Command
      */
     private function resolveFuelType(string $sippFuelId): string
     {
-        return match (strtoupper($sippFuelId)) {
-            'E' => 'Electric',
-            'H' => 'Hybrid Petrol & Gas',
-            'L' => 'Hybrid Petrol & Gas',
-            'D' => 'Petrol', // Diesel not in local options, map to closest
-            'F' => 'Hybrid Petrol & Gas',
-            default => 'Petrol',
-        };
+        return \App\Services\SippDecoder::getLocalFuelName(str_pad('', 3, 'X') . $sippFuelId);
     }
 
     private function downloadImage(?string $url, string $groupId): ?string
