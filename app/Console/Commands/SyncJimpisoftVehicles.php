@@ -268,11 +268,7 @@ class SyncJimpisoftVehicles extends Command
                             $needsDetails = true;
                             break;
                         }
-                        $specCount = \App\Models\VehicleSpecification::where('vehicle_id', $existingVehicle->id)->count();
-                        if ($specCount < 6) {
-                            $needsDetails = true;
-                            break;
-                        }
+
                         if (empty($existingVehicle->photo)) {
                             $needsDetails = true;
                             break;
@@ -339,19 +335,7 @@ class SyncJimpisoftVehicles extends Command
                             ]);
                         }
 
-                        if (!empty($mergedInclusionList)) {
-                            $includedIds = [];
-                            foreach ($mergedInclusionList as $incText) {
-                                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
-                                $includedIds[] = $inc->id;
-                            }
-                            $vehicle->included()->sync($includedIds);
-                        }
 
-                        // Backfill or refresh specs for existing vehicles
-                        if (! $pricesOnly && ! empty($details)) {
-                            $this->syncVehicleSpecifications($vehicle, $details);
-                        }
 
                         $updated++;
                     } else {

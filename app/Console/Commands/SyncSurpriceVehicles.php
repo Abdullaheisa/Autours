@@ -236,11 +236,15 @@ class SyncSurpriceVehicles extends Command
                         continue;
                     }
 
-                    $charge = $this->findMainCharge($offering);
                     $totalCharge = $offering['rentalDetails'][0]['totalCharge'] ?? [];
+                    $dayPrice = $totalCharge['estimatedTotalAmount'] ?? 0;
+                    $currency = $totalCharge['currencyCode'] ?? 'EUR';
 
-                    $dayPrice = $charge['unitCharge'] ?? 0;
-                    $currency = $charge['currencyCode'] ?? ($totalCharge['currencyCode'] ?? 'EUR');
+                    if ($dayPrice <= 0) {
+                        $charge = $this->findMainCharge($offering);
+                        $dayPrice = ($charge['unitCharge'] ?? 0) * ($charge['quantity'] ?? 1);
+                        $currency = $charge['currencyCode'] ?? $currency;
+                    }
 
                     if ($dayPrice > 0) {
                         $prices[$groupId] = [
@@ -258,10 +262,17 @@ class SyncSurpriceVehicles extends Command
                     if (empty($groupId) || !isset($prices[$groupId])) {
                         continue;
                     }
-                    $charge = $this->findMainCharge($offering);
-                    $unitCharge = $charge['unitCharge'] ?? 0;
-                    if ($unitCharge > 0) {
-                        $prices[$groupId]['week_price'] = round((float) $unitCharge * 7, 2);
+                    
+                    $totalCharge = $offering['rentalDetails'][0]['totalCharge'] ?? [];
+                    $weekPrice = $totalCharge['estimatedTotalAmount'] ?? 0;
+                    
+                    if ($weekPrice <= 0) {
+                        $charge = $this->findMainCharge($offering);
+                        $weekPrice = ($charge['unitCharge'] ?? 0) * 7;
+                    }
+
+                    if ($weekPrice > 0) {
+                        $prices[$groupId]['week_price'] = (float) $weekPrice;
                     }
                 }
 
@@ -270,13 +281,17 @@ class SyncSurpriceVehicles extends Command
                     if (empty($groupId) || !isset($prices[$groupId])) {
                         continue;
                     }
-                    $charge = $this->findMainCharge($offering);
-                    $unitCharge = $charge['unitCharge'] ?? 0;
-                    $totalAmount = $offering['rentalDetails'][0]['totalCharge']['estimatedTotalAmount'] ?? 0;
-                    if ($unitCharge > 0) {
-                        $prices[$groupId]['month_price'] = round((float) $unitCharge * 30, 2);
-                    } elseif ($totalAmount > 0) {
-                        $prices[$groupId]['month_price'] = (float) $totalAmount;
+                    
+                    $totalCharge = $offering['rentalDetails'][0]['totalCharge'] ?? [];
+                    $monthPrice = $totalCharge['estimatedTotalAmount'] ?? 0;
+                    
+                    if ($monthPrice <= 0) {
+                        $charge = $this->findMainCharge($offering);
+                        $monthPrice = ($charge['unitCharge'] ?? 0) * 30;
+                    }
+
+                    if ($monthPrice > 0) {
+                        $prices[$groupId]['month_price'] = (float) $monthPrice;
                     }
                 }
 
@@ -355,14 +370,7 @@ class SyncSurpriceVehicles extends Command
                         }
                         $vehicle->update($updateData);
 
-                        if (!empty($inclusions)) {
-                            $this->syncInclusions($vehicle, $inclusions);
-                        }
 
-                        $specCount = VehicleSpecification::where('vehicle_id', $vehicle->id)->count();
-                        if (! $pricesOnly && $specCount < 4) {
-                            $this->syncVehicleSpecifications($vehicle, $vehicleInfo);
-                        }
 
                         $updated++;
                     } else {

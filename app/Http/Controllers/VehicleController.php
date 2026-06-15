@@ -513,10 +513,15 @@ class VehicleController extends Controller
 
             if ($request->has('location_types')) {
                 LocationTypeVehicle::query()->where('vehicle_id', $existingVehicle->id)->delete();
-                LocationTypeVehicle::query()->insert([
-                    'vehicle_id' => $existingVehicle->id,
-                    'location_type_id' => $request->location_types
-                ]);
+                $locTypes = is_array($request->location_types) ? $request->location_types : [$request->location_types];
+                foreach ($locTypes as $locTypeId) {
+                    if ($locTypeId && $locTypeId !== 'undefined' && $locTypeId !== 'null') {
+                        LocationTypeVehicle::query()->insert([
+                            'vehicle_id' => $existingVehicle->id,
+                            'location_type_id' => $locTypeId
+                        ]);
+                    }
+                }
             }
 
             $existingVehicle->save();
@@ -600,10 +605,15 @@ class VehicleController extends Controller
 
             $item->save();
             if ($request->has('location_types')) {
-                LocationTypeVehicle::query()->insert([
-                    'vehicle_id' => $item->id,
-                    'location_type_id' => $request->location_types
-                ]);
+                $locTypes = is_array($request->location_types) ? $request->location_types : [$request->location_types];
+                foreach ($locTypes as $locTypeId) {
+                    if ($locTypeId && $locTypeId !== 'undefined' && $locTypeId !== 'null') {
+                        LocationTypeVehicle::query()->insert([
+                            'vehicle_id' => $item->id,
+                            'location_type_id' => $locTypeId
+                        ]);
+                    }
+                }
             }
             if ($request->has('specifications')) {
                 $specifications = json_decode($request->specifications);

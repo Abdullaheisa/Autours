@@ -324,11 +324,16 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
             vehiclePhotoId: vehicleData.photo || "",
             pickupLocationId: typeof vehicleData.pickup_loc === 'object' && vehicleData.pickup_loc !== null ? String(vehicleData.pickup_loc.id) : String(vehicleData.pickup_loc || vehicleData.branch?.id || ""),
             categoryId: typeof vehicleData.category === 'object' && vehicleData.category !== null ? String(vehicleData.category.id) : String(vehicleData.category || vehicleData.category_id || ""),
-            locationTypeId: Array.isArray(vehicleData.location_type) && vehicleData.location_type.length 
-              ? String(vehicleData.location_type[0].id || vehicleData.location_type[0])
-              : (typeof vehicleData.location_type === 'object' && vehicleData.location_type !== null 
-                  ? String(vehicleData.location_type.id) 
-                  : (vehicleData.location_type ? String(vehicleData.location_type) : "")),
+            locationTypeId: (() => {
+              const lt = vehicleData.location_type;
+              if (Array.isArray(lt)) {
+                return lt.length > 0 ? String(lt[0].id || lt[0]) : "";
+              }
+              if (lt && typeof lt === 'object') {
+                return String(lt.id || "");
+              }
+              return lt ? String(lt) : "";
+            })(),
             fuelPolicyId: String(vehicleData.fuel_policy_id || ""),
             reserveWithoutConfirmation: vehicleData.instant_confirmation === 0,
             description: vehicleData.description || "",
@@ -442,7 +447,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
       form.append("category", formData.categoryId);
       form.append("instant_confirmation", formData.reserveWithoutConfirmation ? "0" : "1");
       
-      if (formData.locationTypeId) {
+      if (formData.locationTypeId && formData.locationTypeId !== "undefined") {
         form.append("location_types", formData.locationTypeId);
       }
       if (formData.fuelPolicyId) {

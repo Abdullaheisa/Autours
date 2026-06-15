@@ -389,11 +389,7 @@ class SyncEmrVehicles extends Command
                         }
                         $vehicle->update($updateData);
 
-                        // Backfill specs for existing vehicles if missing
-                        $specCount = VehicleSpecification::where('vehicle_id', $vehicle->id)->count();
-                        if (! $pricesOnly && $specCount < 4) {
-                            $this->syncVehicleSpecifications($vehicle, $group);
-                        }
+
 
                         $updated++;
                     } else {
