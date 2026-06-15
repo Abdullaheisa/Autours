@@ -18,9 +18,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
+use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 
 class SyncSurpriceVehicles extends Command
 {
+    use ResolvesLocalVehiclePhoto;
+
     /**
      * The name and signature of the console command.
      *
@@ -363,7 +366,7 @@ class SyncSurpriceVehicles extends Command
                             $updateData['supplier'] = $supplierUser->id;
                         }
                         if (empty($vehicle->photo) && !empty($photoUrl)) {
-                            $photoFilename = $this->downloadImage($photoUrl, $groupId);
+                            $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($photoUrl, $groupId);
                             if ($photoFilename) {
                                 $updateData['photo'] = $photoFilename;
                             }
@@ -378,7 +381,7 @@ class SyncSurpriceVehicles extends Command
                             continue;
                         }
 
-                        $photoFilename = $this->downloadImage($photoUrl, $groupId);
+                        $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($photoUrl, $groupId);
                         $categoryId = $this->resolveCategoryFromSipp($vehicleInfo['code'] ?? '');
 
                         $vehicle = Vehicle::create([

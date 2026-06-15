@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
+use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 
 class SyncJimpisoftVehicles extends Command
 {
+    use ResolvesLocalVehiclePhoto;
+
     /**
      * The name and signature of the console command.
      *
@@ -292,7 +295,7 @@ class SyncJimpisoftVehicles extends Command
                             $vehicleName = (string) ($group['Group_Name'] ?? $group['group_Name'] ?? $groupId);
                         }
 
-                        $photoFilename = $this->downloadImage(
+                        $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage(
                             $details['imageURL'] ?? $details['ImageURL'] ?? null,
                             $groupId
                         );

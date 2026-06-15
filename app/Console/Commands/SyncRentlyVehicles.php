@@ -18,9 +18,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
+use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 
 class SyncRentlyVehicles extends Command
 {
+    use ResolvesLocalVehiclePhoto;
+
     private const COMMERCIAL_AGREEMENT_CODE = 'pod-autours'; // Change this once you have the correct code from Rently
 
     /**
@@ -237,7 +240,7 @@ class SyncRentlyVehicles extends Command
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
                 } elseif (!$pricesOnly) {
-                    $photoFilename = $this->downloadImage($model['imagePath'] ?? null, $modelId);
+                    $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($model['imagePath'] ?? null, $modelId);
                     
                     $vehicle = Vehicle::create([
                         'name' => $vehicleName,

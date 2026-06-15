@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
+use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 
 class SyncEmrVehicles extends Command
 {
+    use ResolvesLocalVehiclePhoto;
+
     /**
      * The name and signature of the console command.
      *
@@ -359,9 +362,11 @@ class SyncEmrVehicles extends Command
                     }
                 }
 
-                // Download image once per group, only if needed
-                $photoFilename = null;
-                if ($needsImageDownload) {
+                // Try local photo first
+                $photoFilename = $this->resolveLocalPhoto($vehicleName);
+
+                // Download image once per group, only if needed and local not found
+                if (empty($photoFilename) && $needsImageDownload) {
                     $photoFilename = $this->downloadImage($imageUrl, $groupId);
                 }
 

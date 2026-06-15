@@ -248,16 +248,6 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             }
         }
 
-        // If still no match, try just the first word (brand name)
-        if ($photo === null) {
-            $nameParts = explode(' ', trim($vehicleName));
-            if (count($nameParts) >= 1) {
-                $brandName = $nameParts[0];
-                $photo = VehiclesPhotos::query()
-                    ->where('name', 'like', '%' . strtolower($brandName) . '%')
-                    ->first();
-            }
-        }
 
         if ($photo === null) {
             $this->addError($rowNumber, "No photo found for vehicle '{$vehicleName}'. Please upload a photo for this vehicle first in the Photos section");
