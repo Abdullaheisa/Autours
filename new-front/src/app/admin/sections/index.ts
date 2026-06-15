@@ -13,6 +13,7 @@ export { default as RentalsSection } from "./rentals/RentalsSection";
 export { default as RentalReviewsSection } from "./rental-reviews/RentalReviewsSection";
 export { default as RentalTermsSection } from "./rental-terms/RentalTermsSection";
 export { default as WhatIsIncludedSection } from "./what-is-included/WhatIsIncludedSection";
+export { default as BulkInclusionsSection } from "./bulk-inclusions/BulkInclusionsSection";
 export { default as SubscribersSection } from "./subscribers/SubscribersSection";
 export { default as BackgroundSettingsSection } from "./background-settings/BackgroundSettingsSection";
 export { default as LogoutSection } from "./logout/LogoutSection";

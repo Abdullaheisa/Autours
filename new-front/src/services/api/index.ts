@@ -150,6 +150,15 @@ export const profitApi = {
   getVehicles: (supplier?: string, branch_id?: string) => apiClient.get("/get/vehicles", { params: { supplier, branch_id } }),
 };
 
+// Vehicle Inclusions API (Bulk Assign)
+export const vehicleInclusionsApi = {
+  getAll: (params?: any) => apiClient.get("/api/admin/vehicles/inclusions", { params }),
+  bulkUpdate: (data: { selectedVehicles: string; included_ids: number[] }) =>
+    apiClient.post("/api/admin/vehicles/inclusions/bulk", data),
+  updateSingle: (data: { vehicle_id: number; included_ids: number[] }) =>
+    apiClient.post("/api/admin/vehicles/inclusions/single", data),
+};
+
 // Rate API
 export const rateApi = {
   getQuestions: (id: number) => apiClient.get("/get/rating/questions", { params: { id } }),

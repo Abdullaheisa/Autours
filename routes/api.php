@@ -187,6 +187,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
     // Profits
     Route::post('/profit/upload', [\App\Http\Controllers\ProfitsController::class, 'upload']);
 
+    // Vehicle Inclusions (Bulk)
+    Route::get('/vehicles/inclusions', [\App\Http\Controllers\VehicleInclusionsController::class, 'index']);
+    Route::post('/vehicles/inclusions/bulk', [\App\Http\Controllers\VehicleInclusionsController::class, 'bulkUpdate']);
+    Route::post('/vehicles/inclusions/single', [\App\Http\Controllers\VehicleInclusionsController::class, 'updateSingle']);
+
     // Background Settings
     Route::get('/background-settings', [\App\Http\Controllers\BackgroundSettingsController::class, 'index']);
     Route::post('/background-settings', [\App\Http\Controllers\BackgroundSettingsController::class, 'store']);

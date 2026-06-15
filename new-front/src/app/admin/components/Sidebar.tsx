@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, UserCircle, Building2, BookOpen, TrendingUp, Car, Upload,
   Grid3X3, Settings2, Crown, Users, CalendarCheck, Star, FileText, CheckCircle2,
-  Mail, Palette, LogOut, ChevronLeft, ChevronRight, BarChart3, Gift, ListTree, Tag
+  Mail, Palette, LogOut, ChevronLeft, ChevronRight, BarChart3, Gift, ListTree, Tag, ListChecks
 } from "lucide-react";
 import { sidebarItems as defaultSidebarItems } from "@/lib/data";
 import { useSelector } from "react-redux";
@@ -16,7 +16,7 @@ import { getLogoUrl } from "@/utils/getImageUrl";
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, UserCircle, Building2, BookOpen, TrendingUp, Car, Upload,
   Grid3X3, Settings2, Crown, Users, CalendarCheck, Star, FileText, CheckCircle2,
-  Mail, Palette, LogOut, BarChart3, Gift, ListTree, Tag
+  Mail, Palette, LogOut, BarChart3, Gift, ListTree, Tag, ListChecks
 };
 
 interface SidebarProps {

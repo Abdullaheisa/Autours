@@ -327,6 +327,11 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('delete/requests', [UserController::class, 'deleteMemberships']);
     Route::post('profit/upload', [ProfitsController::class, 'upload']);
 
+    // Vehicle Inclusions (Bulk)
+    Route::get('vehicles/inclusions', [\App\Http\Controllers\VehicleInclusionsController::class, 'index']);
+    Route::post('vehicles/inclusions/bulk', [\App\Http\Controllers\VehicleInclusionsController::class, 'bulkUpdate']);
+    Route::post('vehicles/inclusions/single', [\App\Http\Controllers\VehicleInclusionsController::class, 'updateSingle']);
+
     Route::inertia('photos', 'Dashboard/Photos');
     Route::inertia('vehicles-bulk-upload', 'Dashboard/VehiclesBulkUpload');
     Route::post('post/photos', [VehicleController::class, 'createPhotos']);
