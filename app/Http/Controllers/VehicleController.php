@@ -175,7 +175,7 @@ class VehicleController extends Controller
             foreach ($vehicles as $vehicle) {
                 $supplierId = $vehicle->supplier instanceof User ? $vehicle->supplier->id : ($vehicle->getAttributes()['supplier'] ?? '');
                 $categoryId = $vehicle->getAttributes()['category'] ?? '';
-                $key = strtolower(trim($vehicle->name)) . '|' . $supplierId . '|' . $categoryId;
+                $key = strtolower(trim($vehicle->name)) . '|' . $supplierId . '|' . $categoryId . '|' . $vehicle->price . '|' . $vehicle->week_price . '|' . $vehicle->month_price;
                 
                 if (!isset($groupedKeys[$key])) {
                     $vehicle->setAttribute('available_branches', $vehicle->branch ? [$vehicle->branch->toArray()] : []);
