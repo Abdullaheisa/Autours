@@ -441,8 +441,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
       form.append("week_price", formData.price37);
       form.append("month_price", formData.price830);
       
-      const selectedBranch = dynamicData.branches.find((b: any) => String(b.id) === formData.pickupLocationId);
-      form.append("pickupLoc", selectedBranch?.location || formData.pickupLocationId);
+      form.append("pickupLoc", formData.pickupLocationId);
       
       form.append("category", formData.categoryId);
       form.append("instant_confirmation", formData.reserveWithoutConfirmation ? "0" : "1");

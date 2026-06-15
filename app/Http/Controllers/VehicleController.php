@@ -503,7 +503,14 @@ class VehicleController extends Controller
 
 
             if ($request->has('pickupLoc')) {
-                $existingVehicle->pickup_loc = Branch::query()->where('location', $request->pickupLoc)->first()->id;
+                if (is_numeric($request->pickupLoc)) {
+                    $existingVehicle->pickup_loc = $request->pickupLoc;
+                } else {
+                    $branch = Branch::query()->where('location', $request->pickupLoc)->first();
+                    if ($branch) {
+                        $existingVehicle->pickup_loc = $branch->id;
+                    }
+                }
             }
 
             if ($request->has('category')) {
