@@ -283,9 +283,9 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
             vehicleManagementApi.getForEdit(vehicleId),
             specificationApi.getAll(),
           ]) as any[];
-        
+
         const vehicleData = vehicleRes?.data || vehicleRes;
-        
+
         const rawSpecs = specsRes?.data || specsRes || [];
         const parsedSpecs = Array.isArray(rawSpecs) ? rawSpecs.map((s: any) => ({
           ...s,
@@ -295,11 +295,11 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
         const includedList = includedRes.data?.data || includedRes.data || [];
 
         setDynamicData({
-          photos:        Array.isArray(photosRes) ? photosRes : (photosRes.data?.data || photosRes.data || []),
-          categories:    catsRes.data?.data     || catsRes.data     || [],
-          branches:      branchesRes.data?.data || branchesRes.data || [],
+          photos: Array.isArray(photosRes) ? photosRes : (photosRes.data?.data || photosRes.data || []),
+          categories: catsRes.data?.data || catsRes.data || [],
+          branches: branchesRes.data?.data || branchesRes.data || [],
           locationTypes: locTypesRes.data?.data || locTypesRes.data || [],
-          fuelPolicies:  fuelPolRes.data?.data  || fuelPolRes.data  || [],
+          fuelPolicies: fuelPolRes.data?.data || fuelPolRes.data || [],
           includedItems: includedList,
           specifications: parsedSpecs,
         });
@@ -312,23 +312,23 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
             });
           }
 
-          const includedFeatures = Array.isArray(vehicleData.what_is_included) 
+          const includedFeatures = Array.isArray(vehicleData.what_is_included)
             ? vehicleData.what_is_included.map((name: any) => {
-                if (typeof name === 'object' && name !== null) return name.id;
-                const found = includedList.find((item: any) => item.what_is_included === name || item.id === name);
-                return found ? found.id : null;
-              }).filter((id: any) => id !== null)
+              if (typeof name === 'object' && name !== null) return name.id;
+              const found = includedList.find((item: any) => item.what_is_included === name || item.id === name);
+              return found ? found.id : null;
+            }).filter((id: any) => id !== null)
             : [];
 
           setFormData({
             vehiclePhotoId: vehicleData.photo || "",
             pickupLocationId: typeof vehicleData.pickup_loc === 'object' && vehicleData.pickup_loc !== null ? String(vehicleData.pickup_loc.id) : String(vehicleData.pickup_loc || vehicleData.branch?.id || ""),
             categoryId: typeof vehicleData.category === 'object' && vehicleData.category !== null ? String(vehicleData.category.id) : String(vehicleData.category || vehicleData.category_id || ""),
-            locationTypeId: Array.isArray(vehicleData.location_type) && vehicleData.location_type.length 
+            locationTypeId: Array.isArray(vehicleData.location_type) && vehicleData.location_type.length
               ? String(vehicleData.location_type[0].id || vehicleData.location_type[0])
-              : (typeof vehicleData.location_type === 'object' && vehicleData.location_type !== null 
-                  ? String(vehicleData.location_type.id) 
-                  : (vehicleData.location_type ? String(vehicleData.location_type) : "")),
+              : (typeof vehicleData.location_type === 'object' && vehicleData.location_type !== null
+                ? String(vehicleData.location_type.id)
+                : (vehicleData.location_type ? String(vehicleData.location_type) : "")),
             fuelPolicyId: String(vehicleData.fuel_policy_id || ""),
             reserveWithoutConfirmation: vehicleData.instant_confirmation === 0,
             description: vehicleData.description || "",
@@ -356,7 +356,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
 
   // ── Click-outside for dropdowns ───────────
   const includedDropdownRef = useRef<HTMLDivElement>(null);
-  const vehicleDropdownRef  = useRef<HTMLDivElement>(null);
+  const vehicleDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -435,20 +435,19 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
       form.append("price", formData.price12);
       form.append("week_price", formData.price37);
       form.append("month_price", formData.price830);
-      
-      const selectedBranch = dynamicData.branches.find((b: any) => String(b.id) === formData.pickupLocationId);
-      form.append("pickupLoc", selectedBranch?.location || formData.pickupLocationId);
-      
+
+      form.append("pickupLoc", formData.pickupLocationId);
+
       form.append("category", formData.categoryId);
       form.append("instant_confirmation", formData.reserveWithoutConfirmation ? "0" : "1");
-      
+
       if (formData.locationTypeId) {
         form.append("location_types", formData.locationTypeId);
       }
       if (formData.fuelPolicyId) {
         form.append("fuel_policy", formData.fuelPolicyId);
       }
-      
+
       // Use selected feature names/columns
       const names = selectedFeatures.map(item => item.what_is_included || item.name || String(item.id));
       form.append("included", names.join(","));
@@ -593,9 +592,8 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
                             type="button"
                             key={photo.id}
                             onClick={() => handleVehicleSelect(String(photo.id))}
-                            className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${
-                              isSelected ? "bg-primary-50/50" : ""
-                            }`}
+                            className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${isSelected ? "bg-primary-50/50" : ""
+                              }`}
                           >
                             <div className="w-16 h-12 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
                               {photoUrl ? (
@@ -663,7 +661,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
                 label="Pickup Location"
                 value={formData.pickupLocationId}
                 onChange={(v) => setFormData(p => ({ ...p, pickupLocationId: v }))}
-                options={toOpts(dynamicData.branches, "location")}
+                options={toOpts(dynamicData.branches, "name")}
                 placeholder="Select branch…"
               />
               <SelectField
@@ -702,14 +700,12 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
                     onClick={() =>
                       setFormData(p => ({ ...p, reserveWithoutConfirmation: !p.reserveWithoutConfirmation }))
                     }
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                      formData.reserveWithoutConfirmation ? 'bg-primary-500' : 'bg-gray-300'
-                    }`}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${formData.reserveWithoutConfirmation ? 'bg-primary-500' : 'bg-gray-300'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                        formData.reserveWithoutConfirmation ? 'translate-x-5' : 'translate-x-0.5'
-                      }`}
+                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${formData.reserveWithoutConfirmation ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
                     />
                   </button>
                 </div>
@@ -735,9 +731,9 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
         {/* ── Prices ── */}
         <SectionCard icon={Tag} title="Prices Section">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <PriceField label="Price 1-2 days"  value={formData.price12}  onChange={(v) => setFormData(p => ({ ...p, price12: v }))} />
-            <PriceField label="3 - 7 Days Price" value={formData.price37}  onChange={(v) => setFormData(p => ({ ...p, price37: v }))} />
-            <PriceField label="8-30 Days Price"  value={formData.price830} onChange={(v) => setFormData(p => ({ ...p, price830: v }))} />
+            <PriceField label="Price 1-2 days" value={formData.price12} onChange={(v) => setFormData(p => ({ ...p, price12: v }))} />
+            <PriceField label="3 - 7 Days Price" value={formData.price37} onChange={(v) => setFormData(p => ({ ...p, price37: v }))} />
+            <PriceField label="8-30 Days Price" value={formData.price830} onChange={(v) => setFormData(p => ({ ...p, price830: v }))} />
           </div>
         </SectionCard>
 
@@ -772,25 +768,22 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
                       type="button"
                       key={item.id}
                       onClick={() => handleFeatureToggle(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${
-                        formData.includedFeatures.includes(item.id) ? "bg-primary-50/50" : ""
-                      }`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${formData.includedFeatures.includes(item.id) ? "bg-primary-50/50" : ""
+                        }`}
                     >
                       <div
-                        className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
-                          formData.includedFeatures.includes(item.id)
+                        className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors shrink-0 ${formData.includedFeatures.includes(item.id)
                             ? "bg-primary-500 border-primary-500 text-white"
                             : "bg-white border-gray-200"
-                        }`}
+                          }`}
                       >
                         {formData.includedFeatures.includes(item.id) && (
                           <Check size={12} strokeWidth={3} />
                         )}
                       </div>
                       <span
-                        className={`text-sm font-medium ${
-                          formData.includedFeatures.includes(item.id) ? "text-primary-700" : "text-gray-700"
-                        }`}
+                        className={`text-sm font-medium ${formData.includedFeatures.includes(item.id) ? "text-primary-700" : "text-gray-700"
+                          }`}
                       >
                         {item.what_is_included || item.name}
                       </span>
