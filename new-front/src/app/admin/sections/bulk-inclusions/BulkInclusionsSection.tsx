@@ -48,6 +48,11 @@ export default function BulkInclusionsSection() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
+  // Server-side aggregate stats
+  const [withInclusionsTotal, setWithInclusionsTotal] = useState(0);
+  const [withoutInclusionsTotal, setWithoutInclusionsTotal] = useState(0);
+  const [totalBranches, setTotalBranches] = useState(0);
+
   // Track current filters in a ref to reset page when they change
   const filtersRef = useRef({
     searchQuery,
@@ -158,6 +163,9 @@ export default function BulkInclusionsSection() {
           setTotalPages(res?.last_page || 1);
           setTotalCount(res?.total || items.length);
           setCurrentPage(res?.current_page || page);
+          setWithInclusionsTotal(res?.with_inclusions_count ?? 0);
+          setWithoutInclusionsTotal(res?.without_inclusions_count ?? 0);
+          setTotalBranches(res?.total_branches ?? 0);
 
           setVehicles(
             items.map((item: any) => ({
@@ -220,10 +228,7 @@ export default function BulkInclusionsSection() {
     [fetchData]
   );
 
-  // ── Stats ─────────────────────────────────────────────────────────────
-  const withInclusions = vehicles.filter((v) => v.included.length > 0).length;
-  const withoutInclusions = vehicles.filter((v) => v.included.length === 0).length;
-  const activeBranches = new Set(vehicles.map((v) => v.branch)).size;
+  // ── Stats (all server-side) ───────────────────────────────────────────
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const handleBulkSubmit = async (selectedIds: number[]) => {
@@ -292,17 +297,17 @@ export default function BulkInclusionsSection() {
         <StatsCard label="Total Vehicles" value={totalCount} icon={<Car size={20} />} color="blue" />
         <StatsCard
           label="With Inclusions"
-          value={withInclusions}
+          value={withInclusionsTotal}
           icon={<CheckCircle2 size={20} />}
           color="emerald"
         />
         <StatsCard
           label="Without Inclusions"
-          value={withoutInclusions}
+          value={withoutInclusionsTotal}
           icon={<AlertTriangle size={20} />}
           color="amber"
         />
-        <StatsCard label="Branches (page)" value={activeBranches} icon={<Store size={20} />} color="purple" />
+        <StatsCard label="Branches" value={totalBranches} icon={<Store size={20} />} color="purple" />
       </div>
 
       {/* Filters */}

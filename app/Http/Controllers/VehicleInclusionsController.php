@@ -97,6 +97,64 @@ class VehicleInclusionsController extends Controller
             }
             unset($vehicle);
 
+            // Compute server-side aggregate stats across ALL filtered vehicles (not just the page)
+            $totalVehicles = $items['total'];
+            $withInclusionsCount = DB::table('vehicle_included')
+                ->join('vehicles', 'vehicles.id', '=', 'vehicle_included.vehicle_id')
+                ->whereNull('vehicles.deleted_at')
+                ->distinct('vehicle_included.vehicle_id')
+                ->count('vehicle_included.vehicle_id');
+            $totalBranches = Vehicle::whereNull('deleted_at')
+                ->distinct('pickup_loc')
+                ->count('pickup_loc');
+
+            // If there are active filters, compute against the filtered set instead
+            if ($request->has('country') || $request->has('supplier') || $request->has('branch')
+                || $request->has('selectedVehicles') || $request->has('search')) {
+                // Clone query without pagination to get all matching vehicle IDs
+                $filteredQuery = Vehicle::query()
+                    ->leftJoin('branches', 'branches.id', '=', 'vehicles.pickup_loc')
+                    ->leftJoin('users', 'users.id', '=', 'vehicles.supplier')
+                    ->whereNull('vehicles.deleted_at');
+
+                if ($request->has('supplier')) {
+                    $filteredQuery->where('vehicles.supplier', $request->supplier);
+                }
+                if ($request->has('branch')) {
+                    $filteredQuery->where('vehicles.pickup_loc', $request->branch);
+                }
+                if ($request->has('selectedVehicles')) {
+                    $filteredQuery->whereIn('vehicles.id', $request->selectedVehicles);
+                }
+                if ($request->has('country')) {
+                    $filteredQuery->where('branches.country', $request->country);
+                }
+                if ($request->has('search')) {
+                    $search = $request->get('search');
+                    $filteredQuery->where(function ($q) use ($search) {
+                        $q->where('vehicles.name', 'LIKE', '%' . $search . '%')
+                          ->orWhere('branches.name', 'LIKE', '%' . $search . '%')
+                          ->orWhere('branches.country', 'LIKE', '%' . $search . '%')
+                          ->orWhere('users.name', 'LIKE', '%' . $search . '%');
+                    });
+                }
+
+                $allFilteredIds = $filteredQuery->pluck('vehicles.id')->toArray();
+                $withInclusionsCount = DB::table('vehicle_included')
+                    ->whereIn('vehicle_id', $allFilteredIds)
+                    ->distinct('vehicle_id')
+                    ->count('vehicle_id');
+                $totalVehicles = count($allFilteredIds);
+                $totalBranches = Vehicle::whereNull('deleted_at')
+                    ->whereIn('id', $allFilteredIds)
+                    ->distinct('pickup_loc')
+                    ->count('pickup_loc');
+            }
+
+            $items['with_inclusions_count'] = $withInclusionsCount;
+            $items['without_inclusions_count'] = $totalVehicles - $withInclusionsCount;
+            $items['total_branches'] = $totalBranches;
+
             return response()->json($items, 200);
         } catch (\Exception $e) {
             Log::error("VehicleInclusionsController index error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
