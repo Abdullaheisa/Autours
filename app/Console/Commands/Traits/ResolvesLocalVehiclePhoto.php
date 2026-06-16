@@ -16,19 +16,20 @@ trait ResolvesLocalVehiclePhoto
         }
 
         $vehicleName = trim($vehicleName);
+        $lowerName = mb_strtolower($vehicleName);
 
-        // Try exact match first
+        // Try exact match first (case-insensitive)
         $photo = VehiclesPhotos::query()
-            ->where('name', 'like', '%' . $vehicleName . '%')
+            ->whereRaw('LOWER(name) like ?', ['%' . $lowerName . '%'])
             ->first();
 
-        // If no exact match, try matching just the car model (first two words)
+        // If no exact match, try matching just the car model (first two words, case-insensitive)
         if ($photo === null) {
             $nameParts = explode(' ', $vehicleName);
             if (count($nameParts) >= 2) {
-                $shortName = $nameParts[0] . ' ' . $nameParts[1];
+                $shortName = mb_strtolower($nameParts[0] . ' ' . $nameParts[1]);
                 $photo = VehiclesPhotos::query()
-                    ->where('name', 'like', '%' . $shortName . '%')
+                    ->whereRaw('LOWER(name) like ?', ['%' . $shortName . '%'])
                     ->first();
             }
         }
