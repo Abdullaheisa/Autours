@@ -346,7 +346,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       src={carData.supplier.logo}
       alt={`${carData.supplier.name} Logo`}
       width={333}
-      height={144}
+      height={126}
       className="w-full h-full object-contain"
       unoptimized
     />
