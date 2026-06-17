@@ -383,6 +383,34 @@ class BlogController extends Controller
     }
 
     /**
+     * Upload an image from the rich text editor.
+     */
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        try {
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $image_name = time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
+                $image->move(public_path('img/blogs/content'), $image_name);
+
+                return response()->json([
+                    'success' => true,
+                    'url' => url('img/blogs/content/' . $image_name),
+                ], 200);
+            }
+
+            return response()->json(['success' => false, 'message' => 'No image uploaded'], 400);
+        } catch (\Exception $e) {
+            \Log::error('Rich Text Image Upload Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Generate a URL-friendly slug from a title.
      */
     private function generateSlug(string $title): string

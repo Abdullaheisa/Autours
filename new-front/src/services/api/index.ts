@@ -10,6 +10,7 @@ export const blogApi = {
   update: (id: number, data: unknown) => apiClient.post(`/api/blogs/${id}`, data),
   delete: (id: number) => apiClient.delete(`/api/blogs/${id}`),
   togglePublish: (id: number) => apiClient.patch(`/api/blogs/${id}/toggle-publish`, {}),
+  uploadImage: (formData: FormData) => apiClient.post("/api/blogs/upload-image", formData),
 };
 
 // Blog Category API

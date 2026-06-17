@@ -14,7 +14,10 @@ import {
   Table,
   Image as ImageIcon,
   Code,
+  Loader2,
 } from 'lucide-react';
+import { blogApi } from '@/services/api';
+import toast from 'react-hot-toast';
 
 export interface RichTextEditorProps {
   value: string;
@@ -57,8 +60,9 @@ export default function RichTextEditor({
   const [isSourceMode, setIsSourceMode] = useState(false);
 
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageAlt, setImageAlt] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const savedRangeRef = useRef<Range | null>(null);
 
@@ -178,17 +182,34 @@ export default function RichTextEditor({
 
   const handleImage = () => {
     saveSelection();
-    setImageUrl('');
+    setImageFile(null);
     setImageAlt('');
     setImageModalOpen(true);
   };
 
-  const submitImage = () => {
-    if (imageUrl) {
-      const imgHTML = `<img src="${imageUrl}" alt="${imageAlt}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;" />`;
-      runCommand('insertHTML', imgHTML);
+  const submitImage = async () => {
+    if (imageFile) {
+      setUploadingImage(true);
+      try {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        const response: any = await blogApi.uploadImage(formData);
+        const url = response?.data?.url || response?.url;
+        if (url) {
+          const imgHTML = `<img src="${url}" alt="${imageAlt}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;" />`;
+          runCommand('insertHTML', imgHTML);
+          setImageModalOpen(false);
+        } else {
+          toast.error("Failed to upload image");
+        }
+      } catch (e: any) {
+        toast.error(e.response?.data?.message || "Failed to upload image");
+      } finally {
+        setUploadingImage(false);
+      }
+    } else {
+      toast.error("Please select an image");
     }
-    setImageModalOpen(false);
   };
 
   const getBtnClass = (isActive: boolean) =>
@@ -460,15 +481,14 @@ export default function RichTextEditor({
       {imageModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-900 mb-3">Insert Image</h3>
+            <h3 className="text-sm font-bold text-gray-900 mb-3">Upload Image</h3>
             <div className="mb-3">
-              <label className="block text-xs font-bold text-gray-700 mb-1">Image URL</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Select Image</label>
               <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary file:text-gray-900 hover:file:bg-primary/80"
                 autoFocus
               />
             </div>
@@ -481,14 +501,17 @@ export default function RichTextEditor({
                 placeholder="Image description"
                 className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') submitImage();
-                  if (e.key === 'Escape') setImageModalOpen(false);
+                  if (e.key === 'Enter' && !uploadingImage) submitImage();
+                  if (e.key === 'Escape' && !uploadingImage) setImageModalOpen(false);
                 }}
               />
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setImageModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl">Cancel</button>
-              <button onClick={submitImage} className="px-4 py-2 text-sm font-bold bg-primary text-gray-900 rounded-xl hover:bg-primary-600">Insert</button>
+              <button disabled={uploadingImage} onClick={() => setImageModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl disabled:opacity-50">Cancel</button>
+              <button disabled={uploadingImage || !imageFile} onClick={submitImage} className="px-4 py-2 text-sm font-bold bg-primary text-gray-900 rounded-xl hover:bg-primary-600 flex items-center gap-2 disabled:opacity-50">
+                {uploadingImage && <Loader2 size={14} className="animate-spin" />}
+                {uploadingImage ? 'Uploading...' : 'Insert'}
+              </button>
             </div>
           </div>
         </div>

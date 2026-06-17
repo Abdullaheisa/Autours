@@ -247,6 +247,7 @@ Route::prefix('blogs')->group(function () {
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/upload-image', [BlogController::class, 'uploadImage'])->name('api.blogs.upload-image');
         Route::post('/', [BlogController::class, 'store'])->name('api.blogs.store');
         Route::post('/{blog}', [BlogController::class, 'update'])->name('api.blogs.update');
         Route::put('/{blog}', [BlogController::class, 'update'])->name('api.blogs.put-update');
