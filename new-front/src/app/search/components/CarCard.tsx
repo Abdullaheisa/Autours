@@ -347,14 +347,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       alt={`${carData.supplier.name} Logo`}
       width={333}
       height={126}
-      className="w-full h-full object-contain"
+      className="w-full h-full object-cover object-center"
       unoptimized
     />
   ) : (
     <span className="text-[10px] font-bold text-gray-600">N/A</span>
   )}
 </div>
-
 
             <div className="min-w-0">
               <span className="text-xs md:text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
@@ -458,7 +457,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     {displayedInclusions.map((inc, i) => (
                       <div key={i} className="flex items-center gap-1.5">
                         <Check size={12} className="text-green-600 shrink-0" />
-                        <span className="text-xs font-black text-gray-700">{inc}</span>
+                        <span className="text-[10px] font-normal text-gray-700">{inc}</span>
                       </div>
                     ))}
                   </div>
