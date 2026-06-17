@@ -199,9 +199,19 @@ class SyncWheelsysVehicles extends Command
         $progress->finish();
         $this->newLine();
 
+        // 7. Clean up branches without vehicles
+        $orphanedCount = 0;
+        foreach ($allBranches as $branch) {
+            if ($branch->vehicles()->count() === 0) {
+                $branch->delete();
+                $orphanedCount++;
+            }
+        }
+
         $this->info('========== Wheelsys Vehicle Sync Complete ==========');
         $this->info("Created  : {$created}");
         $this->info("Skipped  : {$skipped} (Already existing)");
+        $this->info("Deleted  : {$orphanedCount} (Empty branches)");
         $this->info('====================================================');
 
         return self::SUCCESS;
