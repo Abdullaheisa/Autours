@@ -340,20 +340,21 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         <div className="mx-4 mb-2 md:mb-2.5">
           <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center justify-start gap-x-4 gap-y-3 flex-wrap">
-            <div className="bg-white p-1 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
-              {carData.supplier.logo ? (
-                <Image
-                  src={carData.supplier.logo}
-                  alt={`${carData.supplier.name} Logo`}
-                  width={80}
-                  height={40}
-                  className="h-10 w-auto max-w-[80px] object-contain"
-                  unoptimized
-                />
-              ) : (
-                <span className="text-[10px] font-bold text-gray-600">N/A</span>
-              )}
-            </div>
+            <div className="bg-white p-1 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm overflow-hidden">
+  {carData.supplier.logo ? (
+    <Image
+      src={carData.supplier.logo}
+      alt={`${carData.supplier.name} Logo`}
+      width={333}
+      height={144}
+      className="w-full h-full object-contain"
+      unoptimized
+    />
+  ) : (
+    <span className="text-[10px] font-bold text-gray-600">N/A</span>
+  )}
+</div>
+
 
             <div className="min-w-0">
               <span className="text-xs md:text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
