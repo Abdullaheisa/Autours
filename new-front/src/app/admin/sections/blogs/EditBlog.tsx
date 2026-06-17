@@ -42,6 +42,7 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
   const [publishTime, setPublishTime] = useState(blog?.publishTime || "");
   const [previewImage, setPreviewImage] = useState<string | null>(blog?.image || null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageAltText, setImageAltText] = useState(blog?.image_alt_text || "");
   const [tags, setTags] = useState(blog?.tags || "");
   const [loading, setLoading] = useState(false);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
@@ -120,6 +121,7 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
       status, publishDate: status === "scheduled" ? publishDate : undefined,
       publishTime: status === "scheduled" ? publishTime : undefined,
       imageFile: imageFile || undefined,
+      image_alt_text: imageAltText,
       tags,
     });
     setLoading(false);
@@ -264,6 +266,15 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
                 {previewImage ? "Change Image" : "Upload Image"}
                 <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
               </label>
+              
+              <div className="mt-4">
+                <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1 block">Image Alt Text (Accessibility)</label>
+                <input
+                  value={imageAltText} onChange={(e) => setImageAltText(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white"
+                  placeholder="Describe the image content..."
+                />
+              </div>
             </div>
 
             {/* Meta Description */}

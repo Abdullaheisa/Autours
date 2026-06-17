@@ -21,6 +21,7 @@ export interface Blog {
   publishTime?: string;
   views?: number;
   tags?: string;
+  image_alt_text?: string;
 }
 
 const mapApiBlog = (raw: any): Blog => {
@@ -71,6 +72,7 @@ const mapApiBlog = (raw: any): Blog => {
     publishTime: raw.publish_time,
     views: raw.views ?? 0,
     tags: raw.tags || '',
+    image_alt_text: raw.image_alt_text || '',
   };
 };
 
@@ -120,6 +122,7 @@ export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<
       payload.append('published_at', '');
     }
     if (data.tags) payload.append('tags', data.tags);
+    if (data.image_alt_text) payload.append('image_alt_text', data.image_alt_text);
     if (data.imageFile) payload.append('image', data.imageFile);
 
     const response: any = await blogApi.create(payload);
@@ -148,6 +151,7 @@ export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: 
       }
     }
     if (data.tags !== undefined) payload.append('tags', data.tags);
+    if (data.image_alt_text !== undefined) payload.append('image_alt_text', data.image_alt_text);
     if (data.imageFile) payload.append('image', data.imageFile);
 
     const response: any = await blogApi.update(id, payload);

@@ -19,7 +19,7 @@ export default function BlogCard({ blog, onView, onEdit, onDelete, categoryColor
   return (
     <div className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all duration-300 overflow-hidden flex flex-col">
       <div className="relative h-44 overflow-hidden">
-        <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img src={blog.image} alt={blog.image_alt_text || blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <div className="absolute top-3 left-3">
           <Badge {...badgeProps} className="capitalize">

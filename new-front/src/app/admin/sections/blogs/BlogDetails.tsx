@@ -3,7 +3,7 @@
 import { ArrowLeft, Calendar, Clock, Eye, Tag, Share2, Printer, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { getStatusBadgeProps } from "@/utils/statusMapper";
-import { Blog } from "@/hooks/useBlogs";
+import { Blog } from "@/store/slices/blogsSlice";
 
 interface BlogDetailsProps {
   blog: Blog;
@@ -46,7 +46,7 @@ export default function BlogDetails({ blog, onBack, onEdit }: BlogDetailsProps) 
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Hero Image */}
         <div className="relative h-64 sm:h-96">
-          <img src={blog.image} alt={blog.title} className="w-full h-full object-cover" />
+          <img src={blog.image} alt={blog.image_alt_text || blog.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-8 left-8 right-8">
             <div className="flex items-center gap-3 mb-4 flex-wrap">
