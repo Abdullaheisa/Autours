@@ -30,6 +30,10 @@ class Kernel extends ConsoleKernel
          $schedule->command('rently:sync-branches --countries="Jordan,Morocco"')->dailyAt('04:00');
          $schedule->command('rently:sync-vehicles --prices-only --countries="Jordan,Morocco"')->everyFourHours();
 
+         // Sync Wheelsys branches daily and vehicle prices every 4 hours
+         $schedule->command('wheelsys:sync-branches')->dailyAt('04:30');
+         $schedule->command('wheelsys:sync-vehicles')->everyFourHours();
+
          // Sync exchange rates daily
          $schedule->command('sync:exchange-rates')->dailyAt('06:00');
     }   
