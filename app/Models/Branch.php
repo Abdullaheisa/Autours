@@ -45,4 +45,9 @@ class Branch extends Model
             ->withPivot('is_primary')
             ->withTimestamps();
     }
+
+    public function setCountryAttribute($value)
+    {
+        $this->attributes['country'] = $value ? ucwords(strtolower((string)$value)) : $value;
+    }
 }
