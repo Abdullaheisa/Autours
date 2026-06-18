@@ -995,7 +995,7 @@ class VehicleController extends Controller
             ->orderBy('name')
             ->get()
             ->unique(function ($branch) {
-                return $branch->airport_id ? 'airport_' . $branch->airport_id : $branch->name;
+                return $branch->airport_id ? 'airport_' . $branch->airport_id : mb_strtolower(trim($branch->name));
             })
             ->values();
         return response()->json($locations);

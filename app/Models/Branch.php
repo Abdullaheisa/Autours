@@ -25,7 +25,9 @@ class Branch extends Model
         'lng',
         'location_type',
         'abriviation',
-        'activation'
+        'activation',
+        'airport_id',
+        'normalized_name'
     ];
 
     public function company() {
