@@ -11,6 +11,14 @@ class Vehicle extends Model
     use HasFactory;
     use SoftDeletes;
 
+    public function setNameAttribute($value)
+    {
+        if ($value !== null) {
+            $value = trim(preg_replace('/(?i)\s*-?\s*\(?or similar\)?\s*/', '', $value));
+        }
+        $this->attributes['name'] = $value;
+    }
+
     protected $fillable = [
         'photo',
         'name',
