@@ -41,7 +41,8 @@ class WheelsysApiService
         string $pickupDate,
         string $pickupTime,
         string $dropoffDate,
-        string $dropoffTime
+        string $dropoffTime,
+        ?string $country = null
     ): array {
         $url = self::BASE_URL . "/price-quote_" . self::LINK_CODE . ".html";
 
@@ -55,6 +56,17 @@ class WheelsysApiService
             'RETURN_STATION' => $returnStation,
             'TRACING' => 'ON',
         ];
+
+        if ($country) {
+            $countryLower = strtolower($country);
+            if ($countryLower === 'egypt') {
+                $params['RATE_CODE'] = 'EGYRC';
+                $params['CDP'] = 'EGYPOA';
+            } elseif ($countryLower === 'morocco') {
+                $params['RATE_CODE'] = 'MORRC';
+                $params['CDP'] = 'MORPOA';
+            }
+        }
 
         $response = Http::timeout($this->requestTimeout)
             ->withOptions(['verify' => false])

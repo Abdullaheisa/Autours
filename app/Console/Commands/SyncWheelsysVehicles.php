@@ -117,10 +117,11 @@ class SyncWheelsysVehicles extends Command
 
         foreach ($allBranches as $branch) {
             $stationId = $branch->station_id;
+            $country = $branch->country;
 
-            $prices1 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate1Str, $dropoffTime);
-            $prices7 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate7Str, $dropoffTime);
-            $prices30 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate30Str, $dropoffTime);
+            $prices1 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate1Str, $dropoffTime, $country);
+            $prices7 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate7Str, $dropoffTime, $country);
+            $prices30 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate30Str, $dropoffTime, $country);
 
             // Merge prices
             foreach ($prices1 as $groupId => $data1) {
