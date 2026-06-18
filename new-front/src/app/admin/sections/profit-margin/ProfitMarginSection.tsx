@@ -83,14 +83,14 @@ export default function ProfitMarginsPage() {
 
   const fetchBranches = useCallback(() => {
     if (selectedSupplier) {
-      profitApi.getBranches(selectedSupplier).then((res: any) => {
+      profitApi.getBranches(selectedSupplier, selectedCountry).then((res: any) => {
         const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
         setBranches(data.map((item: any) => ({ id: String(item.id), name: item.name })));
       }).catch(console.error);
     } else {
       setBranches([]);
     }
-  }, [selectedSupplier]);
+  }, [selectedSupplier, selectedCountry]);
 
   useEffect(() => {
     fetchBranches();

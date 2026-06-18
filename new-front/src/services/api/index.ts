@@ -147,7 +147,7 @@ export const profitApi = {
   upload: (data: unknown) => apiClient.post("/api/admin/profit/upload", data),
   getCountries: () => apiClient.get("/get/countries"),
   getSuppliers: (country?: string) => apiClient.get("/get/suppliers", { params: { country } }),
-  getBranches: (company_id?: string) => apiClient.get("/get/branches", { params: { company_id } }),
+  getBranches: (company_id?: string, country?: string) => apiClient.get("/get/branches", { params: { company_id, country } }),
   getVehicles: (supplier?: string, branch_id?: string) => apiClient.get("/get/vehicles", { params: { supplier, branch_id } }),
 };
 
