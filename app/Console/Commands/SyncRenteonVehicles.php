@@ -242,9 +242,28 @@ class SyncRenteonVehicles extends Command
                 }
             }
 
+            $name = $item['ModelName'] ?? 'Unknown';
+            $acriss = $item['CarCategory'] ?? '';
+
+            if (!empty($acriss) && strlen($acriss) >= 4) {
+                $trans = strtoupper($acriss[2]);
+                if (in_array($trans, ['A', 'B', 'D']) && stripos($name, 'Auto') === false) {
+                    $name .= ' Automatic';
+                }
+
+                $fuel = strtoupper($acriss[3]);
+                if (in_array($fuel, ['D', 'Q', 'Z']) && stripos($name, 'Diesel') === false) {
+                    $name .= ' Diesel';
+                } elseif (in_array($fuel, ['H', 'I']) && stripos($name, 'Hybrid') === false) {
+                    $name .= ' Hybrid';
+                } elseif (in_array($fuel, ['E', 'C', 'V']) && stripos($name, 'Electric') === false) {
+                    $name .= ' Electric';
+                }
+            }
+
             $mapped[$groupId] = [
-                'name' => $item['ModelName'] ?? 'Unknown',
-                'acriss' => $item['CarCategory'] ?? '',
+                'name' => $name,
+                'acriss' => $acriss,
                 'price' => $item['Amount'] ?? 0,
                 'currency' => $item['Currency'] ?? $currency,
                 'imageurl' => $item['CarModelImageURL'] ?? null,
