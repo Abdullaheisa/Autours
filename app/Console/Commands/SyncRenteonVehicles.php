@@ -30,7 +30,8 @@ class SyncRenteonVehicles extends Command
      * @var string
      */
     protected $signature = 'renteon:sync-vehicles
-                            {--pickup-date= : Pickup date (yyyy-MM-dd), defaults to tomorrow}';
+                            {--pickup-date= : Pickup date (yyyy-MM-dd), defaults to tomorrow}
+                            {--full : Check availability for ALL Renteon branches, otherwise only checks branches that already have vehicles}';
 
     /**
      * The console command description.
@@ -54,7 +55,7 @@ class SyncRenteonVehicles extends Command
 
         // 1. Resolve Renteon supplier user
         $supplierUser = User::firstOrCreate(
-            ['email' => 'temp@renteon.com'],
+            ['email' => 'arda@essencecarrental.com'],
             [
                 'name' => 'Renteon (' . RenteonApiService::PROVIDER_CODE . ')',
                 'role' => 'active_supplier',
@@ -68,10 +69,16 @@ class SyncRenteonVehicles extends Command
         // 2. Load specs
         $this->loadSpecificationDefinitions();
 
-        // 3. Resolve all Renteon branches
-        $allBranches = Branch::where('company_id', $supplierUser->id)
-            ->whereNotNull('station_id')
-            ->get();
+        // 3. Resolve Renteon branches
+        $query = Branch::where('company_id', $supplierUser->id)
+            ->whereNotNull('station_id');
+
+        if (! $this->option('full')) {
+            $query->has('vehicles');
+            $this->info('Mode: Only syncing branches that already have vehicles. Use --full to sync all branches.');
+        }
+
+        $allBranches = $query->get();
 
         if ($allBranches->isEmpty()) {
             $this->warn('No Renteon branches found. Run: php artisan renteon:sync-branches');
@@ -155,7 +162,7 @@ class SyncRenteonVehicles extends Command
 
                 $vehicleName = $data1['name'] ?: 'Unknown Model';
                 $photoUrl = $data1['imageurl'] ?? null;
-                $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($photoUrl, $groupId);
+                $photoFilename = $this->resolveLocalPhoto($vehicleName);
                 
                 $categoryId = $this->resolveCategoryFromSipp($data1['acriss']);
 
