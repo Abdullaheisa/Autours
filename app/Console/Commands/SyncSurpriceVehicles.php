@@ -466,18 +466,16 @@ class SyncSurpriceVehicles extends Command
         // 11. Delete empty branches
         // ------------------------------------------------------------------
         $branchesDeleted = 0;
-        if (! $pricesOnly) {
-            $emptyBranches = Branch::where('company_id', $supplierUser->id)
-                ->whereDoesntHave('vehicles', function ($q) {
-                    $q->whereNull('deleted_at');
-                })
-                ->get();
+        $emptyBranches = Branch::where('company_id', $supplierUser->id)
+            ->whereDoesntHave('vehicles', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->get();
 
-            foreach ($emptyBranches as $emptyBranch) {
-                $emptyBranch->delete();
-                $branchesDeleted++;
-                $this->warn("Deleted empty branch: {$emptyBranch->name}");
-            }
+        foreach ($emptyBranches as $emptyBranch) {
+            $emptyBranch->delete();
+            $branchesDeleted++;
+            $this->warn("Deleted empty branch: {$emptyBranch->name}");
         }
 
         // ------------------------------------------------------------------

@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\CountryCurrencyResolver;
 use App\Services\WheelsysApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -79,7 +80,7 @@ class SyncWheelsysBranches extends Command
             $lat = $station['lat'];
             $lng = $station['long'];
 
-            $currency = $this->resolveCurrency($countryCode);
+            $currency = CountryCurrencyResolver::resolveCurrency($countryCode);
 
             $validStationIds[] = $locationCode;
 
@@ -96,7 +97,7 @@ class SyncWheelsysBranches extends Command
                     'location' => $city ?: $name,
                     'adresse' => $address ?: $name,
                     'city' => $city ?: $name,
-                    'country' => $this->resolveCountryName($countryCode),
+                    'country' => CountryCurrencyResolver::resolveCountryName($countryCode),
                     'currency' => $currency,
                     'lat' => $lat,
                     'lng' => $lng,
@@ -146,67 +147,4 @@ class SyncWheelsysBranches extends Command
         return self::SUCCESS;
     }
 
-    private function resolveCurrency(string $countryCode): string
-    {
-        return match (strtoupper($countryCode)) {
-            'GR' => 'EUR',
-            'CY' => 'EUR',
-            'CZ' => 'CZK',
-            'AE' => 'AED',
-            'MF' => 'EUR',
-            'US' => 'USD',
-            'MU' => 'MUR',
-            'MA' => 'MAD',
-            'PL' => 'PLN',
-            'PT' => 'EUR',
-            'RO' => 'RON',
-            'TR' => 'TRY',
-            'RS' => 'RSD',
-            'SK' => 'EUR',
-            'GE' => 'GEL',
-            'AL' => 'ALL',
-            'ES' => 'EUR',
-            'GB' => 'GBP',
-            'MK' => 'MKD',
-            'BA' => 'BAM',
-            'BG' => 'BGN',
-            'HR' => 'EUR',
-            'XK' => 'EUR',
-            'ME' => 'EUR',
-            'EG' => 'EGP',
-            default => 'EUR',
-        };
-    }
-
-    private function resolveCountryName(string $code): string
-    {
-        return match (strtoupper($code)) {
-            'GR' => 'Greece',
-            'CY' => 'Cyprus',
-            'CZ' => 'Czech Republic',
-            'AE' => 'United Arab Emirates',
-            'MF' => 'Sint Maarten',
-            'US' => 'United States',
-            'MU' => 'Mauritius',
-            'MA' => 'Morocco',
-            'PL' => 'Poland',
-            'PT' => 'Portugal',
-            'RO' => 'Romania',
-            'TR' => 'Turkey',
-            'RS' => 'Serbia',
-            'SK' => 'Slovakia',
-            'GE' => 'Georgia',
-            'AL' => 'Albania',
-            'ES' => 'Spain',
-            'GB' => 'United Kingdom',
-            'MK' => 'North Macedonia',
-            'BA' => 'Bosnia and Herzegovina',
-            'BG' => 'Bulgaria',
-            'HR' => 'Croatia',
-            'XK' => 'Kosovo',
-            'ME' => 'Montenegro',
-            'EG' => 'Egypt',
-            default => $code,
-        };
-    }
 }

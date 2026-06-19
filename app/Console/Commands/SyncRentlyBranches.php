@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\CountryCurrencyResolver;
 use App\Services\RentlyApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -83,7 +84,7 @@ class SyncRentlyBranches extends Command
             $filteredPlaces = [];
             foreach ($places as $place) {
                 $rawCountry = strtolower((string) ($place['country'] ?? ''));
-                $resolvedCountry = strtolower($this->resolveCountryName($rawCountry));
+                $resolvedCountry = strtolower(CountryCurrencyResolver::resolveCountryName($rawCountry));
                 
                 if (in_array($rawCountry, $allowedCountries) || in_array($resolvedCountry, $allowedCountries)) {
                     $filteredPlaces[] = $place;
@@ -115,8 +116,8 @@ class SyncRentlyBranches extends Command
                 continue;
             }
 
-            $country = $this->resolveCountryName($countryCode);
-            $currency = $this->resolveCurrency($countryCode);
+            $country = CountryCurrencyResolver::resolveCountryName($countryCode);
+            $currency = CountryCurrencyResolver::resolveCurrency($countryCode);
 
             $branch = Branch::updateOrCreate(
                 [
@@ -183,42 +184,4 @@ class SyncRentlyBranches extends Command
         return self::SUCCESS;
     }
 
-    private function resolveCountryName(string $code): string
-    {
-        return match (strtoupper($code)) {
-            'US' => 'United States',
-            'GB' => 'United Kingdom',
-            'TR' => 'Turkey',
-            'ES' => 'Spain',
-            'FR' => 'France',
-            'IT' => 'Italy',
-            'DE' => 'Germany',
-            'AE' => 'United Arab Emirates',
-            'AR' => 'Argentina',
-            'CO' => 'Colombia',
-            'GR' => 'Greece',
-            'UY' => 'Uruguay',
-            'MX' => 'Mexico',
-            'JO' => 'Jordan',
-            'MA' => 'Morocco',
-            default => $code,
-        };
-    }
-
-    private function resolveCurrency(string $code): string
-    {
-        return match (strtoupper($code)) {
-            'AE' => 'AED',
-            'US' => 'USD',
-            'TR' => 'TRY',
-            'GB' => 'GBP',
-            'AR' => 'ARS',
-            'UY' => 'UYU',
-            'MX' => 'MXN',
-            'CO' => 'COP',
-            'JO' => 'JOD',
-            'MA' => 'MAD',
-            default => 'EUR',
-        };
-    }
 }

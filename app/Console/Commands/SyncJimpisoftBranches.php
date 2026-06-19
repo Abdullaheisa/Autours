@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\CountryCurrencyResolver;
 use App\Services\JimpisoftApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -93,7 +94,7 @@ class SyncJimpisoftBranches extends Command
                     'adresse' => $stationName,
                     'city' => $city,
                     'country' => $country,
-                    'currency' => $this->detectCurrency($country),
+                    'currency' => CountryCurrencyResolver::resolveCurrencyByCountryName($country),
                     'lat' => $latitude,
                     'lng' => $longitude,
                     'location_type' => $this->detectLocationType($stationName),
@@ -193,21 +194,4 @@ class SyncJimpisoftBranches extends Command
         return 'United Arab Emirates';
     }
 
-    /**
-     * Detect currency from country name.
-     */
-    private function detectCurrency(string $country): string
-    {
-        return match ($country) {
-            'Turkey' => 'TRY',
-            'Cyprus' => 'EUR',
-            'Greece' => 'EUR',
-            'Oman' => 'OMR',
-            'Bahrain' => 'BHD',
-            'Saudi Arabia' => 'SAR',
-            'Qatar' => 'QAR',
-            'Kuwait' => 'KWD',
-            default => 'AED',
-        };
-    }
 }

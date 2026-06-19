@@ -273,13 +273,29 @@ class SyncRentlyVehicles extends Command
         }
 
         // Delete vehicles not seen in this sync
-        $orphaned = Vehicle::where('supplier', $supplierUser->id)
-            ->whereNotIn('id', $syncedVehicleIds)
+        if (! $pricesOnly && ! empty($syncedVehicleIds)) {
+            $orphaned = Vehicle::where('supplier', $supplierUser->id)
+                ->whereNotIn('id', $syncedVehicleIds)
+                ->get();
+
+            foreach ($orphaned as $ov) {
+                $ov->delete();
+                $deleted++;
+            }
+        }
+
+        // Clean up branches without vehicles
+        $branchesDeleted = 0;
+        $emptyBranches = Branch::where('company_id', $supplierUser->id)
+            ->whereDoesntHave('vehicles', function ($q) {
+                $q->whereNull('deleted_at');
+            })
             ->get();
 
-        foreach ($orphaned as $ov) {
-            $ov->delete();
-            $deleted++;
+        foreach ($emptyBranches as $emptyBranch) {
+            $emptyBranch->delete();
+            $branchesDeleted++;
+            $this->warn("Deleted empty branch: {$emptyBranch->name}");
         }
 
         $this->newLine();
@@ -287,6 +303,9 @@ class SyncRentlyVehicles extends Command
         $this->info("Created  : {$created}");
         $this->info("Updated  : {$updated}");
         $this->info("Deleted  : {$deleted}");
+        if ($branchesDeleted > 0) {
+            $this->info("Empty branches deleted: {$branchesDeleted}");
+        }
         $this->info('==================================================');
 
         return self::SUCCESS;

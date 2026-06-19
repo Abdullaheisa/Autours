@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\CountryCurrencyResolver;
 use App\Services\EmrJsonApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -92,8 +93,8 @@ class SyncEmrBranches extends Command
                 $lng = $parts[1] ?? null;
             }
 
-            $country = $this->resolveCountryName($countryCode);
-            $currency = $this->resolveCurrency($countryCode);
+            $country = CountryCurrencyResolver::resolveCountryName($countryCode);
+            $currency = CountryCurrencyResolver::resolveCurrency($countryCode);
 
             $branch = Branch::updateOrCreate(
                 [
@@ -179,33 +180,4 @@ class SyncEmrBranches extends Command
         return 'Downtown';
     }
 
-    /**
-     * Resolve full country name from ISO country code.
-     */
-    private function resolveCountryName(string $code): string
-    {
-        return match (strtoupper($code)) {
-            'TR' => 'Turkey',
-            'ME' => 'Montenegro',
-            'AL' => 'Albania',
-            'CY' => 'Cyprus',
-            'MK' => 'North Macedonia',
-            'XK' => 'Kosovo',
-            'BA' => 'Bosnia and Herzegovina',
-            'HR' => 'Croatia',
-            'MA' => 'Morocco',
-            default => $code,
-        };
-    }
-
-    /**
-     * Resolve currency from ISO country code.
-     */
-    private function resolveCurrency(string $code): string
-    {
-        return match (strtoupper($code)) {
-            'TR' => 'TRY',
-            default => 'EUR',
-        };
-    }
 }

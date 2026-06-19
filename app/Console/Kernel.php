@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
          $schedule->command('sitemap:generate')->cron('0 0 */2 * *');
 
          // Refresh Jimpisoft vehicle prices every 4 hours
+         $schedule->command('jimpisoft:sync-branches')->dailyAt('02:00');
          $schedule->command('jimpisoft:sync-vehicles --prices-only')->everyFourHours();
 
          // Sync EMR branches daily and vehicle prices every 4 hours
@@ -34,8 +35,12 @@ class Kernel extends ConsoleKernel
          $schedule->command('wheelsys:sync-branches')->dailyAt('04:30');
          $schedule->command('wheelsys:sync-vehicles')->everyFourHours();
 
+         // Sync Renteon branches daily and vehicles every 4 hours
+         $schedule->command('renteon:sync-branches')->dailyAt('05:00');
+         $schedule->command('renteon:sync-vehicles')->everyFourHours();
+
          // Sync exchange rates daily
-         $schedule->command('sync:exchange-rates')->dailyAt('06:00');
+         $schedule->command('sync:exchange-rates')->everyFourHours();
     }   
 
     /**

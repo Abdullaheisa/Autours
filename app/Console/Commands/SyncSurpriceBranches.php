@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\CountryCurrencyResolver;
 use App\Services\SurpriceApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -89,7 +90,7 @@ class SyncSurpriceBranches extends Command
             $lat = $address['coordinates']['lat'] ?? ($address['coordinates']['latitude'] ?? null);
             $lng = $address['coordinates']['lon'] ?? ($address['coordinates']['longitude'] ?? null);
 
-            $currency = $this->resolveCurrency($countryCode);
+            $currency = CountryCurrencyResolver::resolveCurrency($countryCode);
 
             $validStationIds[] = $locationCode;
 
@@ -103,7 +104,7 @@ class SyncSurpriceBranches extends Command
                     'location' => $city,
                     'adresse' => implode(', ', $address['addressLine'] ?? [$name]),
                     'city' => $city,
-                    'country' => $countryName ?: $this->resolveCountryName($countryCode),
+                    'country' => $countryName ?: CountryCurrencyResolver::resolveCountryName($countryCode),
                     'currency' => $currency,
                     'lat' => $lat,
                     'lng' => $lng,
@@ -155,71 +156,4 @@ class SyncSurpriceBranches extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * Resolve currency from ISO country code.
-     */
-    private function resolveCurrency(string $countryCode): string
-    {
-        return match (strtoupper($countryCode)) {
-            'GR' => 'EUR',
-            'CY' => 'EUR',
-            'CZ' => 'CZK',
-            'AE' => 'AED',
-            'MF' => 'EUR',
-            'US' => 'USD',
-            'MU' => 'MUR',
-            'MA' => 'MAD',
-            'PL' => 'PLN',
-            'PT' => 'EUR',
-            'RO' => 'RON',
-            'TR' => 'TRY',
-            'RS' => 'RSD',
-            'SK' => 'EUR',
-            'GE' => 'GEL',
-            'AL' => 'ALL',
-            'ES' => 'EUR',
-            'GB' => 'GBP',
-            'MK' => 'MKD',
-            'BA' => 'BAM',
-            'BG' => 'BGN',
-            'HR' => 'EUR',
-            'XK' => 'EUR',
-            'ME' => 'EUR',
-            default => 'EUR',
-        };
-    }
-
-    /**
-     * Resolve full country name from ISO code.
-     */
-    private function resolveCountryName(string $code): string
-    {
-        return match (strtoupper($code)) {
-            'GR' => 'Greece',
-            'CY' => 'Cyprus',
-            'CZ' => 'Czech Republic',
-            'AE' => 'United Arab Emirates',
-            'MF' => 'Sint Maarten',
-            'US' => 'United States',
-            'MU' => 'Mauritius',
-            'MA' => 'Morocco',
-            'PL' => 'Poland',
-            'PT' => 'Portugal',
-            'RO' => 'Romania',
-            'TR' => 'Turkey',
-            'RS' => 'Serbia',
-            'SK' => 'Slovakia',
-            'GE' => 'Georgia',
-            'AL' => 'Albania',
-            'ES' => 'Spain',
-            'GB' => 'United Kingdom',
-            'MK' => 'North Macedonia',
-            'BA' => 'Bosnia and Herzegovina',
-            'BG' => 'Bulgaria',
-            'HR' => 'Croatia',
-            'XK' => 'Kosovo',
-            'ME' => 'Montenegro',
-            default => $code,
-        };
-    }
 }
