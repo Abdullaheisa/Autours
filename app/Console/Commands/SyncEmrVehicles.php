@@ -18,10 +18,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
+use App\Console\Commands\Traits\NormalizesVehicleNames;
 
 class SyncEmrVehicles extends Command
 {
-    use ResolvesLocalVehiclePhoto;
+    use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
     /**
      * The name and signature of the console command.
@@ -339,6 +340,7 @@ class SyncEmrVehicles extends Command
                 if (empty($vehicleName)) {
                     $vehicleName = $groupName ?: 'EMR Group ' . $groupId;
                 }
+                $vehicleName = $this->normalizeVehicleName($vehicleName);
 
                 $sipp = (string) ($group['sipp'] ?? '');
                 $categoryId = $this->resolveCategoryFromSipp($sipp);

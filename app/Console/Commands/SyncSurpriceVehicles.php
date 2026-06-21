@@ -19,10 +19,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
+use App\Console\Commands\Traits\NormalizesVehicleNames;
 
 class SyncSurpriceVehicles extends Command
 {
-    use ResolvesLocalVehiclePhoto;
+    use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
     /**
      * The name and signature of the console command.
@@ -316,6 +317,7 @@ class SyncSurpriceVehicles extends Command
 
                     $vehicleInfo = $priceData['vehicle'];
                     $vehicleName = trim($vehicleInfo['description'] ?? $vehicleInfo['vehMakeModel'] ?? $groupId);
+                    $vehicleName = $this->normalizeVehicleName($vehicleName);
                     $photoUrl = $vehicleInfo['pictureURL'] ?? null;
 
                     $dayPrice = $priceData['day_price'];

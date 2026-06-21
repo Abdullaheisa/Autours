@@ -19,10 +19,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
+use App\Console\Commands\Traits\NormalizesVehicleNames;
 
 class SyncWheelsysVehicles extends Command
 {
-    use ResolvesLocalVehiclePhoto;
+    use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
     /**
      * The name and signature of the console command.
@@ -157,6 +158,7 @@ class SyncWheelsysVehicles extends Command
                 }
 
                 $vehicleName = $data1['name'] ?: 'Unknown Model';
+                $vehicleName = $this->normalizeVehicleName($vehicleName);
                 $photoUrl = $data1['imageurl'] ?? null;
                 $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($photoUrl, $groupId);
                 

@@ -19,10 +19,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
+use App\Console\Commands\Traits\NormalizesVehicleNames;
 
 class SyncRentlyVehicles extends Command
 {
-    use ResolvesLocalVehiclePhoto;
+    use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
     private const COMMERCIAL_AGREEMENT_CODE = 'pod-autours'; // Change this once you have the correct code from Rently
 
@@ -225,6 +226,7 @@ class SyncRentlyVehicles extends Command
                 $model = $branchModels[$modelId];
                 $vehicleName = trim(($model['brand'] ?? '') . ' ' . ($model['name'] ?? ''));
                 if (empty($vehicleName)) $vehicleName = 'Rently Model ' . $modelId;
+                $vehicleName = $this->normalizeVehicleName($vehicleName);
 
                 $existingVehicle = Vehicle::where('pickup_loc', $branchId)
                     ->where('description', 'LIKE', "%[RENTLY-MODEL-ID:{$modelId}]%")

@@ -18,10 +18,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
+use App\Console\Commands\Traits\NormalizesVehicleNames;
 
 class SyncJimpisoftVehicles extends Command
 {
-    use ResolvesLocalVehiclePhoto;
+    use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
     /**
      * The name and signature of the console command.
@@ -294,6 +295,7 @@ class SyncJimpisoftVehicles extends Command
                         if (empty($vehicleName)) {
                             $vehicleName = (string) ($group['Group_Name'] ?? $group['group_Name'] ?? $groupId);
                         }
+                        $vehicleName = $this->normalizeVehicleName($vehicleName);
 
                         $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage(
                             $details['imageURL'] ?? $details['ImageURL'] ?? null,
