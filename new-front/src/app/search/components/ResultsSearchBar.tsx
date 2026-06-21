@@ -233,10 +233,17 @@ export default function ResultsSearchBar({
                     <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400">
                       {loc.location_type?.toLowerCase().includes('airport') ? <Plane size={12} /> : <Building size={12} />}
                     </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold text-gray-800 line-clamp-2">
-                        {getLocationDisplayLabel(loc)}
-                      </span>
+                    <div className="flex flex-col min-w-0 text-left">
+                      <div className="flex items-center flex-wrap gap-1.5">
+                        <span className="text-xs font-bold text-gray-800 line-clamp-2">
+                          {getLocationDisplayLabel(loc).replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`), '')}
+                        </span>
+                        {loc.abriviation && (
+                          <span className="text-[9px] font-black text-gray-600 bg-gray-200 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+                            {loc.abriviation}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 ))

@@ -53,6 +53,7 @@ export const vehicleApi = {
         adresse: loc.adresse || loc.location_address || '',
         location_address: loc.location_address || loc.adresse || '',
         location_type: loc.location_type || '',
+        abriviation: loc.abriviation || loc.abbreviation || '',
       }));
     } catch (err) {
       console.error('[LOCATIONS ERROR]', err);

@@ -46,6 +46,11 @@ class Branch extends Model
             ->withTimestamps();
     }
 
+    public function airport()
+    {
+        return $this->belongsTo(Airport::class, 'airport_id', 'id');
+    }
+
     public function setCountryAttribute($value)
     {
         $this->attributes['country'] = $value ? ucwords(strtolower((string)$value)) : $value;

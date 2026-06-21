@@ -247,9 +247,16 @@ export default function HeroSearch({
   
   {/* النصوص */}
   <div className="flex flex-col min-w-0 text-left">
-    <span className="text-xs font-medium text-gray-900 line-clamp-2 leading-relaxed">
-      {getLocationDisplayLabel(loc)}
-    </span>
+    <div className="flex items-center flex-wrap gap-1.5">
+      <span className="text-xs font-medium text-gray-900 line-clamp-2 leading-relaxed">
+        {getLocationDisplayLabel(loc).replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`), '')}
+      </span>
+      {loc.abriviation && (
+        <span className="text-[9px] font-black text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+          {loc.abriviation}
+        </span>
+      )}
+    </div>
   </div>
 </button>
                         ))

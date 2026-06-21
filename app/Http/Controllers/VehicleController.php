@@ -992,8 +992,15 @@ class VehicleController extends Controller
     public function getLocations()
     {
         $locations = Branch::query()
+            ->with('airport')
             ->orderBy('name')
             ->get()
+            ->map(function ($branch) {
+                if (empty($branch->abriviation) && $branch->airport) {
+                    $branch->abriviation = $branch->airport->iata_code;
+                }
+                return $branch;
+            })
             ->unique(function ($branch) {
                 return $branch->airport_id ? 'airport_' . $branch->airport_id : mb_strtolower(trim($branch->name));
             })
