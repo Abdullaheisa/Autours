@@ -31,7 +31,8 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
   const isEditing = !!blog;
 
   const [title, setTitle] = useState(blog?.title || "");
-  const [slug, setSlug] = useState("");
+  const [slug, setSlug] = useState(blog?.slug || "");
+  const [isSlugManual, setIsSlugManual] = useState(!!blog?.slug);
   const [author, setAuthor] = useState(blog?.author || "");
   // Store category as ID (string) for submission - find matching ID if editing
   const [category, setCategory] = useState<string>("");
@@ -66,8 +67,12 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
 
   // Auto-generate slug from title
   useEffect(() => {
-    setSlug(title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
-  }, [title]);
+    if (!isSlugManual) {
+      // Create a basic URL-friendly slug, but allow Arabic characters to remain if the backend handles them, or just use basic dash replacement
+      // A more inclusive regex that allows Arabic letters: /[^a-zA-Z0-9\u0621-\u064A\u0660-\u0669]+/g
+      setSlug(title.toLowerCase().replace(/[^a-z0-9\u0621-\u064A\u0660-\u0669]+/g, "-").replace(/(^-|-$)/g, ""));
+    }
+  }, [title, isSlugManual]);
 
   // Reset schedule when status changes away from scheduled
   useEffect(() => {
@@ -116,7 +121,7 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
     setLoading(true);
     await onSave({
       ...(blog?.id ? { id: blog.id } : {}),
-      title, excerpt: metaDescription, content, author,
+      title, slug, excerpt: metaDescription, content, author,
       category, // this is the category ID
       status, publishDate: status === "scheduled" ? publishDate : undefined,
       publishTime: status === "scheduled" ? publishTime : undefined,
@@ -163,7 +168,7 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
             <div>
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Slug (auto-generated)</label>
               <input
-                value={slug} onChange={(e) => setSlug(e.target.value)}
+                value={slug} onChange={(e) => { setSlug(e.target.value); setIsSlugManual(true); }}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-500 focus:outline-none transition-all"
                 placeholder="auto-generated-from-title"
               />

@@ -111,6 +111,7 @@ export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<
   try {
     const payload = new FormData();
     if (data.title) payload.append('title', data.title);
+    if (data.slug) payload.append('slug', data.slug);
     if (data.author) payload.append('author', data.author);
     if (data.category) payload.append('blog_category_id', String(data.category));
     payload.append('content', data.content || ' '); // content is required by backend
@@ -138,6 +139,7 @@ export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: 
     const payload = new FormData();
     payload.append('_method', 'PUT'); // Laravel requires this for FormData PUT requests
     if (data.title) payload.append('title', data.title);
+    if (data.slug) payload.append('slug', data.slug);
     if (data.author) payload.append('author', data.author);
     if (data.category) payload.append('blog_category_id', String(data.category));
     if (data.content) payload.append('content', data.content);
