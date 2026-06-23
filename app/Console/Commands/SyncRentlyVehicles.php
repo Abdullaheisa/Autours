@@ -183,9 +183,9 @@ class SyncRentlyVehicles extends Command
                                 $stationPrices[$branchId][$modelId]['day_value'] = $dayPrice;
                                 $branchModels[$modelId] = $item['model'];
                             } elseif ($days === 7) {
-                                $stationPrices[$branchId][$modelId]['week_price'] = $price;
+                                $stationPrices[$branchId][$modelId]['week_price'] = round($price / 7, 2);
                             } elseif ($days === 30) {
-                                $stationPrices[$branchId][$modelId]['month_price'] = $price;
+                                $stationPrices[$branchId][$modelId]['month_price'] = round($price / 30, 2);
                             }
                         }
                     } else {
@@ -220,8 +220,8 @@ class SyncRentlyVehicles extends Command
                 $dayPrice = $priceData['day_value'] ?? 0;
                 if ($dayPrice <= 0) continue;
 
-                $weekPrice = $priceData['week_price'] ?? ($dayPrice * 7);
-                $monthPrice = $priceData['month_price'] ?? ($dayPrice * 30);
+                $weekPrice = $priceData['week_price'] ?? $dayPrice;
+                $monthPrice = $priceData['month_price'] ?? $dayPrice;
 
                 $model = $branchModels[$modelId];
                 $vehicleName = trim(($model['brand'] ?? '') . ' ' . ($model['name'] ?? ''));

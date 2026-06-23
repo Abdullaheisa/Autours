@@ -276,7 +276,7 @@ class SyncSurpriceVehicles extends Command
                     }
 
                     if ($weekPrice > 0) {
-                        $prices[$groupId]['week_price'] = (float) $weekPrice;
+                        $prices[$groupId]['week_price'] = round((float) $weekPrice / 7, 2);
                     }
                 }
 
@@ -295,7 +295,7 @@ class SyncSurpriceVehicles extends Command
                     }
 
                     if ($monthPrice > 0) {
-                        $prices[$groupId]['month_price'] = (float) $monthPrice;
+                        $prices[$groupId]['month_price'] = round((float) $monthPrice / 30, 2);
                     }
                 }
 
@@ -321,8 +321,8 @@ class SyncSurpriceVehicles extends Command
                     $photoUrl = $vehicleInfo['pictureURL'] ?? null;
 
                     $dayPrice = $priceData['day_price'];
-                    $weekPrice = $priceData['week_price'] ?? round($dayPrice * 7, 2);
-                    $monthPrice = $priceData['month_price'] ?? round($dayPrice * 30, 2);
+                    $weekPrice = $priceData['week_price'] ?? $dayPrice;
+                    $monthPrice = $priceData['month_price'] ?? $dayPrice;
                     $currency = $priceData['currency'];
 
                     // Currency conversion if branch currency differs

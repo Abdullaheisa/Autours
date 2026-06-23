@@ -168,8 +168,8 @@ class SyncJimpisoftVehicles extends Command
                 
                 if ($baseDayValue > 0) {
                     $priceData['day_value'] = $baseDayValue;
-                    $priceData['week_price'] = round($dayValue7 * 7, 2);
-                    $priceData['month_price'] = round($dayValue30 * 30, 2);
+                    $priceData['week_price'] = $dayValue7;
+                    $priceData['month_price'] = $dayValue30;
                     $stationPrices[$branchId][$groupId] = $priceData;
                 }
             }

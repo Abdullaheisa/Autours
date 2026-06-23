@@ -143,8 +143,8 @@ class SyncRenteonVehicles extends Command
                     continue;
                 }
 
-                $weekPrice = isset($prices7[$groupId]) ? $prices7[$groupId]['price'] : round($dayPrice * 7, 2);
-                $monthPrice = isset($prices30[$groupId]) ? $prices30[$groupId]['price'] : round($dayPrice * 30, 2);
+                $weekPrice = isset($prices7[$groupId]) ? round($prices7[$groupId]['price'] / 7, 2) : $dayPrice;
+                $monthPrice = isset($prices30[$groupId]) ? round($prices30[$groupId]['price'] / 30, 2) : $dayPrice;
                 $respCurrency = $data1['currency'] ?? $currency;
 
                 // Currency conversion

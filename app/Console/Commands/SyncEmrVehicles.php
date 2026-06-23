@@ -286,8 +286,8 @@ class SyncEmrVehicles extends Command
                 
                 if ($baseDayValue > 0) {
                     $priceData['day_value'] = round($baseDayValue * $multiplier, 2);
-                    $priceData['week_price'] = round(($dayValue7 * 7) * $multiplier, 2);
-                    $priceData['month_price'] = round(($dayValue30 * 30) * $multiplier, 2);
+                    $priceData['week_price'] = round($dayValue7 * $multiplier, 2);
+                    $priceData['month_price'] = round($dayValue30 * $multiplier, 2);
                     $stationPrices[$branchId][$groupId] = $priceData;
                 }
             }
