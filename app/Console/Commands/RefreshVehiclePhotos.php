@@ -45,35 +45,32 @@ class RefreshVehiclePhotos extends Command
         $progress = $this->output->createProgressBar($vehicles->count());
         $progress->start();
 
+        $missingNames = [];
+
         foreach ($vehicles as $vehicle) {
             // Attempt to resolve a local photo based on the vehicle's name
             $localPhoto = $this->resolveLocalPhoto($vehicle->name);
 
-            $oldPhoto = $vehicle->photo;
-            $status = 'Unchanged';
-            $newPhoto = $oldPhoto;
-
             if (!$localPhoto) {
-                $status = 'No Local Photo Found';
+                $notFoundCount++;
+                if (!isset($missingNames[$vehicle->name])) {
+                    $missingNames[$vehicle->name] = true;
+                    fputcsv($csvFile, [
+                        $vehicle->id,
+                        $vehicle->name,
+                        $vehicle->supplier,
+                        $vehicle->pickup_loc,
+                        $vehicle->photo,
+                        $vehicle->photo,
+                        'No Local Photo Found'
+                    ]);
+                }
             } elseif ($vehicle->photo !== $localPhoto) {
                 $vehicle->update(['photo' => $localPhoto]);
-                $status = 'Changed';
-                $newPhoto = $localPhoto;
                 $updatedCount++;
             } else {
-                $status = 'Unchanged';
                 $unchangedCount++;
             }
-
-            fputcsv($csvFile, [
-                $vehicle->id,
-                $vehicle->name,
-                $vehicle->supplier,
-                $vehicle->pickup_loc,
-                $oldPhoto,
-                $newPhoto,
-                $status
-            ]);
 
             $progress->advance();
         }
@@ -85,6 +82,7 @@ class RefreshVehiclePhotos extends Command
 
         $this->info("Successfully updated photos for {$updatedCount} vehicles.");
         $this->info("Vehicles unchanged: {$unchangedCount}");
+        $this->info("Vehicles missing photos: {$notFoundCount} (" . count($missingNames) . " unique)");
         $this->info("Report generated at: {$reportPath}");
         return self::SUCCESS;
     }
