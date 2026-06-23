@@ -500,6 +500,7 @@ class SyncEmrVehicles extends Command
             }
         }
         file_put_contents($cachePath, json_encode($newEmptyBranches));
+        @chmod($cachePath, 0666);
 
         // ------------------------------------------------------------------
         // 11. Summary
@@ -532,6 +533,7 @@ class SyncEmrVehicles extends Command
             $totalVehiclesWithPrice
         );
         file_put_contents($summaryPath, $summaryText);
+        @chmod($summaryPath, 0666);
         $this->info("Summary written to: {$summaryPath}");
 
         return self::SUCCESS;
@@ -805,6 +807,7 @@ class SyncEmrVehicles extends Command
 
             $fullPath = $directory . DIRECTORY_SEPARATOR . $filename;
             file_put_contents($fullPath, $body);
+            @chmod($fullPath, 0666);
 
             $this->imageCache[$cacheKey] = $filename;
             return $filename;

@@ -105,11 +105,12 @@ class SyncWheelsysVehicles extends Command
         $existingVehiclesByTag = [];
         foreach ($allExistingVehicles as $v) {
             if (preg_match('/\[WHEELSYS-GROUP-ID:([^\]]+)\]/', $v->description, $m)) {
-                $existingVehiclesByTag[$m[1]][$v->pickup_loc] = true;
+                $existingVehiclesByTag[$m[1]][$v->pickup_loc] = $v;
             }
         }
 
         $created = 0;
+        $updated = 0;
         $skipped = 0;
 
         // 6. Process each branch sequentially
@@ -128,11 +129,7 @@ class SyncWheelsysVehicles extends Command
             foreach ($prices1 as $groupId => $data1) {
                 $tag = "[WHEELSYS-GROUP-ID:{$groupId}]";
 
-                // Strictly skip if already exists for this branch
-                if (isset($existingVehiclesByTag[$groupId][$branch->id])) {
-                    $skipped++;
-                    continue;
-                }
+                $existingVehicle = $existingVehiclesByTag[$groupId][$branch->id] ?? null;
 
                 $dayPrice = $data1['price'];
                 if ($dayPrice <= 0) {
@@ -155,6 +152,16 @@ class SyncWheelsysVehicles extends Command
                         $monthPrice = round($monthPrice * $rate->rate, 2);
                         $currency = $branchCurrency;
                     }
+                }
+
+                if ($existingVehicle) {
+                    $existingVehicle->update([
+                        'price' => $dayPrice,
+                        'week_price' => $weekPrice,
+                        'month_price' => $monthPrice,
+                    ]);
+                    $updated++;
+                    continue;
                 }
 
                 $vehicleName = $data1['name'] ?: 'Unknown Model';
@@ -192,7 +199,7 @@ class SyncWheelsysVehicles extends Command
                 $this->syncInclusions($vehicle, $data1['inclusions'] ?? []);
 
                 // Mark as existing so we don't duplicate within same run if somehow repeated
-                $existingVehiclesByTag[$groupId][$branch->id] = true;
+                $existingVehiclesByTag[$groupId][$branch->id] = $vehicle;
                 $created++;
             }
 
@@ -213,7 +220,8 @@ class SyncWheelsysVehicles extends Command
 
         $this->info('========== Wheelsys Vehicle Sync Complete ==========');
         $this->info("Created  : {$created}");
-        $this->info("Skipped  : {$skipped} (Already existing)");
+        $this->info("Updated  : {$updated}");
+        $this->info("Skipped  : {$skipped}");
         $this->info("Deleted  : {$orphanedCount} (Empty branches)");
         $this->info('====================================================');
 
