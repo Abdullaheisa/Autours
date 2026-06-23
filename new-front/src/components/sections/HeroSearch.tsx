@@ -94,7 +94,8 @@ export default function HeroSearch({
       display.includes(q) ||
       loc.location?.toLowerCase().includes(q) ||
       loc.adresse?.toLowerCase().includes(q) ||
-      loc.name?.toLowerCase().includes(q)
+      loc.name?.toLowerCase().includes(q) ||
+      loc.country?.toLowerCase().includes(q)
     );
   });
 
@@ -257,6 +258,11 @@ export default function HeroSearch({
         </span>
       )}
     </div>
+    {loc.country && (
+      <span className="text-[10px] font-medium text-gray-500 mt-0.5">
+        {loc.country}
+      </span>
+    )}
   </div>
 </button>
                         ))

@@ -76,6 +76,7 @@ class BranchNormalizationService
                 'airport_id' => $airport->id,
                 'normalized_name' => $airport->airport_name,
                 'location' => $airport->city,
+                'abriviation' => strtoupper($airport->iata_code),
             ];
         }
 
@@ -345,6 +346,7 @@ class BranchNormalizationService
                     'airport_id' => $result['airport_id'],
                     'normalized_name' => $result['normalized_name'],
                     'location' => $result['location'],
+                    'abriviation' => $result['abriviation'] ?? $branch->abriviation,
                 ]);
                 $stats['updated']++;
             }

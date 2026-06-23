@@ -107,6 +107,7 @@ class NormalizeBranches extends Command
                             'airport_id' => $result['airport_id'],
                             'normalized_name' => $result['normalized_name'],
                             'location' => $result['location'],
+                            'abriviation' => $result['abriviation'] ?? $branch->abriviation,
                         ]);
                     }
                     $updated++;
