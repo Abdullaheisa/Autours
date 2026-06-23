@@ -201,7 +201,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       supplier: {
         name: (supplierSource?.company || supplierSource?.name || vehicle.supplier?.company || 'Supplier').toString().trim(),
         logo: getLogoUrl(logoStr),
-        rating: supplierSource?.rating || supplierSource?.rate || 0,
+        rating: supplierSource?.rating || supplierSource?.rate || 9,
         reviewsCount: supplierSource?.reviewsCount || supplierSource?.reviews_count || 0,
         rentalTerms: Array.isArray(v.rental_terms)
           ? v.rental_terms
