@@ -1,9 +1,17 @@
+import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import HeroSearch from '@/components/sections/HeroSearch';
 import SectionDivider from '@/components/sections/SectionDivider';
 import { siteConfig } from '@/config/site';
+
+export const metadata: Metadata = {
+  description: "Book affordable car rentals across the UAE, Saudi Arabia, Kuwait, Bahrain, Oman, Jordan, and Egypt. Compare prices, enjoy free cancellation, and find the perfect vehicle with Autours.",
+  alternates: {
+    canonical: '/',
+  },
+};
 
 // 🚀 السحر هنا: تحميل الكومبوننتس اللي تحت الـ Fold "على الطلب" (Lazy Loading)
 // ده هيقلل حجم الجافاسكريبت اللي بيتحمل في البداية لأكثر من 60%

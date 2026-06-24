@@ -91,9 +91,14 @@ export default function ContactUsPage() {
     message: ''
   });
 
+  const [emailHref, setEmailHref] = useState('javascript:void(0)');
+  const [emailText, setEmailText] = useState('...');
+
   // Ensure page starts at the top scroll position on load
   useEffect(() => {
     window.scrollTo(0, 0);
+    setEmailHref('mailto:' + ['Info', 'autours.net'].join('@'));
+    setEmailText(['Info', 'autours.net'].join('@'));
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -164,7 +169,7 @@ export default function ContactUsPage() {
 
               {/* Email Us Card */}
               <motion.a
-                href="mailto:Info@autours.net"
+                href={emailHref}
                 whileHover={{ y: -4 }}
                 className="bg-black rounded-[2rem] pt-10 pb-6 px-6 relative border-2 border-black flex flex-col items-center justify-center text-center shadow-lg group transition-all"
               >
@@ -175,7 +180,7 @@ export default function ContactUsPage() {
                   Email Us
                 </span>
                 <span className="text-lg font-black text-primary tracking-wide truncate max-w-full">
-                  Info@autours.net
+                  {emailText}
                 </span>
               </motion.a>
 

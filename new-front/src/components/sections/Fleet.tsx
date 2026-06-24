@@ -101,7 +101,7 @@ export default function Fleet() {
                     height={600}
                     className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    priority
+                    loading="lazy"
                   />
                 </div>
               </SwiperSlide>

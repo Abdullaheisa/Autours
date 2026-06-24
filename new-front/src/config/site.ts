@@ -1,9 +1,9 @@
 export const siteConfig = {
   name: 'Autours',
   description: 'Premium Car Rental Marketplace',
-  url: 'https://autours.com',
+  url: 'https://www.autours.net',
   contact: {
-    email: 'info@autours.com',
+    email: 'info@autours.net',
     phone: '+971 4 123 4567',
     address: 'Dubai, United Arab Emirates',
   },

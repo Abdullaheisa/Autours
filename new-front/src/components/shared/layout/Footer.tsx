@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -47,6 +47,11 @@ const footerLinks = {
 
 export default function Footer() {
   const [showAll, setShowAll] = useState(false);
+  const [emailHref, setEmailHref] = useState('javascript:void(0)');
+
+  useEffect(() => {
+    setEmailHref('mailto:' + ['info', 'autours.com'].join('@'));
+  }, []);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith('#')) {
@@ -161,7 +166,7 @@ export default function Footer() {
                 { name: 'Instagram', icon: <Instagram size={16} aria-hidden="true" />, href: '#' },
                 { name: 'LinkedIn', icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: '#' },
                 { name: 'X', icon: <XIcon size={14} />, href: '#' },
-                { name: 'Email', icon: <Mail size={16} aria-hidden="true" />, href: 'mailto:info@autours.com' }
+                { name: 'Email', icon: <Mail size={16} aria-hidden="true" />, href: emailHref }
               ].map((social, i) => (
                 <motion.a 
                   key={i} 

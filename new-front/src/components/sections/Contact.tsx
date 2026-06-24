@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter,
   ArrowUpRight
@@ -61,6 +61,11 @@ const socialLinksData = [
 
 export default function Contact() {
   const [hoveredSocial, setHoveredSocial] = useState<number | null>(null);
+  const [emailHref, setEmailHref] = useState('javascript:void(0)');
+
+  useEffect(() => {
+    setEmailHref('mailto:' + ['info', 'autours.net'].join('@'));
+  }, []);
 
   return (
     <section id="contact" className="relative overflow-hidden bg-white w-full">
@@ -82,42 +87,46 @@ export default function Contact() {
             </motion.div>
 
             <div className="space-y-3">
-              {contactInfoData.map((item, i) => (
-                <motion.a
-                  key={i}
-                  href={item.href}
-                  target={item.href.startsWith('http') ? '_blank' : undefined}
-                  rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.4 }}
-                  whileHover={{ x: 8 }}
-                  className="group flex items-center gap-5 py-1.5"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:rotate-6 transition-all duration-300">
-                    <item.icon
-                      size={24}
-                      className="text-primary group-hover:text-gray-900 transition-colors duration-300"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 border-b border-gray-50 pb-1 group-hover:border-primary/10 transition-colors">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-0.5">
-                      {item.label}
-                    </p>
-                    <p className="text-lg md:text-xl font-black text-gray-900 group-hover:text-primary transition-colors truncate">
-                      {item.value}
-                    </p>
-                  </div>
-                  <div className="w-8 h-8 rounded-full border-2 border-gray-100 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all shrink-0">
-                    <ArrowUpRight
-                      size={14}
-                      className="text-gray-200 group-hover:text-gray-900 transition-colors"
-                    />
-                  </div>
-                </motion.a>
-              ))}
+              {contactInfoData.map((item, i) => {
+                const isEmail = item.label === 'Email Us';
+                const hrefVal = isEmail ? emailHref : item.href;
+                return (
+                  <motion.a
+                    key={i}
+                    href={hrefVal}
+                    target={hrefVal.startsWith('http') ? '_blank' : undefined}
+                    rel={hrefVal.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1, duration: 0.4 }}
+                    whileHover={{ x: 8 }}
+                    className="group flex items-center gap-5 py-1.5"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:rotate-6 transition-all duration-300">
+                      <item.icon
+                        size={24}
+                        className="text-primary group-hover:text-gray-900 transition-colors duration-300"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 border-b border-gray-50 pb-1 group-hover:border-primary/10 transition-colors">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-0.5">
+                        {item.label}
+                      </p>
+                      <p className="text-lg md:text-xl font-black text-gray-900 group-hover:text-primary transition-colors truncate">
+                        {item.value}
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full border-2 border-gray-100 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all shrink-0">
+                      <ArrowUpRight
+                        size={14}
+                        className="text-gray-200 group-hover:text-gray-900 transition-colors"
+                      />
+                    </div>
+                  </motion.a>
+                );
+              })}
             </div>
 
             {/* Social Links */}

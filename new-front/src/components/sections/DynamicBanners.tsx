@@ -11,8 +11,13 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 function resolveImageUrl(path: string | undefined, fallback: string): string {
   if (!path) return fallback;
-  if (path.startsWith('http')) return path;
-  return `${BACKEND_URL}${path}`;
+  let finalPath = path;
+  if (finalPath.endsWith('.png') || finalPath.endsWith('.jpg') || finalPath.endsWith('.jpeg')) {
+    const ext = finalPath.substring(finalPath.lastIndexOf('.'));
+    finalPath = finalPath.substring(0, finalPath.length - ext.length) + '.webp';
+  }
+  if (finalPath.startsWith('http')) return finalPath;
+  return `${BACKEND_URL}${finalPath}`;
 }
 
 export default function DynamicBanners() {
@@ -111,7 +116,7 @@ export default function DynamicBanners() {
           className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-end cursor-default"
         >
           <Image 
-            src={resolveImageUrl(backgrounds['be_supplier'], '/img/be-supplier-background.png')} 
+            src={resolveImageUrl(backgrounds['be_supplier'], '/img/be-supplier-background.webp')} 
             alt="Be Supplier Background"
             fill
             sizes="100vw"
@@ -126,7 +131,7 @@ export default function DynamicBanners() {
             className="hidden md:block absolute left-[-10%] sm:left-[-5%] bottom-[5%] w-[60%] sm:w-[50%] lg:w-[45%] h-full z-20 pointer-events-none select-none"
           >
             <Image 
-              src="/img/be-supplier-car.png" 
+              src="/img/be-supplier-car.webp" 
               alt="Be Supplier Car" 
               fill
               sizes="(max-width: 768px) 60vw, 45vw"
@@ -171,7 +176,7 @@ export default function DynamicBanners() {
           className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-end cursor-default"
         >
           <Image 
-            src={resolveImageUrl(backgrounds['offers'], '/img/offers.jpeg')} 
+            src={resolveImageUrl(backgrounds['offers'], '/img/offers.webp')} 
             alt="Cinema Offers"
             fill
             sizes="100vw"
