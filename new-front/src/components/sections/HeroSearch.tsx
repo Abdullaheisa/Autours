@@ -23,13 +23,8 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 function resolveImageUrl(path: string | undefined, fallback: string): string {
   if (!path) return fallback;
-  let finalPath = path;
-  if (finalPath.endsWith('.png') || finalPath.endsWith('.jpg') || finalPath.endsWith('.jpeg')) {
-    const ext = finalPath.substring(finalPath.lastIndexOf('.'));
-    finalPath = finalPath.substring(0, finalPath.length - ext.length) + '.webp';
-  }
-  if (finalPath.startsWith('http')) return finalPath;
-  return `${BACKEND_URL}${finalPath}`;
+  if (path.startsWith('http')) return path;
+  return `${BACKEND_URL}${path}`;
 }
 
 const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) => 
