@@ -26,7 +26,7 @@ export default function ProfilePage() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (checked && !isAuthenticated && !localStorage.getItem("token")) {
+    if (checked && !isAuthenticated && !(localStorage.getItem("token") || sessionStorage.getItem("token"))) {
       router.replace("/login");
     }
   }, [checked, isAuthenticated, router]);

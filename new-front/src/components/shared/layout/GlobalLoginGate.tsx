@@ -40,7 +40,7 @@ export default function GlobalLoginGate() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
-    dispatch(loginThunk({ email, password })).then((result: any) => {
+    dispatch(loginThunk({ email, password, rememberMe: true })).then((result: any) => {
       if (result.meta.requestStatus === 'fulfilled') {
         toast.success('Login successful!');
         setDismissed(true);
@@ -55,6 +55,7 @@ export default function GlobalLoginGate() {
     const credentials = {
       email: role === 'admin' ? 'admin@autours.net' : 'supplier@autours.net',
       password: 'password',
+      rememberMe: true,
     };
     setEmail(credentials.email);
     setPassword(credentials.password);

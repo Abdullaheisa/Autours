@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { ContestApi } from '@/services/contest/contest.api';
-import { ContestRegistrationDTO, RegisterUserPayload } from '@/services/contest/contest.types';
+import { ContestRegistrationDTO, RegisterUserPayload, ContestSettingsDTO } from '@/services/contest/contest.types';
 
 export interface ContestState {
   enabled: boolean;
   campaignVersion: number;
   forceInteraction: boolean;
+  banner: string | null;
   registrations: ContestRegistrationDTO[];
   loading: boolean;
   error: string | null;
@@ -15,6 +16,7 @@ const initialState: ContestState = {
   enabled: true,
   campaignVersion: 1,
   forceInteraction: false,
+  banner: null,
   registrations: [],
   loading: false,
   error: null,
@@ -25,7 +27,7 @@ export const fetchContestSettings = createAsyncThunk('contest/fetchSettings', as
   return await ContestApi.fetchSettings();
 });
 
-export const updateContestSettings = createAsyncThunk('contest/updateSettings', async (settings: Partial<{ enabled: boolean; forceInteraction: boolean }>) => {
+export const updateContestSettings = createAsyncThunk('contest/updateSettings', async (settings: FormData | Partial<ContestSettingsDTO>) => {
   return await ContestApi.updateSettings(settings);
 });
 
@@ -53,6 +55,7 @@ const contestSlice = createSlice({
       state.enabled = action.payload.enabled;
       state.campaignVersion = action.payload.campaignVersion;
       state.forceInteraction = action.payload.forceInteraction;
+      state.banner = action.payload.banner ?? null;
     });
     builder.addCase(fetchContestSettings.rejected, (state, action) => { state.loading = false; state.error = action.error.message || 'Failed'; });
 
@@ -62,11 +65,17 @@ const contestSlice = createSlice({
       state.loading = false;
       state.enabled = action.payload.enabled;
       state.forceInteraction = action.payload.forceInteraction;
+      state.banner = action.payload.banner ?? null;
+    });
+    builder.addCase(updateContestSettings.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to update settings';
     });
 
     // Reset Campaign
     builder.addCase(resetCampaign.fulfilled, (state, action) => {
       state.campaignVersion = action.payload.campaignVersion;
+      state.banner = action.payload.banner ?? null;
     });
 
     // Register User

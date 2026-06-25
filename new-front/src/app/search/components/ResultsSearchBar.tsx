@@ -173,7 +173,7 @@ export default function ResultsSearchBar({
       ${isOpen ? 'block' : 'hidden'}
     `}>
       {onClose && (
-        <div className="md:hidden flex items-center justify-between bg-yellow-50 px-5 py-3 border-b border-yellow-100">
+        <div className="lg:hidden flex items-center justify-between bg-yellow-50 px-5 py-3 border-b border-yellow-100">
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={14} className="text-yellow-700" />
             <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>
@@ -188,7 +188,7 @@ export default function ResultsSearchBar({
         </div>
       )}
 
-      <div className="hidden md:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
+      <div className="hidden lg:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={14} className="text-yellow-700" />
           <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>

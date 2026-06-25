@@ -153,7 +153,7 @@ export default function DynamicBanners() {
                 disabled={supplierLoading}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
+                className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-normal rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
               >
                 {supplierLoading ? '...' : 'Submit'}
               </motion.button>
@@ -175,7 +175,7 @@ export default function DynamicBanners() {
             alt="Cinema Offers"
             fill
             sizes="100vw"
-            quality={75}
+            quality={90}
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/20 transition-opacity duration-700 hover:opacity-30 z-10 pointer-events-none" />
@@ -192,7 +192,7 @@ export default function DynamicBanners() {
                 onChange={(e) => setCinemaEmail(e.target.value)}
                 placeholder={cinemaLoading ? "جاري..." : "بريدك"} 
                 disabled={cinemaLoading}
-                className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-bold text-white placeholder:text-white/30 outline-none text-right h-full disabled:opacity-50"
+                className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-normal text-white placeholder:text-white/30 outline-none text-right h-full disabled:opacity-50"
                 dir="rtl"
               />
               <motion.button 

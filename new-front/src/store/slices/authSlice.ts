@@ -59,10 +59,12 @@ const initialState: AuthState = {
 
 export const loginThunk = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  async (credentials: { email: string; password: string; rememberMe?: boolean }, { rejectWithValue }) => {
     try {
       // 1. Destroy the Old Token on the backend first if it exists
-      const existingToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const existingToken = typeof window !== 'undefined'
+        ? (localStorage.getItem('token') || sessionStorage.getItem('token'))
+        : null;
       if (existingToken) {
         try {
           await authApi.logout();
@@ -91,14 +93,17 @@ export const loginThunk = createAsyncThunk(
       delete axios.defaults.headers.common['Authorization'];
       delete axiosClient.defaults.headers.common['Authorization'];
 
-      const response = await authApi.login(credentials) as AuthApiResponse;
+      const response = await authApi.login({ email: credentials.email, password: credentials.password }) as AuthApiResponse;
 
       if (response.status === true || response.status === 'true') {
         const token = response.token;
         if (!token) {
           return rejectWithValue('No token received from server.');
         }
-        localStorage.setItem('token', token);
+
+        const remember = credentials.rememberMe !== false;
+        const storage = remember ? localStorage : sessionStorage;
+        storage.setItem('token', token);
         
         // Set header on axiosClient for future requests
         axiosClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -115,7 +120,7 @@ export const loginThunk = createAsyncThunk(
           phone_num: userData.phone_num || undefined,
           country: userData.country || undefined,
         };
-        localStorage.setItem('user', JSON.stringify(user));
+        storage.setItem('user', JSON.stringify(user));
         return { user, token };
       }
 
@@ -179,13 +184,19 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     restoreAuth: (state) => {
-      const token = localStorage.getItem('token');
-      const userRaw = localStorage.getItem('user');
-      if (token && userRaw) {
-        const parsed = JSON.parse(userRaw) as User;
-        state.token = token;
-        state.user = { ...parsed, role: normalizeAuthRole(parsed.role), status: parsed.status || parsed.role };
-        state.isAuthenticated = true;
+      if (typeof window !== 'undefined') {
+        let token = localStorage.getItem('token');
+        let userRaw = localStorage.getItem('user');
+        if (!token || !userRaw) {
+          token = sessionStorage.getItem('token');
+          userRaw = sessionStorage.getItem('user');
+        }
+        if (token && userRaw) {
+          const parsed = JSON.parse(userRaw) as User;
+          state.token = token;
+          state.user = { ...parsed, role: normalizeAuthRole(parsed.role), status: parsed.status || parsed.role };
+          state.isAuthenticated = true;
+        }
       }
     },
     logout: (state) => {
@@ -203,7 +214,11 @@ const authSlice = createSlice({
     updateUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(action.payload));
+        if (localStorage.getItem('token')) {
+          localStorage.setItem('user', JSON.stringify(action.payload));
+        } else if (sessionStorage.getItem('token')) {
+          sessionStorage.setItem('user', JSON.stringify(action.payload));
+        }
       }
     },
     clearError: (state) => {

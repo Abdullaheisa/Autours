@@ -11,6 +11,7 @@ export interface ContestSettingsDTO {
   enabled: boolean;
   campaignVersion: number;
   forceInteraction: boolean;
+  banner?: string | null;
 }
 
 export interface RegisterUserPayload {

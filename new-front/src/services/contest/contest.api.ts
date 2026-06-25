@@ -38,15 +38,46 @@ const mockFetchSettings = async (): Promise<ContestSettingsDTO> => {
   await delay(300);
   const saved = ContestStorage.getSettings();
   if (saved) return saved;
-  return { enabled: true, campaignVersion: 1, forceInteraction: false };
+  return { enabled: true, campaignVersion: 1, forceInteraction: false, banner: null };
 };
 
 const mockUpdateSettings = async (
-  settings: Partial<ContestSettingsDTO>
+  settings: FormData | Partial<ContestSettingsDTO>
 ): Promise<ContestSettingsDTO> => {
   await delay(300);
   const current = await mockFetchSettings();
-  const updated = { ...current, ...settings };
+  
+  let updated: ContestSettingsDTO;
+  if (settings instanceof FormData) {
+    const enabledVal = settings.get('enabled');
+    const forceInteractionVal = settings.get('forceInteraction');
+    const bannerVal = settings.get('banner');
+    
+    let banner: string | null = current.banner ?? null;
+    if (bannerVal === 'null' || bannerVal === null) {
+      banner = null;
+    } else if (bannerVal instanceof File) {
+      banner = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.readAsDataURL(bannerVal);
+      });
+    } else if (typeof bannerVal === 'string') {
+      banner = bannerVal;
+    }
+
+    updated = {
+      ...current,
+      enabled: enabledVal !== null ? enabledVal === 'true' : current.enabled,
+      forceInteraction: forceInteractionVal !== null ? forceInteractionVal === 'true' : current.forceInteraction,
+      banner
+    };
+  } else {
+    updated = { ...current, ...settings };
+  }
+
   ContestStorage.saveSettings(updated);
   return updated;
 };
@@ -90,7 +121,7 @@ const mockRegisterUser = async (
  * Response: ContestSettingsDTO
  */
 const realFetchSettings = async (): Promise<ContestSettingsDTO> => {
-  return apiClient.get<ContestSettingsDTO>(`${ADMIN_CONTEST_BASE}/settings`);
+  return apiClient.get<ContestSettingsDTO>(`${CONTEST_BASE}/settings`);
 };
 
 /**
@@ -99,8 +130,18 @@ const realFetchSettings = async (): Promise<ContestSettingsDTO> => {
  * Response: ContestSettingsDTO
  */
 const realUpdateSettings = async (
-  settings: Partial<ContestSettingsDTO>
+  settings: FormData | Partial<ContestSettingsDTO>
 ): Promise<ContestSettingsDTO> => {
+  if (settings instanceof FormData) {
+    if (!settings.has('_method')) {
+      settings.append('_method', 'PUT');
+    }
+    return apiClient.post<ContestSettingsDTO>(`${ADMIN_CONTEST_BASE}/settings`, settings, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
   return apiClient.put<ContestSettingsDTO>(`${ADMIN_CONTEST_BASE}/settings`, settings);
 };
 
@@ -149,7 +190,7 @@ export class ContestApi {
 
   /** Update popup settings */
   static updateSettings = (
-    settings: Partial<ContestSettingsDTO>
+    settings: FormData | Partial<ContestSettingsDTO>
   ): Promise<ContestSettingsDTO> =>
     USE_REAL_API ? realUpdateSettings(settings) : mockUpdateSettings(settings);
 

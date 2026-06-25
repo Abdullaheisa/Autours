@@ -18,6 +18,13 @@ export default function ContestPopup() {
   const campaignVersion = contestState?.campaignVersion ?? 1;
   const forceInteraction = contestState?.forceInteraction ?? false;
 
+  const banner = contestState?.banner;
+  const bannerUrl = banner 
+    ? (banner.startsWith('http') || banner.startsWith('blob:') || banner.startsWith('data:')
+        ? banner
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${banner}`)
+    : null;
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -111,124 +118,142 @@ export default function ContestPopup() {
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto transition-all duration-500">
       <div 
-        className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl p-8 relative overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-500"
+        className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl relative overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-500"
         style={{
           boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.05)',
         }}
       >
-        {/* Decorative elements */}
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/20 rounded-full blur-[3rem] pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-amber-500/10 rounded-full blur-[3rem] pointer-events-none" />
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-amber-500 to-primary" />
-{/* Close button */}
+        {/* Banner or Fallback at top */}
+        {bannerUrl ? (
+          <div className="relative w-full h-[200px]  overflow-hidden bg-gray-50 border-b border-gray-100 shrink-0">
+            <img 
+              src={bannerUrl} 
+              alt="Contest Banner" 
+              className="w-full h-full object-cover block animate-in fade-in duration-300"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+          </div>
+        ) : (
+          <div className="relative w-full bg-gradient-to-br from-gray-950 via-gray-900 to-amber-950 text-white py-10 px-8 text-center flex flex-col items-center justify-center border-b border-white/5 shrink-0">
+            <div className="absolute -top-12 -left-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-black/20 relative z-10 animate-bounce">
+              <Gift className="w-8 h-8 text-primary" strokeWidth={2} />
+            </div>
+            
+            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight font-title mb-2 flex items-center gap-2 relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white via-primary to-amber-400">
+              Win Exclusive Rewards <Sparkles className="w-5 h-5 text-primary shrink-0 animate-pulse" />
+            </h2>
+            
+            <p className="text-xs md:text-sm text-gray-300 font-medium max-w-sm relative z-10 leading-relaxed">
+              Register now for a chance to win premium travel rewards and exclusive car rental upgrades for your next journey!
+            </p>
+          </div>
+        )}
+
+        {/* Close button */}
         {!forceInteraction && (
           <button
-            type="button" // دي مهمة جداً عشان لو المودال جوه Form ميعملش ريفريش
+            type="button"
             onClick={(e) => {
-              e.preventDefault(); // بتمنع أي أكشن افتراضي
-              e.stopPropagation(); // بتمنع الضغطة إنها تسمع في الديف اللي تحته
+              e.preventDefault();
+              e.stopPropagation();
               handleClose();
             }}
-            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors active:scale-95 z-50 cursor-pointer select-none shrink-0 outline-none focus:ring-2 focus:ring-gray-300"
+            className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white hover:text-primary transition-all active:scale-95 z-50 cursor-pointer select-none outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
             aria-label="Close modal"
           >
             <X size={18} strokeWidth={2.5} className="pointer-events-none" />
           </button>
         )}
 
-        {/* Header */}
-        <div className="text-center mb-8 relative z-10">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
-            <Gift className="w-8 h-8 text-primary" strokeWidth={2} />
-          </div>
-          <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-title mb-2 flex items-center justify-center gap-2">
-            Win Exclusive Rewards <Sparkles className="w-5 h-5 text-amber-500" />
-          </h2>
-          <p className="text-sm text-gray-500 font-medium px-4">
-            Register now for a chance to win premium travel rewards and exclusive car rental upgrades for your next journey!
-          </p>
+        {/* Form area */}
+        <div className="p-8 pt-6 relative">
+          {/* Decorative elements */}
+          <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/20 rounded-full blur-[3rem] pointer-events-none" />
+          <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-amber-500/10 rounded-full blur-[3rem] pointer-events-none" />
+
+          <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Full Name</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                <input
+                  type="text" required value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Phone Number</label>
+                <div className="relative group">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                  <input
+                    type="tel" required value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1 234 567 890"
+                    className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Email Address</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                  <input
+                    type="email" required value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pb-2">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Country (Optional)</label>
+              <div className="relative group">
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                <select
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 appearance-none"
+                >
+                  <option value="">Select your country</option>
+                  {countries.map(c => (
+                    <option key={c.id} value={c.nameEn}>{c.flag} {c.nameEn}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="submit" disabled={loading}
+              className="w-full bg-primary text-gray-900 hover:bg-primary-600 font-black py-4 rounded-2xl hover:scale-[1.01] active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 text-sm disabled:opacity-70 mt-4 group"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                <>
+                  Register to Win
+                  <Gift className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
         </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-          <div className="space-y-1.5">
-            <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Full Name</label>
-            <div className="relative group">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
-              <input
-                type="text" required value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your full name"
-                className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Phone Number</label>
-              <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
-                <input
-                  type="tel" required value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 234 567 890"
-                  className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Email Address</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
-                <input
-                  type="email" required value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5 pb-2">
-            <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">Country (Optional)</label>
-            <div className="relative group">
-              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full pl-11 pr-4 py-3.5 text-sm bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-gray-800 appearance-none"
-              >
-                <option value="">Select your country</option>
-                {countries.map(c => (
-                  <option key={c.id} value={c.nameEn}>{c.flag} {c.nameEn}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="submit" disabled={loading}
-            className="w-full bg-primary text-gray-900 hover:bg-primary-600 font-black py-4 rounded-2xl hover:scale-[1.01] active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 text-sm disabled:opacity-70 mt-4 group"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </span>
-            ) : (
-              <>
-                Register to Win
-                <Gift className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-              </>
-            )}
-          </button>
-        </form>
 
       </div>
     </div>

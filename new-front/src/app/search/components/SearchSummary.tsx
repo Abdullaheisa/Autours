@@ -23,9 +23,9 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-      {/* Desktop + Tablet Header */}
+      {/* Desktop Sidebar Header - lg and above only */}
       {!forceMobileLayout && (
-        <div className="hidden md:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
+        <div className="hidden lg:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={14} className="text-yellow-700" />
             <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Your Search Details</h3>
@@ -33,8 +33,8 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
         </div>
       )}
 
-      {/* Mobile Horizontal Bar (or forced mobile layout) */}
-      <div className={`${forceMobileLayout ? 'block' : 'md:hidden'} relative`}>
+      {/* Mobile/Tablet Horizontal Bar */}
+      <div className={`${forceMobileLayout ? 'block' : 'lg:hidden'} relative`}>
         <div className={`flex flex-col sm:flex-row sm:items-center bg-yellow-50 ${!hideEditButton ? 'pr-12' : ''}`}>
           {/* Pickup Info */}
           <div className="flex-1 px-4 py-3 sm:border-r border-yellow-200">
@@ -82,9 +82,9 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
         )}
       </div>
 
-      {/* Desktop + Tablet Content */}
+      {/* Desktop Content - lg and above only */}
       {!forceMobileLayout && (
-        <div className="hidden md:block p-5 space-y-5">
+        <div className="hidden lg:block p-5 space-y-5">
         {/* Pick-up */}
         <div className="space-y-2.5">
           <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pick-up Location</h4>

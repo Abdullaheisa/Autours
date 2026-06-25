@@ -44,7 +44,7 @@ axiosClient.interceptors.request.use(
     //    Always inject — logout needs the token to revoke it server-side.
     //    If there is no token yet (login / register), this block is skipped safely.
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         config.headers = config.headers ?? {};
         config.headers['Authorization'] = `Bearer ${token}`;
@@ -55,7 +55,15 @@ axiosClient.interceptors.request.use(
     //    multipart/form-data with the correct boundary automatically.
     //    Without this, file uploads and bulk Excel uploads break silently.
     if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
+      if (config.headers) {
+        if (typeof config.headers.delete === 'function') {
+          config.headers.delete('content-type');
+          config.headers.delete('Content-Type');
+        } else {
+          delete config.headers['Content-Type'];
+          delete config.headers['content-type'];
+        }
+      }
     }
 
     return config;
@@ -94,13 +102,13 @@ export const apiClient = {
     return response.data;
   },
 
-  post: async <T>(endpoint: string, data?: unknown): Promise<T> => {
-    const response = await axiosClient.post<T>(endpoint, data);
+  post: async <T>(endpoint: string, data?: unknown, options?: object): Promise<T> => {
+    const response = await axiosClient.post<T>(endpoint, data, options);
     return response.data;
   },
 
-  put: async <T>(endpoint: string, data?: unknown): Promise<T> => {
-    const response = await axiosClient.put<T>(endpoint, data);
+  put: async <T>(endpoint: string, data?: unknown, options?: object): Promise<T> => {
+    const response = await axiosClient.put<T>(endpoint, data, options);
     return response.data;
   },
 

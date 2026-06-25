@@ -40,6 +40,18 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterParams]);
 
+  // 🔒 قفل الـ scroll لما الـ Filter drawer يفتح
+  useEffect(() => {
+    if (showMobileFilters) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showMobileFilters]);
+
   const handleClearAll = () => {
     dispatch(resetFilters());
   };
@@ -48,8 +60,8 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
 
   return (
     <>
-      {/* Desktop/Tablet Sidebar - visible on md and above */}
-      <div className="hidden md:block w-full space-y-0">
+      {/* Desktop Sidebar - visible on lg and above only */}
+      <div className="hidden lg:block w-full space-y-0">
         <FiltersContent
           filterParams={filterParams}
           minPrice={minPrice}
@@ -61,8 +73,8 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
         />
       </div>
 
-      {/* Mobile Filter Bar - visible below md */}
-      <div className="md:hidden">
+      {/* Mobile/Tablet Filter Bar - visible below lg */}
+      <div className="lg:hidden">
         <button
           onClick={() => setShowMobileFilters(true)}
           className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
@@ -89,7 +101,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm"
+              className="lg:hidden fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm"
               onClick={() => setShowMobileFilters(false)}
             />
             <motion.div
@@ -97,7 +109,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="md:hidden fixed top-0 right-0 bottom-0 w-full max-w-[400px] bg-white z-[9999] shadow-2xl flex flex-col"
+              className="lg:hidden fixed top-0 right-0 bottom-0 w-full max-w-[400px] bg-white z-[9999] shadow-2xl flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-yellow-100 bg-yellow-50">

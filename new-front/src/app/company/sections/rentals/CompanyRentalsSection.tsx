@@ -71,7 +71,7 @@ export default function CompanyRentalsSection() {
       const base64Request = btoa(JSON.stringify({ rental_id: rentalId }));
       const params = `status=${newStatusId}&request=${base64Request}`;
       
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       await fetch(`/api/backend/booking/update-status?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`

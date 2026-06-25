@@ -18,7 +18,8 @@ class ContestController extends Controller
         return response()->json([
             'enabled' => $setting->enabled,
             'campaignVersion' => $setting->campaign_version,
-            'forceInteraction' => $setting->force_interaction
+            'forceInteraction' => $setting->force_interaction,
+            'banner' => $setting->banner
         ]);
     }
 

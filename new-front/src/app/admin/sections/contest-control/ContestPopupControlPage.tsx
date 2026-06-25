@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import { fetchContestSettings, fetchRegistrations, updateContestSettings, resetCampaign } from "@/store/slices/contestSlice";
 import { ContestApi } from "@/services/contest/contest.api";
-import { Gift, Trash2, Power, EyeOff, RotateCcw, Download, Search, Mail, Phone, RefreshCw } from "lucide-react";
+import { Gift, Trash2, Power, EyeOff, RotateCcw, Download, Search, Mail, Phone, RefreshCw, Upload, Image } from "lucide-react";
 
 export default function ContestPopupControlPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { enabled, campaignVersion, forceInteraction, registrations, loading } = useSelector(
+  const { enabled, campaignVersion, forceInteraction, banner, registrations, loading } = useSelector(
     (state: RootState) => state.contest
   );
 
@@ -85,24 +85,101 @@ export default function ContestPopupControlPage() {
       </div>
 
       {/* Settings */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Popup Behavior Settings</h3>
-        <div className="flex items-center justify-between max-w-xl p-4 border border-gray-100 rounded-xl bg-gray-50/50">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
           <div>
-            <p className="font-semibold text-gray-900">Force Interaction</p>
-            <p className="text-sm text-gray-500">If enabled, users cannot close the popup without registering.</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Popup Behavior Settings</h3>
+            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl bg-gray-50/50">
+              <div>
+                <p className="font-semibold text-gray-900">Force Interaction</p>
+                <p className="text-sm text-gray-500">If enabled, users cannot close the popup without registering.</p>
+              </div>
+              <button
+                onClick={() => dispatch(updateContestSettings({ forceInteraction: !forceInteraction }))}
+                disabled={loading}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 shrink-0 ${
+                  forceInteraction ? 'bg-primary' : 'bg-gray-300'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  forceInteraction ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => dispatch(updateContestSettings({ forceInteraction: !forceInteraction }))}
-            disabled={loading}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-              forceInteraction ? 'bg-primary' : 'bg-gray-300'
-            }`}
-          >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              forceInteraction ? 'translate-x-6' : 'translate-x-1'
-            }`} />
-          </button>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Popup Banner Settings</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Customize the popup with a premium banner. Recommended: 1200x600 px (2:1). Max 20MB.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {/* Upload Area */}
+            <div className="border-2 border-dashed border-gray-200 hover:border-primary rounded-2xl p-4 transition-all bg-gray-50/30 hover:bg-gray-50 flex flex-col items-center justify-center text-center cursor-pointer relative min-h-[140px] group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 20 * 1024 * 1024) {
+                      alert("File size exceeds 20MB limit.");
+                      return;
+                    }
+                    const formData = new FormData();
+                    formData.append('banner', file);
+                    dispatch(updateContestSettings(formData));
+                  }
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+                <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-100 group-hover:scale-105 transition-transform">
+                  <Upload className="w-5 h-5 text-gray-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">Click to upload or drag & drop</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Accepts all image formats (Max 20MB)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Banner Preview */}
+            {banner && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Banner Preview</p>
+                <div className="relative rounded-xl overflow-hidden border border-gray-100 h-[180px] bg-gray-50 group">
+                  <img
+                    src={banner.startsWith('http') || banner.startsWith('blob:') || banner.startsWith('data:') ? banner : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${banner}`}
+                    alt="Current Banner"
+                    className="w-full h-full object-cover block"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm("Are you sure you want to remove the banner?")) {
+                          const formData = new FormData();
+                          formData.append('banner', 'null');
+                          dispatch(updateContestSettings(formData));
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+                      title="Remove Banner"
+                    >
+                      <Trash2 size={14} />
+                      Remove Banner
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

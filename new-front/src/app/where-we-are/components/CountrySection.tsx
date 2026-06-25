@@ -1,65 +1,89 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { MapPin } from 'lucide-react';
 
 interface CountrySectionProps {
   countryName: string;
   titleSuffix: string;
   description: string;
   images: string[];
+  index: number;
+  isReversed: boolean;
 }
 
 export default function CountrySection({
   countryName,
   titleSuffix,
   description,
-  images
+  images,
+  isReversed
 }: CountrySectionProps) {
   return (
     <motion.section
-      initial={{ opacity: 0, y: 25 }}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.6 }}
-      className="w-full flex flex-col items-center"
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+      className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center"
     >
-      {/* Title Header with Yellow Location Pin */}
-      <div className="flex items-center gap-2.5 mb-4 text-center justify-center">
-        {/* Map Pin Icon */}
-        <svg
-          className="w-8 h-8 text-[#fde047] shrink-0"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-        </svg>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase text-black tracking-tight font-title">
-          <span className="text-black">{countryName}:</span>{' '}
-          <span className="text-black/90 font-black">{titleSuffix}</span>
-        </h2>
+      {/* Text Content */}
+      <div className={`space-y-4 ${isReversed ? 'lg:order-2' : 'lg:order-1'}`}>
+        {/* Header */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-yellow-500" />
+            <span className="text-xs font-semibold text-yellow-600 uppercase tracking-wider">
+              Destination
+            </span>
+          </div>
+
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-neutral-900 leading-tight">
+            {countryName}
+            <span className="block text-neutral-400 font-light text-lg sm:text-xl md:text-2xl mt-0.5">
+              {titleSuffix}
+            </span>
+          </h3>
+        </div>
+
+        {/* Description */}
+        <p className="text-neutral-600 text-sm sm:text-base leading-relaxed max-w-lg">
+          {description}
+        </p>
       </div>
 
-      {/* Description Text */}
-      <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-relaxed max-w-4xl text-center mx-auto mb-8 font-normal">
-        {description}
-      </p>
-
-      {/* Grid of Three Rounded Image Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-        {images.map((imgUrl, index) => (
+      {/* Images Grid */}
+      <div className={`${isReversed ? 'lg:order-1' : 'lg:order-2'}`}>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          {/* Main Large Image */}
           <motion.div
-            key={index}
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="w-full aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-lg border border-black/5"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className="col-span-2 aspect-[16/10] rounded-xl sm:rounded-2xl overflow-hidden shadow-md group"
           >
             <img
-              src={imgUrl}
-              alt={`${countryName} landmark ${index + 1}`}
-              className="w-full h-full object-cover select-none pointer-events-none"
+              src={images[0]}
+              alt={`${countryName} main`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </motion.div>
-        ))}
+
+          {/* Two Smaller Images */}
+          {images.slice(1).map((imgUrl, imgIdx) => (
+            <motion.div
+              key={imgIdx}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-sm group"
+            >
+              <img
+                src={imgUrl}
+                alt={`${countryName} ${imgIdx + 2}`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </motion.section>
   );

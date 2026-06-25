@@ -12,7 +12,8 @@ class ContestSetting extends Model
     protected $fillable = [
         'enabled',
         'campaign_version',
-        'force_interaction'
+        'force_interaction',
+        'banner'
     ];
 
     protected $casts = [

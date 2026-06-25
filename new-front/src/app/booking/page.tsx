@@ -187,7 +187,7 @@ function BookingContent() {
   }, [isAuthenticated, loggedInUser]);
 
   // ── Checkboxes ───────────────────────────────────────────────────────────────
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [rentalTerms, setRentalTerms] = useState(false);
   const [subscribeEmails, setSubscribeEmails] = useState(false);
 
@@ -296,7 +296,7 @@ function BookingContent() {
 
     setIsSubmitting(true);
     try {
-      let token = localStorage.getItem('token');
+      let token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
       if (!isAuthenticated && !token) {
         // Step 1: Register customer if not logged in
@@ -323,9 +323,11 @@ function BookingContent() {
         const user = regRes?.data?.user;
         if (token) {
           localStorage.setItem('token', token);
+          sessionStorage.setItem('token', token);
         }
         if (user) {
           localStorage.setItem('user', JSON.stringify(user));
+          sessionStorage.setItem('user', JSON.stringify(user));
         }
 
         // Sync Redux auth state immediately

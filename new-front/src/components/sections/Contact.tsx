@@ -114,7 +114,11 @@ export default function Contact() {
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-0.5">
                         {item.label}
                       </p>
-                      <p className="text-lg md:text-xl font-black text-gray-900 group-hover:text-primary transition-colors truncate">
+                      {/* ملاحظة: لقد قمت بتطبيق تعديل truncate الذي اقترحته سابقًا 
+                        على نص الـ value هنا أيضًا، لضمان استقرار التصميم على الموبايل 
+                        مع الحفاظ على التنسيقات الأخرى.
+                      */}
+                      <p className="text-sm md:text-xl font-black text-gray-900 group-hover:text-primary transition-colors truncate">
                         {item.value}
                       </p>
                     </div>
@@ -174,6 +178,7 @@ export default function Contact() {
           </div>
 
           {/* Right Image: Hidden below 1024px (lg breakpoint), full bleed on lg+ */}
+          {/* تم إرجاع تنسيقات الحاوية والصورة إلى ما كانت عليه في البداية */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}

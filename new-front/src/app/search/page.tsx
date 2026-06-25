@@ -25,6 +25,18 @@ function SearchPageContent() {
   const currencyCode = useSelector((state: RootState) => state.currency.code);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
 
+  // 🔒 قفل الـ scroll لما الـ drawer يفتح
+  useEffect(() => {
+    if (isSearchDrawerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSearchDrawerOpen]);
+
 
 
   const {
@@ -293,13 +305,13 @@ function SearchPageContent() {
   return (
     <main className="min-h-screen bg-gray-100">
       <Navbar />
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <Stepper currentStep={2} />
         <div className="px-4 pt-3 pb-2">
           <SearchSummary onEditClick={() => setIsSearchDrawerOpen(true)} />
         </div>
       </div>
-      <div className="hidden md:block"><Stepper currentStep={2} /></div>
+      <div className="hidden lg:block"><Stepper currentStep={2} /></div>
 
       <div className="max-w-[1400px] mx-auto px-4 py-8">
         {!hasValidSearch ? (
@@ -312,17 +324,17 @@ function SearchPageContent() {
             <a href="/" className="px-8 py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-xs uppercase tracking-wider shadow-md hover:scale-[1.02] transition-all">Go to Home</a>
           </div>
         ) : (
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            <aside className="w-full md:w-[280px] lg:w-[320px] shrink-0 space-y-4">
-              <div className="hidden md:block"><SearchSummary /></div>
-              <div className="hidden md:block"><ResultsSearchBar onSearch={handleReSearch} isOpen={true} /></div>
-              <div className="hidden md:block"><SearchFilters onFilterChange={handleFilterChange} /></div>
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            <aside className="w-full lg:w-[320px] shrink-0 space-y-4">
+              <div className="hidden lg:block"><SearchSummary /></div>
+              <div className="hidden lg:block"><ResultsSearchBar onSearch={handleReSearch} isOpen={true} /></div>
+              <div className="hidden lg:block"><SearchFilters onFilterChange={handleFilterChange} /></div>
             </aside>
 
             <div className="flex-1 w-full min-w-0 space-y-4">
               <CategoryFilterBar />
 
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <SearchFilters onFilterChange={handleFilterChange} />
               </div>
 
@@ -402,7 +414,59 @@ function SearchPageContent() {
       </div>
 
       <Footer />
+
+      {/* 🔍 Mobile/Tablet Search Drawer - يفتح لما تضغط القلم */}
+      <AnimatePresence>
+        {isSearchDrawerOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm lg:hidden"
+              onClick={() => setIsSearchDrawerOpen(false)}
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-full max-w-[420px] bg-white z-[9999] shadow-2xl flex flex-col lg:hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-yellow-100 bg-yellow-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <Search size={16} className="text-gray-900" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800">Modify Search</h3>
+                </div>
+                <button
+                  onClick={() => setIsSearchDrawerOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors"
+                  aria-label="Close search drawer"
+                >
+                  <X size={18} className="text-gray-500" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <ResultsSearchBar
+                  onSearch={handleReSearch}
+                  isOpen={true}
+                  preventRedirect={false}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </main>
+
   );
 }
 

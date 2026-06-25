@@ -9,6 +9,7 @@ import {
 import { motion } from 'framer-motion';
 import { assets } from '@/config/assets';
 import { countries } from '@/data/countries';
+import { siteConfig } from '@/config/site';
 
 const XIcon = ({ size = 18 }: { size?: number }) => (
   <svg 
@@ -50,7 +51,7 @@ export default function Footer() {
   const [emailHref, setEmailHref] = useState('javascript:void(0)');
 
   useEffect(() => {
-    setEmailHref('mailto:' + ['info', 'autours.com'].join('@'));
+    setEmailHref('mailto:' + siteConfig.contact.email);
   }, []);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -162,15 +163,17 @@ export default function Footer() {
             </p>
             <div className="flex gap-2">
               {[
-                { name: 'Facebook', icon: <Facebook size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: '#' },
-                { name: 'Instagram', icon: <Instagram size={16} aria-hidden="true" />, href: '#' },
-                { name: 'LinkedIn', icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: '#' },
-                { name: 'X', icon: <XIcon size={14} />, href: '#' },
+                { name: 'Facebook', icon: <Facebook size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.facebook },
+                { name: 'Instagram', icon: <Instagram size={16} aria-hidden="true" />, href: siteConfig.socials.instagram },
+                { name: 'LinkedIn', icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.linkedin },
+                { name: 'X', icon: <XIcon size={14} />, href: siteConfig.socials.x },
                 { name: 'Email', icon: <Mail size={16} aria-hidden="true" />, href: emailHref }
               ].map((social, i) => (
                 <motion.a 
                   key={i} 
                   href={social.href}
+                  target={social.name === 'Email' ? undefined : '_blank'}
+                  rel={social.name === 'Email' ? undefined : 'noopener noreferrer'}
                   aria-label={`Follow us on ${social.name}`} // 🚀 التأكيد على تواجد الـ Aria-label
                   whileHover={{ y: -2 }}
                   className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none"

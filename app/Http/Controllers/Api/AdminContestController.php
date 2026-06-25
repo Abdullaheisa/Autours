@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ContestSetting;
 use App\Models\ContestRegistration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class AdminContestController extends Controller
 {
@@ -18,7 +19,8 @@ class AdminContestController extends Controller
         return response()->json([
             'enabled' => $setting->enabled,
             'campaignVersion' => $setting->campaign_version,
-            'forceInteraction' => $setting->force_interaction
+            'forceInteraction' => $setting->force_interaction,
+            'banner' => $setting->banner
         ]);
     }
 
@@ -30,10 +32,36 @@ class AdminContestController extends Controller
         }
         
         if ($request->has('enabled')) {
-            $setting->enabled = $request->enabled;
+            $setting->enabled = filter_var($request->enabled, FILTER_VALIDATE_BOOLEAN);
         }
         if ($request->has('forceInteraction')) {
-            $setting->force_interaction = $request->forceInteraction;
+            $setting->force_interaction = filter_var($request->forceInteraction, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if ($request->hasFile('banner')) {
+            $request->validate([
+                'banner' => 'image|max:20480'
+            ]);
+
+            $file = $request->file('banner');
+            $filename = 'contest-banner-' . time() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('images/contest');
+
+            if (!File::exists($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true);
+            }
+
+            if ($setting->banner && File::exists(public_path($setting->banner))) {
+                File::delete(public_path($setting->banner));
+            }
+
+            $file->move($destinationPath, $filename);
+            $setting->banner = '/images/contest/' . $filename;
+        } elseif ($request->has('banner') && ($request->banner === null || $request->banner === 'null' || $request->banner === '')) {
+            if ($setting->banner && File::exists(public_path($setting->banner))) {
+                File::delete(public_path($setting->banner));
+            }
+            $setting->banner = null;
         }
         
         $setting->save();
@@ -41,7 +69,8 @@ class AdminContestController extends Controller
         return response()->json([
             'enabled' => $setting->enabled,
             'campaignVersion' => $setting->campaign_version,
-            'forceInteraction' => $setting->force_interaction
+            'forceInteraction' => $setting->force_interaction,
+            'banner' => $setting->banner
         ]);
     }
 
@@ -57,7 +86,8 @@ class AdminContestController extends Controller
         return response()->json([
             'enabled' => $setting->enabled,
             'campaignVersion' => $setting->campaign_version,
-            'forceInteraction' => $setting->force_interaction
+            'forceInteraction' => $setting->force_interaction,
+            'banner' => $setting->banner
         ]);
     }
 

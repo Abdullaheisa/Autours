@@ -56,7 +56,9 @@ export default function CompanyBulkUploadSection() {
   const handleDownloadTemplate = async () => {
     setIsDownloading(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const token = typeof window !== 'undefined'
+        ? (localStorage.getItem('token') || sessionStorage.getItem('token'))
+        : null;
       const response = await axiosClient.get("/vehicles/bulk-upload/template", {
         responseType: "blob",
         headers: {
@@ -115,7 +117,9 @@ export default function CompanyBulkUploadSection() {
         formData.append("supplier", String(user.id));
       }
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const token = typeof window !== 'undefined'
+        ? (localStorage.getItem('token') || sessionStorage.getItem('token'))
+        : null;
       const res: any = await axiosClient.post("/vehicles/bulk-upload", formData, {
         headers: {
           'Content-Type': 'multipart/form-data',

@@ -23,10 +23,11 @@ const config: Config = {
         "secondary": "var(--secondary-color)",
       },
       fontFamily: {
-        // 🚀 تم تغيير الخط الأساسي لـ Hubot Sans ليكون الخط الوحيد في الموقع
-        sans: ["var(--font-hubot)", "system-ui", "sans-serif"],
-        title: ["var(--font-hubot)", "system-ui", "sans-serif"],
-        body: ["var(--font-hubot)", "system-ui", "sans-serif"],
+        // 🔢 TajawalNumbers للأرقام (unicode-range) | HubotSans لكل النصوص | Tajawal fallback للعربي
+        sans: ["TajawalNumbers", "HubotSans", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        title: ["TajawalNumbers", "HubotSans", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        body: ["TajawalNumbers", "HubotSans", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        arabic: ["var(--font-tajawal)", "system-ui", "sans-serif"],
       },
     },
   },

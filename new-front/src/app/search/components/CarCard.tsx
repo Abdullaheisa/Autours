@@ -69,6 +69,17 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   }, [preselectedBookId, branchVehicleIds, availableBranches]);
 
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(computedBranchId);
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
+  const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsMobileDropdownOpen(false);
+      setIsDesktopDropdownOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   // Sync state if computed branch ID changes (e.g. if branchVehicleIds was empty on first render)
   useEffect(() => {
@@ -268,9 +279,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white rounded-2xl border-2 shadow-md border-gray-100 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all duration-300 w-full overflow-hidden text-sm"
+      className="bg-white rounded-2xl border-2 shadow-md border-gray-100 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all duration-300 w-full overflow-visible relative text-sm"
     >
-      <div className="flex flex-col lg:hidden">
+      <div className="flex flex-col md:hidden">
         <div className="p-4 pb-2 flex justify-center">
           <Image
             src={imgError ? 'https://via.placeholder.com/300x180?text=No+Image' : (carData.image || 'https://via.placeholder.com/300x180?text=No+Image')}
@@ -286,10 +297,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         <div className="px-4 pb-3 text-center">
           <div className="flex items-center justify-center gap-2">
-            <h3 className="text-base md:text-lg font-black text-gray-900 leading-tight">
+            <h3 className="text-base md:text-lg font-bold text-gray-900 leading-tight">
               {carData.name}
             </h3>
-            <span className="text-xs md:text-sm font-normal text-gray-600">or Similar</span>
+            <span className="text-xs md:text-sm font-medium text-gray-600">or Similar</span>
             <div
               className="relative"
               onMouseEnter={() => setShowInfoTooltip(true)}
@@ -329,8 +340,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               { icon: assets.icons.transmission, val: carData.transmission, label: '' }
             ].map((feat, i) => (
               <div key={i} className="flex flex-col items-center gap-1 bg-gray-50 rounded-lg py-2 md:py-2.5">
-                <img src={feat.icon} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                <span className="text-[10px] md:text-[11px] font-black text-gray-700">
+                <img src={feat.icon} alt="" className={` object-contain shrink-0 text-center  ${(i + 1) % 2 !== 0 ? 'w-7 h-7' : 'w-6 h-6'}`} aria-hidden="true" />
+                <span className="text-[11px] md:text-[9px] font-semibold text-center text-gray-700">
                   {feat.val} {feat.label}
                 </span>
               </div>
@@ -513,20 +524,60 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
             {!hideBookingControls && (
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col items-center gap-2">
                 {availableBranches.length > 1 && (
-                  <select
-                    value={selectedBranchId || ''}
-                    onChange={(e) => setSelectedBranchId(Number(e.target.value))}
-                    className="text-xs p-1.5 border border-gray-200 rounded-md bg-gray-50 font-medium text-gray-700 outline-none focus:border-blue-400 min-w-[140px] max-w-[200px]"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {availableBranches.map((b: any) => (
-                      <option key={b.id} value={b.id}>
-                        Pickup: {b.name || b.location}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative w-full min-w-[160px] max-w-[220px]">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMobileDropdownOpen(!isMobileDropdownOpen);
+                        setIsDesktopDropdownOpen(false);
+                      }}
+                      className="w-full text-xs py-2 px-8 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors font-bold text-gray-700 outline-none cursor-pointer text-center relative"
+                    >
+                      <span className="block truncate">
+                        <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
+                        <span className="text-gray-700 font-extrabold">
+                          {availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
+                        </span>
+                      </span>
+                      <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${isMobileDropdownOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </button>
+
+                    <AnimatePresence>
+                      {isMobileDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute z-50 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto no-scrollbar"
+                        >
+                          {availableBranches.map((b: any) => {
+                            const isSelected = b.id === selectedBranchId;
+                            return (
+                              <button
+                                key={b.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedBranchId(b.id);
+                                  setIsMobileDropdownOpen(false);
+                                }}
+                                className={`w-full text-left text-xs py-2.5 px-4 transition-colors font-bold ${
+                                  isSelected
+                                    ? 'bg-[var(--primary)] text-gray-900'
+                                    : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
+                                }`}
+                              >
+                                <span className="font-extrabold">{b.name || b.location}</span>
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )}
                 <Link
                   href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
@@ -541,9 +592,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
       </div>
 
-      <div className="hidden lg:block">
+      <div className="hidden md:block">
         <div className="flex items-start">
-          <div className="w-[300px] shrink-0 p-5 flex items-center justify-center">
+          <div className="w-[300px] shrink-0 p-3 lg:px-5 lg:py-3  flex items-center justify-center">
             <Image
               src={imgError ? 'https://via.placeholder.com/400x250?text=No+Image' : (carData.image || 'https://via.placeholder.com/400x250?text=No+Image')}
               alt={carData.name}
@@ -556,11 +607,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             />
           </div>
 
-          <div className="flex-1 p-5 pl-10 min-w-0 flex flex-col justify-between">
+          <div className="flex-1 p-4 lg:px-5 lg:py-3 lg:pl-10 min-w-0 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-lg font-black text-gray-900">{carData.name}</h3>
-                <span className="text-xs font-normal text-gray-600">or Similar</span>
+                <h3 className="text-lg font-bold text-gray-900">{carData.name}</h3>
+                <span className="text-xs font-medium text-gray-600">or Similar</span>
                 <div
                   className="relative"
                   onMouseEnter={() => setShowInfoTooltip(true)}
@@ -588,7 +639,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
               <p className="text-xs font-black text-gray-600 mb-4">{carData.type}</p>
 
-              <div className="grid grid-cols-2 w-[80%] justify-between gap-x-0 gap-y-2">
+              <div className="grid grid-cols-2 w-full lg:w-[55%] gap-x-2 lg:gap-x-4 gap-y-2">
                 {[
                   { icon: assets.icons.seats, val: carData.seats, label: 'Seats' },
                   { icon: assets.icons.doors, val: carData.doors, label: 'Doors' },
@@ -597,9 +648,12 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   { icon: assets.icons.fuel, val: carData.fuelType, label: '' },
                   { icon: assets.icons.transmission, val: carData.transmission, label: '' }
                 ].map((feat, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <img src={feat.icon} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                    <span className="text-xs font-black text-gray-700">{feat.val} {feat.label}</span>
+                  <div 
+                    key={i} 
+                    className="flex items-center gap-2 w-full"
+                  >
+                    <img src={feat.icon} alt="" className={`object-contain shrink-0 ${(i + 1) % 2 !== 0 ? 'w-8 h-8' : 'w-6 h-6'}`} aria-hidden="true" />
+                    <span className="text-xs lg:text-sm font-semibold lg:font-bold text-gray-700 whitespace-nowrap">{feat.val} {feat.label}</span>
                   </div>
                 ))}
               </div>
@@ -607,8 +661,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           </div>
         </div>
 
-        <div className="mx-5 mb-2 flex relative">
-          <div className="w-[72%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-7 gap-y-5 flex-wrap">
+        <div className="mx-5 mb-2 flex flex-col lg:flex-row relative gap-y-3 lg:gap-y-0">
+          <div className="w-full lg:w-[75%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-7 gap-y-5 flex-wrap">
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               {carData.supplier.logo ? (
                 <Image
@@ -628,8 +682,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <span className="text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
               <button onClick={() => setShowTerms(true)} className="text-xs font-black text-blue-600 underline hover:text-blue-800 leading-none">Rental Terms</button>
             </div>
-
-
 
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="bg-[var(--primary)] text-gray-900 px-2 py-1 rounded-md text-sm font-black">{carData.supplier.rating}/10</span>
@@ -672,7 +724,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           </div>
 
           {mainHighlight && (
-            <div className="flex-1 flex items-center justify-start pl-3 gap-2 relative min-w-0">
+            <div className="w-full lg:flex-1 flex items-center justify-start lg:pl-3 gap-2 relative min-w-0">
               <div className="flex items-start gap-1.5 text-green-700 min-w-0">
                 <Check size={18} className="stroke-[3] shrink-0 mt-[1px]" />
                 <span className="text-[13px] font-black leading-tight text-left break-words">{mainHighlight}</span>
@@ -697,18 +749,18 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           )}
         </div>
 
-        <div className="flex">
-          <div className='flex bg-green-100/35 rounded-xl mx-4 mb-4 w-[70%]'>
-            <div className="w-[50%] p-5 pt-3">
+        <div className="flex flex-col lg:flex-row">
+          <div className='flex bg-green-100/35 rounded-xl mx-5 lg:mx-0 lg:ml-4 mb-4 w-[calc(100%-2.5rem)] lg:w-[80%]'>
+            <div className="w-[60%] p-2 pt-3">
               <div className="mb-2">
                 <h4 className="text-xs font-black text-green-700">What is Included!</h4>
                 <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
               </div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 mt-3">
+              <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
                 {displayedInclusions.map((inc, i) => (
                   <div key={i} className="flex items-center gap-1.5">
                     <Check size={11} className="text-green-600 shrink-0" />
-                    <span className="text-[11px] font-black text-gray-700">{inc}</span>
+                    <span className="text-[12px] font-bold text-gray-700">{inc}</span>
                   </div>
                 ))}
               </div>
@@ -719,7 +771,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               )}
             </div>
 
-            <div className="w-[50%] p-5 pt-14 space-y-3">
+            <div className="w-[40%] p-2 pt-14 space-y-3">
               <div className="flex items-start gap-2">
                 <button onClick={openMap} className="shrink-0 pt-0.5"><Globe size={14} className="text-blue-600" /></button>
                 <div className="flex items-start gap-1.5">
@@ -750,33 +802,75 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
           </div>
 
-          <div className="w-[260px] shrink-0 p-5 pt-6 flex flex-col items-start justify-end">
-            <span className="text-sm font-bold pl-4 text-gray-600 block mb-2">for {carData.price.totalDays} days</span>
-            <div className="text-left mb-5">
-              <span className="text-3xl pl-4 font-black text-gray-900">
-                {formatPrice(carData.price.amount, carData.price.currency as Currency)}
-              </span>
+          <div className="w-full lg:w-[260px] lg:shrink-0 p-5 pt-2 lg:pt-6 flex flex-row lg:flex-col items-center lg:items-start justify-between lg:justify-end">
+            <div className="flex flex-col items-start">
+              <span className="text-sm font-bold pl-4 text-gray-600 block mb-1 lg:mb-2">for {carData.price.totalDays} days</span>
+              <div className="text-left mb-0 lg:mb-5">
+                <span className="text-3xl pl-4 font-black text-gray-900">
+                  {formatPrice(carData.price.amount, carData.price.currency as Currency)}
+                </span>
+              </div>
             </div>
 
             {!hideBookingControls && (
-              <div className="w-full flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-2 items-center lg:items-stretch w-auto lg:w-full">
                 {availableBranches.length > 1 && (
-                  <select
-                    value={selectedBranchId || ''}
-                    onChange={(e) => setSelectedBranchId(Number(e.target.value))}
-                    className="w-full text-xs p-2 border border-gray-200 rounded-lg bg-gray-50 font-bold text-gray-700 outline-none focus:border-blue-400"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {availableBranches.map((b: any) => (
-                      <option key={b.id} value={b.id}>
-                        Pickup: {b.name || b.location}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative w-full min-w-[160px] max-w-[200px] lg:max-w-none">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDesktopDropdownOpen(!isDesktopDropdownOpen);
+                        setIsMobileDropdownOpen(false);
+                      }}
+                      className="w-full text-xs py-2 px-8 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors font-bold text-gray-700 outline-none cursor-pointer text-center relative"
+                    >
+                      <span className="block truncate">
+                        <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
+                        <span className="text-gray-700 font-extrabold">
+                          {availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
+                        </span>
+                      </span>
+                      <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${isDesktopDropdownOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </button>
+
+                    <AnimatePresence>
+                      {isDesktopDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute z-50 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto no-scrollbar"
+                        >
+                          {availableBranches.map((b: any) => {
+                            const isSelected = b.id === selectedBranchId;
+                            return (
+                              <button
+                                key={b.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedBranchId(b.id);
+                                  setIsDesktopDropdownOpen(false);
+                                }}
+                                className={`w-full text-left text-xs py-2.5 px-4 transition-colors font-bold ${
+                                  isSelected
+                                    ? 'bg-[var(--primary)] text-gray-900'
+                                    : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
+                                }`}
+                              >
+                                <span className="font-extrabold">{b.name || b.location}</span>
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )}
                 <Link
                   href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
-                  className="w-full py-3.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-lg uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg"
+                  className="w-auto lg:w-full py-2.5 lg:py-3.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm lg:text-lg uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap"
                 >
                   Book Now
                   <span className="sr-only"> for {carData.name}</span>
