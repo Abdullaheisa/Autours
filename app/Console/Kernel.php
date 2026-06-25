@@ -39,6 +39,10 @@ class Kernel extends ConsoleKernel
        //  $schedule->command('renteon:sync-branches')->dailyAt('05:00');
          $schedule->command('renteon:sync-vehicles')->everyFourHours();
 
+         // Sync Xdrive branches daily and vehicle prices every 4 hours
+       //  $schedule->command('xdrive:sync-branches --real')->dailyAt('05:30');
+         $schedule->command('xdrive:sync-vehicles --prices-only --real')->everyFourHours();
+
          // Sync exchange rates daily
          $schedule->command('sync:exchange-rates')->everyFourHours();
     }   
