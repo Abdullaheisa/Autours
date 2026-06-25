@@ -55,14 +55,14 @@ class SyncXdriveBranches extends Command
         $supplierUserId = 0;
         
         if ($this->option('dry-run')) {
-            $this->info('[DRY RUN] Would resolve or create supplier user: xdrive@tempmail.com');
+            $this->info('[DRY RUN] Would resolve or create supplier user: laraozyaman@xdrivemobility.com');
         } else {
             $supplierUser = User::firstOrCreate(
-                ['email' => 'xdrive@tempmail.com'],
+                ['email' => 'laraozyaman@xdrivemobility.com'],
                 [
                     'name' => 'Xdrive Autotours',
                     'role' => 'active_supplier',
-                    'password' => Hash::make(Str::random(32)),
+                    'password' => Hash::make('Qrentals@12345'),
                     'company' => 'Xdrive Autotours',
                 ]
             );

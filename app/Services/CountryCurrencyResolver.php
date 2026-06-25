@@ -27,6 +27,7 @@ class CountryCurrencyResolver
             'BH' => 'BHD',
             'EG' => 'EGP',
             'JO' => 'JOD',
+            'KE' => 'KES',
             'KW' => 'KWD',
             'MA' => 'MAD',
             'MU' => 'MUR',
@@ -34,7 +35,9 @@ class CountryCurrencyResolver
             'QA' => 'QAR',
             'SA' => 'SAR',
             'SC' => 'SCR',
+            'TZ' => 'TZS',
             'ZA' => 'ZAR',
+            'ZM' => 'ZMW',
 
             // --- Europe (Eurozone) ---
             'AT' => 'EUR',
@@ -98,13 +101,23 @@ class CountryCurrencyResolver
             'US' => 'USD',
             'UY' => 'UYU',
 
-            // --- Caribbean ---
+            // --- Caribbean & Central America ---
+            'AG' => 'XCD',
             'AI' => 'XCD',
+            'AW' => 'AWG',
+            'BB' => 'BBD',
+            'BS' => 'BSD',
             'CW' => 'ANG',
+            'GD' => 'XCD',
+            'GP' => 'EUR',
+            'JM' => 'JMD',
+            'LC' => 'XCD',
             'SX' => 'ANG',
+            'TT' => 'TTD',
 
             // --- Asia & Oceania ---
             'AU' => 'AUD',
+            'FJ' => 'FJD',
             'LK' => 'LKR',
             'MY' => 'MYR',
             'NZ' => 'NZD',
@@ -134,14 +147,18 @@ class CountryCurrencyResolver
             'BH' => 'Bahrain',
             'EG' => 'Egypt',
             'JO' => 'Jordan',
+            'KE' => 'Kenya',
             'KW' => 'Kuwait',
             'MA' => 'Morocco',
             'MU' => 'Mauritius',
+            'MW' => 'Malawi',
             'OM' => 'Oman',
             'QA' => 'Qatar',
             'SA' => 'Saudi Arabia',
             'SC' => 'Seychelles',
+            'TZ' => 'Tanzania',
             'ZA' => 'South Africa',
+            'ZM' => 'Zambia',
 
             // --- Europe ---
             'AL' => 'Albania',
@@ -192,22 +209,33 @@ class CountryCurrencyResolver
             'UA' => 'Ukraine',
             'XK' => 'Kosovo',
 
-            // --- Americas ---
+            // --- Americas & Caribbean ---
+            'AG' => 'Antigua and Barbuda',
             'AI' => 'Anguilla',
             'AR' => 'Argentina',
+            'AW' => 'Aruba',
+            'BB' => 'Barbados',
+            'BS' => 'Bahamas',
             'CL' => 'Chile',
             'CO' => 'Colombia',
             'CW' => 'Curaçao',
             'DO' => 'Dominican Republic',
+            'GD' => 'Grenada',
+            'GP' => 'Guadeloupe',
             'GT' => 'Guatemala',
+            'JM' => 'Jamaica',
+            'LC' => 'St. Lucia',
             'MX' => 'Mexico',
             'PA' => 'Panama',
             'PR' => 'Puerto Rico',
+            'SX' => 'Sint Maarten',
+            'TT' => 'Trinidad and Tobago',
             'US' => 'United States',
             'UY' => 'Uruguay',
 
             // --- Asia & Oceania ---
             'AU' => 'Australia',
+            'FJ' => 'Fiji',
             'LK' => 'Sri Lanka',
             'MY' => 'Malaysia',
             'NZ' => 'New Zealand',

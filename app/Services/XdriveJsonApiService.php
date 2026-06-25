@@ -18,7 +18,7 @@ class XdriveJsonApiService
     private int $requestTimeout = 15;
 
     /**
-     * Fetch all locations from EMR JSON API.
+     * Fetch all locations from Xdrive JSON API.
      *
      * @return array<int, array>
      */
@@ -41,7 +41,7 @@ class XdriveJsonApiService
     }
 
     /**
-     * Fetch all vehicle groups from EMR JSON API.
+     * Fetch all vehicle groups from Xdrive JSON API.
      *
      * @return array<int, array>
      */
@@ -213,7 +213,7 @@ class XdriveJsonApiService
     }
 
     /**
-     * Save a reservation to EMR.
+     * Save a reservation to Xdrive.
      *
      * @param array<string, mixed> $params
      * @return array<string, mixed>
@@ -241,7 +241,7 @@ class XdriveJsonApiService
     }
 
     /**
-     * Cancel a reservation in EMR.
+     * Cancel a reservation in Xdrive.
      *
      * @param string $rezId Reservation ID of the car
      * @param string $id    ID value given when registered

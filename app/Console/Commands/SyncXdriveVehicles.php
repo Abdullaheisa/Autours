@@ -77,17 +77,23 @@ class SyncXdriveVehicles extends Command
         // ------------------------------------------------------------------
         // 1. Resolve or create the Xdrive supplier user
         // ------------------------------------------------------------------
-        $supplierUser = User::firstOrCreate(
-            ['email' => 'xdrive@tempmail.com'],
-            [
-                'name' => 'Xdrive Autotours',
-                'role' => 'active_supplier',
-                'password' => Hash::make(Str::random(32)),
-                'company' => 'Xdrive Autotours',
-            ]
-        );
+        $supplierUserId = 0;
+        if ($this->option('dry-run')) {
+            $this->info('[DRY RUN] Would resolve or create supplier user: laraozyaman@xdrivemobility.com');
+        } else {
+            $supplierUser = User::firstOrCreate(
+                ['email' => 'laraozyaman@xdrivemobility.com'],
+                [
+                    'name' => 'Xdrive Autotours',
+                    'role' => 'active_supplier',
+                    'password' => Hash::make('Qrentals@12345'),
+                    'company' => 'Xdrive Autotours',
+                ]
+            );
 
-        $this->info("Supplier user resolved: ID {$supplierUser->id} ({$supplierUser->email})");
+            $supplierUserId = $supplierUser->id;
+            $this->info("Supplier user resolved: ID {$supplierUser->id} ({$supplierUser->email})");
+        }
 
         // ------------------------------------------------------------------
         // 2. Load local specification definitions
@@ -114,7 +120,7 @@ class SyncXdriveVehicles extends Command
         // 4. Clean up orphaned Xdrive images
         // ------------------------------------------------------------------
         $this->info('Cleaning up orphaned Xdrive images...');
-        $activeEmrPhotos = Vehicle::where('description', 'LIKE', '%[Xdrive-GROUP-ID:%')
+        $activeXdrivePhotos = Vehicle::where('description', 'LIKE', '%[Xdrive-GROUP-ID:%')
             ->whereNotNull('photo')
             ->pluck('photo')
             ->unique()
@@ -126,7 +132,7 @@ class SyncXdriveVehicles extends Command
         if (is_dir($imgDir)) {
             foreach (glob($imgDir . '/xdrive_*') as $filePath) {
                 $fileName = basename($filePath);
-                if (! in_array($fileName, $activeEmrPhotos, true)) {
+                if (! in_array($fileName, $activeXdrivePhotos, true)) {
                     @unlink($filePath);
                     $cleaned++;
                 }
@@ -308,19 +314,19 @@ class SyncXdriveVehicles extends Command
         $this->info('Stations with valid prices: ' . count($stationPrices));
 
         // ------------------------------------------------------------------
-        // 6. Pre-load existing EMR vehicles from DB
+        // 6. Pre-load existing Xdrive vehicles from DB
         // ------------------------------------------------------------------
-        $allExistingEmrVehicles = Vehicle::where('description', 'LIKE', '%[Xdrive-GROUP-ID:%')
+        $allExistingXdriveVehicles = Vehicle::where('description', 'LIKE', '%[Xdrive-GROUP-ID:%')
             ->get();
 
         $existingVehiclesByGroup = [];
-        foreach ($allExistingEmrVehicles as $v) {
+        foreach ($allExistingXdriveVehicles as $v) {
             if (preg_match('/\[Xdrive-GROUP-ID:([^\]]+)\]/', $v->description, $m)) {
                 $existingVehiclesByGroup[$m[1]][$v->pickup_loc] = $v;
             }
         }
 
-        $this->info('Existing EMR vehicles in DB: ' . $allExistingEmrVehicles->count());
+        $this->info('Existing Xdrive vehicles in DB: ' . $allExistingXdriveVehicles->count());
 
         // ------------------------------------------------------------------
         // 7. Loop through groups - create/update ONE vehicle per branch that has a price
@@ -350,7 +356,7 @@ class SyncXdriveVehicles extends Command
                 $type = (string) ($group['type'] ?? '');
                 $vehicleName = trim($brand . ' ' . $type);
                 if (empty($vehicleName)) {
-                    $vehicleName = $groupName ?: 'EMR Group ' . $groupId;
+                    $vehicleName = $groupName ?: 'Xdrive Group ' . $groupId;
                 }
                 $vehicleName = $this->normalizeVehicleName($vehicleName);
 
@@ -471,7 +477,7 @@ class SyncXdriveVehicles extends Command
         }
 
         // ------------------------------------------------------------------
-        // 8. Delete orphaned EMR vehicles no longer in any group
+        // 8. Delete orphaned Xdrive vehicles no longer in any group
         // ------------------------------------------------------------------
         if (! $pricesOnly && ! empty($syncedVehicleIds)) {
             $orphaned = Vehicle::where('description', 'LIKE', '%[Xdrive-GROUP-ID:%')
@@ -539,7 +545,7 @@ class SyncXdriveVehicles extends Command
 
         $summaryPath = storage_path('app/xdrive_sync_summary.txt');
         $summaryText = sprintf(
-            "EMR Sync Summary\n=================\nDate: %s\nStations with prices: %d\nVehicles with prices: %d\n",
+            "Xdrive Sync Summary\n=================\nDate: %s\nStations with prices: %d\nVehicles with prices: %d\n",
             now()->toDateTimeString(),
             count($stationPrices),
             $totalVehiclesWithPrice
@@ -772,7 +778,7 @@ class SyncXdriveVehicles extends Command
 
         // Derive filename from URL extension first, fallback to mime-type later
         $extension = pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = 'emr_' . Str::slug($groupId) . '.' . $extension;
+        $filename = 'xdrive_' . Str::slug($groupId) . '.' . $extension;
         $directory = public_path('img/vehicles');
         $fullPath = $directory . DIRECTORY_SEPARATOR . $filename;
 
@@ -786,7 +792,7 @@ class SyncXdriveVehicles extends Command
             $response = Http::timeout(15)->withOptions(['verify' => false])->get($url);
 
             if (! $response->successful()) {
-                Log::warning("EMR image download failed (HTTP {$response->status()})", ['url' => $url]);
+                Log::warning("Xdrive image download failed (HTTP {$response->status()})", ['url' => $url]);
                 $this->imageCache[$cacheKey] = null;
                 return null;
             }
@@ -795,7 +801,7 @@ class SyncXdriveVehicles extends Command
             $body = $response->body();
 
             if (! str_starts_with($contentType, 'image/')) {
-                Log::warning("EMR resolved URL did not return an image", [
+                Log::warning("Xdrive resolved URL did not return an image", [
                     'url' => $url,
                     'content_type' => $contentType,
                 ]);
@@ -810,7 +816,7 @@ class SyncXdriveVehicles extends Command
                 $extension = $extensions[0];
             }
 
-            $filename = 'emr_' . Str::slug($groupId) . '.' . $extension;
+            $filename = 'xdrive_' . Str::slug($groupId) . '.' . $extension;
             $directory = public_path('img/vehicles');
 
             if (! is_dir($directory)) {
@@ -824,7 +830,7 @@ class SyncXdriveVehicles extends Command
             $this->imageCache[$cacheKey] = $filename;
             return $filename;
         } catch (\Exception $e) {
-            Log::warning("EMR image download exception", [
+            Log::warning("Xdrive image download exception", [
                 'url' => $url,
                 'error' => $e->getMessage(),
             ]);
