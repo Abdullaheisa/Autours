@@ -13,36 +13,42 @@
   src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsC57ZdgA.ttf) format('truetype');
   font-weight: 400;
   font-display: swap;
+unicode-range: U+0000-002F, U+003A-FFFD;
 }
 @font-face {
   font-family: 'HubotSans';
   src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsC1bZdgA.ttf) format('truetype');
   font-weight: 500;
   font-display: swap;
+unicode-range: U+0000-002F, U+003A-FFFD;
 }
 @font-face {
   font-family: 'HubotSans';
   src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCObFdgA.ttf) format('truetype');
   font-weight: 600;
   font-display: swap;
+unicode-range: U+0000-002F, U+003A-FFFD;
 }
 @font-face {
   font-family: 'HubotSans';
   src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCALFdgA.ttf) format('truetype');
   font-weight: 700;
   font-display: swap;
+unicode-range: U+0000-002F, U+003A-FFFD;
 }
 @font-face {
   font-family: 'HubotSans';
   src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCZ7FdgA.ttf) format('truetype');
   font-weight: 800;
   font-display: swap;
+unicode-range: U+0000-002F, U+003A-FFFD;
 }
 @font-face {
   font-family: 'HubotSans';
   src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCTrFdgA.ttf) format('truetype');
   font-weight: 900;
   font-display: swap;
+unicode-range: U+0000-002F, U+003A-FFFD;
 }
 
 /* 🔢 Tajawal - للأرقام فقط عبر unicode-range */
