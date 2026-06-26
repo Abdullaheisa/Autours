@@ -26,16 +26,6 @@ class DashboardController extends Controller
             }
             $supplierId = $user->id;
 
-            // Write database dump to schema_dump.json on every dashboard request
-            try {
-                file_put_contents(public_path('schema_dump.json'), json_encode([
-                    'vehicles' => Vehicle::get(['id', 'name', 'supplier', 'activation'])->toArray(),
-                    'users' => User::get(['id', 'name', 'email', 'role'])->toArray(),
-                    'rentals' => Rental::get(['id', 'supplier_id', 'vehicle_id', 'price', 'supplier_price', 'order_status'])->toArray()
-                ], JSON_PRETTY_PRINT));
-            } catch (\Exception $dumpEx) {
-                // ignore
-            }
 
             // Real Supplier Stats
             $totalRentals = Rental::where('supplier_id', $supplierId)->count();

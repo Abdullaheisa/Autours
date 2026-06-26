@@ -8,15 +8,16 @@ import { useState, useEffect } from "react";
 import { dashboardApi } from "@/services/api";
 import { companies, recentBookings, vehiclesPhotos } from "@/lib/data";
 
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+
 const LOGGED_IN_COMPANY = "MAHD Rent";
 
 export default function CompanyDashboardOverview() {
   const [statsData, setStatsData] = useState<any>(null);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    // Trigger schema dump and db info generation on backend
-    fetch('/api/backend/test_schema.php').catch(() => {});
-
     dashboardApi.getSupplier().then((res: any) => {
       const charts = res?.data || {};
       
@@ -78,7 +79,7 @@ export default function CompanyDashboardOverview() {
       },
       { 
         label: "My Vehicles", 
-        value: data.debug_total_vehicles_in_db|| 0,
+        value: data.totalVehicles || 0,
         icon: <Car size={20} />, 
         change: "+0", 
         trend: "up" as const, 
@@ -97,6 +98,20 @@ export default function CompanyDashboardOverview() {
 
   return (
     <div className="space-y-6">
+      {user && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Welcome back, {user.name || "Partner"}!</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Logged in as: <span className="font-semibold text-primary-600">{user.email}</span> (Role: {user.role})
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wide">
+            {user.role} Account
+          </span>
+        </div>
+      )}
+
       <StatsGrid stats={companyStats} />
       
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

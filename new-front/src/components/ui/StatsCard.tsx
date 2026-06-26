@@ -36,7 +36,7 @@ export default function StatsCard({ label, value, icon, change, trend = "up", co
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2 mb-0.5 truncate">
-            {Number.isNaN(Number(value)) ? 0 : value}
+            {value !== undefined && value !== null ? value : 0}
           </h3>
           <div className="flex items-center gap-2">
             <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider truncate">{label}</p>

@@ -28,7 +28,7 @@ export function CompanyRecentBookingsTable({ bookings }: { bookings?: any[] }) {
         status: mapStatus(b.order_status),
       }));
     }
-    return recentBookings.filter(b => b.company === LOGGED_IN_COMPANY);
+    return [];
   }, [bookings]);
 
   const statusConfig: Record<string, { label: string; color: string; bgColor: string; icon: any }> = {
@@ -119,7 +119,8 @@ export function CompanyMonthlyBookingsChart({ data }: { data?: any }) {
         };
       });
     }
-    return monthlyBookings.map(d => ({ ...d, bookings: Math.floor(d.bookings * 0.15) }));
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return monthNames.map(name => ({ month: name, bookings: 0 }));
   }, [data]);
 
   return (
@@ -162,15 +163,16 @@ export function CompanyVehicleCards({ vehicles }: { vehicles?: any[] }) {
         available: v.activation ? "Available" : "Unavailable",
       }));
     }
-    return vehiclesPhotos.slice(0, 4).map(v => ({
-      id: v.id,
-      name: v.name,
-      category: v.category,
-      image: v.image,
-      price: 45,
-      available: "Available"
-    }));
+    return [];
   }, [vehicles]);
+
+  if (displayVehicles.length === 0) {
+    return (
+      <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 shadow-sm text-gray-400 text-sm font-medium">
+        No vehicles found.
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
