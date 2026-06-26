@@ -27,9 +27,9 @@ const config: Config = {
              },
       fontFamily: {
         // 🔢 TajawalNumbers للأرقام (unicode-range) | HubotSans لكل النصوص | Tajawal fallback للعربي
-        sans: ["TajawalNumbers", "HubotSans", "var(--font-tajawal)", "system-ui", "sans-serif"],
-        title: ["TajawalNumbers", "HubotSans", "var(--font-tajawal)", "system-ui", "sans-serif"],
-        body: ["TajawalNumbers", "HubotSans", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        sans: ["HubotSans","TajawalNumbers", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        title: ["HubotSans","TajawalNumbers", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        body: ["HubotSans","TajawalNumbers", "var(--font-tajawal)", "system-ui", "sans-serif"],
         arabic: ["var(--font-tajawal)", "system-ui", "sans-serif"],
       },
     },
