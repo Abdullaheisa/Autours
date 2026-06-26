@@ -73,6 +73,24 @@ export default function BackgroundSettingsSection() {
     }
   };
 
+  const handleCreateBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const formData = new FormData();
+        formData.append("image", file);
+        setIsLoading(true);
+        await bannerApi.create(formData);
+        toast.success("Custom banner created successfully!");
+        loadData();
+      } catch (err: any) {
+        console.error(err);
+        toast.error(err.message || "Failed to create custom banner!");
+        setIsLoading(false);
+      }
+    }
+  };
+
   const handleUpdateBanner = async (e: React.ChangeEvent<HTMLInputElement>, bannerId: number) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -164,6 +182,16 @@ export default function BackgroundSettingsSection() {
           <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Homepage Section Backgrounds</h3>
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-gray-900 font-semibold rounded-xl text-xs cursor-pointer transition-all shadow-sm">
+                <Plus size={14} />
+                Add Banner
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleCreateBanner}
+                />
+              </label>
             </div>
             <p className="text-xs text-gray-500 mb-6">
               Each section below controls a specific background image shown on the homepage. Click &ldquo;Change Image&rdquo; to upload a new photo.
@@ -235,6 +263,16 @@ export default function BackgroundSettingsSection() {
                         >
                           {banner.visible ? <Eye size={18} /> : <EyeOff size={18} />}
                         </button>
+                        {/* Delete Button (Only for custom banners) */}
+                        {!['banner', 'our_fleet', 'be_supplier', 'offers', 'login', 'manage_booking'].includes(banner.sectionKey || '') && (
+                          <button
+                            onClick={() => handleDeleteBanner(banner.id)}
+                            className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all"
+                            title="Delete custom banner"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

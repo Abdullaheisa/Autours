@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { X, HelpCircle, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 interface FAQProps {
   data?: { q: string; a: string }[];
@@ -139,7 +141,21 @@ This coverage provides financial protection for medical expenses resulting from 
 
   const faqs = data || defaultFaqs;
 
+  const { currentLanguage } = useSelector((state: RootState) => state.ui);
+  const isRTL = currentLanguage === 'ar';
+
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const visibleFaqs = (isMobile && !showAll) ? faqs.slice(0, 3) : faqs;
 
   const openModal = (index: number) => {
     setOpenIndex(index);
@@ -183,37 +199,51 @@ This coverage provides financial protection for medical expenses resulting from 
 
         {/* FAQ Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {faqs.map((faq, i) => (
-            <motion.div 
-              key={i}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.04, duration: 0.4 }}
-              whileHover={{ y: -4, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => openModal(i)}
-              className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-400/20 border border-gray-100 cursor-pointer hover:shadow-xl hover:shadow-gray-400/30 transition-shadow group"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-xs font-black text-gray-900 shrink-0">
-                      {i + 1}
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Question</span>
+          {visibleFaqs.map((faq) => {
+            const originalIndex = faqs.indexOf(faq);
+            return (
+              <motion.div 
+                key={originalIndex}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: originalIndex * 0.04, duration: 0.4 }}
+                whileHover={{ y: -4, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => openModal(originalIndex)}
+                className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-400/20 border border-gray-100 cursor-pointer hover:shadow-xl hover:shadow-gray-400/30 transition-shadow group"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-xs font-black text-gray-900 shrink-0">
+                        {originalIndex + 1}
+                      </span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Question</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-gray-900 leading-snug group-hover:text-primary-600 transition-colors">
+                      {faq.q}
+                    </h4>
                   </div>
-                  <h4 className="text-sm font-bold text-gray-900 leading-snug group-hover:text-primary-600 transition-colors">
-                    {faq.q}
-                  </h4>
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-primary transition-colors shrink-0 mt-1">
+                    <ChevronRight size={16} className="text-gray-500 group-hover:text-gray-900 transition-colors" />
+                  </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-primary transition-colors shrink-0 mt-1">
-                  <ChevronRight size={16} className="text-gray-500 group-hover:text-gray-900 transition-colors" />
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
+
+        {isMobile && faqs.length > 3 && (
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-900 font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 border border-gray-100 flex items-center gap-2"
+            >
+              {showAll ? (isRTL ? 'عرض أقل' : 'Show Less') : (isRTL ? 'عرض المزيد' : 'Show More')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal */}

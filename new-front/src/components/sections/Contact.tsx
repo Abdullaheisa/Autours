@@ -118,7 +118,7 @@ export default function Contact() {
                         على نص الـ value هنا أيضًا، لضمان استقرار التصميم على الموبايل 
                         مع الحفاظ على التنسيقات الأخرى.
                       */}
-                      <p className="text-sm md:text-xl font-black text-gray-900 group-hover:text-primary transition-colors truncate">
+                      <p className="text-xs sm:text-lg md:text-xl font-black text-gray-900 group-hover:text-primary transition-colors break-all sm:break-words">
                         {item.value}
                       </p>
                     </div>

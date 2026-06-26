@@ -133,10 +133,10 @@ export default function WhyAutoursPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ duration: 0.6, delay: (idx % 3) * 0.1 }}
-                    className={`bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden hover:shadow-[0_20px_40px_rgb(249,214,2,0.15)] hover:border-primary/50 transition-all duration-300 group flex flex-col h-full ${isLastAndOdd ? 'md:col-span-2 lg:col-span-1 lg:col-start-2' : ''}`}
+                    className={`bg-white rounded-[2rem] border border-gray-200 shadow-sm overflow-hidden hover:shadow-[0_20px_40px_rgb(249,214,2,0.15)] hover:border-primary/50 transition-all duration-300 group flex flex-col h-full ${isLastAndOdd ? 'md:col-span-2 lg:col-span-1 lg:col-start-2' : ''}`}
                   >
-                    {/* Image Header with soft background */}
-                    <div className="w-full bg-gradient-to-b from-gray-50 to-white p-8 sm:p-10 flex items-center justify-center border-b border-gray-50 h-56 sm:h-64 group-hover:bg-primary-50/50 transition-colors duration-500">
+                    {/* Image Header with pure white background to match image exactly */}
+                    <div className="w-full bg-white p-8 sm:p-10 flex items-center justify-center h-56 sm:h-64">
                       <img
                         src={point.icon}
                         alt={point.title}
@@ -145,7 +145,7 @@ export default function WhyAutoursPage() {
                     </div>
                     
                     {/* Text Body */}
-                    <div className="p-8 sm:p-10 flex flex-col flex-grow">
+                    <div className="px-8 pb-8 sm:px-10 sm:pb-10 pt-2 flex flex-col flex-grow">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-1.5 h-6 bg-primary rounded-full" />
                         <h3 className="text-xl sm:text-2xl font-black text-black tracking-tight">

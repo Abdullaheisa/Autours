@@ -64,7 +64,6 @@ export default function HomePage() {
         <SectionDivider />
         
         <DynamicBanners />
-        <SectionDivider />
         
         <FAQ />
         <SectionDivider />

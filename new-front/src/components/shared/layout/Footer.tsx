@@ -100,7 +100,7 @@ export default function Footer() {
               transition={{ delay: idx * 0.05 }}
               className="space-y-2"
             >
-              <h2 className="text-base font-black text-black">
+              <h2 className="text-sm sm:text-base font-black text-black">
                 {category}
               </h2>
               <ul className="space-y-0.5">
@@ -109,7 +109,7 @@ export default function Footer() {
                     <Link 
                       href={link.href}
                       onClick={(e) => scrollToSection(e, link.href)}
-                      className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
+                      className="text-[13px] sm:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                     >
                       {link.name}
                     </Link>
@@ -126,7 +126,7 @@ export default function Footer() {
             transition={{ delay: 0.15 }}
             className="space-y-2 min-h-[160px]" // Fix CLS by reserving space
           >
-            <h2 className="text-base font-black text-black">
+            <h2 className="text-sm sm:text-base font-black text-black">
               Location
             </h2>
             <ul className="space-y-0.5">
@@ -134,7 +134,7 @@ export default function Footer() {
                 <li key={country.id}>
                   <Link 
                     href={`/countries/${country.id}`}
-                    className="text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
+                    className="text-[13px] sm:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                   >
                     {country.name} Car Rental
                   </Link>
@@ -145,7 +145,7 @@ export default function Footer() {
               <button 
                 onClick={() => setShowAll(!showAll)}
                 aria-expanded={showAll}
-                className="text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block focus:outline-none focus:underline min-h-[20px]"
+                className="text-[11px] sm:text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block focus:outline-none focus:underline min-h-[20px]"
               >
                 {showAll ? '- Show Less' : `+ Show ${countries.length - 5} More`}
               </button>
@@ -155,48 +155,105 @@ export default function Footer() {
 
         <div className="border-t-2 border-black mb-4" />
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 w-full">
           
-          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 w-full md:w-auto">
-            <p className="text-[13px] font-bold text-black">
+          {/* Mobile Layout (Shown only on mobile) */}
+          <div className="flex md:hidden flex-col gap-3 w-full">
+            {/* Row 1: Socials (left) and Payment Methods (right) */}
+            <div className="flex flex-row justify-between items-center w-full">
+              {/* Social Icons */}
+              <div className="flex gap-1.5">
+                {[
+                  { name: 'Facebook', icon: <Facebook size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.facebook },
+                  { name: 'Instagram', icon: <Instagram size={16} aria-hidden="true" />, href: siteConfig.socials.instagram },
+                  { name: 'LinkedIn', icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.linkedin },
+                  { name: 'X', icon: <XIcon size={14} />, href: siteConfig.socials.x },
+                  { name: 'Email', icon: <Mail size={16} aria-hidden="true" />, href: emailHref }
+                ].map((social, i) => (
+                  <motion.a 
+                    key={i} 
+                    href={social.href}
+                    target={social.name === 'Email' ? undefined : '_blank'}
+                    rel={social.name === 'Email' ? undefined : 'noopener noreferrer'}
+                    aria-label={`Follow us on ${social.name}`}
+                    whileHover={{ y: -2 }}
+                    className="w-7 h-7 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none"
+                  >
+                    {social.icon}
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* Payment Methods */}
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-black text-black">
+                  Payment Methods
+                </p>
+                <div className="flex items-center gap-1">
+                  <div className="h-5 w-8 rounded-sm flex items-center justify-center p-0.5 bg-white shadow-sm relative border border-black/5">
+                    <Image src={assets.payment.visa} alt="Visa Accepted" fill sizes="44px" quality={60} loading="lazy" className="object-contain p-0.5" />
+                  </div>
+                  <div className="h-5 w-8 rounded-sm flex items-center justify-center p-0.5 bg-white shadow-sm relative border border-black/5">
+                    <Image src={assets.payment.mastercard} alt="Mastercard Accepted" fill sizes="44px" quality={60} loading="lazy" className="object-contain p-0.5" />
+                  </div>
+                  <div className="h-5 w-5 rounded-sm flex items-center justify-center bg-white shadow-sm relative border border-black/5 overflow-hidden">
+                    <Image src={assets.payment.knet} alt="KNET Accepted" fill sizes="44px" quality={60} loading="lazy" className="object-contain p-0" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2: Copyright (Centered underneath) */}
+            <p className="text-xs font-bold text-black text-center mt-1">
               Copyright © 2026.
             </p>
-            <div className="flex gap-2">
-              {[
-                { name: 'Facebook', icon: <Facebook size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.facebook },
-                { name: 'Instagram', icon: <Instagram size={16} aria-hidden="true" />, href: siteConfig.socials.instagram },
-                { name: 'LinkedIn', icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.linkedin },
-                { name: 'X', icon: <XIcon size={14} />, href: siteConfig.socials.x },
-                { name: 'Email', icon: <Mail size={16} aria-hidden="true" />, href: emailHref }
-              ].map((social, i) => (
-                <motion.a 
-                  key={i} 
-                  href={social.href}
-                  target={social.name === 'Email' ? undefined : '_blank'}
-                  rel={social.name === 'Email' ? undefined : 'noopener noreferrer'}
-                  aria-label={`Follow us on ${social.name}`} // 🚀 التأكيد على تواجد الـ Aria-label
-                  whileHover={{ y: -2 }}
-                  className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none"
-                >
-                  {social.icon}
-                </motion.a>
-              ))}
-            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <p className="text-[13px] font-black text-black">
-              Payment Methods
-            </p>
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm relative">
-                <Image src={assets.payment.visa} alt="Visa Accepted" fill sizes="48px" quality={60} loading="lazy" className="object-contain p-1" />
+          {/* Desktop Layout (Shown only on md screens and up) */}
+          <div className="hidden md:flex flex-row justify-between items-center w-full">
+            {/* Left: Copyright & Socials */}
+            <div className="flex flex-row items-center gap-6">
+              <p className="text-[13px] font-bold text-black whitespace-nowrap">
+                Copyright © 2026.
+              </p>
+              <div className="flex gap-2">
+                {[
+                  { name: 'Facebook', icon: <Facebook size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.facebook },
+                  { name: 'Instagram', icon: <Instagram size={16} aria-hidden="true" />, href: siteConfig.socials.instagram },
+                  { name: 'LinkedIn', icon: <Linkedin size={16} fill="currentColor" strokeWidth={0} aria-hidden="true" />, href: siteConfig.socials.linkedin },
+                  { name: 'X', icon: <XIcon size={14} />, href: siteConfig.socials.x },
+                  { name: 'Email', icon: <Mail size={16} aria-hidden="true" />, href: emailHref }
+                ].map((social, i) => (
+                  <motion.a 
+                    key={i} 
+                    href={social.href}
+                    target={social.name === 'Email' ? undefined : '_blank'}
+                    rel={social.name === 'Email' ? undefined : 'noopener noreferrer'}
+                    aria-label={`Follow us on ${social.name}`}
+                    whileHover={{ y: -2 }}
+                    className="w-8 h-8 bg-black text-primary rounded flex items-center justify-center hover:bg-black/90 transition-all shadow-sm focus:outline-none"
+                  >
+                    {social.icon}
+                  </motion.a>
+                ))}
               </div>
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm relative">
-                <Image src={assets.payment.mastercard} alt="Mastercard Accepted" fill sizes="48px" quality={60} loading="lazy" className="object-contain p-1" />
-              </div>
-              <div className="h-8 w-12 rounded-sm flex items-center justify-center p-0.5 overflow-hidden bg-white shadow-sm relative">
-                <Image src={assets.payment.knet} alt="KNET Accepted" fill sizes="48px" quality={60} loading="lazy" className="object-contain p-0.5" />
+            </div>
+
+            {/* Right: Payment Methods */}
+            <div className="flex items-center gap-4 justify-end">
+              <p className="text-[13px] font-black text-black">
+                Payment Methods
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="h-7 sm:h-8 w-11 sm:w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm relative border border-black/5">
+                  <Image src={assets.payment.visa} alt="Visa Accepted" fill sizes="48px" className="object-contain p-1" />
+                </div>
+                <div className="h-7 sm:h-8 w-11 sm:w-12 rounded-sm flex items-center justify-center p-1 bg-white shadow-sm relative border border-black/5">
+                  <Image src={assets.payment.mastercard} alt="Mastercard Accepted" fill sizes="48px" className="object-contain p-1" />
+                </div>
+                <div className="h-7 sm:h-8 w-7 sm:w-8 rounded-sm flex items-center justify-center bg-white shadow-sm relative border border-black/5 overflow-hidden">
+                  <Image src={assets.payment.knet} alt="KNET Accepted" fill sizes="48px" className="object-contain p-0" />
+                </div>
               </div>
             </div>
           </div>

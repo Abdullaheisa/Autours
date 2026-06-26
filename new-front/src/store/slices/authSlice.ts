@@ -73,10 +73,12 @@ export const loginThunk = createAsyncThunk(
         }
       }
 
-      // 2. Destroy the Old Token and Session completely from local storage and cookies
+      // 2. Destroy the Old Token and Session from local storage and cookies
       if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
         
         // Clear all cookies
         const cookies = document.cookie.split(";");
@@ -207,8 +209,10 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
       if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
       }
     },
     updateUser: (state, action: PayloadAction<User>) => {
