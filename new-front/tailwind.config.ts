@@ -22,6 +22,9 @@ const config: Config = {
         "primary-900": "var(--primary-900)",
         "secondary": "var(--secondary-color)",
       },
+ screens: {
+        'lg': '1080px', 
+             },
       fontFamily: {
         // 🔢 TajawalNumbers للأرقام (unicode-range) | HubotSans لكل النصوص | Tajawal fallback للعربي
         sans: ["TajawalNumbers", "HubotSans", "var(--font-tajawal)", "system-ui", "sans-serif"],
