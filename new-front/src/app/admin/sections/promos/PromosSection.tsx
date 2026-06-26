@@ -302,7 +302,12 @@ export default function PromosSection() {
         </div>
       ) : (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden mb-10">
-          <table className="w-full">
+          {/* Horizontal scroll wrapper - scrollbar appears at top via column-reverse */}
+          <div
+            className="overflow-x-auto"
+            style={{ display: 'flex', flexDirection: 'column-reverse' }}
+          >
+          <table className="w-full min-w-[700px]">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-150">
                 <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Promo Badge</th>
@@ -410,6 +415,7 @@ export default function PromosSection() {
               })}
             </tbody>
           </table>
+          </div>
 
           {filteredPromos.length > 0 && totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-150 px-6 py-4 bg-gray-50/30">

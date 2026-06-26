@@ -11,6 +11,7 @@ interface StatsCardProps {
   change?: string;
   trend?: "up" | "down";
   color: "blue" | "emerald" | "amber" | "purple" | "red" | "cyan" | "pink" | "orange";
+  className?: string;
 }
 
 const colorMap = {
@@ -24,21 +25,21 @@ const colorMap = {
   orange: { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200" },
 };
 
-export default function StatsCard({ label, value, icon, change, trend = "up", color }: StatsCardProps) {
+export default function StatsCard({ label, value, icon, change, trend = "up", color, className }: StatsCardProps) {
   const colors = colorMap[color];
 
   return (
-    <Card className={`p-4 border ${colors.border}`} hover={false}>
-      <div className="flex items-center gap-3">
-        <div className={`p-2.5 rounded-xl ${colors.bg}`}>
+    <Card className={`p-3 sm:p-4 border ${colors.border} ${className || ""}`} hover={false}>
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className={`p-2 sm:p-2.5 rounded-xl ${colors.bg}`}>
           <div className={colors.text}>{icon}</div>
         </div>
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold text-gray-900 mt-4 mb-1">
-          {Number.isNaN(Number(value)) ? 0 : value}
-        </h3>  <div className="flex items-center gap-2">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</p>
-            
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2 mb-0.5 truncate">
+            {Number.isNaN(Number(value)) ? 0 : value}
+          </h3>
+          <div className="flex items-center gap-2">
+            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider truncate">{label}</p>
           </div>
         </div>
       </div>

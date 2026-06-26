@@ -119,10 +119,10 @@ export default function VehiclesPhotosPage() {
         showAction={false}
       />
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         <StatsCard label="Total Vehicles" value={totalVehicles} icon={<Car size={20} />} color="blue" />
         <StatsCard label="With Photos" value={withPhotos} icon={<ImageIcon size={20} />} color="emerald" />
-        <StatsCard label="Without Photos" value={withoutPhotos} icon={<ImageIcon size={20} />} color="amber" />
+        <StatsCard className="col-span-2 sm:col-span-1" label="Without Photos" value={withoutPhotos} icon={<ImageIcon size={20} />} color="amber" />
       </div>
 
       <VehiclePhotoUploadForm 

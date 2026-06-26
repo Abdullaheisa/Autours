@@ -174,66 +174,74 @@ export default function SubscribersSection() {
         </div>
       </div>
 
+
       {/* Subscribers Table */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-gray-100 bg-gray-50/30">
-          <div className="col-span-5 text-sm font-medium text-gray-500">Email</div>
-          <div className="col-span-3 text-sm font-medium text-gray-500">Country</div>
-          <div className="col-span-2 text-sm font-medium text-gray-500">Type</div>
-          <div className="col-span-2 text-sm font-medium text-gray-500 text-right">Action</div>
+        {/* Table with top scrollbar via flex-col-reverse trick */}
+        <div
+          className="overflow-x-auto"
+          style={{ display: 'flex', flexDirection: 'column-reverse' }}
+        >
+          <table className="w-full min-w-[560px]" style={{ tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '40%' }} />
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '16%' }} />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/30">
+                <th className="text-left text-sm font-medium text-gray-500 px-5 py-3">Email</th>
+                <th className="text-left text-sm font-medium text-gray-500 px-5 py-3">Country</th>
+                <th className="text-left text-sm font-medium text-gray-500 px-5 py-3">Type</th>
+                <th className="text-right text-sm font-medium text-gray-500 px-5 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4}>
+                    <div className="flex items-center justify-center py-20">
+                      <span className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedItems.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-5 py-8 text-center">
+                    <p className="text-sm text-gray-500">No subscribers found</p>
+                  </td>
+                </tr>
+              ) : (
+                paginatedItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-5 py-3">
+                      <p className="text-sm text-gray-900 truncate">{item.email}</p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <p className="text-sm text-gray-600">{item.country || "-"}</p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                        item.type === 'supplier' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                      }`}>
+                        {item.type === 'supplier' ? 'Supplier Request' : 'Newsletter'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-400 text-white hover:bg-red-500 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {/* Table Body */}
-        {isLoading ? (
-             <div className="flex items-center justify-center py-20">
-               <span className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-             </div>
-        ) : (
-        <div className="divide-y divide-gray-100">
-          {paginatedItems.map((item) => (
-            <div
-              key={item.id}
-              className="grid grid-cols-12 gap-4 px-5 py-3 hover:bg-gray-50/50 transition-colors items-center"
-            >
-              {/* Email/Name Column */}
-              <div className="col-span-5">
-                <p className="text-sm text-gray-900">{item.email}</p>
-              </div>
-
-              {/* Country Column */}
-              <div className="col-span-3">
-                <p className="text-sm text-gray-600">{item.country || "-"}</p>
-              </div>
-
-              {/* Type Column */}
-              <div className="col-span-2">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                  item.type === 'supplier' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                }`}>
-                  {item.type === 'supplier' ? 'Supplier Request' : 'Newsletter'}
-                </span>
-              </div>
-
-              {/* Action Column */}
-              <div className="col-span-2 flex justify-end">
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-400 text-white hover:bg-red-500 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        )}
-
-        {!isLoading && filteredItems.length === 0 && (
-          <div className="px-5 py-8 text-center">
-            <p className="text-sm text-gray-500">No subscribers found</p>
-          </div>
-        )}
 
         {!isLoading && filteredItems.length > 0 && (
           <div className="border-t border-gray-100 p-4">

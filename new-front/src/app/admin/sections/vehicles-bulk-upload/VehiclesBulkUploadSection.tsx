@@ -175,10 +175,10 @@ export default function BulkVehicleUploadPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-6">
         <StatsCard label="Total Uploaded" value={uploadCount} icon={<Upload size={20} />} color="blue" />
         <StatsCard label="Valid Rows" value={validRows} icon={<FileCheck size={20} />} color="emerald" />
-        <StatsCard label="Errors" value={invalidRows} icon={<AlertTriangle size={20} />} color="red" />
+        <StatsCard className="col-span-2 sm:col-span-1" label="Errors" value={invalidRows} icon={<AlertTriangle size={20} />} color="red" />
       </div>
 
       {/* Download Template */}
