@@ -384,7 +384,7 @@ function BookingContent() {
       <div className="flex flex-col lg:flex-row gap-8 items-start">
 
         {/* ── LEFT SIDEBAR ────────────────────────────────────────────────────── */}
-        <aside className="w-full lg:w-[300px] shrink-0 space-y-5">
+        <aside className="w-full lg:w-[300px] shrink-0 space-y-5 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
           <div className="hidden lg:block">
             <SearchSummary hideEditButton={true} />
           </div>
@@ -424,7 +424,7 @@ function BookingContent() {
         </aside>
 
         {/* ── RIGHT CONTENT ───────────────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 space-y-6">
+        <div className="flex-1 min-w-0 space-y-6 w-full max-w-3xl lg:max-w-none mx-auto lg:mx-0">
 
           {/* Desktop Car Card */}
           <div className="hidden lg:block">
@@ -449,11 +449,11 @@ function BookingContent() {
               <p className="text-sm text-gray-500 mt-1 ml-11">Complete your details to book this vehicle</p>
             </div>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               {/* Gender + Full Name */}
-              <div className="flex gap-3">
-                <div className="w-28 shrink-0">
+              <div className="flex flex-col sm:flex-row gap-3 md:col-span-1">
+                <div className="w-full sm:w-28 shrink-0">
                   <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Title</label>
                   <div className="relative">
                     <select
@@ -483,11 +483,11 @@ function BookingContent() {
               </div>
 
               {/* Phone Code + Phone */}
-              <div>
+              <div className="md:col-span-1">
                 <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   {/* Code Dropdown */}
-                  <div className="relative w-28 shrink-0">
+                  <div className="relative w-full sm:w-28 shrink-0">
                     <select
                       value={mobileCode}
                       onChange={(e) => setMobileCode(e.target.value)}
@@ -512,7 +512,7 @@ function BookingContent() {
               </div>
 
               {/* Country */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Country</label>
                 <div className="relative">
                   <button
@@ -546,7 +546,7 @@ function BookingContent() {
               </div>
 
               {/* Email + Password */}
-              <div className={isAuthenticated ? "grid grid-cols-1" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
+              <div className={`md:col-span-2 grid grid-cols-1 ${isAuthenticated ? "grid-cols-1" : "md:grid-cols-2"} gap-4`}>
                 <div>
                   <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
                   <div className="relative">
@@ -579,7 +579,7 @@ function BookingContent() {
               </div>
 
               {/* ── 3 Checkboxes (same as legacy) ────────────────────────────── */}
-              <div className="pt-4 border-t border-gray-100 space-y-4">
+              <div className="pt-4 border-t border-gray-100 space-y-4 md:col-span-2">
 
                 <CheckboxItem
                   checked={rememberMe}
@@ -608,7 +608,7 @@ function BookingContent() {
               </div>
 
               {/* ── Submit Button ─────────────────────────────────────────────── */}
-              <div className="pt-2">
+              <div className="pt-2 md:col-span-2">
                 <button
                   onClick={handleBook}
                   disabled={isSubmitting}
