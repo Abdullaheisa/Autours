@@ -535,7 +535,7 @@ class SyncJimpisoftVehicles extends Command
             FILTER_VALIDATE_BOOLEAN
         );
         if (isset($this->specDefinitions['Transmission'])) {
-            $transValue = $autoTransmission ? 'Automatic Transmission' : 'Manual Transmission';
+            $transValue = $autoTransmission ? 'Automatic' : 'Manual';
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Transmission',

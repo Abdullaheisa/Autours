@@ -608,7 +608,7 @@ class SyncEmrVehicles extends Command
         // --- Transmission ---
         if (isset($this->specDefinitions['Transmission'])) {
             $transmission = (string) ($group['transmission'] ?? '');
-            $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : ($transmission ? $this->normalizeTransmission($transmission) : 'Manual Transmission');
+            $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : ($transmission ? $this->normalizeTransmission($transmission) : 'Manual');
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Transmission',
@@ -708,9 +708,9 @@ class SyncEmrVehicles extends Command
     {
         $lower = strtolower($value);
         if (str_contains($lower, 'otomatik') || str_contains($lower, 'automatic') || str_contains($lower, 'auto')) {
-            return 'Automatic Transmission';
+            return 'Automatic';
         }
-        return 'Manual Transmission';
+        return 'Manual';
     }
 
     /**

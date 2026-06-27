@@ -342,7 +342,7 @@ class SyncRentlyVehicles extends Command
         $sipp = (string) ($model['sipp'] ?? '');
 
         if (isset($this->specDefinitions['Transmission'])) {
-            $val = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : (($model['transmissionType'] ?? '') === 'Automatic' ? 'Automatic Transmission' : 'Manual Transmission');
+            $val = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : (($model['transmissionType'] ?? '') === 'Automatic' ? 'Automatic' : 'Manual');
             $records[] = ['vehicle_id' => $vehicle->id, 'name' => 'Transmission', 'value' => $val, 'icon' => $this->specDefinitions['Transmission']['icon'], 'created_at' => $now, 'updated_at' => $now];
         }
 

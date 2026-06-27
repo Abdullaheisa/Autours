@@ -626,7 +626,7 @@ class SyncXdriveVehicles extends Command
         // --- Transmission ---
         if (isset($this->specDefinitions['Transmission'])) {
             $transmission = (string) ($group['transmission'] ?? '');
-            $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : ($transmission ? $this->normalizeTransmission($transmission) : 'Manual Transmission');
+            $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : ($transmission ? $this->normalizeTransmission($transmission) : 'Manual');
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Transmission',
@@ -725,10 +725,10 @@ class SyncXdriveVehicles extends Command
     private function normalizeTransmission(string $value): string
     {
         $lower = strtolower($value);
-        if (str_contains($lower, 'otomatik') || str_contains($lower, 'automatic') || str_contains($lower, 'auto')) {
-            return 'Automatic Transmission';
+        if (str_contains($lower, 'auto') || str_contains($lower, 'automtic')) {
+            return 'Automatic';
         }
-        return 'Manual Transmission';
+        return 'Manual';
     }
 
     /**

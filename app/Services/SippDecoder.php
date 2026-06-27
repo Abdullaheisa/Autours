@@ -222,15 +222,15 @@ class SippDecoder
     public static function getLocalTransmissionName(string $sipp): string
     {
         if (strlen($sipp) < 3) {
-            return 'Manual Transmission';
+            return 'Manual';
         }
 
         $char = strtoupper($sipp[2]);
 
         return match ($char) {
-            'A', 'B', 'D' => 'Automatic Transmission',
-            'M', 'N', 'C' => 'Manual Transmission',
-            default => 'Manual Transmission',
+            'A', 'B', 'D' => 'Automatic',
+            'M', 'N', 'C' => 'Manual',
+            default => 'Manual',
         };
     }
 
