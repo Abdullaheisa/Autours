@@ -217,20 +217,21 @@ export default function DynamicBanners() {
             )}
 
             {key !== 'be_supplier' && key !== 'offers' && (
-              <motion.div 
-                whileHover="hover"
-                className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-center cursor-default"
-              >
-                <Image 
-                  src={resolveImageUrl(imagePath, '/img/offers.webp')} 
-                  alt="Dynamic Custom Banner"
-                  fill
-                  sizes="100vw"
-                  quality={90}
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-black/10 transition-opacity duration-700 hover:opacity-20 z-10 pointer-events-none" />
-              </motion.div>
+             <motion.div 
+  whileHover="hover"
+  className="relative w-full overflow-hidden flex items-center justify-center cursor-default"
+  style={{ aspectRatio: '1600 / 500' }} 
+>
+  <Image 
+    src={resolveImageUrl(imagePath, '/img/offers.webp')} 
+    alt="Dynamic Custom Banner"
+    fill
+    priority 
+    sizes="100vw"
+    quality={100} 
+    className="object-cover md:object-fill" 
+</motion.div>
+
             )}
 
             <SectionDivider />
