@@ -23,8 +23,6 @@ trait NormalizesVehicleNames
         // Model codes (Honda, Subaru, Toyota, MG, Mitsubishi, Nissan, Mazda)
         'CRV', 'HRV', 'BRV', 'WRX', 'STI', 'RAV4', 'CR-V', 'HR-V', 'C-HR', 'BR-V',
         'ZS', 'RX', 'ASX', 'XV', 'NV', 'CX', 'RVR',
-        // Roman numerals
-        'II', 'III', 'IV', 'VI',
     ];
 
     /**
@@ -49,6 +47,10 @@ trait NormalizesVehicleNames
         // Matches whole words like MANUAL (case-insensitive), but NOT the standalone "MAN" word
         // to avoid matching brand names like "MAN" trucks
         $name = preg_replace('/\bMANUAL\b/i', 'Manual', $name);
+
+        // Remove Roman numerals indicating generation (e.g. II, III, IV, VI)
+        // Only uppercase to avoid matching partial words if boundaries fail, and exclude standalone V which is in BR-V / HR-V
+        $name = preg_replace('/\b(?:II|III|IV|VI|VII|VIII)\b/', '', $name);
 
         // Remove extra spaces that might have been left over or duplicated
         $name = trim(preg_replace('/\s+/', ' ', $name));
