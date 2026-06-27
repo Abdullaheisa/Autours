@@ -131,7 +131,6 @@ export default function ContestPopup() {
               alt="Contest Banner" 
               className="w-full h-full object-contain block animate-in fade-in duration-300"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
           </div>
         ) : (
           <div className="relative w-full bg-gradient-to-br from-gray-950 via-gray-900 to-amber-950 text-white py-10 px-8 text-center flex flex-col items-center justify-center border-b border-white/5 shrink-0">

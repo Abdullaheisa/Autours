@@ -137,10 +137,9 @@ export default function DynamicBanners() {
                   alt="Be Supplier Background"
                   fill
                   sizes="100vw"
-                  quality={75}
+                  quality={100}
                   className="object-contain w-full h-full"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10 pointer-events-none" />
 
                 <motion.div 
                   variants={carVariants}
@@ -193,10 +192,9 @@ export default function DynamicBanners() {
                   alt="Cinema Offers"
                   fill
                   sizes="100vw"
-                  quality={90}
+                  quality={100}
                   className="object-contain w-full h-full"
                 />
-                <div className="absolute inset-0 bg-black/20 transition-opacity duration-700 hover:opacity-30 z-10 pointer-events-none" />
 
                 <div className="absolute bottom-1 sm:bottom-4 left-1 sm:left-12 lg:left-20 z-20 w-full max-w-[150px] sm:max-w-xs md:max-w-md flex items-end pb-1 sm:pb-8 lg:pb-16 px-2 sm:px-10 lg:mr-10">
                   <motion.form 
