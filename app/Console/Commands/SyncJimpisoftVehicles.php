@@ -317,6 +317,7 @@ class SyncJimpisoftVehicles extends Command
                             'price' => $priceData['day_value'],
                             'week_price' => $priceData['week_price'],
                             'month_price' => $priceData['month_price'],
+                            'instant_confirmation' => 1,
                         ];
                         // Normalize supplier to current Jimpisoft user if it differs
                         if ($vehicle->supplier != $supplierUser->id) {
@@ -365,6 +366,7 @@ class SyncJimpisoftVehicles extends Command
                             'price' => $priceData['day_value'],
                             'week_price' => $priceData['week_price'],
                             'month_price' => $priceData['month_price'],
+                            'instant_confirmation' => 1,
                         ]);
 
                         \App\Models\Profit::create([

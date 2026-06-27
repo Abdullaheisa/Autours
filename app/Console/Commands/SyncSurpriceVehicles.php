@@ -363,6 +363,7 @@ class SyncSurpriceVehicles extends Command
                             'week_price' => $weekPrice,
                             'month_price' => $monthPrice,
                             'activation' => true,
+                            'instant_confirmation' => 1,
                         ];
                         if ($vehicle->supplier != $supplierUser->id) {
                             $updateData['supplier'] = $supplierUser->id;
@@ -398,6 +399,7 @@ class SyncSurpriceVehicles extends Command
                             'price' => $dayPrice,
                             'week_price' => $weekPrice,
                             'month_price' => $monthPrice,
+                            'instant_confirmation' => 1,
                         ]);
 
                         \App\Models\Profit::create([

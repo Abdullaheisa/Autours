@@ -387,6 +387,7 @@ class SyncEmrVehicles extends Command
                             'week_price' => $priceData['week_price'],
                             'month_price' => $priceData['month_price'],
                             'activation' => true,
+                            'instant_confirmation' => 1,
                         ];
                         if ($vehicle->supplier != $supplierUser->id) {
                             $updateData['supplier'] = $supplierUser->id;
@@ -416,6 +417,7 @@ class SyncEmrVehicles extends Command
                             'price' => $priceData['day_value'],
                             'week_price' => $priceData['week_price'],
                             'month_price' => $priceData['month_price'],
+                            'instant_confirmation' => 1,
                         ]);
 
                         // Create default profit record so vehicle shows up in search

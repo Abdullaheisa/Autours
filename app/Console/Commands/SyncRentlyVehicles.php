@@ -238,6 +238,7 @@ class SyncRentlyVehicles extends Command
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
                         'activation' => true,
+                        'instant_confirmation' => 1,
                     ]);
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
@@ -255,6 +256,7 @@ class SyncRentlyVehicles extends Command
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
+                        'instant_confirmation' => 1,
                     ]);
 
                     \App\Models\Profit::create([

@@ -163,6 +163,7 @@ class SyncRenteonVehicles extends Command
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
+                        'instant_confirmation' => 1,
                     ]);
                     $updated++;
                     continue;
@@ -187,6 +188,7 @@ class SyncRenteonVehicles extends Command
                     'price' => $dayPrice,
                     'week_price' => $weekPrice,
                     'month_price' => $monthPrice,
+                    'instant_confirmation' => 1,
                 ]);
 
                 \App\Models\Profit::create([
