@@ -40,7 +40,8 @@ class Vehicle extends Model
         'fuel_policy_id',
         'negotiation_status',
         'negotiation_notes',
-        'negotiation_priority'
+        'negotiation_priority',
+        'instant_confirmation'
     ];
 
     protected $casts = [
