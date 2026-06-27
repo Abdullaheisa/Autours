@@ -593,8 +593,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       </div>
 
       <div className="hidden md:block">
-        <div className="flex items-start">
-          <div className="w-[220px] xl:w-[260px] 2xl:w-[300px] shrink-0 p-3 lg:px-5 lg:py-3 flex items-center justify-center">
+        <div className="flex items-center">
+          <div className="w-[250px] lg:w-[270px] 2xl:w-[300px] shrink-0 p-3 lg:p-4 flex items-center justify-center self-stretch">
             <Image
               src={imgError ? 'https://via.placeholder.com/400x250?text=No+Image' : (carData.image || 'https://via.placeholder.com/400x250?text=No+Image')}
               alt={carData.name}
@@ -602,7 +602,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               height={200}
               priority
               fetchPriority="high"
-              className="w-full h-auto max-h-[200px] object-contain"
+              className="w-full h-auto max-h-[200px] object-contain my-auto"
               onError={() => setImgError(true)}
             />
           </div>
