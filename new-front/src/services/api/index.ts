@@ -2,8 +2,8 @@ import { apiClient } from "./axiosClient";
 
 // Blog API - uses /api/blogs endpoints
 export const blogApi = {
-  getAll: () => apiClient.get("/api/blogs"),
-  getPublished: () => apiClient.get("/api/blogs/published"),
+  getAll: () => apiClient.get("/api/blogs?per_page=1000"),
+  getPublished: () => apiClient.get("/api/blogs/published?per_page=1000"),
   getById: (id: number) => apiClient.get(`/api/blogs/${id}`),
   getBySlug: (slug: string) => apiClient.get(`/api/blogs/slug/${slug}`),
   create: (data: unknown) => apiClient.post("/api/blogs", data),
