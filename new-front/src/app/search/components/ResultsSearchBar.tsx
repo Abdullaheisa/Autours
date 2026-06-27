@@ -95,7 +95,13 @@ export default function ResultsSearchBar({
       loc.name?.toLowerCase().includes(q) ||
       loc.country?.toLowerCase().includes(q)
     );
-  });
+  }).reduce((unique, loc) => {
+    const display = getLocationDisplayLabel(loc);
+    if (!unique.some(l => getLocationDisplayLabel(l) === display)) {
+      unique.push(loc);
+    }
+    return unique;
+  }, [] as LocationBranch[]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

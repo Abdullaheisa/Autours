@@ -97,7 +97,13 @@ export default function HeroSearch({
       loc.name?.toLowerCase().includes(q) ||
       loc.country?.toLowerCase().includes(q)
     );
-  });
+  }).reduce((unique, loc) => {
+    const display = getLocationDisplayLabel(loc);
+    if (!unique.some(l => getLocationDisplayLabel(l) === display)) {
+      unique.push(loc);
+    }
+    return unique;
+  }, [] as LocationBranch[]);
 
   useEffect(() => {
     const fetchLocations = async () => {
