@@ -93,14 +93,25 @@ export default function DynamicBanners() {
     hover: { y: -5, scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.3)", transition: { type: "spring", stiffness: 400, damping: 15 } }
   };
 
-  const bannerKeys = Object.keys(backgrounds).filter(
-    (key) => 
-      key !== 'banner' && 
-      key !== 'our_fleet' && 
-      key !== 'login' && 
-      key !== 'manage_booking' && 
-      backgrounds[key] !== ''
-  );
+  const DESIRED_ORDER = ['be_supplier', 'offers'];
+
+  const bannerKeys = Object.keys(backgrounds)
+    .filter(
+      (key) => 
+        key !== 'banner' && 
+        key !== 'our_fleet' && 
+        key !== 'login' && 
+        key !== 'manage_booking' && 
+        backgrounds[key] !== ''
+    )
+    .sort((a, b) => {
+      const indexA = DESIRED_ORDER.indexOf(a);
+      const indexB = DESIRED_ORDER.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return 0;
+    });
 
   if (bannerKeys.length === 0) return null;
 
@@ -234,7 +245,7 @@ export default function DynamicBanners() {
               </motion.div>
             )}
 
-            {!isLast && <SectionDivider />}
+            <SectionDivider />
           </div>
         );
       })}
