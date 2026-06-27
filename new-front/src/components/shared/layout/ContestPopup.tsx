@@ -125,11 +125,11 @@ export default function ContestPopup() {
       >
         {/* Banner or Fallback at top */}
         {bannerUrl ? (
-          <div className="relative w-full h-[200px]  overflow-hidden bg-gray-50 border-b border-gray-100 shrink-0">
+          <div className="relative w-full aspect-[1600/500] overflow-hidden bg-gray-900 border-b border-gray-100 shrink-0 flex items-center justify-center">
             <img 
               src={bannerUrl} 
               alt="Contest Banner" 
-              className="w-full h-full object-cover block animate-in fade-in duration-300"
+              className="w-full h-full object-contain block animate-in fade-in duration-300"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
           </div>
