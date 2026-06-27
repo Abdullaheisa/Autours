@@ -13,9 +13,8 @@ export default function SectionDivider({
 }: SectionDividerProps) {
   return (
     <div
-      className={`w-full ${className}`}
+      className={`w-full h-[3px] sm:h-[6px] md:h-[10px] ${className}`}
       style={{
-        height: `${height}px`,
         backgroundColor: color,
       }}
     />

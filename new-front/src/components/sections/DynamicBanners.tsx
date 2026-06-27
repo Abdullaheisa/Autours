@@ -130,7 +130,7 @@ export default function DynamicBanners() {
                 whileInView="visible"
                 whileHover="hover"
                 viewport={{ once: true, amount: 0.1 }}
-                className="relative w-full aspect-[1600/500] overflow-hidden flex items-center justify-end cursor-default"
+                className="relative w-full aspect-[16/7] overflow-hidden flex items-center justify-end cursor-default"
               >
                 <Image 
                   src={resolveImageUrl(imagePath, '/img/be-supplier-background.webp')} 
@@ -138,7 +138,7 @@ export default function DynamicBanners() {
                   fill
                   sizes="100vw"
                   quality={100}
-                  className="object-contain w-full h-full"
+                  className="object-cover w-full h-full"
                 />
 
                 <motion.div 
@@ -154,11 +154,11 @@ export default function DynamicBanners() {
                   />
                 </motion.div>
 
-                <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[150px] sm:max-w-xs md:max-w-md flex items-end pb-2 sm:pb-8 lg:pb-16 px-2 sm:px-10 lg:mr-24">
+                <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[150px] sm:max-w-xs md:max-w-sm flex items-end pb-2 sm:pb-6 lg:pb-10 px-2 sm:px-6 lg:mr-16">
                   <motion.form 
                     onSubmit={handleSupplierSubmit}
                     variants={inputVariants}
-                    className="flex items-center w-full h-7 sm:h-12 md:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
+                    className="flex items-center w-full h-7 sm:h-10 md:h-12 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-1.5 shadow-lg transition-colors duration-300 hover:border-primary/30"
                   >
                     <input 
                       type="email" 
@@ -166,14 +166,14 @@ export default function DynamicBanners() {
                       onChange={(e) => setSupplierEmail(e.target.value)}
                       placeholder={supplierLoading ? "SENDING..." : "YOUR MAIL"} 
                       disabled={supplierLoading}
-                      className="flex-1 min-w-0 bg-transparent px-2 sm:px-6 text-[8px] sm:text-xs md:text-base font-bold text-white placeholder:text-white/30 outline-none tracking-tight sm:tracking-widest uppercase h-full disabled:opacity-50"
+                      className="flex-1 min-w-0 bg-transparent px-2 sm:px-4 md:px-5 text-[10px] sm:text-xs md:text-sm font-bold text-white placeholder:text-white/40 outline-none tracking-tight sm:tracking-widest uppercase h-full disabled:opacity-50"
                     />
                     <motion.button 
                       type="submit"
                       disabled={supplierLoading}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="h-full px-3 sm:px-8 bg-primary text-black text-[8px] sm:text-xs md:text-sm font-normal rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
+                      className="h-full px-3 sm:px-6 md:px-8 bg-primary text-black text-[10px] sm:text-xs md:text-sm font-bold rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-md hover:bg-white flex items-center justify-center shrink-0 disabled:opacity-50"
                     >
                       {supplierLoading ? '...' : 'Submit'}
                     </motion.button>
@@ -185,7 +185,7 @@ export default function DynamicBanners() {
             {key === 'offers' && (
               <motion.div 
                 whileHover="hover"
-                className="relative w-full aspect-[1600/500] overflow-hidden flex items-center justify-end cursor-default"
+                className="relative w-full aspect-[16/7] overflow-hidden flex items-center justify-end cursor-default"
               >
                 <Image 
                   src={resolveImageUrl(imagePath, '/img/offers.webp')} 
@@ -193,14 +193,14 @@ export default function DynamicBanners() {
                   fill
                   sizes="100vw"
                   quality={100}
-                  className="object-contain w-full h-full"
+                  className="object-cover w-full h-full"
                 />
 
-                <div className="absolute bottom-1 sm:bottom-4 left-1 sm:left-12 lg:left-20 z-20 w-full max-w-[150px] sm:max-w-xs md:max-w-md flex items-end pb-1 sm:pb-8 lg:pb-16 px-2 sm:px-10 lg:mr-10">
+                <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-8 lg:left-14 z-20 w-full max-w-[140px] sm:max-w-xs md:max-w-sm flex items-end pb-1 sm:pb-4 lg:pb-8 px-1.5 sm:px-4">
                   <motion.form 
                     onSubmit={handleCinemaSubmit}
                     variants={inputVariants}
-                    className="flex items-center w-full h-7 sm:h-12 md:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
+                    className="flex items-center w-full h-6 sm:h-10 md:h-12 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-1.5 shadow-lg transition-colors duration-300 hover:border-primary/30"
                   >
                     <input 
                       type="email" 
@@ -208,7 +208,7 @@ export default function DynamicBanners() {
                       onChange={(e) => setCinemaEmail(e.target.value)}
                       placeholder={cinemaLoading ? "جاري..." : "بريدك"} 
                       disabled={cinemaLoading}
-                      className="flex-1 min-w-0 bg-transparent px-2 sm:px-6 text-[8px] sm:text-xs md:text-base font-normal text-white placeholder:text-white/30 outline-none text-right h-full disabled:opacity-50"
+                      className="flex-1 min-w-0 bg-transparent px-2 sm:px-4 md:px-5 text-[9px] sm:text-xs md:text-sm font-normal text-white placeholder:text-white/40 outline-none text-right h-full disabled:opacity-50"
                       dir="rtl"
                     />
                     <motion.button 
@@ -216,7 +216,7 @@ export default function DynamicBanners() {
                       disabled={cinemaLoading}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="h-full px-3 sm:px-8 bg-primary text-black text-[8px] sm:text-xs md:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
+                      className="h-full px-2.5 sm:px-6 md:px-8 bg-primary text-black text-[9px] sm:text-xs md:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-md hover:bg-white flex items-center justify-center shrink-0 disabled:opacity-50"
                     >
                       {cinemaLoading ? '...' : 'سجل الآن'}
                     </motion.button>
@@ -228,7 +228,7 @@ export default function DynamicBanners() {
             {key !== 'be_supplier' && key !== 'offers' && (
               <motion.div 
                 whileHover="hover"
-                className="relative w-full overflow-hidden flex items-center justify-center cursor-default aspect-[1600/500]"
+                className="relative w-full overflow-hidden flex items-center justify-center cursor-default aspect-[16/7]"
               >
                 <Image 
                   src={resolveImageUrl(imagePath, '/img/offers.webp')} 
@@ -237,7 +237,7 @@ export default function DynamicBanners() {
                   priority 
                   sizes="100vw"
                   quality={100} 
-                  className="object-contain w-full h-full" 
+                  className="object-cover w-full h-full" 
                 />
               </motion.div>
             )}
