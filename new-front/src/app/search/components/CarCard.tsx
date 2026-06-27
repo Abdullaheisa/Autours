@@ -594,7 +594,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
       <div className="hidden md:block">
         <div className="flex items-start">
-          <div className="w-[300px] shrink-0 p-3 lg:px-5 lg:py-3  flex items-center justify-center">
+          <div className="w-[220px] xl:w-[260px] 2xl:w-[300px] shrink-0 p-3 lg:px-5 lg:py-3 flex items-center justify-center">
             <Image
               src={imgError ? 'https://via.placeholder.com/400x250?text=No+Image' : (carData.image || 'https://via.placeholder.com/400x250?text=No+Image')}
               alt={carData.name}
@@ -607,7 +607,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             />
           </div>
 
-          <div className="flex-1 p-4 lg:px-5 lg:py-3 lg:pl-10 min-w-0 flex flex-col justify-between">
+          <div className="flex-1 p-4 lg:px-4 xl:px-5 lg:py-3 min-w-0 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-lg font-bold text-gray-900">{carData.name}</h3>
@@ -639,7 +639,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
               <p className="text-xs font-black text-gray-600 mb-4">{carData.type}</p>
 
-              <div className="grid grid-cols-2 w-full lg:w-[55%] gap-x-2 lg:gap-x-4 gap-y-2">
+              <div className="grid grid-cols-2 w-full lg:w-[85%] xl:w-[70%] 2xl:w-[55%] gap-x-2 lg:gap-x-4 gap-y-2">
                 {[
                   { icon: assets.icons.seats, val: carData.seats, label: 'Seats' },
                   { icon: assets.icons.doors, val: carData.doors, label: 'Doors' },
@@ -650,10 +650,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 ].map((feat, i) => (
                   <div 
                     key={i} 
-                    className="flex items-center gap-2 w-full"
+                    className="flex items-center gap-2 w-full min-w-0"
                   >
                     <img src={feat.icon} alt="" className={`object-contain shrink-0 ${(i + 1) % 2 !== 0 ? 'w-8 h-8' : 'w-6 h-6'}`} aria-hidden="true" />
-                    <span className="text-xs lg:text-sm font-semibold lg:font-bold text-gray-700 whitespace-nowrap">{feat.val} {feat.label}</span>
+                    <span className="text-xs xl:text-sm font-semibold lg:font-bold text-gray-700 truncate">{feat.val} {feat.label}</span>
                   </div>
                 ))}
               </div>
@@ -662,7 +662,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="mx-5 mb-2 flex flex-col lg:flex-row relative gap-y-3 lg:gap-y-0">
-          <div className="w-full lg:w-[75%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-7 gap-y-5 flex-wrap">
+          <div className="w-full lg:w-[70%] xl:w-[75%] bg-gray-100 rounded-xl px-4 py-2.5 flex items-center justify-start gap-x-4 xl:gap-x-7 gap-y-3 flex-wrap min-w-0">
             <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
               {carData.supplier.logo ? (
                 <Image
@@ -750,17 +750,17 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="flex flex-col lg:flex-row">
-          <div className='flex bg-green-100/35 rounded-xl mx-5 lg:mx-0 lg:ml-4 mb-4 w-[calc(100%-2.5rem)] lg:w-[80%]'>
-            <div className="w-[60%] p-2 pt-3">
+          <div className='flex bg-green-100/35 rounded-xl mx-5 lg:mx-0 lg:ml-4 mb-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0'>
+            <div className="w-[55%] xl:w-[60%] p-2 pt-3 min-w-0">
               <div className="mb-2">
                 <h4 className="text-xs font-black text-green-700">What is Included!</h4>
                 <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
               </div>
               <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
                 {displayedInclusions.map((inc, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
+                  <div key={i} className="flex items-center gap-1.5 min-w-0">
                     <Check size={11} className="text-green-600 shrink-0" />
-                    <span className="text-[12px] font-bold text-gray-700">{inc}</span>
+                    <span className="text-[11px] xl:text-[12px] font-bold text-gray-700 truncate" title={inc}>{inc}</span>
                   </div>
                 ))}
               </div>
@@ -771,13 +771,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               )}
             </div>
 
-            <div className="w-[40%] p-2 pt-14 space-y-3">
-              <div className="flex items-start gap-2">
+            <div className="w-[45%] xl:w-[40%] p-2 pt-10 xl:pt-14 space-y-2.5 min-w-0">
+              <div className="flex items-start gap-1.5">
                 <button onClick={openMap} className="shrink-0 pt-0.5"><Globe size={14} className="text-blue-600" /></button>
-                <div className="flex items-start gap-1.5">
+                <div className="flex items-start gap-1 min-w-0">
                   <span className="text-[10px] font-black text-gray-600 uppercase tracking-wider shrink-0">Address</span>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-black text-gray-800">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-black text-gray-800 break-words line-clamp-2">
                       {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
                       availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
                       carData.supplier.address}
@@ -785,28 +785,28 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <Fuel size={16} className="text-blue-600 shrink-0" />
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black text-gray-600 uppercase tracking-wider">Fuel Policy</span>
-                  <span className="text-xs font-black text-gray-800">{carData.fuelPolicy}</span>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="text-[10px] font-black text-gray-600 uppercase tracking-wider shrink-0">Fuel Policy</span>
+                  <span className="text-xs font-black text-gray-800 truncate">{carData.fuelPolicy}</span>
                 </div>
               </div>
-              <div className="flex items-start gap-1.5">
+              <div className="flex items-start gap-1.5 min-w-0">
                 <PickupIcon pickupType={carData.pickupType} />
-                <div>
-                  <span className="text-xs font-black">Pick-up: </span>
-                  <span className="text-[11px] font-black text-gray-800"><PickupLabel pickupType={carData.pickupType} /></span>
+                <div className="min-w-0">
+                  <span className="text-xs font-black shrink-0">Pick-up: </span>
+                  <span className="text-[11px] font-black text-gray-800 truncate block"><PickupLabel pickupType={carData.pickupType} /></span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="w-full lg:w-[260px] lg:shrink-0 p-5 pt-2 lg:pt-6 flex flex-row lg:flex-col items-center lg:items-start justify-between lg:justify-end">
+          <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-2 lg:pt-6 flex flex-row lg:flex-col items-center lg:items-start justify-between lg:justify-end">
             <div className="flex flex-col items-start">
-              <span className="text-sm font-bold pl-4 text-gray-600 block mb-1 lg:mb-2">for {carData.price.totalDays} days</span>
+              <span className="text-xs xl:text-sm font-bold pl-2 xl:pl-4 text-gray-600 block mb-1 lg:mb-2">for {carData.price.totalDays} days</span>
               <div className="text-left mb-0 lg:mb-5">
-                <span className="text-3xl pl-4 font-black text-gray-900">
+                <span className="text-2xl xl:text-3xl pl-2 xl:pl-4 font-black text-gray-900">
                   {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                 </span>
               </div>

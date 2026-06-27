@@ -93,7 +93,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
             <p>{locationText || 'Not selected'}</p>
           </div>
           {searchParams.dateFrom && (
-            <div className="flex items-center gap-5 text-xs font-semibold text-gray-500 pl-6">
+            <div className="flex items-center gap-x-3 gap-y-1 text-xs font-semibold text-gray-500 pl-6 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <Calendar size={14} />
                 {searchParams.dateFrom}
@@ -116,7 +116,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
             <p>{locationText || 'Not selected'}</p>
           </div>
           {searchParams.dateTo && (
-            <div className="flex items-center gap-5 text-xs font-semibold text-gray-500 pl-6">
+            <div className="flex items-center gap-x-3 gap-y-1 text-xs font-semibold text-gray-500 pl-6 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <Calendar size={14} />
                 {searchParams.dateTo}

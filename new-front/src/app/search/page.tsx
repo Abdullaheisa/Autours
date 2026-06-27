@@ -325,7 +325,7 @@ function SearchPageContent() {
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-start">
-            <aside className="w-full lg:w-[320px] shrink-0 space-y-4">
+            <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
               <div className="hidden lg:block"><SearchSummary /></div>
               <div className="hidden lg:block"><ResultsSearchBar onSearch={handleReSearch} isOpen={true} /></div>
               <div className="hidden lg:block"><SearchFilters onFilterChange={handleFilterChange} /></div>
