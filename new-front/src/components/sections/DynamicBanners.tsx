@@ -111,133 +111,129 @@ export default function DynamicBanners() {
         const imagePath = backgrounds[key];
 
         return (
-          <div key={key}>
-            {key === 'be_supplier' && (
-              <motion.div 
-                id="be-supplier-section"
-                initial="initial"
-                whileInView="visible"
-                whileHover="hover"
-                viewport={{ once: true, amount: 0.1 }}
-                className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-end cursor-default"
-              >
-                <Image 
-                  src={resolveImageUrl(imagePath, '/img/be-supplier-background.webp')} 
-                  alt="Be Supplier Background"
-                  fill
-                  sizes="100vw"
-                  quality={75}
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10 pointer-events-none" />
-                
-                <motion.div 
-                  variants={carVariants}
-                  className="hidden md:block absolute left-[-10%] sm:left-[-5%] bottom-[5%] w-[60%] sm:w-[50%] lg:w-[45%] h-full z-20 pointer-events-none select-none"
-                >
-                  <Image 
-                    src="/img/be-supplier-car.webp" 
-                    alt="Be Supplier Car" 
-                    fill
-                    sizes="(max-width: 768px) 60vw, 45vw"
-                    className="object-contain"
-                  />
-                </motion.div>
+  <div key={key}>
+    {key === 'be_supplier' && (
+      <motion.div 
+        id="be-supplier-section"
+        initial="initial"
+        whileInView="visible"
+        whileHover="hover"
+        viewport={{ once: true, amount: 0.1 }}
+        className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-end cursor-default"
+      >
+        <Image 
+          src={resolveImageUrl(imagePath, '/img/be-supplier-background.webp')} 
+          alt="Be Supplier Background"
+          fill
+          sizes="100vw"
+          quality={75}
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10 pointer-events-none" />
 
-                <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[180px] sm:max-w-md flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-24">
-                  <motion.form 
-                    onSubmit={handleSupplierSubmit}
-                    variants={inputVariants}
-                    className="flex items-center w-full h-8 sm:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
-                  >
-                    <input 
-                      type="email" 
-                      value={supplierEmail}
-                      onChange={(e) => setSupplierEmail(e.target.value)}
-                      placeholder={supplierLoading ? "SENDING..." : "YOUR MAIL"} 
-                      disabled={supplierLoading}
-                      className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-bold text-white placeholder:text-white/30 outline-none tracking-tight sm:tracking-widest uppercase h-full disabled:opacity-50"
-                    />
-                    <motion.button 
-                      type="submit"
-                      disabled={supplierLoading}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-normal rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
-                    >
-                      {supplierLoading ? '...' : 'Submit'}
-                    </motion.button>
-                  </motion.form>
-                </div>
-              </motion.div>
-            )}
+        <motion.div 
+          variants={carVariants}
+          className="hidden md:block absolute left-[-10%] sm:left-[-5%] bottom-[5%] w-[60%] sm:w-[50%] lg:w-[45%] h-full z-20 pointer-events-none select-none"
+        >
+          <Image 
+            src="/img/be-supplier-car.webp" 
+            alt="Be Supplier Car" 
+            fill
+            sizes="(max-width: 768px) 60vw, 45vw"
+            className="object-contain"
+          />
+        </motion.div>
 
-            {key === 'offers' && (
-              <motion.div 
-                whileHover="hover"
-                className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-end cursor-default"
-              >
-                <Image 
-                  src={resolveImageUrl(imagePath, '/img/offers.webp')} 
-                  alt="Cinema Offers"
-                  fill
-                  sizes="100vw"
-                  quality={90}
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-black/20 transition-opacity duration-700 hover:opacity-30 z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[180px] sm:max-w-md flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-24">
+          <motion.form 
+            onSubmit={handleSupplierSubmit}
+            variants={inputVariants}
+            className="flex items-center w-full h-8 sm:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
+          >
+            <input 
+              type="email" 
+              value={supplierEmail}
+              onChange={(e) => setSupplierEmail(e.target.value)}
+              placeholder={supplierLoading ? "SENDING..." : "YOUR MAIL"} 
+              disabled={supplierLoading}
+              className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-bold text-white placeholder:text-white/30 outline-none tracking-tight sm:tracking-widest uppercase h-full disabled:opacity-50"
+            />
+            <motion.button 
+              type="submit"
+              disabled={supplierLoading}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-normal rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
+            >
+              {supplierLoading ? '...' : 'Submit'}
+            </motion.button>
+          </motion.form>
+        </div>
+      </motion.div>
+    )}
 
-                <div className="absolute bottom-4 left-4 sm:left-20 z-20 w-full max-w-[160px] sm:max-w-md flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-10">
-                  <motion.form 
-                    onSubmit={handleCinemaSubmit}
-                    variants={inputVariants}
-                    className="flex items-center w-full h-8 sm:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
-                  >
-                    <input 
-                      type="email" 
-                      value={cinemaEmail}
-                      onChange={(e) => setCinemaEmail(e.target.value)}
-                      placeholder={cinemaLoading ? "جاري..." : "بريدك"} 
-                      disabled={cinemaLoading}
-                      className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-normal text-white placeholder:text-white/30 outline-none text-right h-full disabled:opacity-50"
-                      dir="rtl"
-                    />
-                    <motion.button 
-                      type="submit"
-                      disabled={cinemaLoading}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
-                    >
-                      {cinemaLoading ? '...' : 'سجل الآن'}
-                    </motion.button>
-                  </motion.form>
-                </div>
-              </motion.div>
-            )}
+    {key === 'offers' && (
+      <motion.div 
+        whileHover="hover"
+        className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-end cursor-default"
+      >
+        <Image 
+          src={resolveImageUrl(imagePath, '/img/offers.webp')} 
+          alt="Cinema Offers"
+          fill
+          sizes="100vw"
+          quality={90}
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/20 transition-opacity duration-700 hover:opacity-30 z-10 pointer-events-none" />
 
-            {key !== 'be_supplier' && key !== 'offers' && (
-             <motion.div 
-  whileHover="hover"
-  className="relative w-full overflow-hidden flex items-center justify-center cursor-default"
-  style={{ aspectRatio: '1600 / 500' }} 
->
-  <Image 
-    src={resolveImageUrl(imagePath, '/img/offers.webp')} 
-    alt="Dynamic Custom Banner"
-    fill
-    priority 
-    sizes="100vw"
-    quality={100} 
-    className="object-cover md:object-fill" 
-</motion.div>
+        <div className="absolute bottom-4 left-4 sm:left-20 z-20 w-full max-w-[160px] sm:max-w-md flex items-end pb-8 sm:pb-16 lg:pb-24 px-4 sm:px-10 lg:mr-10">
+          <motion.form 
+            onSubmit={handleCinemaSubmit}
+            variants={inputVariants}
+            className="flex items-center w-full h-8 sm:h-16 bg-black/80 backdrop-blur-3xl rounded-full border border-white/20 overflow-hidden p-0.5 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-primary/30"
+          >
+            <input 
+              type="email" 
+              value={cinemaEmail}
+              onChange={(e) => setCinemaEmail(e.target.value)}
+              placeholder={cinemaLoading ? "جاري..." : "بريدك"} 
+              disabled={cinemaLoading}
+              className="flex-1 min-w-0 bg-transparent px-3 sm:px-8 text-[9px] sm:text-base font-normal text-white placeholder:text-white/30 outline-none text-right h-full disabled:opacity-50"
+              dir="rtl"
+            />
+            <motion.button 
+              type="submit"
+              disabled={cinemaLoading}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="h-full px-4 sm:px-10 bg-primary text-black text-[9px] sm:text-sm font-black rounded-full transition-colors duration-300 uppercase tracking-tighter sm:tracking-widest shadow-lg hover:bg-white flex items-center justify-center disabled:opacity-50"
+            >
+              {cinemaLoading ? '...' : 'سجل الآن'}
+            </motion.button>
+          </motion.form>
+        </div>
+      </motion.div>
+    )}
 
-            )}
+    {key !== 'be_supplier' && key !== 'offers' && (
+      <motion.div 
+        whileHover="hover"
+        className="relative w-full overflow-hidden flex items-center justify-center cursor-default"
+        style={{ aspectRatio: '1600 / 500' }} 
+      >
+        <Image 
+          src={resolveImageUrl(imagePath, '/img/offers.webp')} 
+          alt="Dynamic Custom Banner"
+          fill
+          priority 
+          sizes="100vw"
+          quality={100} 
+          className="object-cover md:object-fill" 
+        />
+      </motion.div>
+    )}
 
-            <SectionDivider />
-          </div>
-        );
-      })}
-    </section>
-  );
-}
+    <SectionDivider />
+  </div>
+);
