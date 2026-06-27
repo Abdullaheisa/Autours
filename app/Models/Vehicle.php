@@ -11,13 +11,19 @@ class Vehicle extends Model
     use HasFactory;
     use SoftDeletes;
 
+    use \App\Console\Commands\Traits\NormalizesVehicleNames;
+
     public function setNameAttribute($value)
     {
         if ($value !== null) {
+            // Remove "or similar" suffix from supplier names
             $value = trim(preg_replace('/(?i)\s*-?\s*\(?or similar\)?\s*/', '', $value));
+            // Apply consistent title-case and transmission normalization
+            $value = $this->normalizeVehicleName($value);
         }
         $this->attributes['name'] = $value;
     }
+
 
     protected $fillable = [
         'photo',
