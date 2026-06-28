@@ -40,6 +40,12 @@ trait NormalizesVehicleNames
             return $name;
         }
 
+        // Fix common misspelling
+        $name = preg_replace('/\bRenaut\b/i', 'Renault', $name);
+
+        // Replace special characters to make names normal (e.g. Škoda -> Skoda)
+        $name = str_replace(['Š', 'š'], ['S', 's'], $name);
+
         // Normalize transmission types often appended to car names
         // Matches whole words like AUT, AUTO, AUTOMATIC, AUTOMATiC (case-insensitive)
         $name = preg_replace('/\b(?:AUT|AUTO|AUTOMATIC)\b/i', 'Automatic', $name);
