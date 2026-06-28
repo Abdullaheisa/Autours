@@ -79,6 +79,7 @@ class ProfitsController extends Controller
             }
 
             $query->leftJoin('branches', 'branches.id', '=', 'vehicles.pickup_loc');
+            $query->leftJoin('users', 'users.id', '=', 'vehicles.supplier');
 
             if ($request->has('country')) {
                 $query->where('branches.country', $request->country);
@@ -102,6 +103,7 @@ class ProfitsController extends Controller
             $data = $query->select([
                 'vehicles.id as vehicle_id',
                 'vehicles.supplier as supplier',
+                'users.name as supplier_name',
                 'profits.per_day_profit',
                 'profits.per_week_profit',
                 'profits.per_month_profit',

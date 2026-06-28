@@ -21,7 +21,7 @@ trait NormalizesVehicleNames
         // Trim / edition abbreviations
         'SE', 'LE', 'XL', 'XE', 'XF',
         // Model codes (Honda, Subaru, Toyota, MG, Mitsubishi, Nissan, Mazda)
-        'CRV', 'HRV', 'BRV', 'WRX', 'STI', 'RAV4', 'CR-V', 'HR-V', 'C-HR', 'BR-V',
+        'CRV', 'HRV', 'BRV', 'WRX', 'STI', 'RAV', 'CR-V', 'HR-V', 'C-HR', 'BR-V',
         'ZS', 'RX', 'ASX', 'XV', 'NV', 'CX', 'RVR',
     ];
 
@@ -42,6 +42,12 @@ trait NormalizesVehicleNames
 
         // Fix common misspelling
         $name = preg_replace('/\bRenaut\b/i', 'Renault', $name);
+
+        // Normalize Toyota RAV4 to Toyota RAV 4
+        $name = preg_replace('/\bRAV4\b/i', 'RAV 4', $name);
+
+        // Normalize Toyota 4runner to Toyota 4 Runner
+        $name = preg_replace('/\b4runner\b/i', '4 Runner', $name);
 
         // Replace special characters to make names normal (e.g. Škoda -> Skoda)
         $name = str_replace(['Š', 'š'], ['S', 's'], $name);

@@ -33,27 +33,12 @@ export default function VehicleProfitTable({
   onSaveRow,
   onClearFilters,
 }: VehicleProfitTableProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
   // Refs for double scrollbar synchronization
   const topScrollRef = useRef<HTMLDivElement>(null);
   const tableScrollRef = useRef<HTMLDivElement>(null);
 
-  // Filter by search
-  const filteredVehicles = useMemo(() => {
-    if (!searchQuery) return vehicles;
-    const query = searchQuery.toLowerCase();
-    return vehicles.filter(
-      (v) =>
-        v.name.toLowerCase().includes(query) ||
-        v.supplier.toLowerCase().includes(query) ||
-        v.branch.toLowerCase().includes(query) ||
-        v.country.toLowerCase().includes(query)
-    );
-  }, [vehicles, searchQuery]);
-
-  // Use all filtered vehicles without slicing (pagination is handled by the parent)
-  const paginatedVehicles = filteredVehicles;
+  // Use all vehicles directly (pagination and search are handled by the parent/server)
+  const paginatedVehicles = vehicles;
 
   // Synchronize scrolling of top mirror scrollbar with main table scrollbar
   useEffect(() => {
@@ -89,16 +74,12 @@ export default function VehicleProfitTable({
     };
   }, [paginatedVehicles]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-  };
-
   if (vehicles.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <EmptyState
           title="No vehicles found"
-          description="Try adjusting your filters"
+          description="Try adjusting your filters or search query"
           actionLabel="Clear all filters"
           onAction={onClearFilters}
         />
@@ -116,27 +97,9 @@ export default function VehicleProfitTable({
             Manage individual vehicle pricing rules
           </p>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-          <input
-            type="text"
-            placeholder="Type to search..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-64"
-          />
-        </div>
       </div>
 
-      {filteredVehicles.length === 0 ? (
-        <EmptyState
-          title="No vehicles found"
-          description="Try adjusting your search query"
-          actionLabel="Clear search"
-          onAction={() => handleSearchChange("")}
-        />
-      ) : (
-        <>
+      <>
           {/* Top Mirror Scrollbar */}
           <div ref={topScrollRef} className="overflow-x-auto overflow-y-hidden border-b border-gray-100" style={{ height: '12px' }}>
             <div style={{ width: '900px', height: '1px' }}></div>
@@ -264,11 +227,10 @@ export default function VehicleProfitTable({
           {/* Footer */}
           <div className="px-4 sm:px-5 lg:px-6 py-3 border-t border-gray-100 bg-gray-50/30 flex items-center justify-between gap-3">
             <p className="text-xs text-gray-500">
-              Showing <span className="font-medium text-gray-900">{filteredVehicles.length}</span> vehicle(s)
+              Showing <span className="font-medium text-gray-900">{paginatedVehicles.length}</span> vehicle(s)
             </p>
           </div>
         </>
-      )}
     </div>
   );
 }

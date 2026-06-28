@@ -88,7 +88,18 @@ export default function ProfitFilters({
       </div>
 
       {/* Desktop Filters */}
-      <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            placeholder="Search vehicles..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && onSearchClick()}
+            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+        </div>
         {filterConfigs.map((filter, idx) => (
           <div key={idx} className="relative">
             <filter.icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -106,7 +117,7 @@ export default function ProfitFilters({
           </div>
         ))}
 
-        <div className="flex items-center gap-2 px-1">
+        <div className="flex items-center gap-2 px-1 col-span-2 lg:col-span-1">
           <input
             type="checkbox"
             id="noProfitDesktop"
@@ -114,14 +125,14 @@ export default function ProfitFilters({
             onChange={(e) => onToggleNoProfit(e.target.checked)}
             className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
           />
-          <label htmlFor="noProfitDesktop" className="text-sm text-gray-700 select-none cursor-pointer">
-            Without Profit Margin
+          <label htmlFor="noProfitDesktop" className="text-sm text-gray-700 select-none cursor-pointer whitespace-nowrap">
+            No Profit Margin
           </label>
         </div>
 
         <button
           onClick={onSearchClick}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary-200 flex items-center justify-center gap-2"
+          className="col-span-2 lg:col-span-1 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary-200 flex items-center justify-center gap-2"
         >
           <Search size={16} />
           Search
@@ -140,6 +151,17 @@ export default function ProfitFilters({
 
         {showMobileFilters && (
           <div className="mt-3 space-y-3 pt-3 border-t border-gray-100">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search vehicles..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && onSearchClick()}
+                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
             {filterConfigs.map((filter, idx) => (
               <div key={idx} className="relative">
                 <filter.icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
