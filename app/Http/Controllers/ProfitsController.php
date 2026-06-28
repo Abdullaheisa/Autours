@@ -14,24 +14,25 @@ class ProfitsController extends Controller
     public function upload(Request $request)
     {
         try {
-            $supplierIds = null;
-            $branchIds = null;
-            $vehicles = null;
-            if ($request->has('country')) {
-                $branchIds = Branch::query()->select(['id'])->where('country', $request->country)->get()->pluck('id')->toArray();
-                $vehicles = Vehicle::query()->whereIn('pickup_loc', $branchIds)->get();
-            }
-            if ($request->has('supplier')) {
-                $supplierIds = User::query()->select(['id'])->where('id', $request->supplier)->get()->pluck('id')->toArray();
-                $vehicles = Vehicle::query()->whereIn('supplier', $supplierIds)->get();
+            $query = Vehicle::query();
 
+            if ($request->filled('country')) {
+                $branchIds = Branch::query()->select(['id'])->where('country', $request->country)->get()->pluck('id')->toArray();
+                $query->whereIn('pickup_loc', $branchIds);
             }
-            if ($request->has('branch')) {
-                $vehicles = Vehicle::query()->where('pickup_loc', $request->branch)->get();
+            if ($request->filled('supplier')) {
+                $query->where('supplier', $request->supplier);
             }
-            if ($request->has('selectedVehicles')) {
-                $vehicles = Vehicle::query()->whereIn('id', explode(',',$request->selectedVehicles ))->get();
+            if ($request->filled('branch')) {
+                $query->where('pickup_loc', $request->branch);
             }
+            if ($request->filled('category')) {
+                $query->where('category', $request->category);
+            }
+            if ($request->filled('selectedVehicles')) {
+                $query->whereIn('id', explode(',', $request->selectedVehicles));
+            }
+            $vehicles = $query->get();
             foreach ($vehicles as $vehicle) {
                 Profit::query()->where('vehicle_id', $vehicle->id)->delete();
                 $profit = new Profit();
@@ -61,31 +62,35 @@ class ProfitsController extends Controller
         try {
             $query = Vehicle::query()->leftJoin('profits', 'profits.vehicle_id', '=', 'vehicles.id');
 
-            if ($request->has('supplier')) {
+            if ($request->filled('supplier')) {
                 $query->where('vehicles.supplier', $request->supplier);
             } else {
                 $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
                 if ($user && $user->role == 'active_supplier') {
-                    $query->where('supplier_id', $user->id);
+                    $query->where('vehicles.supplier', $user->id);
                 }
             }
 
-            if ($request->has('branch')) {
-                $query->where('pickup_loc', $request->branch);
+            if ($request->filled('branch')) {
+                $query->where('vehicles.pickup_loc', $request->branch);
             }
 
-            if ($request->has('selectedVehicles')) {
-                $query->whereIn('vehicles.id', $request->selectedVehicles);
+            if ($request->filled('category')) {
+                $query->where('vehicles.category', $request->category);
+            }
+
+            if ($request->filled('selectedVehicles')) {
+                $query->whereIn('vehicles.id', (array)$request->selectedVehicles);
             }
 
             $query->leftJoin('branches', 'branches.id', '=', 'vehicles.pickup_loc');
             $query->leftJoin('users', 'users.id', '=', 'vehicles.supplier');
 
-            if ($request->has('country')) {
+            if ($request->filled('country')) {
                 $query->where('branches.country', $request->country);
             }
 
-            if ($request->has('search')) {
+            if ($request->filled('search')) {
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('vehicles.name', 'LIKE', '%' . $search . '%')

@@ -36,7 +36,7 @@ export default function ProfitMarginsPage() {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
-  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [showNoProfitOnly, setShowNoProfitOnly] = useState(false);
 
   // Server-side pagination state
@@ -48,20 +48,27 @@ export default function ProfitMarginsPage() {
   const [countries, setCountries] = useState<FilterItem[]>([]);
   const [suppliers, setSuppliers] = useState<FilterItem[]>([]);
   const [branches, setBranches] = useState<FilterItem[]>([]);
-  const [vehiclesList, setVehiclesList] = useState<FilterItem[]>([]);
+  const [categories, setCategories] = useState<FilterItem[]>([]);
 
   // Vehicles State (current page only)
   const [vehicles, setVehicles] = useState<VehicleProfit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [rawApiResponse, setRawApiResponse] = useState<any>(null);
+  const [apiError, setApiError] = useState<string>("");
 
   // Track current filters in a ref to reset page when they change
-  const filtersRef = useRef({ searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle, showNoProfitOnly });
+  const filtersRef = useRef({ searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedCategory, showNoProfitOnly });
 
   // Fetch Options
   useEffect(() => {
     profitApi.getCountries().then((res: any) => {
       const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
       setCountries(data.map((item: any) => ({ id: item, name: item })));
+    }).catch(console.error);
+
+    profitApi.getCategories().then((res: any) => {
+      const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setCategories(data.map((item: any) => ({ id: String(item.id), name: item.name })));
     }).catch(console.error);
   }, []);
 
@@ -97,25 +104,10 @@ export default function ProfitMarginsPage() {
     setSelectedBranch("");
   }, [fetchBranches]);
 
-  const fetchVehiclesList = useCallback(() => {
-    if (selectedBranch) {
-      profitApi.getVehicles(selectedSupplier, selectedBranch).then((res: any) => {
-        const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-        setVehiclesList(data.map((item: any) => ({ id: String(item.id), name: item.name })));
-      }).catch(console.error);
-    } else {
-      setVehiclesList([]);
-    }
-  }, [selectedSupplier, selectedBranch]);
-
-  useEffect(() => {
-    fetchVehiclesList();
-    setSelectedVehicle("");
-  }, [fetchVehiclesList]);
-
   // ── Main Data Fetch (server-side pagination) ─────────────────────────────────
   const fetchData = useCallback((page: number = 1) => {
     setIsLoading(true);
+    setApiError("");
 
     const params: any = {
       page,
@@ -126,11 +118,12 @@ export default function ProfitMarginsPage() {
     if (selectedCountry) params.country = selectedCountry;
     if (selectedSupplier) params.supplier = selectedSupplier;
     if (selectedBranch) params.branch = selectedBranch;
-    if (selectedVehicle) params.selectedVehicles = [selectedVehicle];
+    if (selectedCategory) params.category = selectedCategory;
     if (showNoProfitOnly) params.no_profit = "true";
 
     profitApi.getAll(params)
       .then((res: any) => {
+        setRawApiResponse(res);
         // apiClient.get() unwraps axios response.data, so res IS the Laravel paginator:
         // { data: [...items], current_page, last_page, total, per_page, ... }
         const items: any[] = Array.isArray(res?.data) ? res.data
@@ -158,9 +151,10 @@ export default function ProfitMarginsPage() {
       })
       .catch((err) => {
         console.warn("Failed to load profit margins:", err.message);
+        setApiError(err.message || "Failed to load profit margins");
       })
       .finally(() => setIsLoading(false));
-  }, [searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle, showNoProfitOnly]);
+  }, [searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedCategory, showNoProfitOnly]);
 
   // Reset to page 1 when filters change, then fetch
   useEffect(() => {
@@ -170,10 +164,10 @@ export default function ProfitMarginsPage() {
       prev.selectedCountry !== selectedCountry ||
       prev.selectedSupplier !== selectedSupplier ||
       prev.selectedBranch !== selectedBranch ||
-      prev.selectedVehicle !== selectedVehicle ||
+      prev.selectedCategory !== selectedCategory ||
       prev.showNoProfitOnly !== showNoProfitOnly;
 
-    filtersRef.current = { searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedVehicle, showNoProfitOnly };
+    filtersRef.current = { searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedCategory, showNoProfitOnly };
 
     if (filtersChanged) {
       setCurrentPage(1);
@@ -183,7 +177,6 @@ export default function ProfitMarginsPage() {
     }
   }, [fetchData]);
 
-  // Fetch when page changes (but not when filters change — that's handled above)
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     fetchData(page);
@@ -258,7 +251,7 @@ export default function ProfitMarginsPage() {
     setSelectedCountry("");
     setSelectedSupplier("");
     setSelectedBranch("");
-    setSelectedVehicle("");
+    setSelectedCategory("");
     setShowNoProfitOnly(false);
   };
 
@@ -289,12 +282,12 @@ export default function ProfitMarginsPage() {
         onSupplierChange={setSelectedSupplier}
         selectedBranch={selectedBranch}
         onBranchChange={setSelectedBranch}
-        selectedVehicle={selectedVehicle}
-        onVehicleChange={setSelectedVehicle}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
         countries={countries}
         suppliers={suppliers}
         branches={branches}
-        vehiclesList={vehiclesList}
+        categories={categories}
         showNoProfitOnly={showNoProfitOnly}
         onToggleNoProfit={setShowNoProfitOnly}
         onClearFilters={clearFilters}

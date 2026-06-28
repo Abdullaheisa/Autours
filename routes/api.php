@@ -262,6 +262,8 @@ Route::post('/get/vehicle/data', [\App\Http\Controllers\VehicleController::class
 Route::get('/get/countries', [\App\Http\Controllers\CountryController::class, 'index']);
 Route::get('/my-current-user-profile', [\App\Http\Controllers\UserController::class, 'profile']);
 Route::get('get/categories', [\App\Http\Controllers\VehicleController::class, 'getCategories']);
+Route::get('get/profit', [\App\Http\Controllers\ProfitsController::class, 'show']);
+Route::get('/get/profit', [\App\Http\Controllers\ProfitsController::class, 'show']);
 Route::get('get/specifications', [\App\Http\Controllers\SpecificationsController::class, 'index']);
 Route::post('post/specifications', [\App\Http\Controllers\SpecificationsController::class, 'create']);
 Route::post('specifications/update', [\App\Http\Controllers\SpecificationsController::class, 'update']);

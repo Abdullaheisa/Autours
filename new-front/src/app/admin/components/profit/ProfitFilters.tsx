@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ChevronDown, X, Filter, MapPin, Building2, Store, Car } from "lucide-react";
+import { Search, ChevronDown, X, Filter, MapPin, Building2, Store, Layers } from "lucide-react";
 
 export interface FilterItem {
   id: string;
@@ -25,12 +25,12 @@ interface ProfitFiltersProps {
   onSupplierChange: (value: string) => void;
   selectedBranch: string;
   onBranchChange: (value: string) => void;
-  selectedVehicle: string;
-  onVehicleChange: (value: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (value: string) => void;
   countries: FilterItem[];
   suppliers: FilterItem[];
   branches: FilterItem[];
-  vehiclesList: FilterItem[];
+  categories: FilterItem[];
   showNoProfitOnly: boolean;
   onToggleNoProfit: (val: boolean) => void;
   onClearFilters: () => void;
@@ -46,12 +46,12 @@ export default function ProfitFilters({
   onSupplierChange,
   selectedBranch,
   onBranchChange,
-  selectedVehicle,
-  onVehicleChange,
+  selectedCategory,
+  onCategoryChange,
   countries,
   suppliers,
   branches,
-  vehiclesList,
+  categories,
   showNoProfitOnly,
   onToggleNoProfit,
   onClearFilters,
@@ -63,7 +63,7 @@ export default function ProfitFilters({
     selectedCountry !== "",
     selectedSupplier !== "",
     selectedBranch !== "",
-    selectedVehicle !== "",
+    selectedCategory !== "",
     searchQuery !== "",
     showNoProfitOnly === true,
   ].filter(Boolean).length;
@@ -72,7 +72,7 @@ export default function ProfitFilters({
     { icon: MapPin, label: "Country", value: selectedCountry, options: countries, onChange: onCountryChange },
     { icon: Building2, label: "Supplier", value: selectedSupplier, options: suppliers, onChange: onSupplierChange },
     { icon: Store, label: "Branch", value: selectedBranch, options: branches, onChange: onBranchChange },
-    { icon: Car, label: "Vehicle", value: selectedVehicle, options: vehiclesList, onChange: onVehicleChange },
+    { icon: Layers, label: "Category", value: selectedCategory, options: categories, onChange: onCategoryChange },
   ];
 
   return (

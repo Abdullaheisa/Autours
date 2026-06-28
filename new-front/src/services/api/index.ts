@@ -149,6 +149,7 @@ export const profitApi = {
   getSuppliers: (country?: string) => apiClient.get("/get/suppliers", { params: { country } }),
   getBranches: (company_id?: string, country?: string) => apiClient.get("/get/branches", { params: { company_id, country } }),
   getVehicles: (supplier?: string, branch_id?: string) => apiClient.get("/get/vehicles", { params: { supplier, branch_id } }),
+  getCategories: () => apiClient.get("/get/categories"),
 };
 
 // Vehicle Inclusions API (Bulk Assign)
