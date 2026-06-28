@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ChevronDown, X, Filter, MapPin, Building2, Store, Layers } from "lucide-react";
+import { Search, ChevronDown, X, Filter, MapPin, Building2, Store, Layers, Car } from "lucide-react";
 
 export interface FilterItem {
   id: string;
@@ -25,12 +25,15 @@ interface ProfitFiltersProps {
   onSupplierChange: (value: string) => void;
   selectedBranch: string;
   onBranchChange: (value: string) => void;
-  selectedCategory: string;
-  onCategoryChange: (value: string) => void;
-  countries: FilterItem[];
-  suppliers: FilterItem[];
-  branches: FilterItem[];
-  categories: FilterItem[];
+  selectedCategory?: string;
+  onCategoryChange?: (value: string) => void;
+  selectedVehicle?: string;
+  onVehicleChange?: (value: string) => void;
+  countries?: FilterItem[];
+  suppliers?: FilterItem[];
+  branches?: FilterItem[];
+  categories?: FilterItem[];
+  vehiclesList?: FilterItem[];
   showNoProfitOnly: boolean;
   onToggleNoProfit: (val: boolean) => void;
   onClearFilters: () => void;
@@ -46,12 +49,15 @@ export default function ProfitFilters({
   onSupplierChange,
   selectedBranch,
   onBranchChange,
-  selectedCategory,
+  selectedCategory = "",
   onCategoryChange,
-  countries,
-  suppliers,
-  branches,
-  categories,
+  selectedVehicle = "",
+  onVehicleChange,
+  countries = [],
+  suppliers = [],
+  branches = [],
+  categories = [],
+  vehiclesList = [],
   showNoProfitOnly,
   onToggleNoProfit,
   onClearFilters,
@@ -64,15 +70,20 @@ export default function ProfitFilters({
     selectedSupplier !== "",
     selectedBranch !== "",
     selectedCategory !== "",
+    selectedVehicle !== "",
     searchQuery !== "",
     showNoProfitOnly === true,
   ].filter(Boolean).length;
+
+  const fourthFilter: FilterOption = (onVehicleChange || vehiclesList.length > 0)
+    ? { icon: Car, label: "Vehicle", value: selectedVehicle, options: vehiclesList, onChange: onVehicleChange || (() => {}) }
+    : { icon: Layers, label: "Category", value: selectedCategory, options: categories, onChange: onCategoryChange || (() => {}) };
 
   const filterConfigs: FilterOption[] = [
     { icon: MapPin, label: "Country", value: selectedCountry, options: countries, onChange: onCountryChange },
     { icon: Building2, label: "Supplier", value: selectedSupplier, options: suppliers, onChange: onSupplierChange },
     { icon: Store, label: "Branch", value: selectedBranch, options: branches, onChange: onBranchChange },
-    { icon: Layers, label: "Category", value: selectedCategory, options: categories, onChange: onCategoryChange },
+    fourthFilter,
   ];
 
   return (
@@ -109,7 +120,7 @@ export default function ProfitFilters({
               className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer"
             >
               <option value="">All {filter.label}s</option>
-              {filter.options.map((o) => (
+              {(filter.options || []).map((o) => (
                 <option key={o.id} value={o.id}>{o.name}</option>
               ))}
             </select>
@@ -171,7 +182,7 @@ export default function ProfitFilters({
                   className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="">All {filter.label}s</option>
-                  {filter.options.map((o) => (
+                  {(filter.options || []).map((o) => (
                     <option key={o.id} value={o.id}>{o.name}</option>
                   ))}
                 </select>
@@ -221,3 +232,4 @@ export default function ProfitFilters({
     </div>
   );
 }
+
