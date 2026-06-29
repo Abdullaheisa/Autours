@@ -1,13 +1,29 @@
 const http = require('http');
 const { spawn } = require('child_process');
+const url = require('url');
 
 // Port to listen on for webhook requests
 const PORT = 9000;
 
+// The secret password required to trigger the webhook
+const SECRET_TOKEN = 'autours_deploy_secure2026';
+
 const server = http.createServer((req, res) => {
+    // Parse the URL to read query parameters
+    const parsedUrl = url.parse(req.url, true);
+
     // Trigger deployment on /deploy for ANY method (GET or POST)
-    // This allows you to just visit the URL in your browser
-    if (req.url === '/deploy') {
+    if (parsedUrl.pathname === '/deploy') {
+        
+        // SECURITY CHECK: Verify the secret token
+        if (parsedUrl.query.secret !== SECRET_TOKEN) {
+            res.writeHead(403, { 'Content-Type': 'text/plain' });
+            res.end('403 Forbidden: Invalid or missing secret token.\n');
+            console.log(`[${new Date().toISOString()}] Blocked unauthorized deploy attempt from IP: ${req.socket.remoteAddress}`);
+            return;
+        }
+
+        // Set headers for HTTP streaming so the browser displays logs in real-time
         res.writeHead(200, {
             'Content-Type': 'text/plain; charset=utf-8',
             'Transfer-Encoding': 'chunked',
