@@ -85,16 +85,23 @@ const server = http.createServer((req, res) => {
         res.write(`[${startTime}] Clearing fetch cache...\n\n`);
         console.log(`[${startTime}] Cache clear triggered.`);
 
-        const { exec } = require('child_process');
-        exec('rm -rf .next/cache/fetch-cache/*', { cwd: '/var/www/app/new-front' }, (error, stdout, stderr) => {
-            if (error) {
-                res.write(`\n[ERROR] Failed to clear cache: ${error.message}\n`);
-            } else {
-                res.write(`\nCache cleared successfully.\n`);
-            }
-            if (stderr) res.write(`[STDERR] ${stderr}\n`);
+        const clearProcess = spawn('sh', ['-c', 'rm -rfv .next/cache/fetch-cache/*'], { cwd: '/var/www/app/new-front' });
+
+        clearProcess.stdout.on('data', (data) => {
+            res.write(data.toString());
+            process.stdout.write(data.toString());
+        });
+
+        clearProcess.stderr.on('data', (data) => {
+            res.write(`[STDERR] ${data.toString()}`);
+            process.stderr.write(data.toString());
+        });
+
+        clearProcess.on('close', (code) => {
+            const finishMsg = `\n[${new Date().toISOString()}] Cache clear finished with exit code ${code}\n`;
+            res.write(finishMsg);
             res.end();
-            console.log(`[${new Date().toISOString()}] Cache clear finished.`);
+            console.log(finishMsg);
         });
 
     } else {
