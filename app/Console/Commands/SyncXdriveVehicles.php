@@ -414,6 +414,7 @@ class SyncXdriveVehicles extends Command
                             'month_price' => $priceData['month_price'],
                             'activation' => true,
                             'instant_confirmation' => 1,
+                            'category' => $categoryId,
                         ];
                         if ($vehicle->supplier != $supplierUser->id) {
                             $updateData['supplier'] = $supplierUser->id;

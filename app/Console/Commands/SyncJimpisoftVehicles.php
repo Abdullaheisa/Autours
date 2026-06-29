@@ -311,6 +311,8 @@ class SyncJimpisoftVehicles extends Command
                         continue;
                     }
 
+                    $categoryId = $this->resolveCategory($groupId, $details, $group);
+
                     if ($existingVehicle) {
                         $vehicle = $existingVehicle;
                         $updateData = [
@@ -318,6 +320,7 @@ class SyncJimpisoftVehicles extends Command
                             'week_price' => $priceData['week_price'],
                             'month_price' => $priceData['month_price'],
                             'instant_confirmation' => 1,
+                            'category' => $categoryId,
                         ];
                         // Normalize supplier to current Jimpisoft user if it differs
                         if ($vehicle->supplier != $supplierUser->id) {
@@ -361,7 +364,7 @@ class SyncJimpisoftVehicles extends Command
                             'supplier' => $supplierUser->id,
                             'activation' => true,
                             'pickup_loc' => $branchId,
-                            'category' => $this->resolveCategory($groupId, $details),
+                            'category' => $categoryId,
                             'fuel_policy_id' => null,
                             'price' => $priceData['day_value'],
                             'week_price' => $priceData['week_price'],
@@ -617,8 +620,31 @@ class SyncJimpisoftVehicles extends Command
      * @param array  $details   Group details from the API
      * @return int
      */
-    private function resolveCategory(string $groupId, ?array $details = null): int
+    private function resolveCategory(string $groupId, ?array $details = null, ?array $group = null): int
     {
+        // 1. Hardcoded model overrides
+        if (!empty($details)) {
+            $model = strtoupper(trim($details['model'] ?? $details['Model'] ?? ''));
+            if (str_contains($model, 'XPANDER')) {
+                $category = \App\Models\Category::where('name', 'Compact SUV')->first();
+                if ($category) {
+                    return $category->id;
+                }
+            }
+        }
+
+        // 2. Try SIPP code from details or group
+        $sipp = $details['SIPP'] ?? $details['sipp'] ?? $group['SIPP'] ?? $group['sipp'] ?? '';
+        if (!empty($sipp)) {
+            $categoryName = \App\Services\SippDecoder::getLocalCategoryName($sipp);
+            if ($categoryName !== 'Economy') { // Default from SippDecoder, let it fallback if not Economy
+                $category = \App\Models\Category::where('name', $categoryName)->first();
+                if ($category) {
+                    return $category->id;
+                }
+            }
+        }
+
         // ACRISS first-letter to local category name mapping
         // M = Mini, A = Mini/Economy, B = Economy, C = Compact/Standard,
         // D = Standard, E/H = Full Size, F/G = Full Size/SUV,

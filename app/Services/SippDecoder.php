@@ -154,16 +154,22 @@ class SippDecoder
         return $map[$char] ?? 'Unknown Fuel/AC';
     }
 
-    /**
-     * Map SIPP code to local internal Category name.
-     */
     public static function getLocalCategoryName(string $sipp): string
     {
         if (strlen($sipp) < 1) {
             return 'Economy';
         }
 
-        $char = strtoupper($sipp[0]);
+        $char1 = strtoupper($sipp[0]);
+        $char2 = strlen($sipp) >= 2 ? strtoupper($sipp[1]) : '';
+
+        // Prioritize the second character (Vehicle Type) for Vans and SUVs
+        if (in_array($char2, ['V', 'M', 'K'])) {
+            return 'Minivan';
+        }
+        if (in_array($char2, ['F', 'G', 'J'])) {
+            return 'SUV';
+        }
 
         $map = [
             'M' => 'Mini',
@@ -190,9 +196,9 @@ class SippDecoder
         ];
 
         // The older scripts mapped C, D, I, J, S, T to 'Standard'. Let's maintain that backward compatibility or return 'Standard'
-        if ($char === 'C') return 'Standard'; 
+        if ($char1 === 'C') return 'Standard'; 
 
-        return $map[$char] ?? 'Economy';
+        return $map[$char1] ?? 'Economy';
     }
 
     /**
