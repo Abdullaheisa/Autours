@@ -146,41 +146,38 @@ const dashboardSlice = createSlice({
             };
           });
 
-          // 4. Map Bookings By Country
-          const countryCounts: Record<string, number> = {};
-          (data.customerTransactions || []).forEach((booking: any) => {
-            const country = booking.vehicle?.branch?.country || "UAE";
-            countryCounts[country] = (countryCounts[country] || 0) + 1;
-          });
-          const bookingsByCountry = Object.keys(countryCounts).map(country => ({
-            country,
-            bookings: countryCounts[country]
-          }));
-          // Add default fallback countries if empty
-          if (bookingsByCountry.length === 0) {
-            bookingsByCountry.push(
-              { country: "Saudi Arabia", bookings: 124 },
-              { country: "UAE", bookings: 98 },
-              { country: "Egypt", bookings: 95 },
-              { country: "Qatar", bookings: 76 }
-            );
-          }
+          // 4. Map Bookings By Country — use real API data directly
+          const bookingsByCountry = data.bookingsByCountry || data.bookings_by_country || [];
 
-          // 5. Map Top Vehicles
-          const topVehicles = (data.latestVehicles || []).map((v: any, index: number) => ({
-            name: v.name || `${v.brand || ""} ${v.model || ""}`.trim() || "Unknown Vehicle",
-            bookings: 18 - index * 3,
+          // 5. Map Top Vehicles — use real API data directly
+          const topVehicles = (data.topVehicles || data.top_vehicles || []).map((v: any) => ({
+            name: v.name || "Vehicle",
+            bookings: Number(v.bookings || 0),
           }));
 
-          // Store mapped rawData
+          // 6. Country Locations & Vehicle Categories — use API data directly, no fake fallback
+          const countryLocationsStats = data.country_locations_stats || null;
+          const vehicleCategoriesStats = data.vehicle_categories_stats || null;
+
+          const companyPerformance = (data.supplierRevenue || []).map((item: any) => ({
+            name: item.supplier_name || item.name || "Company",
+            bookings: Number(item.bookings || 0),
+            profit: Number(item.profit || 0),
+          }));
+
+          // Store mapped rawData — spread raw data first, then overwrite with processed camelCase keys
           state.rawData = {
+            ...data,                                          // raw API fields (snake_case)
             totalCompanies,
             avgRating,
             recentBookings,
             monthlyBookings: monthlyBookingsMapped,
             bookingsByCountry,
             topVehicles,
-            ...data
+            companyPerformance,
+            rentalSummaryStats:     data.rental_summary_stats     ?? null,
+            countryLocationsStats:  data.country_locations_stats  ?? null,
+            vehicleCategoriesStats: data.vehicle_categories_stats ?? null,
           };
         }
       })

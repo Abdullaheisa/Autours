@@ -12,15 +12,15 @@ export default function TopVehiclesChart() {
   const topVehicles = [...vehiclesData].sort((a: any, b: any) => b.bookings - a.bookings).slice(0, 8);
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+    <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm h-[420px] flex flex-col">
+      <div className="flex items-center justify-between mb-4 gap-2">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-gray-900">Top Vehicles</h3>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Most booked vehicles across all countries</p>
+          <h3 className="text-base font-bold text-gray-900">Top Vehicles</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Most booked vehicles across fleet</p>
         </div>
-        <div className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-medium w-fit">Top 8</div>
+        <div className="bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap">Top 8</div>
       </div>
-      <div className="h-[250px] sm:h-[300px] lg:h-[350px]">
+      <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={topVehicles} layout="vertical" margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />

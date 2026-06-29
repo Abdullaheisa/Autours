@@ -9,14 +9,14 @@ export default function MonthlyBookingsChart() {
   const data = rawData?.monthlyBookings || [];
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-gray-900">Monthly Bookings Trend</h3>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Booking volume over the year</p>
         </div>
         <div className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-medium w-fit">+23% YoY</div>
       </div>
-      <div className="h-[250px] sm:h-[300px] lg:h-[350px]">
+      <div className="h-[220px] sm:h-[250px] lg:h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>

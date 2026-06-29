@@ -12,6 +12,8 @@ import TopVehiclesChart from "@/app/admin/components/TopVehiclesChart";
 import CompanyPerformanceChart from "@/app/admin/components/CompanyPerformanceChart";
 import RecentBookingsTable from "@/app/admin/components/RecentBookingsTable";
 import CountriesOverview from "@/app/admin/components/CountriesOverview";
+import CountryLocationsOverview from "@/app/admin/components/CountryLocationsOverview";
+import VehicleCategoriesOverview from "@/app/admin/components/VehicleCategoriesOverview";
 
 export default function DashboardOverview() {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,20 +32,35 @@ export default function DashboardOverview() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="space-y-4 sm:space-y-6">
+
+      {/* ── Row 1: KPI Stats Cards ── */}
       <StatsCards />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+
+      {/* ── Row 2: Analytics Panels — 3 equal columns ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        <CountryLocationsOverview />
+        <VehicleCategoriesOverview />
+        <CountriesOverview />
+      </div>
+
+      {/* ── Row 3: Monthly Trend (wide) + Company Performance (narrow) ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="xl:col-span-2">
+          <MonthlyBookingsChart />
+        </div>
+        <div className="xl:col-span-1">
+          <CompanyPerformanceChart />
+        </div>
+      </div>
+
+      {/* ── Row 4: 3 Side-by-Side Widgets — Top Vehicles, Bookings by Country, Recent Bookings ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        <TopVehiclesChart />
         <BookingsByCountryChart />
-        <MonthlyBookingsChart />
+        <RecentBookingsTable />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        <div className="md:col-span-2 xl:col-span-2"><TopVehiclesChart /></div>
-        <div className="md:col-span-2 xl:col-span-1"><CompanyPerformanceChart /></div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        <div className="md:col-span-1"><CountriesOverview /></div>
-        <div className="md:col-span-1 xl:col-span-2"><RecentBookingsTable /></div>
-      </div>
+
     </div>
   );
 }

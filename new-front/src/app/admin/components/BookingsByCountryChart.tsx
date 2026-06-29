@@ -11,28 +11,34 @@ export default function BookingsByCountryChart() {
   const data = rawData?.bookingsByCountry || [];
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+    <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm h-[420px] flex flex-col">
+      <div className="flex items-center justify-between mb-4 gap-2">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-gray-900">Bookings by Country</h3>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Total bookings across 9 Arab countries</p>
+          <h3 className="text-base font-bold text-gray-900">Bookings by Country</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Total bookings across active countries</p>
         </div>
-        <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium w-fit">9 Countries</div>
+        <div className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap">
+          {data.length} {data.length === 1 ? "Country" : "Countries"}
+        </div>
       </div>
-      <div className="h-[250px] sm:h-[300px] lg:h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-            <XAxis dataKey="country" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} />
-            <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", padding: "12px" }} formatter={(value: number) => [value.toLocaleString(), "Bookings"]} />
-            <Bar dataKey="bookings" radius={[6, 6, 0, 0]} maxBarSize={40}>
-{data.map((entry: { country: string; bookings: number }, index: number) => (
-                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="flex-1 min-h-0 flex items-center justify-center">
+        {data.length === 0 ? (
+          <p className="text-sm text-gray-400">No country booking data available</p>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <XAxis dataKey="country" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} />
+              <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", padding: "12px" }} formatter={(value: number) => [value.toLocaleString(), "Bookings"]} />
+              <Bar dataKey="bookings" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                {data.map((entry: { country: string; bookings: number }, index: number) => (
+                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
