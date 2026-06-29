@@ -6,7 +6,7 @@ const url = require('url');
 const PORT = 9000;
 
 // The secret password required to trigger the webhook
-const SECRET_TOKEN = 'autours_deploy_secure2026';
+const SECRET_TOKEN = 'autours_deploy_secure2026kgyjfvjhbiuohin651615';
 
 const server = http.createServer((req, res) => {
     // Parse the URL to read query parameters
