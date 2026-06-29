@@ -63,6 +63,40 @@ const server = http.createServer((req, res) => {
             console.log(finishMsg);
         });
 
+    } else if (parsedUrl.pathname === '/clear-cache') {
+        // SECURITY CHECK: Verify the secret token
+        if (parsedUrl.query.secret !== SECRET_TOKEN) {
+            res.writeHead(403, { 'Content-Type': 'text/plain' });
+            res.end('403 Forbidden: Invalid or missing secret token.\n');
+            console.log(`[${new Date().toISOString()}] Blocked unauthorized cache clear attempt from IP: ${req.socket.remoteAddress}`);
+            return;
+        }
+
+        res.writeHead(200, {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Transfer-Encoding': 'chunked',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Content-Type-Options': 'nosniff'
+        });
+        res.write(' '.repeat(2048) + '\n');
+        
+        const startTime = new Date().toISOString();
+        res.write(`[${startTime}] Clearing fetch cache...\n\n`);
+        console.log(`[${startTime}] Cache clear triggered.`);
+
+        const { exec } = require('child_process');
+        exec('rm -rf .next/cache/fetch-cache/*', { cwd: '/var/www/app/new-front' }, (error, stdout, stderr) => {
+            if (error) {
+                res.write(`\n[ERROR] Failed to clear cache: ${error.message}\n`);
+            } else {
+                res.write(`\nCache cleared successfully.\n`);
+            }
+            if (stderr) res.write(`[STDERR] ${stderr}\n`);
+            res.end();
+            console.log(`[${new Date().toISOString()}] Cache clear finished.`);
+        });
+
     } else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not found.\n');
