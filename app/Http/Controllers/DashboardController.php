@@ -176,7 +176,7 @@ class DashboardController extends Controller
             // Real Top Vehicles from rentals join vehicles
             $topVehiclesFromRentals = DB::table('rentals')
                 ->join('vehicles', 'vehicles.id', '=', 'rentals.vehicle_id')
-                ->select('vehicles.name', DB::raw('CAST(count(*) AS UNSIGNED) as bookings'))
+                ->select('vehicles.name', DB::raw('count(*) as bookings'))
                 ->groupBy('vehicles.id', 'vehicles.name')
                 ->orderByDesc('bookings')
                 ->limit(8)
@@ -334,9 +334,9 @@ class DashboardController extends Controller
                 ->join('branches', 'branches.id', '=', 'vehicles.pickup_loc')
                 ->select(
                     'branches.country',
-                    DB::raw('CAST(count(*) AS UNSIGNED) as bookings'),
+                    DB::raw('count(*) as bookings'),
                     DB::raw('COALESCE(sum(rentals.price), 0) as revenue'),
-                    DB::raw('CAST(count(distinct vehicles.id) AS UNSIGNED) as vehicles')
+                    DB::raw('count(distinct vehicles.id) as vehicles')
                 )
                 ->whereNotNull('branches.country')
                 ->where('branches.country', '!=', '')
