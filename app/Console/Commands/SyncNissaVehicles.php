@@ -361,6 +361,13 @@ class SyncNissaVehicles extends Command
                 $vehicleName = $this->normalizeVehicleName($vehicleName);
 
                 $sipp = (string) ($group['sipp'] ?? '');
+                $transmission = (string) ($group['transmission'] ?? '');
+                $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : ($transmission ? $this->normalizeTransmission($transmission) : 'Manual');
+
+                if (stripos($vehicleName, 'Automatic') === false && stripos($vehicleName, 'Manual') === false) {
+                    $vehicleName .= ' ' . $transValue;
+                }
+
                 $categoryId = $this->resolveCategoryFromSipp($sipp);
 
                 $groupExistingVehicles = $existingVehiclesByGroup[$groupId] ?? [];
@@ -401,6 +408,7 @@ class SyncNissaVehicles extends Command
                     if ($existingVehicle) {
                         $vehicle = $existingVehicle;
                         $updateData = [
+                            'name' => $vehicleName,
                             'price' => $priceData['day_value'],
                             'week_price' => $priceData['week_price'],
                             'month_price' => $priceData['month_price'],
