@@ -45,7 +45,7 @@ export default function LoginPage() {
           localStorage.removeItem('rememberedEmail');
         }
       }
-      router.push(getPostLoginPath(result.payload.user.role));
+      router.replace(getPostLoginPath(result.payload.user.role));
     } else {
       toast.error(result.payload as string || 'Login failed');
     }

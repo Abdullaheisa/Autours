@@ -65,18 +65,42 @@ const sidebarFeatureMap: Record<string, keyof typeof features> = {
 };
 
 export default function AdminDashboard() {
-  const [activeItem, setActiveItem] = useState("profile");
+  const [activeItem, setActiveItemState] = useState("profile");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const setActiveItem = (id: string) => {
+    setActiveItemState(id);
+    if (typeof window !== "undefined") {
+      window.history.pushState({ tab: id }, "", `?tab=${id}`);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
       if (tab && pageTitles[tab]) {
-        setActiveItem(tab);
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, "", newUrl);
+        setActiveItemState(tab);
+        window.history.replaceState({ tab }, "", `?tab=${tab}`);
+      } else {
+        window.history.replaceState({ tab: "profile" }, "", window.location.pathname);
       }
+
+      const handlePopState = (e: PopStateEvent) => {
+        if (e.state && e.state.tab && pageTitles[e.state.tab]) {
+          setActiveItemState(e.state.tab);
+        } else {
+          // Fallback if state is missing
+          const currentTab = new URLSearchParams(window.location.search).get("tab");
+          if (currentTab && pageTitles[currentTab]) {
+            setActiveItemState(currentTab);
+          } else {
+            setActiveItemState("profile");
+          }
+        }
+      };
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
     }
   }, []);
 

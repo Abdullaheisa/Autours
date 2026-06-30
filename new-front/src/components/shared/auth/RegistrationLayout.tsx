@@ -59,9 +59,9 @@ export default function RegistrationLayout({
       const payload = result.payload as unknown as { user?: { role: string } };
 
       if (payload.user && payload.user.role) {
-        router.push(getPostLoginPath(payload.user.role));
+        router.replace(getPostLoginPath(payload.user.role));
       } else {
-        router.push('/login');
+        router.replace('/login');
       }
     }
   };

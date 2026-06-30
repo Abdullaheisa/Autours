@@ -67,7 +67,7 @@ function NewPasswordContent() {
         setIsSuccess(true);
         toast.success('Password has been reset successfully!');
         setTimeout(() => {
-          router.push('/login');
+          router.replace('/login');
         }, 2000);
       } else {
         toast.error(res.message || 'Failed to reset password');
