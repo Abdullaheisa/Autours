@@ -497,9 +497,9 @@ class DashboardController extends Controller
             // 4. Detailed Rental Summary Stats
             $charts->rental_summary_stats = [
                 'total_rentals'     => DB::table('rentals')->count(),
-                'completed_rentals' => DB::table('rentals')->whereIn('order_status', [7, 'completed', '7'])->count(),
-                'active_rentals'    => DB::table('rentals')->whereIn('order_status', [2, 'confirmed', '2'])->count(),
-                'cancelled_rentals' => DB::table('rentals')->whereIn('order_status', [3, 5, 'canceled', 'cancelled', '3'])->count(),
+                'completed_rentals' => DB::table('rentals')->where('order_status', RentalStatuses::RECONCILED)->count(),
+                'active_rentals'    => DB::table('rentals')->where('order_status', RentalStatuses::CONFIRMED)->count(),
+                'cancelled_rentals' => DB::table('rentals')->whereIn('order_status', [RentalStatuses::CANCELED, RentalStatuses::REJECTED])->count(),
                 'total_countries'   => count($charts->bookingsByCountry),
             ];
 
