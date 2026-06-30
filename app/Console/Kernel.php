@@ -28,8 +28,8 @@ class Kernel extends ConsoleKernel
          $schedule->command('surprice:sync-vehicles --prices-only')->everyFourHours();
 
          // Sync Rently branches daily and vehicle prices every 4 hours
-      //   $schedule->command('rently:sync-branches --countries="Jordan,Morocco"')->dailyAt('04:00');
-         $schedule->command('rently:sync-vehicles --prices-only --countries="Jordan,Morocco"')->everyFourHours();
+      //   $schedule->command('rently:sync-branches')->dailyAt('04:00');
+         $schedule->command('rently:sync-vehicles --prices-only')->everyFourHours();
 
          // Sync Wheelsys branches daily and vehicle prices every 4 hours
       //   $schedule->command('wheelsys:sync-branches')->dailyAt('04:30');

@@ -16,8 +16,8 @@ use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Symfony\Component\Mime\MimeTypes;
+
+
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 use App\Console\Commands\Traits\NormalizesVehicleNames;
 
@@ -243,7 +243,7 @@ class SyncRentlyVehicles extends Command
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
                 } elseif (!$pricesOnly) {
-                    $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($model['imagePath'] ?? null, $modelId);
+                    $photoFilename = $this->resolveLocalPhoto($vehicleName);
                     
                     $vehicle = Vehicle::create([
                         'name' => $vehicleName,
@@ -376,27 +376,5 @@ class SyncRentlyVehicles extends Command
         return $category ? $category->id : (\App\Models\Category::first()?->id ?? 1);
     }
 
-    private function downloadImage(?string $url, int|string $modelId): ?string
-    {
-        if (empty($url)) return null;
-        try {
-            $response = Http::timeout(30)->withoutVerifying()->get($url);
-            if (!$response->successful()) return null;
 
-            $extension = 'png';
-            $contentType = $response->header('Content-Type');
-            if ($contentType) {
-                $exts = (new MimeTypes())->getExtensions($contentType);
-                if (!empty($exts)) $extension = $exts[0];
-            }
-
-            $filename = 'rently_' . Str::slug($modelId) . '.' . $extension;
-            $directory = public_path('img/vehicles');
-            if (!is_dir($directory)) mkdir($directory, 0755, true);
-            file_put_contents($directory . DIRECTORY_SEPARATOR . $filename, $response->body());
-            return $filename;
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
 }

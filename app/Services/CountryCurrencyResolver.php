@@ -241,7 +241,7 @@ class CountryCurrencyResolver
             'NZ' => 'New Zealand',
             'UZ' => 'Uzbekistan',
 
-            default => $code,
+            default => (strlen($code) === 2 && class_exists('Locale') && ($region = \Locale::getDisplayRegion('-' . $code, 'en'))) ? $region : $code,
         };
     }
 
