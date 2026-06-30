@@ -114,14 +114,14 @@ const dashboardSlice = createSlice({
           const supplierRevenue = data.supplierRevenue || [];
           const numberOfRentalsMonthly = data.numberOfRentalsMonthly || {};
           const NumberOfActiveSuppliers = data.NumberOfActiveSuppliers || {};
-          
+
           const totalRevenue = data.real_total_revenue !== undefined ? Number(data.real_total_revenue) : supplierRevenue.reduce((acc: number, curr: any) => acc + Number(curr.profit || 0), 0);
-          const totalBookings = data.real_total_bookings !== undefined ? Number(data.real_total_bookings) : ((numberOfRentalsMonthly.done || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0) + 
-                                (numberOfRentalsMonthly.cancelled || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0));
+          const totalBookings = data.real_total_bookings !== undefined ? Number(data.real_total_bookings) : ((numberOfRentalsMonthly.done || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0) +
+            (numberOfRentalsMonthly.cancelled || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0));
           const totalCompanies = data.real_total_companies !== undefined ? Number(data.real_total_companies) : (supplierRevenue.length || NumberOfActiveSuppliers.currentYear?.[0]?.count || 0);
           const totalCars = data.real_total_cars !== undefined ? Number(data.real_total_cars) : ((data.latestVehicles || []).length || 0);
           const avgRating = data.real_avg_rating !== undefined ? String(data.real_avg_rating) : "4.8";
-          
+
           state.stats.totalRevenue = totalRevenue;
           state.stats.activeBookings = totalBookings;
           state.stats.newUsers = totalCompanies;
@@ -181,10 +181,10 @@ const dashboardSlice = createSlice({
             bookingsByCountry,
             topVehicles,
             companyPerformance,
-            rentalSummaryStats:     data.rental_summary_stats     ?? null,
-            countryLocationsStats:  data.country_locations_stats  ?? null,
+            rentalSummaryStats: data.rental_summary_stats ?? null,
+            countryLocationsStats: data.country_locations_stats ?? null,
             vehicleCategoriesStats: data.vehicle_categories_stats ?? null,
-            bookingTrends:          data.bookingTrends            ?? null,
+            bookingTrends: data.bookingTrends ?? undefined,
           };
         }
       })
