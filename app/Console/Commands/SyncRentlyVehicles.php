@@ -228,12 +228,22 @@ class SyncRentlyVehicles extends Command
                 if (empty($vehicleName)) $vehicleName = 'Rently Model ' . $modelId;
                 $vehicleName = $this->normalizeVehicleName($vehicleName);
 
+                $sipp = (string) ($model['sipp'] ?? '');
+                $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : (($model['transmissionType'] ?? '') === 'Automatic' ? 'Automatic' : 'Manual');
+                if (stripos($vehicleName, 'Automatic') === false && stripos($vehicleName, 'Manual') === false) {
+                    $vehicleName .= ' ' . $transValue;
+                }
+
+                $categoryId = $this->resolveCategoryFromSipp($sipp);
+
                 $existingVehicle = Vehicle::where('pickup_loc', $branchId)
                     ->where('description', 'LIKE', "%[RENTLY-MODEL-ID:{$modelId}]%")
                     ->first();
 
                 if ($existingVehicle) {
                     $existingVehicle->update([
+                        'name' => $vehicleName,
+                        'category' => $categoryId,
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
@@ -252,7 +262,7 @@ class SyncRentlyVehicles extends Command
                         'supplier' => $supplierUser->id,
                         'activation' => true,
                         'pickup_loc' => $branchId,
-                        'category' => $this->resolveCategoryFromSipp($model['sipp'] ?? ''),
+                        'category' => $categoryId,
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
