@@ -172,7 +172,7 @@ export default function HeroSearch({
   };
 
   return (
-    <section className="relative min-h-[85vh] sm:min-h-[90vh] flex flex-col items-center justify-start pt-16 sm:pt-20 pb-0" aria-label="Car Rental Search">
+    <section className="relative min-h-[95vh] sm:min-h-[100vh] flex flex-col items-center justify-center pt-24 sm:pt-32 pb-16 sm:pb-24" aria-label="Car Rental Search">
       {/* 🚀 السر كله هنا: تحويل الخلفية لـ next/image مضغوطة بالكامل */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-gray-900">
         <Image
@@ -201,8 +201,8 @@ export default function HeroSearch({
           )}
         </div>
 
-        <div className="bg-white/35 backdrop-blur-sm py-6 px-4 sm:py-8 sm:px-6 lg:py-10 lg:px-8 rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/15 w-full max-w-5xl">
-          <form onSubmit={handleSearch} className="space-y-5 sm:space-y-6">
+        <div className="bg-white/35 backdrop-blur-sm py-8 px-5 sm:py-10 sm:px-8 lg:py-12 lg:px-10 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-6xl">
+          <form onSubmit={handleSearch} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(16,minmax(0,1fr))] gap-3 items-start">
               
               {/* Location Input */}
@@ -218,7 +218,7 @@ export default function HeroSearch({
                     }}
                     onFocus={() => location.length > 0 && setShowLocations(true)}
                     placeholder="Enter your Location"
-                    className={`w-full h-12 sm:h-14 pl-4 sm:pl-5 pr-10 bg-white/90 border rounded-2xl text-sm font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
+                    className={`w-full h-14 sm:h-16 pl-4 sm:pl-5 pr-12 bg-white/95 border rounded-[1.25rem] text-sm sm:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
                       errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                     }`}
                   />
@@ -301,7 +301,7 @@ export default function HeroSearch({
 
               {/* Date Range Picker */}
               <div className="lg:col-span-5 relative" ref={calendarRef}>
-                <div className={`flex items-center h-12 sm:h-14 bg-white/90 border rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
+                <div className={`flex items-center h-14 sm:h-16 bg-white/95 border rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
                   errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                 }`}>
                   <button 
@@ -378,7 +378,7 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowStartTime(!showStartTime)}
-                    className="w-full h-12 sm:h-14 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-200 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
@@ -399,7 +399,7 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowEndTime(!showEndTime)}
-                    className="w-full h-12 sm:h-14 px-3 bg-white/90 border border-gray-200 rounded-2xl flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-200 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
@@ -440,7 +440,7 @@ export default function HeroSearch({
                 disabled={isSearching}
                 whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}
                 whileTap={{ scale: 0.97 }}
-                className="h-12 sm:h-14 w-full sm:w-auto px-6 sm:px-8 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm uppercase tracking-wider transition-all duration-500 rounded-2xl shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
+                className="h-14 sm:h-16 w-full sm:w-auto px-6 sm:px-10 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-500 rounded-[1.25rem] shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
               >
                 <span className="absolute inset-0 bg-gray-900 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
                 {isSearching ? (

@@ -10,6 +10,7 @@ interface CalendarRangePickerProps {
   onSelect: (start: Date, end: Date) => void;
   onClose: () => void;
   singleMonth?: boolean;
+  allowPastDates?: boolean;
 }
 
 export default function CalendarRangePicker({
@@ -18,6 +19,7 @@ export default function CalendarRangePicker({
   onSelect,
   onClose,
   singleMonth = false,
+  allowPastDates = false,
 }: CalendarRangePickerProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [tempStart, setTempStart] = useState<Date | null>(startDate);
@@ -28,7 +30,7 @@ export default function CalendarRangePicker({
   const nextMonth = addMonths(currentMonth, 1);
 
   const handleDateClick = useCallback((date: Date) => {
-    if (isBefore(date, today)) return;
+    if (!allowPastDates && isBefore(date, today)) return;
 
     if (!tempStart || (tempStart && tempEnd)) {
       setTempStart(date);
@@ -41,7 +43,7 @@ export default function CalendarRangePicker({
       onSelect(tempStart, date);
       setTimeout(onClose, 300);
     }
-  }, [tempStart, tempEnd, onSelect, onClose, today]);
+  }, [tempStart, tempEnd, onSelect, onClose, today, allowPastDates]);
 
   const getDayClasses = (dayDate: Date, isPast: boolean) => {
     const isStart = tempStart && isSameDay(dayDate, tempStart);
@@ -97,7 +99,7 @@ export default function CalendarRangePicker({
 
     for (let d = 1; d <= daysInMonth; d++) {
       const dayDate = new Date(year, month, d);
-      const isPast = isBefore(dayDate, today);
+      const isPast = !allowPastDates && isBefore(dayDate, today);
       const dayClasses = getDayClasses(dayDate, isPast);
 
       days.push(

@@ -18,6 +18,12 @@ export interface DashboardRawData {
   customerTransactions?: any[];
   latestRentalsTransactions?: any[];
   latestVehicles?: any[];
+  bookingTrends?: {
+    day: Array<{ label: string; bookings: number }>;
+    week: Array<{ label: string; bookings: number }>;
+    month: Array<{ label: string; bookings: number }>;
+    year: Array<{ label: string; bookings: number }>;
+  };
   [key: string]: any;
 }
 
@@ -178,6 +184,7 @@ const dashboardSlice = createSlice({
             rentalSummaryStats:     data.rental_summary_stats     ?? null,
             countryLocationsStats:  data.country_locations_stats  ?? null,
             vehicleCategoriesStats: data.vehicle_categories_stats ?? null,
+            bookingTrends:          data.bookingTrends            ?? null,
           };
         }
       })

@@ -114,6 +114,48 @@ class DashboardController extends Controller
     public function index()
     {
         try {
+            \Illuminate\Support\Facades\Log::info("Dashboard index request inputs: " . json_encode(request()->all()));
+
+            // ─── Custom Period Comparison API Request ───
+            if (request()->has('compare')) {
+                $p1Start = request('p1_start');
+                $p1End = request('p1_end');
+                $p2Start = request('p2_start');
+                $p2End = request('p2_end');
+
+                $p1Count = DB::table('rentals')
+                    ->whereBetween('created_at', [$p1Start . ' 00:00:00', $p1End . ' 23:59:59'])
+                    ->count();
+
+                $p2Count = DB::table('rentals')
+                    ->whereBetween('created_at', [$p2Start . ' 00:00:00', $p2End . ' 23:59:59'])
+                    ->count();
+
+                $p1Revenue = DB::table('rentals')
+                    ->whereBetween('created_at', [$p1Start . ' 00:00:00', $p1End . ' 23:59:59'])
+                    ->whereIn('order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
+                    ->sum(DB::raw('price - supplier_price'));
+
+                $p2Revenue = DB::table('rentals')
+                    ->whereBetween('created_at', [$p2Start . ' 00:00:00', $p2End . ' 23:59:59'])
+                    ->whereIn('order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
+                    ->sum(DB::raw('price - supplier_price'));
+
+                return response()->json([
+                    'status' => true,
+                    'data' => [
+                        'period1' => [
+                            'bookings' => $p1Count,
+                            'revenue' => round((float)$p1Revenue, 2)
+                        ],
+                        'period2' => [
+                            'bookings' => $p2Count,
+                            'revenue' => round((float)$p2Revenue, 2)
+                        ]
+                    ]
+                ]);
+            }
+
             $charts = new stdClass();
             
             // Real Database-wide Stats
@@ -165,6 +207,100 @@ class DashboardController extends Controller
                                                                     WHERE order_status <> :cancelled
                                                                     GROUP BY {$monthSql}",
                 ['cancelled'=> RentalStatuses::CANCELED]);
+                
+            // ─── Detailed Booking Trends (Days, Weeks, Months, Years) ───
+            // Anchor to the latest booking date so development/mock data shows populated charts
+            $latestRental = DB::table('rentals')->latest('created_at')->first();
+            $anchorDate = $latestRental ? Carbon::parse($latestRental->created_at) : Carbon::now();
+
+            $dailySql = $isSqlite ? "strftime('%Y-%m-%d', created_at)" : ($isPgsql ? "to_char(created_at, 'YYYY-MM-DD')" : "DATE_FORMAT(created_at, '%Y-%m-%d')");
+            $dailyData = DB::table('rentals')
+                ->select(DB::raw("{$dailySql} as period"), DB::raw("COUNT(*) as count"))
+                ->where('created_at', '>=', $anchorDate->copy()->subDays(30))
+                ->groupBy(DB::raw($dailySql))
+                ->get()
+                ->pluck('count', 'period')
+                ->toArray();
+
+            $dailyTrend = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $date = $anchorDate->copy()->subDays($i);
+                $key = $date->format('Y-m-d');
+                $dailyTrend[] = [
+                    'label' => $date->format('d M'),
+                    'bookings' => (int)($dailyData[$key] ?? 0)
+                ];
+            }
+
+            // Weekly Trend (last 12 weeks from anchor date)
+            $weeklyRaw = DB::table('rentals')
+                ->select('created_at')
+                ->where('created_at', '>=', $anchorDate->copy()->subWeeks(12))
+                ->get();
+
+            $weeklyTrend = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $carbonDate = $anchorDate->copy()->subWeeks($i);
+                $startOfWeek = $carbonDate->copy()->startOfWeek();
+                $endOfWeek = $carbonDate->copy()->endOfWeek();
+                $count = $weeklyRaw->filter(function($r) use ($startOfWeek, $endOfWeek) {
+                    $created = Carbon::parse($r->created_at);
+                    return $created->between($startOfWeek, $endOfWeek);
+                })->count();
+
+                $weeklyTrend[] = [
+                    'label' => 'Wk ' . $carbonDate->format('W, Y'),
+                    'bookings' => $count
+                ];
+            }
+
+            // Monthly Trend (Chronological last 12 months from anchor date)
+            $monthlyRaw = DB::table('rentals')
+                ->select('created_at')
+                ->where('created_at', '>=', $anchorDate->copy()->subMonths(12))
+                ->get();
+
+            $monthlyTrend = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $date = $anchorDate->copy()->subMonths($i);
+                $startOfMonth = $date->copy()->startOfMonth();
+                $endOfMonth = $date->copy()->endOfMonth();
+                $count = $monthlyRaw->filter(function($r) use ($startOfMonth, $endOfMonth) {
+                    $created = Carbon::parse($r->created_at);
+                    return $created->between($startOfMonth, $endOfMonth);
+                })->count();
+
+                $monthlyTrend[] = [
+                    'label' => $date->format('M Y'),
+                    'bookings' => $count
+                ];
+            }
+
+            // Yearly Trend (last 5 years from anchor date)
+            $yearlyRaw = DB::table('rentals')
+                ->select('created_at')
+                ->where('created_at', '>=', $anchorDate->copy()->subYears(5))
+                ->get();
+
+            $yearlyTrend = [];
+            for ($i = 4; $i >= 0; $i--) {
+                $year = $anchorDate->copy()->subYears($i)->year;
+                $count = $yearlyRaw->filter(function($r) use ($year) {
+                    return Carbon::parse($r->created_at)->year === $year;
+                })->count();
+
+                $yearlyTrend[] = [
+                    'label' => (string)$year,
+                    'bookings' => $count
+                ];
+            }
+
+            $charts->bookingTrends = [
+                'day' => $dailyTrend,
+                'week' => $weeklyTrend,
+                'month' => $monthlyTrend,
+                'year' => $yearlyTrend
+            ];
                 
             $charts->supplierRevenue = $supplierRevenue;
             $charts->NumberOfActiveSuppliers = $NumberOfActiveSuppliers;
@@ -250,15 +386,27 @@ class DashboardController extends Controller
 
             $allCountries = $branchesByCountry->keys()->merge($airportsByCountry->keys())->unique()->values();
 
-            $countryLocationsList = $allCountries->map(function($countryName) use ($branchesByCountry, $airportsByCountry, $branchNamesByCountry, $airportNamesByCountry) {
+            // Bookings count per country (for sorting by most booked)
+            $bookingsByCountryMap = DB::table('rentals')
+                ->join('vehicles', 'vehicles.id', '=', 'rentals.vehicle_id')
+                ->join('branches', 'branches.id', '=', 'vehicles.pickup_loc')
+                ->select('branches.country', DB::raw('count(*) as bookings_count'))
+                ->whereNotNull('branches.country')
+                ->where('branches.country', '!=', '')
+                ->groupBy('branches.country')
+                ->get()
+                ->keyBy('country');
+
+            $countryLocationsList = $allCountries->map(function($countryName) use ($branchesByCountry, $airportsByCountry, $branchNamesByCountry, $airportNamesByCountry, $bookingsByCountryMap) {
                 return [
-                    'country'       => $countryName,
-                    'branches'      => isset($branchesByCountry[$countryName]) ? (int)$branchesByCountry[$countryName]->branch_count : 0,
-                    'airports'      => isset($airportsByCountry[$countryName]) ? (int)$airportsByCountry[$countryName]->airport_count : 0,
-                    'branch_names'  => isset($branchNamesByCountry[$countryName]) ? $branchNamesByCountry[$countryName]->toArray() : [],
-                    'airport_names' => isset($airportNamesByCountry[$countryName]) ? $airportNamesByCountry[$countryName]->toArray() : [],
+                    'country'        => $countryName,
+                    'branches'       => isset($branchesByCountry[$countryName]) ? (int)$branchesByCountry[$countryName]->branch_count : 0,
+                    'airports'       => isset($airportsByCountry[$countryName]) ? (int)$airportsByCountry[$countryName]->airport_count : 0,
+                    'bookings'       => isset($bookingsByCountryMap[$countryName]) ? (int)$bookingsByCountryMap[$countryName]->bookings_count : 0,
+                    'branch_names'   => isset($branchNamesByCountry[$countryName]) ? $branchNamesByCountry[$countryName]->toArray() : [],
+                    'airport_names'  => isset($airportNamesByCountry[$countryName]) ? $airportNamesByCountry[$countryName]->toArray() : [],
                 ];
-            })->sortByDesc('branches')->values();
+            })->sortByDesc('bookings')->values(); // ← مرتبة بالأكثر حجوزات أولاً
 
             $totalBranchesCount = DB::table('branches')->count();
             $totalAirportsCount = DB::table('branches')->where(function($q) {
@@ -275,6 +423,7 @@ class DashboardController extends Controller
             ];
 
             // 2. Vehicle Categories & Demand Statistics
+
             $categories = \App\Models\Category::all();
             $categoriesStatsList = [];
 

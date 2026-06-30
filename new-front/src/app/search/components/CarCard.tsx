@@ -250,7 +250,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
   const displayedInclusions = showAllInclusions
     ? carData.inclusions
-    : carData.inclusions.slice(0, 4);
+    : carData.inclusions.slice(0, 6);
 
   const promosList = carData.promos || [];
 
@@ -472,7 +472,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                       </div>
                     ))}
                   </div>
-                  {carData.inclusions.length > 4 && (
+                  {carData.inclusions.length > 6 && (
                     <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="text-xs text-end w-full py-3 pr-5 font-black text-gray-700 underline hover:text-gray-900">
                       {showAllInclusions ? 'Show Less' : 'More +'}
                     </button>
@@ -764,7 +764,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   </div>
                 ))}
               </div>
-              {carData.inclusions.length > 4 && (
+              {carData.inclusions.length > 6 && (
                 <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-[11px] font-black text-gray-800 underline hover:text-gray-600">
                   {showAllInclusions ? 'Show Less' : 'Show More +'}
                 </button>
