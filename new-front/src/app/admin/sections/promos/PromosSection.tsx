@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import Pagination from "@/components/ui/Pagination";
 import { promoApi, profitApi } from "@/services/api";
+import { apiClient } from "@/services/api/axiosClient";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,14 @@ export default function PromosSection() {
   // Modal Search & Filter States
   const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [modalSupplierFilter, setModalSupplierFilter] = useState("All");
+  const [modalCountryFilter, setModalCountryFilter] = useState("All");
+  const [modalBranchFilter, setModalBranchFilter] = useState("All");
+  const [modalCurrentPage, setModalCurrentPage] = useState(1);
+  const [modalTotalPages, setModalTotalPages] = useState(1);
+  const [modalTotalCount, setModalTotalCount] = useState(0);
+  const [modalCountries, setModalCountries] = useState<any[]>([]);
+  const [modalBranches, setModalBranches] = useState<any[]>([]);
+  const [modalSuppliers, setModalSuppliers] = useState<any[]>([]);
 
   // Form State
   const [formName, setFormName] = useState("");
@@ -72,43 +81,101 @@ export default function PromosSection() {
     return filteredPromos.slice(start, start + itemsPerPage);
   }, [filteredPromos, currentPage]);
 
-  // Open modal to assign promo to vehicles
-  const handleOpenAssignModal = async (promo: any) => {
-    setModalSearchQuery("");
-    setModalSupplierFilter("All");
-    setCurrentPromo(promo);
-    setIsAssignModalOpen(true);
+  const fetchModalVehiclesPage = async (
+    page: number,
+    country: string,
+    branch: string,
+    supplier: string,
+    search: string
+  ) => {
     setIsLoadingVehicles(true);
     try {
-      // 1. Fetch all vehicles in system
-      const res: any = await profitApi.getVehicles();
+      const params: any = {
+        paginate: "true",
+        page,
+        per_page: 20,
+      };
+      if (country && country !== "All") params.country = country;
+      if (branch && branch !== "All") params.branch_id = branch;
+      if (supplier && supplier !== "All") params.supplier = supplier;
+      if (search) params.search = search;
+
+      const res: any = await apiClient.get("/get/vehicles", { params });
+      
       const list = res?.data?.data || res?.data || res || [];
+      const total = res?.total || res?.data?.total || list.length;
+      const lastPage = res?.last_page || res?.data?.last_page || 1;
+      const currentPageNum = res?.current_page || res?.data?.current_page || 1;
 
-      // 2. Fetch active vehicle IDs mapped to this promo
-      const activeRes: any = await promoApi.getAll();
-      // To get vehicles for THIS promo, call with included_id parameter
-      // We pass the parameter using index API
-      const response: any = await promoApi.getAll(); 
-      // The API mapped getAll fetches mapped promo included_ids or vehicles.
-      // In PromosController, Route::get('promo') accepts included_id query param.
-      // Let's call the index route with a custom query
-      const axiosClient = (promoApi as any).getAll.prototype ? null : require("@/services/api/axiosClient").apiClient;
-      let activeVehicleIds: number[] = [];
-      if (axiosClient) {
-        const mappedRes = await axiosClient.get(`/api/supplier/promo?included_id=${promo.id}`);
-        activeVehicleIds = Array.isArray(mappedRes) ? mappedRes : (mappedRes?.data || []);
-      }
-
-      if (Array.isArray(list)) {
-        setVehicles(list);
-        setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)));
-      }
+      setVehicles(list);
+      setModalTotalCount(total);
+      setModalTotalPages(lastPage);
+      setModalCurrentPage(currentPageNum);
     } catch (err) {
       toast.error("Failed to load fleet vehicles.");
     } finally {
       setIsLoadingVehicles(false);
     }
   };
+
+  const loadBranchesForCountry = async (country: string) => {
+    try {
+      const bRes: any = await profitApi.getBranches(undefined, country === "All" ? undefined : country);
+      const bData = Array.isArray(bRes?.data) ? bRes.data : Array.isArray(bRes) ? bRes : [];
+      setModalBranches(bData);
+    } catch (err) {
+      console.error("Failed to load branches list", err);
+    }
+  };
+
+  // Open modal to assign promo to vehicles
+  const handleOpenAssignModal = async (promo: any) => {
+    setModalSearchQuery("");
+    setModalSupplierFilter("All");
+    setModalCountryFilter("All");
+    setModalBranchFilter("All");
+    setModalCurrentPage(1);
+    setVehicles([]);
+    setModalCountries([]);
+    setModalBranches([]);
+    setModalSuppliers([]);
+    setCurrentPromo(promo);
+    setIsAssignModalOpen(true);
+    setIsLoadingVehicles(true);
+    try {
+      // 1. Fetch metadata lists
+      const cRes: any = await profitApi.getCountries();
+      const cData = Array.isArray(cRes?.data) ? cRes.data : Array.isArray(cRes) ? cRes : [];
+      setModalCountries(cData);
+
+      const sRes: any = await profitApi.getSuppliers();
+      const sData = Array.isArray(sRes?.data) ? sRes.data : Array.isArray(sRes) ? sRes : [];
+      setModalSuppliers(sData.map((item: any) => ({ id: String(item.id), name: item.name })));
+
+      // 2. Fetch active vehicle IDs mapped to this promo
+      const axiosClient = (promoApi as any).getAll.prototype ? null : require("@/services/api/axiosClient").apiClient;
+      let activeVehicleIds: number[] = [];
+      if (axiosClient) {
+        const mappedRes = await axiosClient.get(`/api/supplier/promo?included_id=${promo.id}`);
+        activeVehicleIds = Array.isArray(mappedRes) ? mappedRes : (mappedRes?.data || []);
+      }
+      setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)));
+
+      // 3. Initial page load
+      await fetchModalVehiclesPage(1, "All", "All", "All", "");
+    } catch (err) {
+      toast.error("Failed to load fleet data.");
+    } finally {
+      setIsLoadingVehicles(false);
+    }
+  };
+
+  // Reactive effect to fetch page 1 whenever filters change inside the modal
+  useEffect(() => {
+    if (isAssignModalOpen) {
+      fetchModalVehiclesPage(1, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+    }
+  }, [modalSearchQuery, modalSupplierFilter, modalCountryFilter, modalBranchFilter, isAssignModalOpen]);
 
   const handleSaveAssignments = async () => {
     if (!currentPromo) return;
@@ -207,41 +274,18 @@ export default function PromosSection() {
     }
   };
 
-  // List of unique supplier names for dropdown
-  const modalSuppliersList = useMemo(() => {
-    const list = new Set<string>();
-    vehicles.forEach((v) => {
-      const name = v.supplier?.company || v.supplier?.name || "Independent Suppliers";
-      list.add(name);
-    });
-    return ["All", ...Array.from(list)];
-  }, [vehicles]);
-
-  // Filter vehicles by search and supplier select inside modal
-  const filteredModalVehicles = useMemo(() => {
-    return vehicles.filter((v) => {
-      const supplierName = v.supplier?.company || v.supplier?.name || "Independent Suppliers";
-      const matchesSupplier = modalSupplierFilter === "All" || supplierName === modalSupplierFilter;
-      
-      const vName = v.name || "";
-      const matchesSearch = modalSearchQuery === "" || vName.toLowerCase().includes(modalSearchQuery.toLowerCase());
-      
-      return matchesSupplier && matchesSearch;
-    });
-  }, [vehicles, modalSupplierFilter, modalSearchQuery]);
-
-  // Group filtered vehicles by company/supplier
+  // Group vehicles by company/supplier
   const groupedVehicles = useMemo(() => {
     const groups: Record<string, any[]> = {};
-    filteredModalVehicles.forEach((v) => {
-      const supplierName = v.supplier?.company || v.supplier?.name || "Independent Suppliers";
+    vehicles.forEach((v) => {
+      const supplierName = v.supplierUser?.company || v.supplierUser?.name || v.supplier?.company || v.supplier?.name || "Independent Suppliers";
       if (!groups[supplierName]) {
         groups[supplierName] = [];
       }
       groups[supplierName].push(v);
     });
     return groups;
-  }, [filteredModalVehicles]);
+  }, [vehicles]);
 
   const toggleVehicleSelection = (id: number) => {
     setSelectedVehicleIds(prev =>
@@ -466,26 +510,68 @@ export default function PromosSection() {
               </div>
 
               {/* Search and Filters inside Modal */}
-              <div className="flex flex-col sm:flex-row gap-3 py-3 border-b border-gray-150 bg-gray-50/20 px-1">
-                <div className="flex-1 relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary" size={15} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 py-3 border-b border-gray-150 bg-gray-50/20 px-1.5">
+                {/* Search */}
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary" size={14} />
                   <input
                     type="text"
-                    placeholder="Search vehicle by name..."
+                    placeholder="Search by name..."
                     value={modalSearchQuery}
                     onChange={(e) => setModalSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                    className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-800 font-semibold"
                   />
                 </div>
-                <div className="w-full sm:w-56">
+
+                {/* Country */}
+                <div>
+                  <select
+                    value={modalCountryFilter}
+                    onChange={(e) => {
+                      const newCountry = e.target.value;
+                      setModalCountryFilter(newCountry);
+                      setModalBranchFilter("All");
+                      loadBranchesForCountry(newCountry);
+                    }}
+                    className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer outline-none font-semibold"
+                  >
+                    <option value="All">All Countries</option>
+                    {modalCountries.map((c: any, idx: number) => (
+                      <option key={idx} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Branch */}
+                <div>
+                  <select
+                    value={modalBranchFilter}
+                    onChange={(e) => setModalBranchFilter(e.target.value)}
+                    disabled={modalCountryFilter === "All"}
+                    className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                  >
+                    <option value="All">All Branches</option>
+                    {modalBranches.map((b: any, idx: number) => (
+                      <option key={idx} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Supplier */}
+                <div>
                   <select
                     value={modalSupplierFilter}
                     onChange={(e) => setModalSupplierFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer outline-none"
+                    className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer outline-none font-semibold"
                   >
-                    {modalSuppliersList.map((sup, idx) => (
-                      <option key={idx} value={sup}>
-                        {sup === "All" ? "All Suppliers (Companies)" : sup}
+                    <option value="All">All Suppliers</option>
+                    {modalSuppliers.map((sup: any, idx: number) => (
+                      <option key={idx} value={sup.id}>
+                        {sup.name}
                       </option>
                     ))}
                   </select>
@@ -531,7 +617,7 @@ export default function PromosSection() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-bold text-gray-900 truncate leading-snug">{v.name}</p>
-                                  <p className="text-[10px] text-gray-400 truncate mt-0.5">{v.pickup_loc?.name || "All Branches"}</p>
+                                  <p className="text-[10px] text-gray-400 truncate mt-0.5">{v.pickup_loc?.name || v.branch?.name || "All Branches"}</p>
                                 </div>
                                 <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
                                   isSelected ? "bg-primary border-primary text-black" : "bg-white border-gray-300"
@@ -544,6 +630,24 @@ export default function PromosSection() {
                         </div>
                       </div>
                     ))}
+
+                    {/* Pagination Info & Controls inside Modal */}
+                    {!isLoadingVehicles && vehicles.length > 0 && modalTotalPages > 1 && (
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-4 pb-2 bg-white sticky bottom-0 z-10">
+                        <span className="text-xs font-bold text-gray-500">
+                          Showing {Math.min(modalTotalCount, (modalCurrentPage - 1) * 20 + 1)} to{" "}
+                          {Math.min(modalTotalCount, modalCurrentPage * 20)} of {modalTotalCount} cars
+                        </span>
+                        <Pagination
+                          currentPage={modalCurrentPage}
+                          totalPages={modalTotalPages}
+                          onPageChange={(page) => {
+                            setModalCurrentPage(page);
+                            fetchModalVehiclesPage(page, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

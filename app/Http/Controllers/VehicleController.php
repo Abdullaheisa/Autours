@@ -1035,6 +1035,13 @@ class VehicleController extends Controller
             $vehicles->where('pickup_loc', $branchId);
         }
 
+        $country = $request->get('country');
+        if ($country != null) {
+            $vehicles->whereHas('branch', function ($q) use ($country) {
+                $q->where('country', $country);
+            });
+        }
+
         if ($categoryId != null) {
             $vehicles->where('category', $categoryId);
         }

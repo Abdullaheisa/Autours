@@ -122,10 +122,10 @@ export default function Contact() {
                         {item.value}
                       </p>
                     </div>
-                    <div className="w-8 h-8 rounded-full border-2 border-gray-100 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all shrink-0">
+                    <div className="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all shrink-0">
                       <ArrowUpRight
                         size={14}
-                        className="text-gray-200 group-hover:text-gray-900 transition-colors"
+                        className="text-slate-400 group-hover:text-gray-900 transition-colors"
                       />
                     </div>
                   </motion.a>
@@ -158,16 +158,16 @@ export default function Contact() {
                     whileTap={{ scale: 0.9 }}
                     onHoverStart={() => setHoveredSocial(i)}
                     onHoverEnd={() => setHoveredSocial(null)}
-                    className="relative w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center transition-all duration-300 shadow-sm"
+                    className="relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm"
                     style={{
-                      backgroundColor: hoveredSocial === i ? social.color : '#f9fafb'
+                      backgroundColor: hoveredSocial === i ? social.color : '#f1f5f9'
                     }}
                   >
                     <social.icon
                       size={20}
                       className="transition-colors duration-300"
                       style={{
-                        color: hoveredSocial === i ? '#ffffff' : '#9ca3af'
+                        color: hoveredSocial === i ? '#ffffff' : '#334155'
                       }}
                       strokeWidth={1.5}
                     />

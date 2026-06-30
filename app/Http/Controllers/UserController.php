@@ -282,7 +282,7 @@ class UserController extends Controller
         $branches = Branch::query();
         if ($request->has('company_id')) {
             $branches->where('company_id', $request->company_id);
-        } else if ($companyId) {
+        } else if ($companyId && $user && $user->role === 'active_supplier') {
             $branches->where('company_id', $companyId);
         }
         if ($request->has('country')) {

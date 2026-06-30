@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
@@ -83,14 +84,22 @@ export default function AboutUsPage() {
 
       <main className="flex-grow">
         
-        {/* ── 1. Hero Section (White Background with Premium Car Image) ── */}
-        <section className="relative w-full py-12 lg:py-16 overflow-hidden bg-white border-b border-slate-100">
-          {/* Subtle light grid background */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-35" />
+        {/* ── 1. Hero Section (Full-Width Car Background) ── */}
+        <section className="relative w-full py-20 lg:py-28 overflow-hidden bg-slate-950">
+          {/* Full-Width Background Image */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="/img/banner-bk.webp"
+              alt="Car Comparison Background"
+              fill
+              priority
+              className="object-cover object-center"
+              quality={95}
+            />
+            {/* Dark gradient overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/90" />
+          </div>
           
-          {/* Light primary background blur glow */}
-          <div className="absolute right-[-10%] top-[-10%] w-[450px] h-[450px] bg-primary/10 rounded-full filter blur-[100px] pointer-events-none" />
-
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center space-y-6">
               
@@ -98,7 +107,7 @@ export default function AboutUsPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-slate-800 text-xs font-black uppercase tracking-wider shadow-3xs mx-auto"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary/20 border border-primary/30 text-primary text-xs font-black uppercase tracking-wider shadow-3xs mx-auto"
               >
                 <Sparkles size={13} className="text-primary animate-pulse" />
                 Car Comparison Marketplace
@@ -108,7 +117,7 @@ export default function AboutUsPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.05 }}
-                className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] text-slate-900"
+                className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] text-white"
               >
                 Compare Car Rentals <br />
                 With Absolute <span className="bg-primary px-3.5 py-1 rounded-2xl inline-block shadow-2xs text-slate-950 font-black border border-primary/20 rotate-[-1deg]">Confidence</span>
@@ -118,7 +127,7 @@ export default function AboutUsPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-slate-600 text-sm sm:text-base md:text-lg leading-[1.8] max-w-2xl mx-auto font-semibold"
+                className="text-slate-200 text-sm sm:text-base md:text-lg leading-[1.8] max-w-2xl mx-auto font-semibold"
               >
                 Autours is a trusted car rental comparison platform that connects travelers with leading local and international car rental companies. We help customers compare prices, vehicle options, rental conditions, and pickup locations, making it easier to find the right car at the right price.
               </motion.p>
@@ -129,19 +138,19 @@ export default function AboutUsPage() {
                 transition={{ duration: 0.6, delay: 0.15 }}
                 className="flex flex-wrap justify-center gap-4 pt-3"
               >
-                <div className="bg-slate-50 border border-slate-200 px-5 py-3.5 rounded-2xl flex items-center gap-3.5 hover:border-primary/50 transition-colors shadow-3xs text-left">
-                  <Globe size={20} className="text-primary-850" />
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 px-5 py-3.5 rounded-2xl flex items-center gap-3.5 hover:border-primary/50 hover:bg-white/15 transition-all shadow-3xs text-left">
+                  <Globe size={20} className="text-primary" />
                   <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Operating Areas</p>
-                    <p className="text-xs sm:text-sm font-black text-slate-800 mt-1.5 leading-none">GCC, Egypt, Morocco, Turkey</p>
+                    <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider leading-none">Operating Areas</p>
+                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">GCC, Egypt, Morocco, Turkey</p>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200 px-5 py-3.5 rounded-2xl flex items-center gap-3.5 hover:border-primary/50 transition-colors shadow-3xs text-left">
-                  <Award size={20} className="text-primary-850" />
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 px-5 py-3.5 rounded-2xl flex items-center gap-3.5 hover:border-primary/50 hover:bg-white/15 transition-all shadow-3xs text-left">
+                  <Award size={20} className="text-primary" />
                   <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Trusted Network</p>
-                    <p className="text-xs sm:text-sm font-black text-slate-800 mt-1.5 leading-none">30+ Premium Partners</p>
+                    <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider leading-none">Trusted Network</p>
+                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">30+ Premium Partners</p>
                   </div>
                 </div>
               </motion.div>
@@ -149,13 +158,13 @@ export default function AboutUsPage() {
           </div>
         </section>
 
-        {/* ── 2. Bento Grid: Why Choose Us (Clean Slate Background) ── */}
-        <section className="py-12 bg-slate-50/50">
+        {/* ── 2. Bento Grid: Why Choose Us (Vibrant Primary Background) ── */}
+        <section className="py-12 bg-primary">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div className="text-center max-w-2xl mx-auto mb-10">
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-title">Why Choose Autours?</h2>
-              <p className="text-slate-500 text-xs sm:text-sm mt-1 font-semibold">We simplify car renting by consolidating multiple local and global suppliers in one panel.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-title">Why Choose Autours?</h2>
+              <p className="text-slate-900/80 text-xs sm:text-sm mt-1 font-bold">We simplify car renting by consolidating multiple local and global suppliers in one panel.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -360,42 +369,29 @@ export default function AboutUsPage() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             
             {/* Story (Our Background) */}
-            <div className="flex flex-col lg:flex-row gap-12 items-center">
-              <div className="w-full lg:w-5/12 shrink-0 relative max-w-sm mx-auto">
-                <div className="aspect-[4/3] rounded-2xl overflow-hidden relative z-10 shadow-lg border border-slate-200 bg-slate-50">
-                  <Image
-                    src="/img/About%20us/Our-Vision.png"
-                    alt="Our Story"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-full filter blur-xl opacity-75 animate-pulse" />
-                <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-blue-50 rounded-full filter blur-xl opacity-75 animate-pulse" />
-              </div>
-              
-              <div className="w-full lg:w-7/12 space-y-3.5 text-center lg:text-left">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+              <div className="lg:col-span-5 space-y-4 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-2.5">
                   <div className="w-6 h-1 bg-primary rounded-full" />
                   <span className="text-primary-850 font-black uppercase tracking-widest text-[10px] sm:text-xs">Our Story</span>
                 </div>
                 
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-tight">
+                <h2 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight leading-tight">
                   Connecting Travelers and Rental Providers Since 2024
                 </h2>
+
+                <p className="border-l-4 border-primary pl-4 py-1.5 text-slate-950 font-black text-sm sm:text-base md:text-lg leading-[1.8] text-left">
+                  Autours was launched in <strong>2024</strong> to solve one of the biggest challenges travelers face when renting a car—comparing prices and finding trustworthy rental providers.
+                </p>
+              </div>
+              
+              <div className="lg:col-span-7 space-y-5 text-left">
+                <p className="text-slate-800 text-xs sm:text-sm md:text-base font-extrabold leading-[1.8]">
+                  Instead of spending hours searching individual company websites, we created a single platform where travelers can compare vehicles, prices, rental terms, and pickup locations from multiple suppliers in just a few clicks.
+                </p>
                 
-                <div className="space-y-5 text-left">
-                  <p className="border-l-4 border-primary pl-4 py-1.5 text-slate-950 font-black text-sm sm:text-base md:text-lg leading-[1.8]">
-                    Autours was launched in <strong>2024</strong> to solve one of the biggest challenges travelers face when renting a car—comparing prices and finding trustworthy rental providers.
-                  </p>
-                  
-                  <p className="text-slate-800 text-xs sm:text-sm md:text-base font-extrabold leading-[1.8]">
-                    Instead of spending hours searching individual company websites, we created a single platform where travelers can compare vehicles, prices, rental terms, and pickup locations from multiple suppliers in just a few clicks.
-                  </p>
-                  
-                  <div className="bg-slate-50 border border-slate-200/80 p-5 rounded-2xl text-slate-900 text-xs sm:text-sm md:text-base font-extrabold leading-[1.8] shadow-3xs hover:border-primary/30 transition-colors">
-                    As a comparison platform, Autours acts as the bridge between customers looking for the best rental option and trusted car rental companies seeking to reach more travelers. This approach creates value for both sides by improving transparency, expanding choice, and simplifying the booking process.
-                  </div>
+                <div className="bg-slate-50 border border-slate-200/80 p-5 rounded-2xl text-slate-900 text-xs sm:text-sm md:text-base font-extrabold leading-[1.8] shadow-3xs hover:border-primary/30 transition-colors">
+                  As a comparison platform, Autours acts as the bridge between customers looking for the best rental option and trusted car rental companies seeking to reach more travelers. This approach creates value for both sides by improving transparency, expanding choice, and simplifying the booking process.
                 </div>
               </div>
             </div>
@@ -452,12 +448,12 @@ export default function AboutUsPage() {
         </section>
 
         {/* ── 5. Premium Side-by-Side Comparison Section ── */}
-        <section className="py-12 bg-slate-50/50 border-y border-slate-200/60 relative">
+        <section className="py-12 bg-primary relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div className="text-center max-w-2xl mx-auto mb-10">
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-title">Why Compare Instead of Booking Directly?</h2>
-              <p className="text-slate-500 text-xs sm:text-sm mt-1 font-semibold">See how comparing with Autours gives you a massive advantage over standard single-company bookings.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-title">Why Compare Instead of Booking Directly?</h2>
+              <p className="text-slate-900/80 text-xs sm:text-sm mt-1 font-bold">See how comparing with Autours gives you a massive advantage over standard single-company bookings.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto items-stretch">
@@ -499,7 +495,7 @@ export default function AboutUsPage() {
               {/* Right Column: Comparing via Autours */}
               <motion.div
                 whileHover={{ y: -4 }}
-                className="bg-gradient-to-br from-primary/10 via-white to-white rounded-[2rem] p-6 sm:p-8 border-2 border-primary shadow-md flex flex-col justify-between relative overflow-hidden"
+                className="bg-white rounded-[2rem] p-6 sm:p-8 border-2 border-slate-950 shadow-xl flex flex-col justify-between relative overflow-hidden text-slate-900"
               >
                 <div className="absolute top-0 right-0 bg-primary text-slate-950 font-black text-[9px] uppercase tracking-widest px-4.5 py-1.5 rounded-bl-2xl">
                   Best Value Choice
@@ -508,9 +504,9 @@ export default function AboutUsPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <span className="w-2 h-2 rounded-full bg-emerald-450 shrink-0" />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-primary-800">Autours Comparison</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-primary-850">Autours Comparison</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-900 mb-6 leading-tight">Comparing Through Autours</h3>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-905 mb-6 leading-tight">Comparing Through Autours</h3>
                   
                   <div className="space-y-5">
                     {[
@@ -650,7 +646,6 @@ export default function AboutUsPage() {
             <p className="text-center text-[9px] sm:text-xs font-black uppercase tracking-widest text-slate-800 mt-8">And growing our list of regional providers every single month</p>
           </div>
         </section>
-
         {/* ── 8. FAQ Section Grid & Modals (White Background) ── */}
         <section className="py-12 bg-white text-slate-900 border-t border-slate-200/50 relative">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

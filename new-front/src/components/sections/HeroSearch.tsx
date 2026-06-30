@@ -378,7 +378,7 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowStartTime(!showStartTime)}
-                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-200 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-250 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
@@ -399,7 +399,7 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowEndTime(!showEndTime)}
-                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-200 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-250 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
@@ -418,29 +418,24 @@ export default function HeroSearch({
               </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-5 sm:pt-6 border-t border-gray-300/50">
-{/* الـ Grid يعرض عمودين في الموبايل والتابلت، و4 أعمدة في الشاشات الكبيرة */}
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4 w-full lg:w-auto">
-    {TRUST_BADGES.map((text, i) => (
-      <div key={i} className="flex items-start gap-1.5 sm:gap-2">
-        {/* حجم الأيقونة يصغر سنة في الموبايل عشان يتماشى مع الخط */}
-        <CheckCircle2 className="text-green-500 shrink-0 mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        
-        {/* حجم الخط: صغير جداً في الموبايل [11px] ويكبر في التابلت sm:text-sm */}
-        <span className="text-[10px] sm:text-[13px] font-bold text-black capitalize tracking-wider break-words whitespace-normal leading-tight">
-          {text}
-        </span>
-      </div>
-    ))}
-  </div>
-
+            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-5 pt-5 sm:pt-6 border-t border-gray-300/30">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-3 w-full lg:w-auto">
+                {TRUST_BADGES.map((text, i) => (
+                  <div key={i} className="flex items-center gap-2 shrink-0">
+                    <CheckCircle2 className="text-emerald-500 shrink-0 w-4 h-4 lg:w-5 lg:h-5" />
+                    <span className="text-[11px] sm:text-xs lg:text-[15px] font-bold text-white capitalize tracking-wide whitespace-nowrap drop-shadow-sm">
+                      {text}
+                    </span>
+                  </div>
+                ))}
+              </div>
 
               <motion.button
                 type="submit"
                 disabled={isSearching}
                 whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}
                 whileTap={{ scale: 0.97 }}
-                className="h-14 sm:h-16 w-full sm:w-auto px-6 sm:px-10 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-500 rounded-[1.25rem] shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
+                className="h-14 sm:h-16 w-full lg:w-auto px-6 sm:px-10 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-500 rounded-[1.25rem] shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
               >
                 <span className="absolute inset-0 bg-gray-900 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
                 {isSearching ? (
