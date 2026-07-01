@@ -731,7 +731,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           </div>
 
-          <div className="hidden lg:flex lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 min-w-0 items-center justify-end px-4 lg:px-5">
+          <div className="hidden lg:flex lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 min-w-0 items-center justify-start px-4 lg:px-5">
             {mainHighlight && (
               <div 
                 className="inline-flex items-center gap-1.5 text-green-700"
@@ -819,7 +819,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
           </div>
 
-          <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-6 lg:pt-6 flex flex-col lg:items-end items-start justify-between gap-3 lg:gap-0 self-stretch">
+          <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-6 lg:pt-6 flex flex-col lg:items-start items-start justify-between gap-3 lg:gap-0 self-stretch">
             {mainHighlight && (
               <div 
                 className="inline-flex lg:hidden items-center gap-1.5 text-green-700 mb-10"
@@ -852,10 +852,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             )}
 
-            <div className="flex flex-col lg:items-end items-start w-full gap-2 lg:gap-4 mt-auto">
-              <div className="flex flex-col lg:items-end items-start">
+            <div className="flex flex-col lg:items-start items-start w-full gap-2 lg:gap-4 mt-auto">
+              <div className="flex flex-col lg:items-start items-start">
                 <span className="text-xs lg:text-sm xl:text-base font-bold text-gray-600 block mb-1 lg:mb-2">for {carData.price.totalDays} days</span>
-                <div className="text-left lg:text-right">
+                <div className="text-left lg:text-left">
                   <span className="text-2xl xl:text-3xl font-black text-gray-900">
                     {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                   </span>
