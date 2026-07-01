@@ -284,7 +284,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         <span className="relative inline-flex items-center gap-1 pb-1">
           {checkIcon}
           <span>{firstWord}</span>
-          <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--primary)] rounded-full" />
+          {/* <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--primary)] rounded-full" /> */}
         </span>
         <span>{restOfText}</span>
       </span>
