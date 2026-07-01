@@ -26,6 +26,7 @@ export default function PromosSection() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [allFilteredVehicles, setAllFilteredVehicles] = useState<any[]>([]);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<number[]>([]);
+  const [activePromoVehicles, setActivePromoVehicles] = useState<any[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -144,14 +145,18 @@ export default function PromosSection() {
     search: string
   ) => {
     try {
-      const params: any = {};
+      const params: any = {
+        paginate: "true",
+        per_page: 10000,
+        compact: "true",
+      };
       if (country && country !== "All") params.country = country;
       if (branch && branch !== "All") params.branch_id = branch;
       if (supplier && supplier !== "All") params.supplier = supplier;
       if (search) params.search = search;
 
       const res: any = await apiClient.get("/get/vehicles", { params });
-      const list = res?.data?.data || res?.data || res || [];
+      const list = res?.data || res || [];
       const dataArray = Array.isArray(list) ? list : [];
       setAllFilteredVehicles(dataArray);
     } catch (err) {
@@ -199,7 +204,23 @@ export default function PromosSection() {
       const mappedRes: any = await apiClient.get(`/api/supplier/promo?included_id=${promo.id}`);
       const rawIds = Array.isArray(mappedRes) ? mappedRes : (mappedRes?.data || []);
       activeVehicleIds = Array.isArray(rawIds) ? rawIds : [];
-      setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)));
+      const normalizedActiveIds = activeVehicleIds.map((id: any) => Number(id));
+      setSelectedVehicleIds(normalizedActiveIds);
+
+      // Fetch full details of these active vehicles so they are cached
+      let activeVehiclesList: any[] = [];
+      if (normalizedActiveIds.length > 0) {
+        try {
+          const detailRes: any = await apiClient.get("/get/vehicles", {
+            params: { ids: normalizedActiveIds.join(",") }
+          });
+          const detailList = detailRes?.data || detailRes || [];
+          activeVehiclesList = Array.isArray(detailList) ? detailList : [];
+        } catch (err) {
+          console.warn("Failed to load active vehicles details", err);
+        }
+      }
+      setActivePromoVehicles(activeVehiclesList);
 
       // 3. Initial page load
       await fetchModalVehiclesPage(1, "All", "All", "All", "");
@@ -316,12 +337,21 @@ export default function PromosSection() {
     }
   };
 
+  // Get the full list of all currently selected vehicle objects
+  const fullSelectedList = useMemo(() => {
+    const allLoadedMap = new Map<number, any>();
+    activePromoVehicles.forEach(v => allLoadedMap.set(Number(v.id), v));
+    allFilteredVehicles.forEach(v => allLoadedMap.set(Number(v.id), v));
+    vehicles.forEach(v => allLoadedMap.set(Number(v.id), v));
+
+    return Array.from(allLoadedMap.values()).filter(v => selectedVehicleIds.includes(Number(v.id)));
+  }, [activePromoVehicles, allFilteredVehicles, vehicles, selectedVehicleIds]);
+
   // Group vehicles by company/supplier
   const groupedVehicles = useMemo(() => {
     const groups: Record<string, any[]> = {};
     let listToGroup = [];
     if (showSelectedOnly) {
-      const fullSelectedList = allFilteredVehicles.filter(v => selectedVehicleIds.includes(Number(v.id)));
       const start = (selectedPage - 1) * selectedPerPage;
       listToGroup = fullSelectedList.slice(start, start + selectedPerPage);
     } else {
@@ -336,7 +366,7 @@ export default function PromosSection() {
       groups[supplierName].push(v);
     });
     return groups;
-  }, [vehicles, allFilteredVehicles, selectedVehicleIds, showSelectedOnly, selectedPage]);
+  }, [vehicles, fullSelectedList, showSelectedOnly, selectedPage]);
 
   const toggleVehicleSelection = (id: number) => {
     setSelectedVehicleIds(prev => {
@@ -731,14 +761,14 @@ export default function PromosSection() {
                         </span>
                         <span className="text-[10px] text-gray-400 mt-0.5">
                           {showSelectedOnly 
-                            ? `Remove selection for all ${allFilteredVehicleIds.filter(id => selectedVehicleIds.includes(id)).length} cars currently selected`
+                            ? `Remove selection for all ${fullSelectedList.length} cars currently selected`
                             : `Toggle selection for all ${allFilteredVehicleIds.length} cars matching filters across all pages`}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={showSelectedOnly 
-                          ? () => setSelectedVehicleIds(prev => prev.filter(id => !allFilteredVehicleIds.includes(id))) 
+                          ? () => setSelectedVehicleIds(prev => prev.filter(id => !fullSelectedList.map(v => Number(v.id)).includes(id))) 
                           : toggleSelectAllPage
                         }
                         className={`text-xs font-black px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 ${
@@ -812,7 +842,6 @@ export default function PromosSection() {
                       showSelectedOnly ? (
                         // Local pagination for selected list
                         (() => {
-                          const fullSelectedList = allFilteredVehicles.filter(v => selectedVehicleIds.includes(Number(v.id)));
                           const selectedTotalPages = Math.ceil(fullSelectedList.length / selectedPerPage);
                           if (fullSelectedList.length > 0 && selectedTotalPages > 1) {
                             return (

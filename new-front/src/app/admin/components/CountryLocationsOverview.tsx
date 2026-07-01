@@ -182,39 +182,38 @@ export default function CountryLocationsOverview({ isMaximized = false, onMaximi
       </div>
 
       {/* Hero Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="text-center bg-blue-50/60 rounded-xl py-3">
-          <Globe className="text-blue-500 mx-auto mb-1" size={18} />
-          <p className="text-xl font-extrabold text-gray-900">{totalCountries}</p>
-          <p className="text-[11px] text-gray-500 font-medium">Countries</p>
+      <div className="space-y-1.5 mb-3 bg-gray-50 border border-gray-150 p-2.5 rounded-xl text-xs shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Building2 className="text-emerald-500 shrink-0" size={13} />
+            <span className="text-gray-500 font-semibold">Total Branches:</span>
+          </div>
+          <span className="font-extrabold text-gray-900">{totalBranches.toLocaleString()}</span>
         </div>
-        <div className="text-center bg-emerald-50/60 rounded-xl py-3">
-          <Building2 className="text-emerald-500 mx-auto mb-1" size={18} />
-          <p className="text-xl font-extrabold text-gray-900">{totalBranches.toLocaleString()}</p>
-          <p className="text-[11px] text-gray-500 font-medium">Branches</p>
-        </div>
-        <div className="text-center bg-purple-50/60 rounded-xl py-3">
-          <Plane className="text-purple-500 mx-auto mb-1" size={18} />
-          <p className="text-xl font-extrabold text-gray-900">{totalAirports}</p>
-          <p className="text-[11px] text-gray-500 font-medium">Airports</p>
+        <div className="flex items-center justify-between border-t border-gray-200/60 pt-1.5">
+          <div className="flex items-center gap-1.5">
+            <Plane className="text-purple-500 shrink-0" size={13} />
+            <span className="text-gray-500 font-semibold">Total Airports:</span>
+          </div>
+          <span className="font-extrabold text-gray-900">{totalAirports}</span>
         </div>
       </div>
 
       {/* Most Booked Badge */}
       {topBookingsCountry && (topBookingsCountry.bookings ?? 0) > 0 && (
-        <div className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-xl px-3 py-2 mb-3">
-          <TrendingUp size={14} className="text-orange-500 shrink-0" />
-          <span className="text-xs font-semibold text-orange-700">Most Booked:</span>
+        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2.5 mb-3">
+          <TrendingUp size={14} className="text-amber-700 shrink-0" />
+          <span className="text-xs font-bold text-amber-800">Most Booked:</span>
           {getCountryIso(topBookingsCountry.country) && (
             <Image
               src={`https://flagcdn.com/w40/${getCountryIso(topBookingsCountry.country)}.png`}
               alt={getCountryFullName(topBookingsCountry.country)}
               width={24} height={16}
-              className="w-6 h-auto rounded-sm shadow-sm border border-orange-200 shrink-0"
+              className="w-6 h-auto rounded shadow-sm border border-amber-500/10 shrink-0"
             />
           )}
-          <span className="text-xs font-bold text-orange-900 truncate">{getCountryFullName(topBookingsCountry.country)}</span>
-          <span className="ml-auto bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+          <span className="text-xs font-black text-slate-800 truncate">{getCountryFullName(topBookingsCountry.country)}</span>
+          <span className="ml-auto bg-amber-500/20 text-amber-900 text-[10px] font-black px-2.5 py-0.5 rounded-lg whitespace-nowrap">
             {topBookingsCountry.bookings} bookings
           </span>
         </div>
@@ -226,7 +225,7 @@ export default function CountryLocationsOverview({ isMaximized = false, onMaximi
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
         <MapPin size={12} /> All Countries — <span className="normal-case font-normal text-gray-400">click to see details</span>
       </p>
-      <div className="space-y-1 overflow-y-auto flex-1 min-h-0 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+      <div className="space-y-1 overflow-y-auto flex-1 min-h-0 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-250 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
         {list.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-4">No data available</p>
         ) : (
@@ -234,7 +233,7 @@ export default function CountryLocationsOverview({ isMaximized = false, onMaximi
             <button
               key={i}
               onClick={() => setSelected(item)}
-              className="w-full flex items-center justify-between group hover:bg-blue-50/60 rounded-xl px-2.5 py-1.5 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between group hover:bg-blue-50/40 rounded-xl px-2.5 py-1.5 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
                 {/* Rank number */}
@@ -253,7 +252,7 @@ export default function CountryLocationsOverview({ isMaximized = false, onMaximi
                   ) : (
                     <Globe size={14} className="text-gray-300 shrink-0" />
                   )}
-                  <span className="text-sm font-medium text-gray-700 text-left truncate" title={getCountryFullName(item.country)}>
+                  <span className="text-sm font-medium text-gray-750 text-left truncate" title={getCountryFullName(item.country)}>
                     {getCountryFullName(item.country)}
                   </span>
                 </div>
@@ -261,17 +260,17 @@ export default function CountryLocationsOverview({ isMaximized = false, onMaximi
               <div className="flex items-center gap-2 shrink-0">
                 {/* Bookings badge */}
                 {(item.bookings ?? 0) > 0 && (
-                  <span className="bg-orange-50 text-orange-600 text-xs font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
-                    <TrendingUp size={11} />{item.bookings}
+                  <span className="bg-amber-500/10 text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded border border-amber-500/10 flex items-center gap-1">
+                    <TrendingUp size={10} />{item.bookings}
                   </span>
                 )}
                 {/* Branches badge */}
-                <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
-                  <Building2 size={11} />{item.branches}
+                <span className="bg-emerald-50 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded border border-emerald-100/50 flex items-center gap-1">
+                  <Building2 size={10} />{item.branches}
                 </span>
                 {item.airports > 0 && (
-                  <span className="bg-purple-50 text-purple-700 text-xs font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
-                    <Plane size={11} />{item.airports}
+                  <span className="bg-purple-50 text-purple-800 text-[10px] font-extrabold px-2 py-0.5 rounded border border-purple-100/50 flex items-center gap-1">
+                    <Plane size={10} />{item.airports}
                   </span>
                 )}
                 <ChevronRight size={14} className="text-gray-400 group-hover:text-blue-500 transition-colors" />

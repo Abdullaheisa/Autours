@@ -1027,6 +1027,14 @@ class VehicleController extends Controller
             }
         }
 
+        $ids = $request->get('ids');
+        if ($ids != null) {
+            $idArray = array_filter(array_map('intval', explode(',', (string) $ids)));
+            if (!empty($idArray)) {
+                $vehicles->whereIn('id', $idArray);
+            }
+        }
+
         if (!is_null($supplierId)) {
             $vehicles->where('supplier', $supplierId);
         }
@@ -1050,7 +1058,16 @@ class VehicleController extends Controller
             $vehicles->where('name', 'LIKE', '%' . $search . '%');
         }
 
-        $query = $vehicles->with('category', 'supplierUser', 'branch', 'fuelPolicy')->orderBy('id');
+        if ($request->get('compact') === 'true') {
+            $query = $vehicles->select('id', 'name', 'supplier', 'pickup_loc')
+                ->with([
+                    'supplierUser' => function($q) { $q->select('id', 'company', 'name'); },
+                    'branch' => function($q) { $q->select('id', 'name'); }
+                ])
+                ->orderBy('id');
+        } else {
+            $query = $vehicles->with('category', 'supplierUser', 'branch', 'fuelPolicy')->orderBy('id');
+        }
 
         if ($request->has('paginate')) {
             $data = $query->paginate($request->get('per_page', 10));
@@ -1058,13 +1075,20 @@ class VehicleController extends Controller
             $data = $query->get();
         }
 
-        $data->each(function ($vehicle) {
-            $vehicle->activation = $vehicle->activation == 1;
-            $vehicle->load(['rentals' => function ($query) {
-                $query->where('order_status', 1);
-            }]);
-            $vehicle->setAttribute('rentals_count', $vehicle->rentals->count());
-        });
+        if ($request->get('compact') !== 'true') {
+            $data->each(function ($vehicle) {
+                $vehicle->activation = $vehicle->activation == 1;
+                $vehicle->load(['rentals' => function ($query) {
+                    $query->where('order_status', 1);
+                }]);
+                $vehicle->setAttribute('rentals_count', $vehicle->rentals->count());
+            });
+        } else {
+            $data->each(function ($vehicle) {
+                $vehicle->activation = $vehicle->activation == 1;
+                $vehicle->setAttribute('rentals_count', 0);
+            });
+        }
 
         return response()->json($data);
     }

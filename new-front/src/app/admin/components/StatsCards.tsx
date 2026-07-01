@@ -22,13 +22,13 @@ export default function StatsCards() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
       {cards.map((stat, index) => (
-        <div key={index} className={`bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border ${stat.borderColor} shadow-sm hover:shadow-md transition-shadow`}>
-          <div className="flex items-start justify-between">
-            <div className={`${stat.bgColor} p-2.5 sm:p-3 rounded-xl`}><stat.icon className={stat.iconColor} size={20} /></div>
+        <div key={index} className={`bg-white rounded-2xl p-3 sm:p-4 border ${stat.borderColor} shadow-sm hover:shadow-md transition-shadow flex items-center gap-3 sm:gap-4`}>
+          <div className={`${stat.bgColor} p-2.5 sm:p-3 rounded-xl shrink-0`}>
+            <stat.icon className={stat.iconColor} size={20} />
           </div>
-          <div className="mt-3 sm:mt-4">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stat.value}</p>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">{stat.title}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs sm:text-sm text-gray-500 font-medium truncate">{stat.title}</p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 mt-0.5 truncate">{stat.value}</p>
           </div>
         </div>
       ))}

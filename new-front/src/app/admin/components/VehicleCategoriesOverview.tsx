@@ -156,31 +156,24 @@ export default function VehicleCategoriesOverview({ isMaximized = false, onMaxim
       </div>
 
       {/* Hero highlights */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-emerald-50 rounded-xl p-3.5 border border-emerald-100">
-          <div className="flex items-center gap-1.5 mb-2">
-            <TrendingUp className="text-emerald-600" size={16} />
-            <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-              Most Requested
-            </span>
+      <div className="space-y-1.5 mb-3 bg-gray-50 border border-gray-150 p-2.5 rounded-xl text-xs shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="text-emerald-600 shrink-0" size={13} />
+            <span className="text-gray-500 font-semibold">Most Requested:</span>
           </div>
-          <p className="text-base font-extrabold text-gray-900 truncate capitalize" title={mostRequested}>
-            {mostRequested || <span className="text-gray-400 font-medium text-sm">No data yet</span>}
-          </p>
-          <p className="text-xs text-emerald-600 mt-1 font-medium">🔥 Top booked type</p>
+          <span className="font-extrabold text-gray-900 capitalize" title={mostRequested}>
+            {mostRequested || "—"}
+          </span>
         </div>
-
-        <div className="bg-purple-50 rounded-xl p-3.5 border border-purple-100">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Search className="text-purple-600" size={16} />
-            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
-              Most Searched
-            </span>
+        <div className="flex items-center justify-between border-t border-gray-200/60 pt-1.5">
+          <div className="flex items-center gap-1.5">
+            <Search className="text-purple-605 shrink-0" size={13} />
+            <span className="text-gray-500 font-semibold">Most Searched:</span>
           </div>
-          <p className="text-base font-extrabold text-gray-900 truncate capitalize" title={mostSearched}>
-            {mostSearched || <span className="text-gray-400 font-medium text-sm">No data yet</span>}
-          </p>
-          <p className="text-xs text-purple-600 mt-1 font-medium">🔍 Top search type</p>
+          <span className="font-extrabold text-gray-900 capitalize" title={mostSearched}>
+            {mostSearched || "—"}
+          </span>
         </div>
       </div>
 
@@ -194,26 +187,27 @@ export default function VehicleCategoriesOverview({ isMaximized = false, onMaxim
       {topCategories.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-2">No data</p>
       ) : (
-        <div className="space-y-2 overflow-y-auto flex-1 min-h-0">
+        <div className="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-250 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
           {topCategories.map((item, i) => {
             const pct = totalBookings > 0 ? Math.round((item.bookings_count / totalBookings) * 100) : 0;
             return (
               <button
                 key={i}
                 onClick={() => setSelected(item)}
-                className="w-full flex items-center justify-between group hover:bg-amber-50/60 rounded-xl px-3 py-2 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-between group hover:bg-amber-50/40 rounded-xl px-2.5 py-1.5 transition-colors cursor-pointer"
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${pillColors[i % pillColors.length]}`}>
-                    #{i + 1}
+                <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                  {/* Rank number */}
+                  <span className="w-5 h-5 rounded-full bg-gray-100 group-hover:bg-amber-100 text-gray-600 group-hover:text-amber-800 text-xs font-bold flex items-center justify-center shrink-0 transition-colors">
+                    {i + 1}
                   </span>
-                  <span className="text-sm font-medium text-gray-700 truncate capitalize text-left" title={item.name}>
+                  <span className="text-sm font-medium text-gray-750 truncate capitalize text-left" title={item.name}>
                     {item.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-gray-400">{item.vehicles_count} veh.</span>
-                  <span className="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">
+                  <span className="bg-gray-50 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-150">{item.vehicles_count} veh.</span>
+                  <span className="bg-amber-500/10 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded border border-amber-500/20">
                     {pct}%
                   </span>
                   <ChevronRight size={14} className="text-gray-400 group-hover:text-amber-500 transition-colors" />
