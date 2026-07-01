@@ -189,7 +189,7 @@ export default function HeroSearch({
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/15 to-black/50" />
       </div>
 
-      <div className="relative z-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 w-full flex flex-col items-center">
+      <div className="relative z-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-0 sm:px-4 w-full flex flex-col items-center">
         <div className="text-center mb-4 sm:mb-6 md:mb-8 flex flex-col items-center justify-center gap-2.5 sm:gap-6">
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
             {title} <span className="text-primary">{titleHighlight}</span>
@@ -201,7 +201,7 @@ export default function HeroSearch({
           )}
         </div>
 
-        <div className="bg-white/35 backdrop-blur-sm pt-6 pb-5 px-3 sm:pt-8 sm:pb-7 sm:px-4 md:pt-10 md:pb-8 md:px-5 lg:py-16 lg:px-6 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
+        <div className="bg-white/35 backdrop-blur-sm pt-6 pb-5 px-4 sm:pt-8 sm:pb-7 sm:px-4 md:pt-10 md:pb-8 md:px-5 lg:py-16 lg:px-6 rounded-none sm:rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border-y border-white/20 sm:border border-white/20 w-full max-w-full sm:max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
           <form onSubmit={handleSearch} className="space-y-4 md:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 md:gap-2 lg:gap-3 items-start">
               
