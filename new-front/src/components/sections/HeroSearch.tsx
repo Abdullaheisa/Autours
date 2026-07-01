@@ -172,7 +172,7 @@ export default function HeroSearch({
   };
 
   return (
-    <section className="relative min-h-[95vh] sm:min-h-[100vh] flex flex-col items-center justify-start pt-10 sm:pt-12 xl:pt-14 pb-16 sm:pb-24" aria-label="Car Rental Search">
+    <section className="relative h-auto sm:h-[calc(100vh-80px)] min-h-[580px] sm:min-h-[620px] md:min-h-[660px] flex flex-col items-center justify-start pt-16 pb-12 sm:justify-center sm:pt-0 sm:pb-0 sm:overflow-hidden" aria-label="Car Rental Search">
       {/* 🚀 السر كله هنا: تحويل الخلفية لـ next/image مضغوطة بالكامل */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-gray-900">
         <Image
@@ -190,7 +190,7 @@ export default function HeroSearch({
       </div>
 
       <div className="relative z-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 w-full flex flex-col items-center">
-        <div className="text-center mb-6 sm:mb-8 flex flex-col items-center justify-center gap-4 sm:gap-6">
+        <div className="text-center mb-4 sm:mb-6 md:mb-8 flex flex-col items-center justify-center gap-2.5 sm:gap-6">
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
             {title} <span className="text-primary">{titleHighlight}</span>
           </h1>
@@ -201,8 +201,8 @@ export default function HeroSearch({
           )}
         </div>
 
-        <div className="bg-white/35 backdrop-blur-sm py-12 px-5 sm:py-16 sm:px-8 lg:py-20 lg:px-10 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-6xl xl:max-w-[76rem] 2xl:max-w-[80rem]">
-          <form onSubmit={handleSearch} className="space-y-6">
+        <div className="bg-white/35 backdrop-blur-sm py-6 px-4 sm:py-10 sm:px-6 md:py-12 md:px-8 lg:py-16 lg:px-10 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
+          <form onSubmit={handleSearch} className="space-y-4 md:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(16,minmax(0,1fr))] gap-3 items-start">
               
               {/* Location Input */}
@@ -218,7 +218,7 @@ export default function HeroSearch({
                     }}
                     onFocus={() => location.length > 0 && setShowLocations(true)}
                     placeholder="Enter your Location"
-                    className={`w-full h-14 sm:h-16 pl-4 sm:pl-5 pr-12 bg-white/95 border rounded-[1.25rem] text-sm sm:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
+                    className={`w-full h-12 md:h-14 lg:h-16 pl-4 md:pl-5 pr-12 bg-white/95 border rounded-xl md:rounded-[1.25rem] text-xs md:text-sm lg:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
                       errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                     }`}
                   />
@@ -301,7 +301,7 @@ export default function HeroSearch({
 
               {/* Date Range Picker */}
               <div className="lg:col-span-5 relative" ref={calendarRef}>
-                <div className={`flex items-center h-14 sm:h-16 bg-white/95 border rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
+                <div className={`flex items-center h-12 md:h-14 lg:h-16 bg-white/95 border rounded-xl md:rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
                   errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                 }`}>
                   <button 
@@ -378,7 +378,7 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowStartTime(!showStartTime)}
-                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-250 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-12 md:h-14 lg:h-16 px-3 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-between text-xs md:text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
@@ -399,7 +399,7 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowEndTime(!showEndTime)}
-                    className="w-full h-14 sm:h-16 px-3 bg-white/95 border border-gray-250 rounded-[1.25rem] flex items-center justify-between text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-12 md:h-14 lg:h-16 px-3 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-between text-xs md:text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
@@ -419,11 +419,11 @@ export default function HeroSearch({
             </div>
 
             <div className="flex flex-col-reverse xl:flex-row items-center justify-between gap-5 pt-5 sm:pt-6 border-t border-slate-900/40">
-              <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-5 gap-y-3 w-full xl:w-auto">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 w-full sm:flex sm:flex-wrap sm:items-center sm:justify-center xl:justify-start xl:gap-x-5 xl:gap-y-3 xl:w-auto">
                 {TRUST_BADGES.map((text, i) => (
-                  <div key={i} className="flex items-center gap-2 shrink-0">
-                    <CheckCircle2 className="text-yellow-600 shrink-0 w-4.5 h-4.5 md:w-5 md:h-5" />
-                    <span className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm xl:text-[14px] 2xl:text-[15px] font-bold text-slate-900 capitalize tracking-wide whitespace-nowrap">
+                  <div key={i} className="flex items-center gap-1.5 min-w-0">
+                    <CheckCircle2 className="text-yellow-600 shrink-0 w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-[10px] xs:text-[11px] sm:text-xs md:text-[13px] lg:text-sm xl:text-[14px] 2xl:text-[15px] font-bold text-slate-900 capitalize tracking-wide leading-tight sm:whitespace-nowrap truncate sm:overflow-visible">
                       {text}
                     </span>
                   </div>

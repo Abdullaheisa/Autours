@@ -26,6 +26,7 @@ const config: Config = {
         'lg': '1080px',
         'xl': '1150px',
         '2xl': '1280px',
+        '3xl': '1400px',
       },
       fontFamily: {
         // 🔢 TajawalNumbers للأرقام (unicode-range) | HubotSans لكل النصوص | Tajawal fallback للعربي

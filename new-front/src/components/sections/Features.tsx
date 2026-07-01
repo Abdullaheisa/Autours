@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import {
   Car,
@@ -85,7 +85,7 @@ const FEATURES: Feature[] = [
   },
 ];
 
-function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
+function FeatureCard({ feature, index, className }: { feature: Feature; index: number; className?: string }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-30px" });
 
@@ -95,7 +95,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
       initial={{ opacity: 0, y: 30 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.4, delay: index * 0.06, ease: "easeOut" }}
-      className="group text-center"
+      className={`group text-center ${className || ''}`}
     >
       {/* Icon */}
       <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl bg-gray-50 text-gray-800 transition-all duration-300 group-hover:bg-primary group-hover:text-black group-hover:shadow-lg group-hover:shadow-primary/25 group-hover:scale-110">
@@ -118,6 +118,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
 export default function WhyAutoursSection() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section ref={sectionRef} className="relative py-16 lg:py-20 bg-white overflow-hidden">
@@ -141,8 +142,23 @@ export default function WhyAutoursSection() {
         {/* Features Grid — 5 columns, compact */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-10">
           {FEATURES.map((feature, index) => (
-            <FeatureCard key={feature.id} feature={feature} index={index} />
+            <FeatureCard 
+              key={feature.id} 
+              feature={feature} 
+              index={index} 
+              className={index >= 4 && !isExpanded ? 'hidden md:block' : 'block'}
+            />
           ))}
+        </div>
+
+        {/* Mobile See More / See Less Button */}
+        <div className="md:hidden mt-12 flex justify-center">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 px-6 py-2.5 bg-gray-50 hover:bg-primary/10 border border-gray-200 hover:border-primary text-gray-800 hover:text-gray-900 font-bold text-xs rounded-xl transition-all shadow-sm active:scale-95"
+          >
+            <span>{isExpanded ? 'See Less' : 'See More'}</span>
+          </button>
         </div>
 
       </div>
