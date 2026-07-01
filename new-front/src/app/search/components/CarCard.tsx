@@ -274,6 +274,23 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
   hiddenPromos = Array.from(new Set(hiddenPromos));
 
+  const renderHighlightWithLine = (highlightText: string, sizeClass: string, checkIcon: React.ReactNode) => {
+    const firstSpaceIdx = highlightText.indexOf(' ');
+    const firstWord = firstSpaceIdx !== -1 ? highlightText.substring(0, firstSpaceIdx) : highlightText;
+    const restOfText = firstSpaceIdx !== -1 ? highlightText.substring(firstSpaceIdx) : '';
+
+    return (
+      <span className={`${sizeClass} font-black leading-tight break-words inline-flex items-center gap-1`}>
+        <span className="relative inline-flex items-center gap-1 pb-1">
+          {checkIcon}
+          <span>{firstWord}</span>
+          <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--primary)] rounded-full" />
+        </span>
+        <span>{restOfText}</span>
+      </span>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -488,18 +505,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         <div className="p-4 pt-6">
           {mainHighlight && (
             <div className="flex justify-start mb-8">
-              <div 
-                className="inline-flex items-center gap-1.5 text-green-700"
-                style={{
-                  backgroundImage: 'radial-gradient(circle, #15803d 1.5px, transparent 1.5px)',
-                  backgroundSize: '8px 3px',
-                  backgroundRepeat: 'repeat-x',
-                  backgroundPosition: 'bottom',
-                  paddingBottom: '4px'
-                }}
-              >
-                <Check size={16} className="stroke-[3] shrink-0" />
-                <span className="text-xs md:text-sm font-black leading-tight break-words">{mainHighlight}</span>
+              <div className="inline-flex items-center gap-1.5 text-green-700">
+                {renderHighlightWithLine(mainHighlight, "text-xs md:text-sm", <Check size={14} className="stroke-[3] shrink-0" />)}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm shrink-0">
                     <span className="text-[10px] font-black">+{hiddenPromos.length}</span>
@@ -522,9 +529,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           <div className="flex items-end justify-between gap-3 md:gap-4">
             <div>
-              <span className="text-[11px] md:text-xs font-bold text-gray-600 block mb-0.5">for {carData.price.totalDays} days</span>
+              <span className="text-[10px] md:text-[11px] font-bold text-gray-600 block mb-0.5">for {carData.price.totalDays} days</span>
               <div className="flex items-baseline">
-                <span className="text-xl md:text-2xl font-black text-gray-900">
+                <span className="text-lg md:text-xl font-black text-gray-900">
                   {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                 </span>
               </div>
@@ -588,7 +595,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 )}
                 <Link
                   href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
-                  className="px-5 md:px-7 py-2.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-xs md:text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
+                  className="px-4 md:px-6 py-2 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] md:text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
                 >
                   Book Now
                   <span className="sr-only"> for {carData.name}</span>
@@ -733,18 +740,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           <div className="hidden lg:flex lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 min-w-0 items-center justify-start px-4 lg:px-5">
             {mainHighlight && (
-              <div 
-                className="inline-flex items-center gap-1.5 text-green-700"
-                style={{
-                  backgroundImage: 'radial-gradient(circle, #15803d 1.5px, transparent 1.5px)',
-                  backgroundSize: '8px 3px',
-                  backgroundRepeat: 'repeat-x',
-                  backgroundPosition: 'bottom',
-                  paddingBottom: '4px'
-                }}
-              >
-                <Check size={18} className="stroke-[3] shrink-0" />
-                <span className="text-sm lg:text-base font-black leading-tight break-words">{mainHighlight}</span>
+              <div className="inline-flex items-center gap-1.5 text-green-700">
+                {renderHighlightWithLine(mainHighlight, "text-sm lg:text-base", <Check size={16} className="stroke-[3] shrink-0" />)}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
                     <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
@@ -791,8 +788,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <div className="w-[45%] xl:w-[40%] p-2 pt-10 xl:pt-14 space-y-2.5 min-w-0">
               <div className="flex items-start gap-1.5">
                 <button onClick={openMap} className="shrink-0 pt-0.5"><Globe size={16} className="text-blue-600" /></button>
-                <div className="flex items-start gap-1 min-w-0">
-                  <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Address</span>
+                <div className="flex items-baseline gap-1 min-w-0">
+                  <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Address: </span>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2">
                       {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
@@ -805,7 +802,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1.5 min-w-0">
                 <Fuel size={17} className="text-blue-600 shrink-0" />
                 <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Fuel Policy</span>
+                  <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Fuel Policy: </span>
                   <span className="text-xs md:text-sm font-black text-gray-800 truncate">{carData.fuelPolicy}</span>
                 </div>
               </div>
@@ -821,18 +818,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-6 lg:pt-6 flex flex-col lg:items-start items-start justify-between gap-3 lg:gap-0 self-stretch">
             {mainHighlight && (
-              <div 
-                className="inline-flex lg:hidden items-center gap-1.5 text-green-700 mb-10"
-                style={{
-                  backgroundImage: 'radial-gradient(circle, #15803d 1.5px, transparent 1.5px)',
-                  backgroundSize: '8px 3px',
-                  backgroundRepeat: 'repeat-x',
-                  backgroundPosition: 'bottom',
-                  paddingBottom: '4px'
-                }}
-              >
-                <Check size={18} className="stroke-[3] shrink-0" />
-                <span className="text-sm lg:text-base font-black leading-tight break-words">{mainHighlight}</span>
+              <div className="inline-flex lg:hidden items-center gap-1.5 text-green-700 mb-10">
+                {renderHighlightWithLine(mainHighlight, "text-sm lg:text-base", <Check size={16} className="stroke-[3] shrink-0" />)}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
                     <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
@@ -852,11 +839,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             )}
 
-            <div className="flex flex-col lg:items-start items-start w-full gap-2 lg:gap-4 mt-auto">
+            <div className="flex flex-col lg:items-start items-start w-full gap-2 lg:gap-3 mt-auto">
               <div className="flex flex-col lg:items-start items-start">
-                <span className="text-[11px] lg:text-xs xl:text-sm font-bold text-gray-600 block mb-1">for {carData.price.totalDays} days</span>
+                <span className="text-[10px] lg:text-[11px] xl:text-xs font-bold text-gray-600 block mb-1">for {carData.price.totalDays} days</span>
                 <div className="text-left lg:text-left">
-                  <span className="text-xl xl:text-2xl font-black text-gray-900">
+                  <span className="text-lg lg:text-xl xl:text-2xl font-black text-gray-900">
                     {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                   </span>
                 </div>
@@ -920,7 +907,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   )}
                   <Link
                     href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
-                    className="w-full py-2 lg:py-3 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-xs lg:text-base uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
+                    className="w-full py-2 lg:py-2.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] lg:text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
                   >
                     Book Now
                     <span className="sr-only"> for {carData.name}</span>
