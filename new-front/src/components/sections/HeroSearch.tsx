@@ -418,12 +418,12 @@ export default function HeroSearch({
               </div>
             </div>
 
-            <div className="flex flex-col-reverse xl:flex-row items-center justify-between gap-5 pt-5 sm:pt-6 border-t border-slate-900/40">
+            <div className="flex flex-col-reverse xl:flex-row items-center justify-between gap-5 pt-5 sm:pt-6 border-t border-white/10">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3 w-full sm:flex sm:flex-wrap sm:items-center sm:justify-center xl:justify-start xl:gap-x-5 xl:gap-y-3 xl:w-auto">
                 {TRUST_BADGES.map((text, i) => (
-                  <div key={i} className="flex items-center gap-1.5 min-w-0">
-                    <CheckCircle2 className="text-yellow-600 shrink-0 w-4 h-4 md:w-5 md:h-5" />
-                    <span className="text-[10px] xs:text-[11px] sm:text-xs md:text-[13px] lg:text-sm xl:text-[14px] 2xl:text-[15px] font-bold text-slate-900 capitalize tracking-wide leading-tight sm:whitespace-nowrap truncate sm:overflow-visible">
+                  <div key={i} className="flex items-center gap-2 min-w-0">
+                    <CheckCircle2 className="text-primary shrink-0 w-4 h-4 sm:w-5 sm:h-5 xl:w-6 xl:h-6" />
+                    <span className="text-xs xs:text-[13px] sm:text-[14px] md:text-[15px] lg:text-base xl:text-[17px] 2xl:text-[18px] font-bold text-white capitalize tracking-wide leading-tight sm:whitespace-nowrap truncate sm:overflow-visible">
                       {text}
                     </span>
                   </div>
