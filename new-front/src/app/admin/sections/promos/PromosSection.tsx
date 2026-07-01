@@ -57,6 +57,17 @@ export default function PromosSection() {
     setCurrentPage(1);
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (isAssignModalOpen || isAddEditModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAssignModalOpen, isAddEditModalOpen]);
+
   const loadPromos = async () => {
     setIsLoading(true);
     try {
@@ -184,12 +195,10 @@ export default function PromosSection() {
       setModalSuppliers(sData.map((item: any) => ({ id: String(item.id), name: item.name })));
 
       // 2. Fetch active vehicle IDs mapped to this promo
-      const axiosClient = (promoApi as any).getAll.prototype ? null : require("@/services/api/axiosClient").apiClient;
       let activeVehicleIds: number[] = [];
-      if (axiosClient) {
-        const mappedRes = await axiosClient.get(`/api/supplier/promo?included_id=${promo.id}`);
-        activeVehicleIds = Array.isArray(mappedRes) ? mappedRes : (mappedRes?.data || []);
-      }
+      const mappedRes: any = await apiClient.get(`/api/supplier/promo?included_id=${promo.id}`);
+      const rawIds = Array.isArray(mappedRes) ? mappedRes : (mappedRes?.data || []);
+      activeVehicleIds = Array.isArray(rawIds) ? rawIds : [];
       setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)));
 
       // 3. Initial page load
@@ -330,9 +339,10 @@ export default function PromosSection() {
   }, [vehicles, allFilteredVehicles, selectedVehicleIds, showSelectedOnly, selectedPage]);
 
   const toggleVehicleSelection = (id: number) => {
-    setSelectedVehicleIds(prev =>
-      prev.includes(id) ? prev.filter(vId => vId !== id) : [...prev, id]
-    );
+    setSelectedVehicleIds(prev => {
+      const numId = Number(id);
+      return prev.includes(numId) ? prev.filter(vId => vId !== numId) : [...prev, numId];
+    });
   };
 
   // Global page selection helpers
@@ -765,11 +775,11 @@ export default function PromosSection() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {list.map((v) => {
-                            const isSelected = selectedVehicleIds.includes(v.id);
+                            const isSelected = selectedVehicleIds.includes(Number(v.id));
                             return (
                               <div
                                 key={v.id}
-                                onClick={() => toggleVehicleSelection(v.id)}
+                                onClick={() => toggleVehicleSelection(Number(v.id))}
                                 className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all hover:bg-gray-50/50 ${
                                   isSelected ? "border-primary bg-primary/5" : "border-gray-200 bg-white"
                                 }`}

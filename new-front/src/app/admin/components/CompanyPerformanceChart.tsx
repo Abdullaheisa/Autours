@@ -19,7 +19,7 @@ export default function CompanyPerformanceChart({ isMaximized = false, onMaximiz
 
   return (
     <div className={`bg-white rounded-2xl border border-gray-200 flex flex-col transition-all ${
-      isMaximized ? 'h-full w-full border-none p-0 shadow-none' : 'p-4 sm:p-5 lg:p-6 shadow-sm h-[400px]'
+      isMaximized ? 'h-full w-full border-none p-0 shadow-none' : 'p-4 sm:p-5 lg:p-6 shadow-sm h-[430px]'
     }`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
         <div>
@@ -42,20 +42,20 @@ export default function CompanyPerformanceChart({ isMaximized = false, onMaximiz
         </div>
       </div>
 
-      {/* Fixed height container for ResponsiveContainer to calculate layout correctly */}
-      <div className="h-[280px] w-full relative flex items-center justify-center mt-auto">
+      {/* Fixed height container or flex-growing container when maximized to calculate layout correctly */}
+      <div className={`w-full relative flex items-center justify-center ${isMaximized ? 'flex-1 min-h-0 my-auto' : 'h-[275px] mt-auto'}`}>
         {data.length === 0 ? (
           <p className="text-sm text-gray-400">No company booking data available</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="bookings" strokeWidth={0}>
+              <Pie data={data} cx="50%" cy="50%" innerRadius={isMaximized ? 100 : 50} outerRadius={isMaximized ? 165 : 80} paddingAngle={4} dataKey="bookings" strokeWidth={0}>
                 {data.map((_: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", padding: "12px" }} formatter={(value: number, name: string) => [value.toLocaleString(), name]} />
-              <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} formatter={(value: string) => <span className="text-xs text-gray-600">{value}</span>} />
+              <Legend verticalAlign="bottom" align="center" iconType="circle" iconSize={8} formatter={(value: string) => <span className="text-xs text-gray-600">{value}</span>} wrapperStyle={isMaximized ? { paddingTop: "30px" } : { paddingTop: "10px" }} />
             </PieChart>
           </ResponsiveContainer>
         )}
