@@ -203,10 +203,10 @@ export default function HeroSearch({
 
         <div className="bg-white/35 backdrop-blur-sm py-6 px-4 sm:py-10 sm:px-6 md:py-12 md:px-8 lg:py-16 lg:px-10 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
           <form onSubmit={handleSearch} className="space-y-4 md:space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(16,minmax(0,1fr))] gap-3 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[repeat(16,minmax(0,1fr))] gap-2.5 md:gap-2 lg:gap-3 items-start">
               
               {/* Location Input */}
-              <div className="lg:col-span-8 relative" ref={locationsRef}>
+              <div className="sm:col-span-1 md:col-span-6 lg:col-span-7 xl:col-span-8 relative" ref={locationsRef}>
                 <div className="relative group">
                   <input 
                     type="text" 
@@ -218,7 +218,7 @@ export default function HeroSearch({
                     }}
                     onFocus={() => location.length > 0 && setShowLocations(true)}
                     placeholder="Enter your Location"
-                    className={`w-full h-12 md:h-14 lg:h-16 pl-4 md:pl-5 pr-12 bg-white/95 border rounded-xl md:rounded-[1.25rem] text-xs md:text-sm lg:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
+                    className={`w-full h-12 md:h-12 lg:h-16 pl-4 pr-12 bg-white/95 border rounded-xl md:rounded-[1.25rem] text-xs lg:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
                       errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                     }`}
                   />
@@ -300,8 +300,8 @@ export default function HeroSearch({
               </div>
 
               {/* Date Range Picker */}
-              <div className="lg:col-span-5 relative" ref={calendarRef}>
-                <div className={`flex items-center h-12 md:h-14 lg:h-16 bg-white/95 border rounded-xl md:rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
+              <div className="sm:col-span-1 md:col-span-6 lg:col-span-5 relative" ref={calendarRef}>
+                <div className={`flex items-center h-12 md:h-12 lg:h-16 bg-white/95 border rounded-xl md:rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
                   errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
                 }`}>
                   <button 
@@ -310,12 +310,12 @@ export default function HeroSearch({
                       setShowCalendar(!showCalendar);
                       if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                     }}
-                    className="flex-1 px-4 h-full flex items-center gap-2 hover:bg-white transition-all group border-r border-gray-200"
+                    className="flex-1 px-2.5 md:px-2 lg:px-4 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group border-r border-gray-200"
                   >
                     <Calendar size={16} className="text-gray-500 group-hover:text-primary transition-colors shrink-0" />
                     <div className="flex flex-col items-start leading-tight min-w-0">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
-                      <span className="text-sm font-semibold text-gray-900 truncate">{startDate ? format(startDate, 'dd/MM/yyyy') : 'Select Date'}</span>
+                      <span className="text-xs md:text-xs lg:text-sm font-semibold text-gray-900 truncate">{startDate ? format(startDate, 'dd/MM/yyyy') : 'Select Date'}</span>
                     </div>
                   </button>
 
@@ -325,11 +325,11 @@ export default function HeroSearch({
                       setShowCalendar(!showCalendar);
                       if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                     }}
-                    className="flex-1 px-4 h-full flex items-center gap-2 hover:bg-white transition-all group"
+                    className="flex-1 px-2.5 md:px-2 lg:px-4 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group"
                   >
                     <div className="flex flex-col items-start leading-tight min-w-0">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
-                      <span className="text-sm font-semibold text-gray-900 truncate">{endDate ? format(endDate, 'dd/MM/yyyy') : 'Select Date'}</span>
+                      <span className="text-xs md:text-xs lg:text-sm font-semibold text-gray-900 truncate">{endDate ? format(endDate, 'dd/MM/yyyy') : 'Select Date'}</span>
                     </div>
                   </button>
                 </div>
@@ -373,12 +373,12 @@ export default function HeroSearch({
               </div>
 
               {/* Time Pickers */}
-              <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:col-span-3">
+              <div className="grid grid-cols-2 gap-2 md:gap-1.5 lg:gap-3 sm:col-span-2 md:col-span-4 lg:col-span-4 xl:col-span-3">
                 <div className="relative" ref={startRef}>
                   <button 
                     type="button"
                     onClick={() => setShowStartTime(!showStartTime)}
-                    className="w-full h-12 md:h-14 lg:h-16 px-3 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-between text-xs md:text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-12 md:h-12 lg:h-16 px-2.5 md:px-1.5 lg:px-3 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-between text-xs md:text-[11px] lg:text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Pickup</span>
@@ -399,7 +399,7 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowEndTime(!showEndTime)}
-                    className="w-full h-12 md:h-14 lg:h-16 px-3 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-between text-xs md:text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-12 md:h-12 lg:h-16 px-2.5 md:px-1.5 lg:px-3 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-between text-xs md:text-[11px] lg:text-sm font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
