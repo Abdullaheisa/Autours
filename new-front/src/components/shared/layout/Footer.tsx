@@ -68,7 +68,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-primary pt-10 pb-6 text-black border-t border-black/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
         
         <motion.div 
           initial={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export default function Footer() {
               transition={{ delay: idx * 0.05 }}
               className="space-y-2"
             >
-              <h2 className="text-sm sm:text-base font-black text-black">
+              <h2 className="text-sm sm:text-base lg:text-[17px] xl:text-[18px] 2xl:text-lg font-black text-black">
                 {category}
               </h2>
               <ul className="space-y-0.5">
@@ -109,7 +109,7 @@ export default function Footer() {
                     <Link 
                       href={link.href}
                       onClick={(e) => scrollToSection(e, link.href)}
-                      className="text-[13px] sm:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
+                      className="text-[13px] sm:text-[14px] lg:text-[15px] xl:text-[16px] 2xl:text-[17px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                     >
                       {link.name}
                     </Link>
@@ -126,7 +126,7 @@ export default function Footer() {
             transition={{ delay: 0.15 }}
             className="space-y-2 min-h-[160px]" // Fix CLS by reserving space
           >
-            <h2 className="text-sm sm:text-base font-black text-black">
+            <h2 className="text-sm sm:text-base lg:text-[17px] xl:text-[18px] 2xl:text-lg font-black text-black">
               Location
             </h2>
             <ul className="space-y-0.5">
@@ -134,7 +134,7 @@ export default function Footer() {
                 <li key={country.id}>
                   <Link 
                     href={`/countries/${country.id}`}
-                    className="text-[13px] sm:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
+                    className="text-[13px] sm:text-[14px] lg:text-[15px] xl:text-[16px] 2xl:text-[17px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                   >
                     {country.name} Car Rental
                   </Link>
@@ -213,7 +213,7 @@ export default function Footer() {
           <div className="hidden md:flex flex-row justify-between items-center w-full">
             {/* Left: Copyright & Socials */}
             <div className="flex flex-row items-center gap-6">
-              <p className="text-[13px] font-bold text-black whitespace-nowrap">
+              <p className="text-[13px] xl:text-[14px] 2xl:text-[15px] font-bold text-black whitespace-nowrap">
                 Copyright © 2026.
               </p>
               <div className="flex gap-2">
@@ -241,7 +241,7 @@ export default function Footer() {
 
             {/* Right: Payment Methods */}
             <div className="flex items-center gap-4 justify-end">
-              <p className="text-[13px] font-black text-black">
+              <p className="text-[13px] xl:text-[14px] 2xl:text-[15px] font-black text-black">
                 Payment Methods
               </p>
               <div className="flex items-center gap-2">

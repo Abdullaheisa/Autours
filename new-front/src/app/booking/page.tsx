@@ -371,7 +371,7 @@ function BookingContent() {
   const actualVehicleToBook = searchParams.get('bookId') || selectedVehicle?.id?.toString() || vehicleId || '';
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 py-10">
+    <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-10">
 
       {/* Mobile Summary + Car */}
       <div className="lg:hidden mb-6 space-y-4">

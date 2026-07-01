@@ -103,12 +103,12 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
       </div>
 
       {/* Title */}
-      <h3 className="text-sm font-bold text-gray-900 mb-2 leading-snug">
+      <h3 className="text-sm lg:text-base font-black text-gray-900 mb-2 leading-snug">
         {feature.title}
       </h3>
 
       {/* Description */}
-      <p className="text-xs text-gray-500 leading-relaxed max-w-[220px] mx-auto">
+      <p className="text-xs lg:text-[13px] xl:text-sm text-gray-500 leading-relaxed max-w-[220px] lg:max-w-[260px] xl:max-w-[300px] mx-auto">
         {feature.description}
       </p>
     </motion.div>
@@ -124,7 +124,7 @@ export default function WhyAutoursSection() {
       {/* Top accent line */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-60" />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-6xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Section Header */}
         <div className="text-center mb-14">

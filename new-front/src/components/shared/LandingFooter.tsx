@@ -9,7 +9,7 @@ import { footerLinks } from '@/config/navigation';
 export default function LandingFooter() {
   return (
     <footer className="bg-primary pt-24 pb-12">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           {/* Brand */}
           <div className="space-y-8">

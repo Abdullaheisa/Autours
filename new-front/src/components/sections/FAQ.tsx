@@ -182,7 +182,7 @@ This coverage provides financial protection for medical expenses resulting from 
         <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-primary-600 rounded-full opacity-20 blur-3xl" />
       </div>
 
-      <div className="max-w-6xl mb-10 mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-6xl xl:max-w-[90rem] 2xl:max-w-[95rem] mb-10 mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Title */}
         <div className="text-center my-10">
 
@@ -219,9 +219,9 @@ This coverage provides financial protection for medical expenses resulting from 
                       <span className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-xs font-black text-gray-900 shrink-0">
                         {originalIndex + 1}
                       </span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Question</span>
+                      <span className="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Question</span>
                     </div>
-                    <h4 className="text-sm font-bold text-gray-900 leading-snug group-hover:text-primary-600 transition-colors">
+                    <h4 className="text-sm lg:text-base font-bold text-gray-900 leading-snug group-hover:text-primary-600 transition-colors">
                       {faq.q}
                     </h4>
                   </div>
@@ -298,16 +298,16 @@ This coverage provides financial protection for medical expenses resulting from 
                                 {paragraph.match(/^\d+/)?.[0] ?? '✓'}
                               </span>
                             </div>
-                            <p className="text-sm font-medium text-gray-700 leading-relaxed">
+                            <p className="text-sm lg:text-base font-medium text-gray-700 leading-relaxed">
                               {paragraph.replace(/^[•\-\d]+\.\s*/, '')}
                             </p>
                           </div>
                         ) : paragraph.startsWith('Here') || paragraph.startsWith('At ') || paragraph.startsWith('To ') || paragraph.startsWith('Yes') || paragraph.startsWith('Our ') || paragraph.startsWith('Insurance') || paragraph.startsWith('Collision') || paragraph.startsWith('An additional') || paragraph.startsWith('Theft') || paragraph.startsWith('A Personal') ? (
-                          <p className="text-sm font-semibold text-gray-900 leading-relaxed">
+                          <p className="text-sm lg:text-base font-semibold text-gray-900 leading-relaxed">
                             {paragraph}
                           </p>
                         ) : (
-                          <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                          <p className="text-sm lg:text-base font-medium text-gray-600 leading-relaxed">
                             {paragraph}
                           </p>
                         )}

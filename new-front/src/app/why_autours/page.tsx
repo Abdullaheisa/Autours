@@ -49,7 +49,7 @@ export default function WhyAutoursPage() {
         <section className="relative w-full pt-16 pb-12 lg:pt-28 lg:pb-20 overflow-hidden bg-gray-50 border-b border-gray-100">
           <div className="absolute inset-0 bg-gradient-to-b from-primary-50/70 to-transparent -z-10" />
           
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-4xl mx-auto mb-10 lg:mb-16">
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -98,7 +98,7 @@ export default function WhyAutoursPage() {
 
         {/* New Feature Cards Section - Clean, modern grid */}
         <section className="py-16 sm:py-24 bg-white relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

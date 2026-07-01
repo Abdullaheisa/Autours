@@ -25,11 +25,13 @@ export const currencies = [
 interface CurrencySelectorProps {
   variant?: 'desktop' | 'mobile' | 'mobile-dropdown';
   onMobileClose?: () => void;
+  className?: string;
 }
 
 export default function CurrencySelector({ 
   variant = 'desktop',
-  onMobileClose 
+  onMobileClose,
+  className
 }: CurrencySelectorProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { code: currentCode } = useSelector((state: RootState) => state.currency);
@@ -111,7 +113,7 @@ export default function CurrencySelector({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 px-3 py-2 bg-white hover:bg-gray-50 rounded-xl transition-all border border-gray-200 shadow-sm group min-w-[100px] justify-between"
+        className={className || "flex items-center gap-2.5 px-3 py-2 bg-white hover:bg-gray-50 rounded-xl transition-all border border-gray-200 shadow-sm group min-w-[100px] justify-between"}
       >
         <div className="flex items-center gap-2">
           <Image
@@ -121,11 +123,10 @@ export default function CurrencySelector({
             height={15}
             className="w-5 h-auto rounded-sm"
           />
-          <span className="text-xs font-black text-gray-900 tracking-tight">{currentCurrency.code}</span>
+          <span className="font-black text-gray-900 tracking-tight">{currentCurrency.code}</span>
         </div>
         <ChevronDown 
-          size={14} 
-          className={`text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`text-gray-400 transition-transform duration-300 w-3.5 h-3.5 xl:w-4 xl:h-4 ${isOpen ? 'rotate-180' : ''}`} 
         />
       </button>
 

@@ -313,7 +313,7 @@ function SearchPageContent() {
       </div>
       <div className="hidden lg:block"><Stepper currentStep={2} /></div>
 
-      <div className="max-w-[1400px] mx-auto px-4 py-8">
+      <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-8">
         {!hasValidSearch ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center mb-6">

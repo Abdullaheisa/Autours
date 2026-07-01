@@ -55,7 +55,7 @@ export default function Fleet() {
       {/* خلفية مش أبيض */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#f8f9fa] via-[#f0f1f3] to-[#f8f9fa]" />
 
-      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="text-center mb-16">

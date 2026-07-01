@@ -107,7 +107,7 @@ export default function Contact() {
                       <item.icon
                         size={24}
                         className="text-primary group-hover:text-gray-900 transition-colors duration-300"
-                        strokeWidth={1.5}
+                        strokeWidth={2.2}
                       />
                     </div>
                     <div className="flex-1 min-w-0 border-b border-gray-50 pb-1 group-hover:border-primary/10 transition-colors">
@@ -122,10 +122,11 @@ export default function Contact() {
                         {item.value}
                       </p>
                     </div>
-                    <div className="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all shrink-0">
+                    <div className="w-8 h-8 rounded-full border-2 border-slate-400 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all shrink-0">
                       <ArrowUpRight
                         size={14}
-                        className="text-slate-400 group-hover:text-gray-900 transition-colors"
+                        strokeWidth={2.5}
+                        className="text-slate-900 group-hover:text-gray-900 transition-colors"
                       />
                     </div>
                   </motion.a>
@@ -160,16 +161,16 @@ export default function Contact() {
                     onHoverEnd={() => setHoveredSocial(null)}
                     className="relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm"
                     style={{
-                      backgroundColor: hoveredSocial === i ? social.color : '#f1f5f9'
+                      backgroundColor: hoveredSocial === i ? social.color : '#e2e8f0'
                     }}
                   >
                     <social.icon
                       size={20}
                       className="transition-colors duration-300"
                       style={{
-                        color: hoveredSocial === i ? '#ffffff' : '#334155'
+                        color: hoveredSocial === i ? '#ffffff' : '#0f172a'
                       }}
-                      strokeWidth={1.5}
+                      strokeWidth={1.8}
                     />
                   </motion.a>
                 ))}

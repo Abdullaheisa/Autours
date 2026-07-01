@@ -48,7 +48,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-[var(--primary)] border-b border-black/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
 
           {/* Logo */}
@@ -61,13 +61,13 @@ export default function Navbar() {
             <Image
               src={assets.logo}
               alt={`${siteConfig.name} Logo`}
-              width={180}
-              height={48}
-              sizes="180px"
-              quality={60}
+              width={200}
+              height={54}
+              sizes="(max-width: 1280px) 180px, 200px"
+              quality={70}
               priority
               fetchPriority="high"
-              className="h-12 sm:h-10 md:h-12 w-auto object-contain transition-all"
+              className="h-12 sm:h-10 md:h-12 xl:h-[50px] 2xl:h-[54px] w-auto object-contain transition-all"
             />
           </Link>
 
@@ -78,21 +78,21 @@ export default function Navbar() {
 
           {/* Right side Actions */}
           <div className="flex items-center gap-2">
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-4 xl:gap-5 2xl:gap-6">
 
               {/* Manage Booking Button */}
               <Link
                 href={getManageHref()}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 border-2 border-white hover:bg-gray-50 font-bold text-xs rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 focus:outline-none"
+                className="flex items-center gap-1.5 px-4 h-10 xl:h-[38px] 2xl:h-[40px] bg-white text-gray-900 border border-white hover:bg-gray-50 font-bold text-xs xl:text-xs 2xl:text-sm rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 focus:outline-none"
               >
-                <LayoutDashboard size={14} aria-hidden="true" />
+                <LayoutDashboard size={14} className="xl:size-[15px] 2xl:size-[16px]" aria-hidden="true" />
                 <span>Manage Booking</span>
               </Link>
 
               {/* Currency Selector */}
-              <div className="scale-[0.95]">
-                <CurrencySelector />
-              </div>
+              <CurrencySelector 
+                className="flex items-center gap-2.5 px-3 xl:px-3.5 h-10 xl:h-[38px] 2xl:h-[40px] bg-white hover:bg-gray-50 rounded-xl transition-all border border-gray-200 shadow-sm group min-w-[95px] xl:min-w-[105px] justify-between text-xs xl:text-xs 2xl:text-sm"
+              />
             </div>
 
             {/* Mobile hamburger */}

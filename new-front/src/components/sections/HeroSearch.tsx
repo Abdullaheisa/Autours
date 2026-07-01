@@ -172,7 +172,7 @@ export default function HeroSearch({
   };
 
   return (
-    <section className="relative min-h-[95vh] sm:min-h-[100vh] flex flex-col items-center justify-center pt-24 sm:pt-32 pb-16 sm:pb-24" aria-label="Car Rental Search">
+    <section className="relative min-h-[95vh] sm:min-h-[100vh] flex flex-col items-center justify-start pt-10 sm:pt-12 xl:pt-14 pb-16 sm:pb-24" aria-label="Car Rental Search">
       {/* 🚀 السر كله هنا: تحويل الخلفية لـ next/image مضغوطة بالكامل */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-gray-900">
         <Image
@@ -189,7 +189,7 @@ export default function HeroSearch({
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/15 to-black/50" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 w-full flex flex-col items-center">
+      <div className="relative z-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 w-full flex flex-col items-center">
         <div className="text-center mb-6 sm:mb-8 flex flex-col items-center justify-center gap-4 sm:gap-6">
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
             {title} <span className="text-primary">{titleHighlight}</span>
@@ -201,7 +201,7 @@ export default function HeroSearch({
           )}
         </div>
 
-        <div className="bg-white/35 backdrop-blur-sm py-8 px-5 sm:py-10 sm:px-8 lg:py-12 lg:px-10 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-6xl">
+        <div className="bg-white/35 backdrop-blur-sm py-12 px-5 sm:py-16 sm:px-8 lg:py-20 lg:px-10 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-6xl xl:max-w-[76rem] 2xl:max-w-[80rem]">
           <form onSubmit={handleSearch} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(16,minmax(0,1fr))] gap-3 items-start">
               
@@ -310,7 +310,7 @@ export default function HeroSearch({
                       setShowCalendar(!showCalendar);
                       if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                     }}
-                    className="px-4 h-full flex items-center gap-2 hover:bg-white transition-all group border-r border-gray-200"
+                    className="flex-1 px-4 h-full flex items-center gap-2 hover:bg-white transition-all group border-r border-gray-200"
                   >
                     <Calendar size={16} className="text-gray-500 group-hover:text-primary transition-colors shrink-0" />
                     <div className="flex flex-col items-start leading-tight min-w-0">
@@ -325,7 +325,7 @@ export default function HeroSearch({
                       setShowCalendar(!showCalendar);
                       if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                     }}
-                    className="px-4 h-full flex items-center gap-2 hover:bg-white transition-all group"
+                    className="flex-1 px-4 h-full flex items-center gap-2 hover:bg-white transition-all group"
                   >
                     <div className="flex flex-col items-start leading-tight min-w-0">
                       <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Return</span>
@@ -418,12 +418,12 @@ export default function HeroSearch({
               </div>
             </div>
 
-            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-5 pt-5 sm:pt-6 border-t border-gray-300/30">
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-3 w-full lg:w-auto">
+            <div className="flex flex-col-reverse xl:flex-row items-center justify-between gap-5 pt-5 sm:pt-6 border-t border-slate-900/40">
+              <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-5 gap-y-3 w-full xl:w-auto">
                 {TRUST_BADGES.map((text, i) => (
                   <div key={i} className="flex items-center gap-2 shrink-0">
-                    <CheckCircle2 className="text-emerald-500 shrink-0 w-4 h-4 lg:w-5 lg:h-5" />
-                    <span className="text-[11px] sm:text-xs lg:text-[15px] font-bold text-white capitalize tracking-wide whitespace-nowrap drop-shadow-sm">
+                    <CheckCircle2 className="text-yellow-600 shrink-0 w-4.5 h-4.5 md:w-5 md:h-5" />
+                    <span className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm xl:text-[14px] 2xl:text-[15px] font-bold text-slate-900 capitalize tracking-wide whitespace-nowrap">
                       {text}
                     </span>
                   </div>
@@ -435,7 +435,7 @@ export default function HeroSearch({
                 disabled={isSearching}
                 whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}
                 whileTap={{ scale: 0.97 }}
-                className="h-14 sm:h-16 w-full lg:w-auto px-6 sm:px-10 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-500 rounded-[1.25rem] shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
+                className="h-14 sm:h-16 w-full xl:w-auto px-6 sm:px-10 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-500 rounded-[1.25rem] shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
               >
                 <span className="absolute inset-0 bg-gray-900 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
                 {isSearching ? (
