@@ -24,9 +24,17 @@ export default function PromosSection() {
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
   const [currentPromo, setCurrentPromo] = useState<any | null>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [allFilteredVehicles, setAllFilteredVehicles] = useState<any[]>([]);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<number[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [selectedPage, setSelectedPage] = useState(1);
+  const selectedPerPage = 20;
+
+  useEffect(() => {
+    setSelectedPage(1);
+  }, [showSelectedOnly]);
 
   // Modal Search & Filter States
   const [modalSearchQuery, setModalSearchQuery] = useState("");
@@ -118,6 +126,28 @@ export default function PromosSection() {
     }
   };
 
+  const fetchAllMatchingVehicles = async (
+    country: string,
+    branch: string,
+    supplier: string,
+    search: string
+  ) => {
+    try {
+      const params: any = {};
+      if (country && country !== "All") params.country = country;
+      if (branch && branch !== "All") params.branch_id = branch;
+      if (supplier && supplier !== "All") params.supplier = supplier;
+      if (search) params.search = search;
+
+      const res: any = await apiClient.get("/get/vehicles", { params });
+      const list = res?.data?.data || res?.data || res || [];
+      const dataArray = Array.isArray(list) ? list : [];
+      setAllFilteredVehicles(dataArray);
+    } catch (err) {
+      console.warn("Failed to fetch all matching vehicles", err);
+    }
+  };
+
   const loadBranchesForCountry = async (country: string) => {
     try {
       const bRes: any = await profitApi.getBranches(undefined, country === "All" ? undefined : country);
@@ -135,6 +165,7 @@ export default function PromosSection() {
     setModalCountryFilter("All");
     setModalBranchFilter("All");
     setModalCurrentPage(1);
+    setShowSelectedOnly(false);
     setVehicles([]);
     setModalCountries([]);
     setModalBranches([]);
@@ -163,6 +194,7 @@ export default function PromosSection() {
 
       // 3. Initial page load
       await fetchModalVehiclesPage(1, "All", "All", "All", "");
+      await fetchAllMatchingVehicles("All", "All", "All", "");
     } catch (err) {
       toast.error("Failed to load fleet data.");
     } finally {
@@ -174,6 +206,7 @@ export default function PromosSection() {
   useEffect(() => {
     if (isAssignModalOpen) {
       fetchModalVehiclesPage(1, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+      fetchAllMatchingVehicles(modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
     }
   }, [modalSearchQuery, modalSupplierFilter, modalCountryFilter, modalBranchFilter, isAssignModalOpen]);
 
@@ -277,7 +310,16 @@ export default function PromosSection() {
   // Group vehicles by company/supplier
   const groupedVehicles = useMemo(() => {
     const groups: Record<string, any[]> = {};
-    vehicles.forEach((v) => {
+    let listToGroup = [];
+    if (showSelectedOnly) {
+      const fullSelectedList = allFilteredVehicles.filter(v => selectedVehicleIds.includes(Number(v.id)));
+      const start = (selectedPage - 1) * selectedPerPage;
+      listToGroup = fullSelectedList.slice(start, start + selectedPerPage);
+    } else {
+      listToGroup = vehicles;
+    }
+
+    listToGroup.forEach((v) => {
       const supplierName = v.supplierUser?.company || v.supplierUser?.name || v.supplier?.company || v.supplier?.name || "Independent Suppliers";
       if (!groups[supplierName]) {
         groups[supplierName] = [];
@@ -285,12 +327,71 @@ export default function PromosSection() {
       groups[supplierName].push(v);
     });
     return groups;
-  }, [vehicles]);
+  }, [vehicles, allFilteredVehicles, selectedVehicleIds, showSelectedOnly, selectedPage]);
 
   const toggleVehicleSelection = (id: number) => {
     setSelectedVehicleIds(prev =>
       prev.includes(id) ? prev.filter(vId => vId !== id) : [...prev, id]
     );
+  };
+
+  // Global page selection helpers
+  const allFilteredVehicleIds = useMemo(() => {
+    return allFilteredVehicles.map(v => Number(v.id));
+  }, [allFilteredVehicles]);
+
+  const supplierIdsMap = useMemo(() => {
+    const map: Record<string, number[]> = {};
+    allFilteredVehicles.forEach((v) => {
+      const supplierName = v.supplierUser?.company || v.supplierUser?.name || v.supplier?.company || v.supplier?.name || "Independent Suppliers";
+      if (!map[supplierName]) {
+        map[supplierName] = [];
+      }
+      map[supplierName].push(Number(v.id));
+    });
+    return map;
+  }, [allFilteredVehicles]);
+
+  const isAllPageSelected = useMemo(() => {
+    if (allFilteredVehicleIds.length === 0) return false;
+    return allFilteredVehicleIds.every(id => selectedVehicleIds.includes(id));
+  }, [allFilteredVehicleIds, selectedVehicleIds]);
+
+  const toggleSelectAllPage = () => {
+    if (isAllPageSelected) {
+      setSelectedVehicleIds(prev => prev.filter(id => !allFilteredVehicleIds.includes(id)));
+    } else {
+      setSelectedVehicleIds(prev => {
+        const next = [...prev];
+        allFilteredVehicleIds.forEach(id => {
+          if (!next.includes(id)) next.push(id);
+        });
+        return next;
+      });
+    }
+  };
+
+  // Group selection helpers
+  const isAllGroupSelected = (supplierName: string) => {
+    const listIds = supplierIdsMap[supplierName] || [];
+    if (listIds.length === 0) return false;
+    return listIds.every(id => selectedVehicleIds.includes(id));
+  };
+
+  const toggleGroupSelection = (supplierName: string) => {
+    const listIds = supplierIdsMap[supplierName] || [];
+    const allSelected = isAllGroupSelected(supplierName);
+    if (allSelected) {
+      setSelectedVehicleIds(prev => prev.filter(id => !listIds.includes(id)));
+    } else {
+      setSelectedVehicleIds(prev => {
+        const next = [...prev];
+        listIds.forEach(id => {
+          if (!next.includes(id)) next.push(id);
+        });
+        return next;
+      });
+    }
   };
 
   const resolveImageUrl = (v: any) => {
@@ -498,7 +599,12 @@ export default function PromosSection() {
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-gray-150">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Promote Active: {currentPromo?.what_is_included || currentPromo?.name}</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg font-bold text-gray-900">Promote Active: {currentPromo?.what_is_included || currentPromo?.name}</h3>
+                    <span className="text-[10px] px-2.5 py-0.5 bg-primary text-gray-900 rounded-full font-black border border-primary-600/10 shrink-0">
+                      {selectedVehicleIds.length} Selected
+                    </span>
+                  </div>
                   <p className="text-xs text-gray-500 mt-0.5">Toggle which fleet vehicles should display this promo badge next to the car box & logo</p>
                 </div>
                 <button
@@ -510,7 +616,7 @@ export default function PromosSection() {
               </div>
 
               {/* Search and Filters inside Modal */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 py-3 border-b border-gray-150 bg-gray-50/20 px-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 py-3 border-b border-gray-150 bg-gray-50/20 px-1.5">
                 {/* Search */}
                 <div className="relative group">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary" size={14} />
@@ -576,6 +682,22 @@ export default function PromosSection() {
                     ))}
                   </select>
                 </div>
+
+                {/* Selected Only Toggle */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+                    className={`w-full py-2 px-3 border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                      showSelectedOnly
+                        ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-250 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Check size={12} className={showSelectedOnly ? "block" : "hidden"} />
+                    <span>Selected Only ({selectedVehicleIds.length})</span>
+                  </button>
+                </div>
               </div>
 
               {/* Body */}
@@ -591,11 +713,55 @@ export default function PromosSection() {
                   </div>
                 ) : (
                   <div className="space-y-6">
+                    {/* Global Page Select All / Clear */}
+                    <div className="flex items-center justify-between bg-gray-50 border border-gray-150 p-3 rounded-xl">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-700">
+                          {showSelectedOnly ? "Deselect All Selected Cars" : "Select All Matching Cars"}
+                        </span>
+                        <span className="text-[10px] text-gray-400 mt-0.5">
+                          {showSelectedOnly 
+                            ? `Remove selection for all ${allFilteredVehicleIds.filter(id => selectedVehicleIds.includes(id)).length} cars currently selected`
+                            : `Toggle selection for all ${allFilteredVehicleIds.length} cars matching filters across all pages`}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={showSelectedOnly 
+                          ? () => setSelectedVehicleIds(prev => prev.filter(id => !allFilteredVehicleIds.includes(id))) 
+                          : toggleSelectAllPage
+                        }
+                        className={`text-xs font-black px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 ${
+                          showSelectedOnly || isAllPageSelected
+                            ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                            : "bg-primary text-gray-900 hover:bg-primary/95 border border-primary/20"
+                        }`}
+                      >
+                        {showSelectedOnly 
+                          ? "Deselect All" 
+                          : (isAllPageSelected ? "Clear Selection" : "Select All Cars")
+                        }
+                      </button>
+                    </div>
+
                     {Object.entries(groupedVehicles).map(([supplier, list]) => (
                       <div key={supplier} className="space-y-3">
-                        <div className="flex items-center gap-2 border-b border-gray-100 pb-1.5">
-                          <span className="text-xs font-black text-gray-500 uppercase tracking-wider">{supplier}</span>
-                          <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-bold">{list.length} cars</span>
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-gray-500 uppercase tracking-wider">{supplier}</span>
+                            <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-bold">{list.length} cars on page</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleGroupSelection(supplier)}
+                            className={`text-[10px] font-black px-3 py-1 rounded-lg border transition-all active:scale-95 ${
+                              isAllGroupSelected(supplier)
+                                ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                                : "bg-gray-50 text-gray-700 border-gray-250 hover:bg-gray-100"
+                            }`}
+                          >
+                            {isAllGroupSelected(supplier) ? "Deselect Group" : "Select Group Cars"}
+                          </button>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {list.map((v) => {
@@ -632,21 +798,48 @@ export default function PromosSection() {
                     ))}
 
                     {/* Pagination Info & Controls inside Modal */}
-                    {!isLoadingVehicles && vehicles.length > 0 && modalTotalPages > 1 && (
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-4 pb-2 bg-white sticky bottom-0 z-10">
-                        <span className="text-xs font-bold text-gray-500">
-                          Showing {Math.min(modalTotalCount, (modalCurrentPage - 1) * 20 + 1)} to{" "}
-                          {Math.min(modalTotalCount, modalCurrentPage * 20)} of {modalTotalCount} cars
-                        </span>
-                        <Pagination
-                          currentPage={modalCurrentPage}
-                          totalPages={modalTotalPages}
-                          onPageChange={(page) => {
-                            setModalCurrentPage(page);
-                            fetchModalVehiclesPage(page, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
-                          }}
-                        />
-                      </div>
+                    {!isLoadingVehicles && (
+                      showSelectedOnly ? (
+                        // Local pagination for selected list
+                        (() => {
+                          const fullSelectedList = allFilteredVehicles.filter(v => selectedVehicleIds.includes(Number(v.id)));
+                          const selectedTotalPages = Math.ceil(fullSelectedList.length / selectedPerPage);
+                          if (fullSelectedList.length > 0 && selectedTotalPages > 1) {
+                            return (
+                              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-4 pb-2 bg-white sticky bottom-0 z-10">
+                                <span className="text-xs font-bold text-gray-500">
+                                  Showing {Math.min(fullSelectedList.length, (selectedPage - 1) * selectedPerPage + 1)} to{" "}
+                                  {Math.min(fullSelectedList.length, selectedPage * selectedPerPage)} of {fullSelectedList.length} selected cars
+                                </span>
+                                <Pagination
+                                  currentPage={selectedPage}
+                                  totalPages={selectedTotalPages}
+                                  onPageChange={setSelectedPage}
+                                />
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()
+                      ) : (
+                        // Server-side pagination for entire fleet
+                        modalTotalPages > 1 && vehicles.length > 0 && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-4 pb-2 bg-white sticky bottom-0 z-10">
+                            <span className="text-xs font-bold text-gray-500">
+                              Showing {Math.min(modalTotalCount, (modalCurrentPage - 1) * 20 + 1)} to{" "}
+                              {Math.min(modalTotalCount, modalCurrentPage * 20)} of {modalTotalCount} cars
+                            </span>
+                            <Pagination
+                              currentPage={modalCurrentPage}
+                              totalPages={modalTotalPages}
+                              onPageChange={(page) => {
+                                setModalCurrentPage(page);
+                                fetchModalVehiclesPage(page, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+                              }}
+                            />
+                          </div>
+                        )
+                      )
                     )}
                   </div>
                 )}
