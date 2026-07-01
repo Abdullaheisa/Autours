@@ -201,12 +201,12 @@ export default function HeroSearch({
           )}
         </div>
 
-        <div className="bg-white/35 backdrop-blur-sm pt-6 pb-5 px-4 sm:pt-8 sm:pb-7 sm:px-6 md:pt-10 md:pb-8 md:px-8 lg:py-16 lg:px-10 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
+        <div className="bg-white/35 backdrop-blur-sm pt-6 pb-5 px-3 sm:pt-8 sm:pb-7 sm:px-4 md:pt-10 md:pb-8 md:px-5 lg:py-16 lg:px-6 rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border border-white/20 w-full max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
           <form onSubmit={handleSearch} className="space-y-4 md:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 md:gap-2 lg:gap-3 items-start">
               
               {/* Location Input */}
-              <div className="sm:col-span-1 md:col-span-4 relative" ref={locationsRef}>
+              <div className="sm:col-span-1 md:col-span-5 relative" ref={locationsRef}>
                 <div className="relative group">
                   <input 
                     type="text" 
@@ -310,7 +310,7 @@ export default function HeroSearch({
                       setShowCalendar(!showCalendar);
                       if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                     }}
-                    className="flex-1 px-3.5 md:px-3 lg:px-4 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group border-r border-gray-200"
+                    className="flex-1 px-3.5 md:px-3 lg:px-3.5 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group border-r border-gray-200"
                   >
                     <Calendar size={16} className="text-gray-500 group-hover:text-primary transition-colors shrink-0" />
                     <div className="flex flex-col items-start leading-tight min-w-0">
@@ -325,7 +325,7 @@ export default function HeroSearch({
                       setShowCalendar(!showCalendar);
                       if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                     }}
-                    className="flex-1 px-3.5 md:px-3 lg:px-4 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group"
+                    className="flex-1 px-3.5 md:px-3 lg:px-3.5 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group"
                   >
                     <div className="flex flex-col items-start leading-tight min-w-0">
                       <span className="text-[12px] md:text-[11px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500">Return</span>
@@ -373,18 +373,18 @@ export default function HeroSearch({
               </div>
 
               {/* Time Pickers */}
-              <div className="grid grid-cols-2 gap-2 md:gap-1.5 lg:gap-3 sm:col-span-2 md:col-span-4">
+              <div className="grid grid-cols-2 gap-2 md:gap-1.5 lg:gap-3 sm:col-span-2 md:col-span-3">
                 <div className="relative" ref={startRef}>
                   <button 
                     type="button"
                     onClick={() => setShowStartTime(!showStartTime)}
-                    className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-7 lg:pl-4 lg:pr-9 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-6 lg:pl-4 lg:pr-6 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[12px] md:text-[11px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500">Pickup</span>
                       <span>{startTime}</span>
                     </div>
-                    <Clock size={14} className="absolute right-2.5 md:right-2 lg:right-3.5 top-1/2 -translate-y-1/2 text-gray-500 shrink-0" />
+                    <Clock size={14} className="absolute right-2.5 md:right-2 lg:right-2 top-1/2 -translate-y-1/2 text-gray-500 shrink-0" />
                   </button>
                   {showStartTime && (
                     <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
@@ -399,13 +399,13 @@ export default function HeroSearch({
                   <button 
                     type="button"
                     onClick={() => setShowEndTime(!showEndTime)}
-                    className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-7 lg:pl-4 lg:pr-9 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-6 lg:pl-4 lg:pr-6 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
                   >
                     <div className="flex flex-col items-start leading-tight">
                       <span className="text-[12px] md:text-[11px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500">Return</span>
                       <span>{endTime}</span>
                     </div>
-                    <Clock size={14} className="absolute right-2.5 md:right-2 lg:right-3.5 top-1/2 -translate-y-1/2 text-gray-500 shrink-0" />
+                    <Clock size={14} className="absolute right-2.5 md:right-2 lg:right-2 top-1/2 -translate-y-1/2 text-gray-500 shrink-0" />
                   </button>
                   {showEndTime && (
                     <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
