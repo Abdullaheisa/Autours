@@ -498,8 +498,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   paddingBottom: '4px'
                 }}
               >
-                <Check size={18} className="stroke-[3] shrink-0" />
-                <span className="text-sm md:text-base font-black leading-tight break-words">{mainHighlight}</span>
+                <Check size={16} className="stroke-[3] shrink-0" />
+                <span className="text-xs md:text-sm font-black leading-tight break-words">{mainHighlight}</span>
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm shrink-0">
                     <span className="text-[10px] font-black">+{hiddenPromos.length}</span>
@@ -522,9 +522,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           <div className="flex items-end justify-between gap-3 md:gap-4">
             <div>
-              <span className="text-xs md:text-sm font-bold text-gray-600 block mb-0.5 md:mb-1">for {carData.price.totalDays} days</span>
+              <span className="text-[11px] md:text-xs font-bold text-gray-600 block mb-0.5">for {carData.price.totalDays} days</span>
               <div className="flex items-baseline">
-                <span className="text-2xl md:text-3xl font-black text-gray-900">
+                <span className="text-xl md:text-2xl font-black text-gray-900">
                   {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                 </span>
               </div>
@@ -588,7 +588,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 )}
                 <Link
                   href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
-                  className="px-6 md:px-8 py-3 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
+                  className="px-5 md:px-7 py-2.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-xs md:text-sm uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
                 >
                   Book Now
                   <span className="sr-only"> for {carData.name}</span>
@@ -743,8 +743,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   paddingBottom: '4px'
                 }}
               >
-                <Check size={20} className="stroke-[3] shrink-0" />
-                <span className="text-base lg:text-lg font-black leading-tight break-words">{mainHighlight}</span>
+                <Check size={18} className="stroke-[3] shrink-0" />
+                <span className="text-sm lg:text-base font-black leading-tight break-words">{mainHighlight}</span>
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
                     <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
@@ -831,8 +831,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   paddingBottom: '4px'
                 }}
               >
-                <Check size={20} className="stroke-[3] shrink-0" />
-                <span className="text-base lg:text-lg font-black leading-tight break-words">{mainHighlight}</span>
+                <Check size={18} className="stroke-[3] shrink-0" />
+                <span className="text-sm lg:text-base font-black leading-tight break-words">{mainHighlight}</span>
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
                     <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
@@ -854,9 +854,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
             <div className="flex flex-col lg:items-start items-start w-full gap-2 lg:gap-4 mt-auto">
               <div className="flex flex-col lg:items-start items-start">
-                <span className="text-xs lg:text-sm xl:text-base font-bold text-gray-600 block mb-1 lg:mb-2">for {carData.price.totalDays} days</span>
+                <span className="text-[11px] lg:text-xs xl:text-sm font-bold text-gray-600 block mb-1">for {carData.price.totalDays} days</span>
                 <div className="text-left lg:text-left">
-                  <span className="text-2xl xl:text-3xl font-black text-gray-900">
+                  <span className="text-xl xl:text-2xl font-black text-gray-900">
                     {formatPrice(carData.price.amount, carData.price.currency as Currency)}
                   </span>
                 </div>
@@ -920,7 +920,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   )}
                   <Link
                     href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
-                    className="w-full py-2.5 lg:py-3.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-sm lg:text-lg uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
+                    className="w-full py-2 lg:py-3 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-xs lg:text-base uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
                   >
                     Book Now
                     <span className="sr-only"> for {carData.name}</span>
