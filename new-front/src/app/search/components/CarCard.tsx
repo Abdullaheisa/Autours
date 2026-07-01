@@ -816,9 +816,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
           </div>
 
-          <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-6 lg:pt-6 flex flex-col lg:items-start items-start justify-between gap-3 lg:gap-0 self-stretch">
+          <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-4 lg:pt-6 flex flex-col lg:items-start items-start justify-center lg:justify-between gap-5 lg:gap-0 self-stretch">
             {mainHighlight && (
-              <div className="inline-flex lg:hidden items-center gap-1.5 text-green-700 mb-10">
+              <div className="inline-flex lg:hidden items-center gap-1.5 text-green-700">
                 {renderHighlightWithLine(mainHighlight, "text-sm lg:text-base", <Check size={16} className="stroke-[3] shrink-0" />)}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
@@ -839,7 +839,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             )}
 
-            <div className="flex flex-col lg:items-start items-start w-full gap-2 lg:gap-3 mt-auto">
+            <div className="flex flex-row lg:flex-col items-end lg:items-start justify-between w-full lg:gap-3 mt-auto gap-3">
               <div className="flex flex-col lg:items-start items-start">
                 <span className="text-[10px] lg:text-[11px] xl:text-xs font-bold text-gray-600 block mb-1">for {carData.price.totalDays} days</span>
                 <div className="text-left lg:text-left">
@@ -850,9 +850,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
 
               {!hideBookingControls && (
-                <div className="flex flex-col gap-2 items-stretch w-full">
+                <div className="flex flex-col gap-2 items-stretch w-auto lg:w-full">
                   {availableBranches.length > 1 && (
-                    <div className="relative w-full">
+                    <div className="relative w-full min-w-[160px] max-w-[200px] lg:max-w-none">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -907,7 +907,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   )}
                   <Link
                     href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
-                    className="w-full py-2 lg:py-2.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] lg:text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
+                    className="w-auto lg:w-full py-2 lg:py-2.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] lg:text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
                   >
                     Book Now
                     <span className="sr-only"> for {carData.name}</span>
