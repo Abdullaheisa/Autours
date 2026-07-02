@@ -37,6 +37,7 @@ const footerLinks = {
     { name: 'Subscribe', href: '/subscribe' },
     { name: 'Why Autours?', href: '/why_autours' },
     { name: 'Our Blogs', href: '/blogs' },
+    { name: 'Car Rental Brands', href: '/car-rental-brands' },
   ],
   Supplier: [
     { name: 'Be Supplier', href: '/be-supplier' },

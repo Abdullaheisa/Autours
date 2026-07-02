@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContestController;
 use App\Http\Controllers\Api\AdminContestController;
 use App\Http\Controllers\Api\SupplierIntelligenceController;
+use App\Http\Controllers\CarRentalBrandsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -258,6 +259,9 @@ Route::prefix('blogs')->group(function () {
 
 // Legacy API Endpoints (migrated from web.php for /api prefix support)
 Route::get('get/suppliers', [\App\Http\Controllers\UserController::class, 'suppliers']);
+Route::get('get/car-rental-brands', [CarRentalBrandsController::class, 'index']);
+Route::get('get/car-rental-brands/{brandSlug}', [CarRentalBrandsController::class, 'show']);
+Route::get('get/car-rental-brands/{brandSlug}/{countrySlug}', [CarRentalBrandsController::class, 'showCountry']);
 Route::post('/get/vehicle/data', [\App\Http\Controllers\VehicleController::class, 'getVehicle']);
 Route::get('/get/countries', [\App\Http\Controllers\CountryController::class, 'index']);
 Route::get('/my-current-user-profile', [\App\Http\Controllers\UserController::class, 'profile']);
