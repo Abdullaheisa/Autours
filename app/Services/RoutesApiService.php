@@ -43,7 +43,7 @@ class RoutesApiService
     /**
      * Send REQRAT request to fetch rates/vehicles.
      */
-    public function getRates(string $locationCode, Carbon $pickupDate, Carbon $dropoffDate, string $rateSource = 'ROUTES'): array
+    public function getRates(string $locationCode, Carbon $pickupDate, Carbon $dropoffDate, string $rateSource = 'Domestic'): array
     {
         $xml = $this->buildRatesXml($locationCode, $pickupDate, $dropoffDate, $rateSource);
         
@@ -153,7 +153,7 @@ XML;
         <PickupDateTime>{$pickupStr}</PickupDateTime>
         <ReturnDateTime>{$dropoffStr}</ReturnDateTime>
         <RateSource>{$rateSource}</RateSource>
-        <CompanyNumber>12345</CompanyNumber>
+        <CompanyNumber>{$this->customerNumber}</CompanyNumber>
         <TotalPricing>N</TotalPricing>
     </Payload>
 </TRNXML>

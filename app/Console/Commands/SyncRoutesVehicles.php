@@ -62,18 +62,17 @@ class SyncRoutesVehicles extends Command
         }
 
         $pickupStr = $this->option('pickup-date');
-        $pickupDate = $pickupStr ? Carbon::parse($pickupStr) : Carbon::tomorrow();
-        $dropoffDate = $pickupDate->copy()->addDays(7);
+        $pickupDate = $pickupStr ? Carbon::parse($pickupStr) : Carbon::tomorrow()->addDay();
+        $dropoffDate1 = $pickupDate->copy()->addDay();
+        $dropoffDate7 = $pickupDate->copy()->addDays(7);
+        $dropoffDate30 = $pickupDate->copy()->addDays(30);
         
-        $rateCodesStr = $this->option('rate-codes') ?? 'Domestic';
-        $rateCodes = explode(',', $rateCodesStr);
         $pricesOnly = $this->option('prices-only');
 
         $this->info(sprintf(
-            'Starting Routes vehicle sync: %d branch(es), Pickup: %s, Dropoff: %s',
+            'Starting Routes vehicle sync: %d branch(es), Pickup: %s',
             $allBranches->count(),
-            $pickupDate->toDateString(),
-            $dropoffDate->toDateString()
+            $pickupDate->toDateString()
         ));
 
         // Inclusions as requested by the user
@@ -89,39 +88,87 @@ class SyncRoutesVehicles extends Command
         foreach ($allBranches as $branch) {
             $this->info("Processing branch: {$branch->station_id} - {$branch->name}");
             
-            $rates = $service->getRates($branch->station_id, $pickupDate, $dropoffDate);
+            $rates1 = $service->getRates($branch->station_id, $pickupDate, $dropoffDate1) ?: [];
+            $rates7 = $service->getRates($branch->station_id, $pickupDate, $dropoffDate7) ?: [];
+            $rates30 = $service->getRates($branch->station_id, $pickupDate, $dropoffDate30) ?: [];
             
-            if (empty($rates)) {
+            if (empty($rates1) && empty($rates7) && empty($rates30)) {
                 $this->warn("No rates found for branch {$branch->station_id}");
                 continue;
             }
 
-            foreach ($rates as $rate) {
-                $currentRateCode = $rate['RateCode'] ?? 'Domestic';
+            $mergedRates = [];
 
-                $modelName = $rate['ModelDesc'];
-                $classDesc = $rate['ClassDesc'];
-                $classCode = $rate['ClassCode'];
-                $price = $rate['TotalCharge'] ?? $rate['RateAmount']; 
-                
-                if (empty($modelName) || empty($price)) {
+            // 1 Day Rates
+            foreach ($rates1 as $rate) {
+                $classCode = $rate['ClassCode'] ?? null;
+                if (!$classCode) continue;
+                $mergedRates[$classCode] = [
+                    'model' => $rate['ModelDesc'],
+                    'classDesc' => $rate['ClassDesc'] ?? '',
+                    'dayPrice' => $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0,
+                    'weekPrice' => null,
+                    'monthPrice' => null,
+                ];
+            }
+
+            // 7 Day Rates
+            foreach ($rates7 as $rate) {
+                $classCode = $rate['ClassCode'] ?? null;
+                if (!$classCode) continue;
+                $price = $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0;
+                if (!isset($mergedRates[$classCode])) {
+                    $mergedRates[$classCode] = [
+                        'model' => $rate['ModelDesc'],
+                        'classDesc' => $rate['ClassDesc'] ?? '',
+                        'dayPrice' => $price > 0 ? round($price / 7, 2) : 0, // Fallback if 1-day is missing
+                        'weekPrice' => $price > 0 ? round($price / 7, 2) : null,
+                        'monthPrice' => null,
+                    ];
+                } else {
+                    $mergedRates[$classCode]['weekPrice'] = $price > 0 ? round($price / 7, 2) : null;
+                }
+            }
+
+            // 30 Day Rates
+            foreach ($rates30 as $rate) {
+                $classCode = $rate['ClassCode'] ?? null;
+                if (!$classCode) continue;
+                $price = $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0;
+                if (!isset($mergedRates[$classCode])) {
+                    $mergedRates[$classCode] = [
+                        'model' => $rate['ModelDesc'],
+                        'classDesc' => $rate['ClassDesc'] ?? '',
+                        'dayPrice' => $price > 0 ? round($price / 30, 2) : 0, // Fallback
+                        'weekPrice' => null,
+                        'monthPrice' => $price > 0 ? round($price / 30, 2) : null,
+                    ];
+                } else {
+                    $mergedRates[$classCode]['monthPrice'] = $price > 0 ? round($price / 30, 2) : null;
+                }
+            }
+
+            foreach ($mergedRates as $classCode => $data) {
+                if (empty($data['model']) || $data['dayPrice'] <= 0) {
                     continue;
                 }
 
-                $normalizedModel = $this->normalizeName($modelName);
-                
+                $normalizedModel = $this->normalizeVehicleName($data['model']);
+                $categoryId = $this->resolveCategoryFromSipp($classCode);
+
                 $vehicle = Vehicle::updateOrCreate(
                     [
-                        'company_id' => $supplierUser->id,
-                        'branch_id' => $branch->id,
-                        'group' => $classCode,
-                        'rate_code' => $currentRateCode,
+                        'supplier' => $supplierUser->id,
+                        'pickup_loc' => $branch->id,
+                        'name' => $normalizedModel,
                     ],
                     [
-                        'name' => $normalizedModel,
-                        'car_type' => $classDesc,
-                        'original_price' => $price,
-                        'status' => 'active',
+                        'category' => $categoryId,
+                        'price' => $data['dayPrice'],
+                        'week_price' => $data['weekPrice'] ?? $data['dayPrice'],
+                        'month_price' => $data['monthPrice'] ?? $data['dayPrice'],
+                        'activation' => true,
+                        'instant_confirmation' => 1,
                     ]
                 );
                 
@@ -136,7 +183,7 @@ class SyncRoutesVehicles extends Command
 
         // Deactivate or delete old vehicles not seen in this run
         if (!$pricesOnly && !empty($syncedVehicleIds)) {
-            $deleted = Vehicle::where('company_id', $supplierUser->id)
+            $deleted = Vehicle::where('supplier', $supplierUser->id)
                 ->whereNotIn('id', $syncedVehicleIds)
                 ->delete();
             if ($deleted > 0) {
@@ -146,5 +193,19 @@ class SyncRoutesVehicles extends Command
 
         $this->info('========== Routes Vehicle Sync Complete ==========');
         return self::SUCCESS;
+    }
+
+    private function resolveCategoryFromSipp(string $sipp): ?int
+    {
+        $categoryName = \App\Services\SippDecoder::getLocalCategoryName($sipp);
+        
+        if ($categoryName !== null) {
+            $category = \App\Models\Category::where('name', $categoryName)->first();
+            if ($category) {
+                return $category->id;
+            }
+        }
+
+        return null;
     }
 }

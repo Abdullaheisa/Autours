@@ -61,6 +61,54 @@ class SyncRoutesBranches extends Command
         // 3. Process locations
         $syncedCount = 0;
         foreach ($locations as $loc) {
+            $cleanAddress = preg_replace('/[\r\n]+/', ',', $loc['Address'] ?? '');
+            $addressParts = array_values(array_filter(array_map('trim', explode(',', $cleanAddress))));
+            $country = null;
+
+            // 1. Try to resolve from address parts (from end to start)
+            for ($i = count($addressParts) - 1; $i >= 0; $i--) {
+                $part = rtrim($addressParts[$i], '.');
+                $code = \App\Services\CountryCurrencyResolver::resolveCountryCode($part);
+                if ($code) {
+                    $country = \App\Services\CountryCurrencyResolver::resolveCountryName($code);
+                    break;
+                }
+                if (strlen($part) === 2) {
+                    $resolved = \App\Services\CountryCurrencyResolver::resolveCountryName(strtoupper($part));
+                    if ($resolved !== strtoupper($part)) {
+                        $country = $resolved;
+                        break;
+                    }
+                }
+            }
+
+            // 2. Fallback to currency mapping if address doesn't explicitly contain the country
+            if (!$country && !empty($loc['Currency'])) {
+                $currencyMap = [
+                    'AUD' => 'Australia', 'CAD' => 'Canada', 'NZD' => 'New Zealand', 'PLN' => 'Poland',
+                    'TRY' => 'Turkey', 'GBP' => 'United Kingdom', 'MXN' => 'Mexico', 'JMD' => 'Jamaica',
+                    'BBD' => 'Barbados', 'OMR' => 'Oman', 'QAR' => 'Qatar', 'JOD' => 'Jordan',
+                    'MAD' => 'Morocco', 'CRC' => 'Costa Rica', 'PAB' => 'Panama', 'ALL' => 'Albania',
+                    'COP' => 'Colombia', 'ISK' => 'Iceland', 'RON' => 'Romania', 'AMD' => 'Armenia',
+                    'GEL' => 'Georgia', 'MUR' => 'Mauritius', 'PEN' => 'Peru', 'USD' => 'United States'
+                ];
+                if (isset($currencyMap[$loc['Currency']])) {
+                    $country = $currencyMap[$loc['Currency']];
+                }
+            }
+
+            // 3. Ultimate fallback: take the last alphanumeric part, or default to Canada
+            if (!$country && !empty($addressParts)) {
+                for ($i = count($addressParts) - 1; $i >= 0; $i--) {
+                    $part = rtrim($addressParts[$i], '.');
+                    if (preg_match('/[a-zA-Z]/', $part)) {
+                        $country = $part;
+                        break;
+                    }
+                }
+            }
+            $country = $country ?: 'Canada';
+
             // Upsert branch
             $branch = Branch::updateOrCreate(
                 [
@@ -77,7 +125,7 @@ class SyncRoutesBranches extends Command
                     'currency' => $loc['Currency'] ?? null,
                     'lat' => $loc['Latitude'] ?? null,
                     'lng' => $loc['Longitude'] ?? null,
-                    'country' => 'Canada', // Default based on context
+                    'country' => $country,
                 ]
             );
 
