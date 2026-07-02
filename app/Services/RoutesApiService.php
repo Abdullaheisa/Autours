@@ -188,6 +188,7 @@ XML;
                     'ClassCode' => (string)$rate->ClassCode,
                     'ClassDesc' => (string)$rate->ClassDesc,
                     'ModelDesc' => (string)$rate->ModelDesc,
+                    'ClassImage' => (string)$rate->ClassImage,
                     'RateCode' => (string)$rate->RateCode,
                     'RateAmount' => (string)$rate->RateAmount,
                     'CurrencyCode' => (string)$rate->CurrencyCode,

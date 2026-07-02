@@ -9,13 +9,21 @@ use App\Models\Included;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\RoutesApiService;
+use App\Services\SippDecoder;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\NormalizesVehicleNames;
+use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 
 class SyncRoutesVehicles extends Command
 {
-    use NormalizesVehicleNames;
+    use NormalizesVehicleNames, ResolvesLocalVehiclePhoto;
+
+    private array $imageCache = [];
 
     /**
      * The name and signature of the console command.
@@ -106,6 +114,7 @@ class SyncRoutesVehicles extends Command
                 $mergedRates[$classCode] = [
                     'model' => $rate['ModelDesc'],
                     'classDesc' => $rate['ClassDesc'] ?? '',
+                    'classImage' => $rate['ClassImage'] ?? null,
                     'dayPrice' => $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0,
                     'weekPrice' => null,
                     'monthPrice' => null,
@@ -121,6 +130,7 @@ class SyncRoutesVehicles extends Command
                     $mergedRates[$classCode] = [
                         'model' => $rate['ModelDesc'],
                         'classDesc' => $rate['ClassDesc'] ?? '',
+                        'classImage' => $rate['ClassImage'] ?? null,
                         'dayPrice' => $price > 0 ? round($price / 7, 2) : 0, // Fallback if 1-day is missing
                         'weekPrice' => $price > 0 ? round($price / 7, 2) : null,
                         'monthPrice' => null,
@@ -139,6 +149,7 @@ class SyncRoutesVehicles extends Command
                     $mergedRates[$classCode] = [
                         'model' => $rate['ModelDesc'],
                         'classDesc' => $rate['ClassDesc'] ?? '',
+                        'classImage' => $rate['ClassImage'] ?? null,
                         'dayPrice' => $price > 0 ? round($price / 30, 2) : 0, // Fallback
                         'weekPrice' => null,
                         'monthPrice' => $price > 0 ? round($price / 30, 2) : null,
@@ -155,6 +166,19 @@ class SyncRoutesVehicles extends Command
 
                 $normalizedModel = $this->normalizeVehicleName($data['model']);
                 $categoryId = $this->resolveCategoryFromSipp($classCode);
+                
+                // Add Transmission
+                $transmissionRaw = SippDecoder::getTransmissionAndDrive($classCode[2] ?? '');
+                $isAuto = str_contains(strtolower($transmissionRaw), 'automatic');
+                $isManual = str_contains(strtolower($transmissionRaw), 'manual');
+
+                if ($isAuto && !preg_match('/\b(Automatic|Auto|Aut)\b/i', $normalizedModel)) {
+                    $normalizedModel .= ' Automatic';
+                } elseif ($isManual && !preg_match('/\b(Manual|Man)\b/i', $normalizedModel)) {
+                    $normalizedModel .= ' Manual';
+                }
+
+                $photoFilename = $this->resolveLocalPhoto($normalizedModel);
 
                 $vehicle = Vehicle::updateOrCreate(
                     [
@@ -169,6 +193,7 @@ class SyncRoutesVehicles extends Command
                         'month_price' => $data['monthPrice'] ?? $data['dayPrice'],
                         'activation' => true,
                         'instant_confirmation' => 1,
+                        'photo' => $photoFilename,
                     ]
                 );
                 
@@ -197,7 +222,7 @@ class SyncRoutesVehicles extends Command
 
     private function resolveCategoryFromSipp(string $sipp): ?int
     {
-        $categoryName = \App\Services\SippDecoder::getLocalCategoryName($sipp);
+        $categoryName = SippDecoder::getLocalCategoryName($sipp);
         
         if ($categoryName !== null) {
             $category = \App\Models\Category::where('name', $categoryName)->first();
