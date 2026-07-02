@@ -187,6 +187,7 @@ XML;
                 $rates[] = [
                     'ClassCode' => (string)$rate->ClassCode,
                     'ClassDesc' => (string)$rate->ClassDesc,
+                    'Seats' => (string)$rate->Seats,
                     'ModelDesc' => (string)$rate->ModelDesc,
                     'ClassImage' => (string)$rate->ClassImage,
                     'RateCode' => (string)$rate->RateCode,

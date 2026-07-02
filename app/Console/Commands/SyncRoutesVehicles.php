@@ -6,8 +6,10 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\Included;
+use App\Models\Specification;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleSpecification;
 use App\Services\RoutesApiService;
 use App\Services\SippDecoder;
 use Carbon\Carbon;
@@ -24,6 +26,7 @@ class SyncRoutesVehicles extends Command
     use NormalizesVehicleNames, ResolvesLocalVehiclePhoto;
 
     private array $imageCache = [];
+    private array $specDefinitions = [];
 
     /**
      * The name and signature of the console command.
@@ -59,6 +62,17 @@ class SyncRoutesVehicles extends Command
             return self::FAILURE;
         }
 
+        $pickupStr = $this->option('pickup-date');
+        $pickupDateCarbon = $pickupStr ? Carbon::parse($pickupStr) : Carbon::tomorrow()->addDay();
+        
+        // Validate inputs
+        if ($pickupDateCarbon <= Carbon::today()) {
+            $this->error('Pickup date must be in the future.');
+            return self::FAILURE;
+        }
+
+        $this->loadSpecificationDefinitions();
+
         // 2. Fetch all Routes branches
         $allBranches = Branch::where('company_id', $supplierUser->id)
             ->whereNotNull('station_id')
@@ -69,19 +83,13 @@ class SyncRoutesVehicles extends Command
             return self::FAILURE;
         }
 
-        $pickupStr = $this->option('pickup-date');
-        $pickupDate = $pickupStr ? Carbon::parse($pickupStr) : Carbon::tomorrow()->addDay();
-        $dropoffDate1 = $pickupDate->copy()->addDay();
-        $dropoffDate7 = $pickupDate->copy()->addDays(7);
-        $dropoffDate30 = $pickupDate->copy()->addDays(30);
+        $this->info("Starting Routes vehicle sync: " . $allBranches->count() . " branch(es), Pickup: {$pickupDateCarbon->toDateString()}");
+
+        $dropoffDate1 = $pickupDateCarbon->copy()->addDay();
+        $dropoffDate7 = $pickupDateCarbon->copy()->addDays(7);
+        $dropoffDate30 = $pickupDateCarbon->copy()->addDays(30);
         
         $pricesOnly = $this->option('prices-only');
-
-        $this->info(sprintf(
-            'Starting Routes vehicle sync: %d branch(es), Pickup: %s',
-            $allBranches->count(),
-            $pickupDate->toDateString()
-        ));
 
         // Inclusions as requested by the user
         $inclusions = [];
@@ -96,9 +104,9 @@ class SyncRoutesVehicles extends Command
         foreach ($allBranches as $branch) {
             $this->info("Processing branch: {$branch->station_id} - {$branch->name}");
             
-            $rates1 = $service->getRates($branch->station_id, $pickupDate, $dropoffDate1) ?: [];
-            $rates7 = $service->getRates($branch->station_id, $pickupDate, $dropoffDate7) ?: [];
-            $rates30 = $service->getRates($branch->station_id, $pickupDate, $dropoffDate30) ?: [];
+            $rates1 = $service->getRates($branch->station_id, $pickupDateCarbon, $dropoffDate1) ?: [];
+            $rates7 = $service->getRates($branch->station_id, $pickupDateCarbon, $dropoffDate7) ?: [];
+            $rates30 = $service->getRates($branch->station_id, $pickupDateCarbon, $dropoffDate30) ?: [];
             
             if (empty($rates1) && empty($rates7) && empty($rates30)) {
                 $this->warn("No rates found for branch {$branch->station_id}");
@@ -111,14 +119,15 @@ class SyncRoutesVehicles extends Command
             foreach ($rates1 as $rate) {
                 $classCode = $rate['ClassCode'] ?? null;
                 if (!$classCode) continue;
-                $mergedRates[$classCode] = [
-                    'model' => $rate['ModelDesc'],
-                    'classDesc' => $rate['ClassDesc'] ?? '',
-                    'classImage' => $rate['ClassImage'] ?? null,
-                    'dayPrice' => $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0,
-                    'weekPrice' => null,
-                    'monthPrice' => null,
-                ];
+                    $mergedRates[$classCode] = [
+                        'model' => $rate['ModelDesc'],
+                        'classDesc' => $rate['ClassDesc'] ?? '',
+                        'classImage' => $rate['ClassImage'] ?? null,
+                        'seats' => $rate['Seats'] ?? null,
+                        'dayPrice' => $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0,
+                        'weekPrice' => null,
+                        'monthPrice' => null,
+                    ];
             }
 
             // 7 Day Rates
@@ -131,6 +140,7 @@ class SyncRoutesVehicles extends Command
                         'model' => $rate['ModelDesc'],
                         'classDesc' => $rate['ClassDesc'] ?? '',
                         'classImage' => $rate['ClassImage'] ?? null,
+                        'seats' => $rate['Seats'] ?? null,
                         'dayPrice' => $price > 0 ? round($price / 7, 2) : 0, // Fallback if 1-day is missing
                         'weekPrice' => $price > 0 ? round($price / 7, 2) : null,
                         'monthPrice' => null,
@@ -150,6 +160,7 @@ class SyncRoutesVehicles extends Command
                         'model' => $rate['ModelDesc'],
                         'classDesc' => $rate['ClassDesc'] ?? '',
                         'classImage' => $rate['ClassImage'] ?? null,
+                        'seats' => $rate['Seats'] ?? null,
                         'dayPrice' => $price > 0 ? round($price / 30, 2) : 0, // Fallback
                         'weekPrice' => null,
                         'monthPrice' => $price > 0 ? round($price / 30, 2) : null,
@@ -196,6 +207,8 @@ class SyncRoutesVehicles extends Command
                         'photo' => $photoFilename,
                     ]
                 );
+
+                $this->syncVehicleSpecifications($vehicle, $classCode, $data['seats']);
                 
                 // Sync Inclusions
                 if (!$pricesOnly) {
@@ -232,5 +245,90 @@ class SyncRoutesVehicles extends Command
         }
 
         return null;
+    }
+
+    private function loadSpecificationDefinitions(): void
+    {
+        $this->specDefinitions = [];
+        foreach (Specification::all() as $spec) {
+            $this->specDefinitions[$spec->name] = [
+                'id' => $spec->id,
+                'icon' => $spec->icon,
+            ];
+        }
+    }
+
+    private function syncVehicleSpecifications(Vehicle $vehicle, string $sipp, ?string $seats): void
+    {
+        VehicleSpecification::where('vehicle_id', $vehicle->id)->delete();
+
+        $records = [];
+        $now = Carbon::now()->toDateTimeString();
+
+        if ($seats !== null && $seats !== '' && isset($this->specDefinitions['Number of seats'])) {
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Number of seats',
+                'value' => (string) $seats,
+                'icon' => $this->specDefinitions['Number of seats']['icon'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (isset($this->specDefinitions['Transmission'])) {
+            $transValue = SippDecoder::getLocalTransmissionName($sipp);
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Transmission',
+                'value' => $transValue,
+                'icon' => $this->specDefinitions['Transmission']['icon'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (isset($this->specDefinitions['Doors'])) {
+            $bodyTypeRaw = SippDecoder::getType($sipp[1] ?? '');
+            if (str_contains($bodyTypeRaw, 'Door')) {
+                $doorsValue = str_replace(' Door', '', $bodyTypeRaw);
+                $records[] = [
+                    'vehicle_id' => $vehicle->id,
+                    'name' => 'Doors',
+                    'value' => $doorsValue,
+                    'icon' => $this->specDefinitions['Doors']['icon'],
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        if (isset($this->specDefinitions['Air Conditioner'])) {
+            $acValue = SippDecoder::getLocalAcName($sipp);
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Air Conditioner',
+                'value' => $acValue,
+                'icon' => $this->specDefinitions['Air Conditioner']['icon'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (isset($this->specDefinitions['Fuel'])) {
+            $fuelType = SippDecoder::getLocalFuelName($sipp);
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Fuel',
+                'value' => $fuelType,
+                'icon' => $this->specDefinitions['Fuel']['icon'] ?? 'gas-pump',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (! empty($records)) {
+            VehicleSpecification::query()->insert($records);
+        }
     }
 }
