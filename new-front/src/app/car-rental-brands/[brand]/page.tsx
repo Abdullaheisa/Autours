@@ -123,7 +123,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
 
               {/* Description paragraphs */}
               <div className="space-y-6">
-                {descriptionParagraphs.map((para, i) => (
+                {descriptionParagraphs.map((para: string, i: number) => (
                   <p key={i} className="text-base md:text-[17px] text-gray-700 leading-[1.8] font-normal">
                     {para}
                   </p>
@@ -150,7 +150,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-              {brand.countries.map((country) => (
+              {brand.countries.map((country: any) => (
                 <CarRentalCard
                   key={country.countrySlug}
                   href={`/car-rental-brands/${brand.id}/${country.countrySlug}`}

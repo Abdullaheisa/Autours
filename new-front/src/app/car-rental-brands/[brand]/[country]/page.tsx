@@ -136,8 +136,8 @@ export default async function BrandCountryPage({ params }: PageProps) {
               </h2>
               <div className="flex flex-wrap gap-3">
                 {brand.countries
-                  .filter((c) => c.countrySlug !== countrySlug)
-                  .map((c) => (
+                  .filter((c: any) => c.countrySlug !== countrySlug)
+                  .map((c: any) => (
                     <Link
                       key={c.countrySlug}
                       href={`/car-rental-brands/${brand.id}/${c.countrySlug}`}
