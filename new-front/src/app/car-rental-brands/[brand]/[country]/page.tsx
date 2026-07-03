@@ -7,7 +7,8 @@ import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
 import LocationsAccordion from '@/components/car-rental-brands/LocationsAccordion';
-import { SERVER_API_BASE } from '@/config/api';
+import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
+import { getCountryIso } from '@/utils/countryUtils';
 
 interface PageProps {
   params: Promise<{ brand: string; country: string }>;
@@ -145,7 +146,7 @@ export default async function BrandCountryPage({ params }: PageProps) {
                       className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-700 hover:text-gray-950 hover:border-primary shadow-[0_2px_6px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(249,214,2,0.15)] transition-all duration-300 hover:-translate-y-0.5"
                     >
                       <img
-                        src={`https://flagcdn.com/w40/${c.countryCode.toLowerCase()}.png`}
+                        src={`https://flagcdn.com/w40/${(getCountryIso(c.countryName) || c.countryCode).toLowerCase()}.png`}
                         alt={c.countryName}
                         width={26}
                         height={17}

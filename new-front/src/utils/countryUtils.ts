@@ -179,7 +179,12 @@ const countryIsoMap: Record<string, string> = {
   "Ethiopia": "et",
   "Ghana": "gh",
   "Tanzania": "tz",
+  "Tanzania, United Republic Of": "tz",
   "New Zealand": "nz",
+  "Fiji": "fj",
+  "Malta": "mt",
+  "Nepal": "np",
+  "Estonia": "ee",
 };
 
 /**

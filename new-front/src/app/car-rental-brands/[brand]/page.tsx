@@ -8,6 +8,7 @@ import Footer from '@/components/shared/layout/Footer';
 import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
 import CarRentalCard from '@/components/car-rental-brands/CarRentalCard';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
+import { getCountryIso } from '@/utils/countryUtils';
 
 interface PageProps {
   params: Promise<{ brand: string }>;
@@ -158,7 +159,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
                   key={country.countrySlug}
                   href={`/car-rental-brands/${brand.id}/${country.countrySlug}`}
                   title={`${brand.name} in ${country.countryName}`}
-                  countryCode={country.countryCode}
+                  countryCode={getCountryIso(country.countryName) || country.countryCode}
                   id={`brand-country-${country.countrySlug}`}
                 />
               ))}

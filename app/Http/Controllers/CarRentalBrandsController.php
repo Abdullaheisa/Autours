@@ -158,22 +158,15 @@ class CarRentalBrandsController extends Controller
 
         foreach ($groupedByCountry as $countryName => $countryBranches) {
             $countrySlug = strtolower(trim(str_replace(' ', '-', $countryName)));
-            $countryCode = 'AE';
+            $countryCode = \App\Services\CountryCurrencyResolver::resolveCountryCode($countryName);
+            if (empty($countryCode)) {
+                $countryCode = 'AE';
+            }
 
             if ($countrySlug === 'united-arab-emirates' || $countrySlug === 'uae') {
                 $countrySlug = 'uae';
-                $countryCode = 'AE';
             } elseif ($countrySlug === 'saudi-arabia' || $countrySlug === 'saudi') {
                 $countrySlug = 'saudi';
-                $countryCode = 'SA';
-            } elseif ($countrySlug === 'egypt') {
-                $countryCode = 'EG';
-            } elseif ($countrySlug === 'kuwait') {
-                $countryCode = 'KW';
-            } elseif ($countrySlug === 'bahrain') {
-                $countryCode = 'BH';
-            } elseif ($countrySlug === 'jordan') {
-                $countryCode = 'JO';
             }
 
             $airportBranches = [];
