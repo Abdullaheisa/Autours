@@ -33,7 +33,13 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
   const [title, setTitle] = useState(blog?.title || "");
   const [slug, setSlug] = useState(blog?.slug || "");
   const [isSlugManual, setIsSlugManual] = useState(!!blog?.slug);
-  const [author, setAuthor] = useState(blog?.author || "");
+  const [author, setAuthor] = useState(() => {
+    if (blog) return blog.author || "";
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("autours_last_author") || "";
+    }
+    return "";
+  });
   // Store category as ID (string) for submission - find matching ID if editing
   const [category, setCategory] = useState<string>("");
   const [content, setContent] = useState(blog?.content || "");
@@ -44,10 +50,25 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
   const [previewImage, setPreviewImage] = useState<string | null>(blog?.image || null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageAltText, setImageAltText] = useState(blog?.image_alt_text || "");
-  const [authorLinkedin, setAuthorLinkedin] = useState(blog?.author_linkedin || "");
-  const [previewAuthorImage, setPreviewAuthorImage] = useState<string | null>(
-    blog?.author_image ? (blog.author_image.startsWith("http") ? blog.author_image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/img/blogs/${blog.author_image}`) : null
-  );
+  const [authorLinkedin, setAuthorLinkedin] = useState(() => {
+    if (blog) return blog.author_linkedin || "";
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("autours_last_author_linkedin") || "";
+    }
+    return "";
+  });
+  const [previewAuthorImage, setPreviewAuthorImage] = useState<string | null>(() => {
+    if (blog?.author_image) {
+      return blog.author_image.startsWith("http") ? blog.author_image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/img/blogs/${blog.author_image}`;
+    }
+    if (typeof window !== "undefined") {
+      const lastImage = localStorage.getItem("autours_last_author_image");
+      if (lastImage) {
+        return lastImage.startsWith("http") ? lastImage : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/img/blogs/${lastImage}`;
+      }
+    }
+    return null;
+  });
   const [authorImageFile, setAuthorImageFile] = useState<File | null>(null);
   const [tags, setTags] = useState(blog?.tags || "");
   const [loading, setLoading] = useState(false);
@@ -132,7 +153,27 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
       toast.error("Please set a publish date and time for scheduled posts.");
       return;
     }
+
+    // Save to localStorage for future articles
+    if (typeof window !== "undefined") {
+      localStorage.setItem("autours_last_author", author);
+      localStorage.setItem("autours_last_author_linkedin", authorLinkedin);
+      if (previewAuthorImage) {
+        const filename = previewAuthorImage.split('/').pop() || "";
+        localStorage.setItem("autours_last_author_image", filename);
+      } else {
+        localStorage.removeItem("autours_last_author_image");
+      }
+    }
+
     setLoading(true);
+
+    // Resolve the current author_image string value if no new file is uploaded
+    let currentAuthorImage = undefined;
+    if (!authorImageFile && previewAuthorImage) {
+      currentAuthorImage = previewAuthorImage.split('/').pop() || undefined;
+    }
+
     await onSave({
       ...(blog?.id ? { id: blog.id } : {}),
       title, slug, excerpt: metaDescription, content, author,
@@ -144,6 +185,7 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
       tags,
       author_linkedin: authorLinkedin,
       authorImageFile: authorImageFile || undefined,
+      author_image: currentAuthorImage,
     });
     setLoading(false);
     onBack();

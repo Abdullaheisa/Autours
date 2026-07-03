@@ -195,9 +195,15 @@ class BlogController extends Controller
                 'published_at' => 'nullable|string',
                 'tags' => 'nullable|string',
                 'views' => 'nullable|integer',
-                'author_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'author_image' => 'nullable',
                 'author_linkedin' => 'nullable|string|max:255',
             ]);
+
+            if ($request->hasFile('author_image')) {
+                $request->validate([
+                    'author_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+                ]);
+            }
 
             // Generate slug if not provided
             if (empty($validated['slug'])) {
@@ -265,9 +271,15 @@ class BlogController extends Controller
                 'published_at' => 'nullable|string',
                 'tags' => 'nullable|string',
                 'views' => 'nullable|integer',
-                'author_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'author_image' => 'nullable',
                 'author_linkedin' => 'nullable|string|max:255',
             ]);
+
+            if ($request->hasFile('author_image')) {
+                $request->validate([
+                    'author_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+                ]);
+            }
 
             // Generate slug if title changed but slug not provided
             if (isset($validated['title']) && !isset($validated['slug'])) {

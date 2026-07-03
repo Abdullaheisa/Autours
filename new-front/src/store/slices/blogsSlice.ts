@@ -130,7 +130,11 @@ export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<
     if (data.image_alt_text) payload.append('image_alt_text', data.image_alt_text);
     if (data.imageFile) payload.append('image', data.imageFile);
     if (data.author_linkedin) payload.append('author_linkedin', data.author_linkedin);
-    if (data.authorImageFile) payload.append('author_image', data.authorImageFile);
+    if (data.authorImageFile) {
+      payload.append('author_image', data.authorImageFile);
+    } else if (data.author_image) {
+      payload.append('author_image', data.author_image);
+    }
 
     const response: any = await blogApi.create(payload);
     // response = { success, message, data: {...blog} }
@@ -162,7 +166,11 @@ export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: 
     if (data.image_alt_text !== undefined) payload.append('image_alt_text', data.image_alt_text);
     if (data.imageFile) payload.append('image', data.imageFile);
     if (data.author_linkedin !== undefined) payload.append('author_linkedin', data.author_linkedin);
-    if (data.authorImageFile) payload.append('author_image', data.authorImageFile);
+    if (data.authorImageFile) {
+      payload.append('author_image', data.authorImageFile);
+    } else if (data.author_image) {
+      payload.append('author_image', data.author_image);
+    }
 
     const response: any = await blogApi.update(id, payload);
     return mapApiBlog(response?.data || response);
