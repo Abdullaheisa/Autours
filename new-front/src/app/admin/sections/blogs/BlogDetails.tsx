@@ -4,6 +4,8 @@ import { ArrowLeft, Calendar, Clock, Eye, Tag, Share2, Printer, Pencil } from "l
 import { Badge } from "@/components/ui/Badge";
 import { getStatusBadgeProps } from "@/utils/statusMapper";
 import { Blog } from "@/store/slices/blogsSlice";
+import { getBlogImageUrl } from "@/utils/getImageUrl";
+import Image from "next/image";
 
 interface BlogDetailsProps {
   blog: Blog;
@@ -71,12 +73,35 @@ export default function BlogDetails({ blog, onBack, onEdit }: BlogDetailsProps) 
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-6 pb-8 mb-8 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold text-sm">
-                {blog.authorAvatar}
-              </div>
+              {blog.author_image ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 shrink-0 transform translate-z-0 relative">
+                  <Image
+                    src={getBlogImageUrl(blog.author_image)}
+                    alt={blog.author}
+                    width={100}
+                    height={100}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold text-sm shrink-0">
+                  {blog.authorAvatar}
+                </div>
+              )}
               <div>
                 <p className="text-xs text-gray-500">Written by</p>
-                <p className="text-sm font-bold text-gray-900">{blog.author}</p>
+                {blog.author_linkedin ? (
+                  <a
+                    href={blog.author_linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-bold text-gray-900 hover:text-primary-600 underline decoration-dotted transition-colors"
+                  >
+                    {blog.author}
+                  </a>
+                ) : (
+                  <p className="text-sm font-bold text-gray-900">{blog.author}</p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">

@@ -14,9 +14,9 @@ import { blogCategoryApi } from '@/services/api';
 
 // 🎨 تعديل نوع Blog ليشمل imageFile
 interface EditBlogProps {
-  blog: (Blog & { imageFile?: File | null }) | null;
+  blog: (Blog & { imageFile?: File | null; authorImageFile?: File | null }) | null;
   onBack: () => void;
-  onSave: (data: Partial<Blog> & { id?: number; imageFile?: File | null }) => void;
+  onSave: (data: Partial<Blog> & { id?: number; imageFile?: File | null; authorImageFile?: File | null }) => void;
   blogCategories: BlogCategory[];
 }
 
@@ -44,6 +44,11 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
   const [previewImage, setPreviewImage] = useState<string | null>(blog?.image || null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageAltText, setImageAltText] = useState(blog?.image_alt_text || "");
+  const [authorLinkedin, setAuthorLinkedin] = useState(blog?.author_linkedin || "");
+  const [previewAuthorImage, setPreviewAuthorImage] = useState<string | null>(
+    blog?.author_image ? (blog.author_image.startsWith("http") ? blog.author_image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/img/blogs/${blog.author_image}`) : null
+  );
+  const [authorImageFile, setAuthorImageFile] = useState<File | null>(null);
   const [tags, setTags] = useState(blog?.tags || "");
   const [loading, setLoading] = useState(false);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
@@ -109,6 +114,15 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
     reader.readAsDataURL(file);
   };
 
+  const handleAuthorImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAuthorImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPreviewAuthorImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     if (!title.trim() || !author.trim() || !category) {
       toast.error("Please fill in all required fields (Title, Author, Category).");
@@ -128,6 +142,8 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
       imageFile: imageFile || undefined,
       image_alt_text: imageAltText,
       tags,
+      author_linkedin: authorLinkedin,
+      authorImageFile: authorImageFile || undefined,
     });
     setLoading(false);
     onBack();
@@ -175,15 +191,24 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
               <p className="text-[10px] text-gray-400 mt-1.5 font-medium">Auto-generated from title. You can edit it manually.</p>
             </div>
 
-            {/* Author & Category */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Author <span className="text-red-500">*</span></label>
+            {/* Author & Category Group */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50/50 p-5 rounded-2xl border border-gray-200/60">
+              <div className="sm:col-span-2">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Author Name <span className="text-red-500">*</span></label>
                 <input
                   value={author} onChange={(e) => setAuthor(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" placeholder="Author name..."
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white" placeholder="Author name..."
                 />
               </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Author LinkedIn URL (SEO)</label>
+                <input
+                  value={authorLinkedin} onChange={(e) => setAuthorLinkedin(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white" placeholder="https://linkedin.com/in/username"
+                />
+              </div>
+
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Category <span className="text-red-500">*</span></label>
@@ -203,6 +228,37 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
                     {activeCategories.map((c: any) => <option key={c.id} value={c.id}>{c.title || c.name}</option>)}
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Author Profile Photo</label>
+                <div className="flex items-center gap-4 bg-white p-3 rounded-xl border border-gray-200">
+                  <div className="relative w-12 h-12 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-400">
+                    {previewAuthorImage ? (
+                      <img src={previewAuthorImage} alt="Author Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      author.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="cursor-pointer px-3.5 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all text-center">
+                      Choose Photo
+                      <input type="file" className="hidden" accept="image/*" onChange={handleAuthorImageChange} />
+                    </label>
+                    {previewAuthorImage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthorImageFile(null);
+                          setPreviewAuthorImage(null);
+                        }}
+                        className="text-[10px] text-red-500 font-bold hover:underline self-start"
+                      >
+                        Remove photo
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

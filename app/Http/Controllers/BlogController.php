@@ -195,6 +195,8 @@ class BlogController extends Controller
                 'published_at' => 'nullable|string',
                 'tags' => 'nullable|string',
                 'views' => 'nullable|integer',
+                'author_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'author_linkedin' => 'nullable|string|max:255',
             ]);
 
             // Generate slug if not provided
@@ -211,6 +213,14 @@ class BlogController extends Controller
                 $image_name = time() . '_' . $image->getClientOriginalName();
                 $image->move(public_path('img/blogs'), $image_name);
                 $validated['image'] = $image_name;
+            }
+
+            // Handle author image upload
+            if ($request->hasFile('author_image')) {
+                $author_img = $request->file('author_image');
+                $author_img_name = time() . '_author_' . $author_img->getClientOriginalName();
+                $author_img->move(public_path('img/blogs'), $author_img_name);
+                $validated['author_image'] = $author_img_name;
             }
 
             $blog = Blog::create($validated);
@@ -255,6 +265,8 @@ class BlogController extends Controller
                 'published_at' => 'nullable|string',
                 'tags' => 'nullable|string',
                 'views' => 'nullable|integer',
+                'author_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'author_linkedin' => 'nullable|string|max:255',
             ]);
 
             // Generate slug if title changed but slug not provided
@@ -278,6 +290,19 @@ class BlogController extends Controller
                 $image_name = time() . '_' . $image->getClientOriginalName();
                 $image->move(public_path('img/blogs'), $image_name);
                 $validated['image'] = $image_name;
+            }
+
+            // Handle author image upload
+            if ($request->hasFile('author_image')) {
+                // Delete old author image if exists
+                if ($blog->author_image && file_exists(public_path('img/blogs/' . $blog->author_image))) {
+                    unlink(public_path('img/blogs/' . $blog->author_image));
+                }
+
+                $author_img = $request->file('author_image');
+                $author_img_name = time() . '_author_' . $author_img->getClientOriginalName();
+                $author_img->move(public_path('img/blogs'), $author_img_name);
+                $validated['author_image'] = $author_img_name;
             }
 
             $blog->update($validated);

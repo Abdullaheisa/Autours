@@ -121,8 +121,10 @@ export default async function BlogPostDetail({ params }: PageProps) {
   const post = await getBlogBySlugOrId(slug);
   
   if (!post) notFound();
-
+ 
   const authorName = post.author || 'Autours';
+  const authorImage = post.author_image ? getBlogImageUrl(post.author_image) : '';
+  const authorLinkedin = post.author_linkedin;
   const publishDate = post.created_at ? new Date(post.created_at) : null;
   
   const formattedDate = publishDate ? publishDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
@@ -132,24 +134,24 @@ export default async function BlogPostDetail({ params }: PageProps) {
   const blogImg = getBlogImageUrl(post.image);
   const categoryTitle = post.category?.title || post.blog_category?.title || 'Blog';
   const categoryId = post.blog_category_id || post.blog_category?.id;
-
+ 
   // 🚀 Fetch related posts dynamically by category
   let relatedPosts = [];
   if (categoryId) {
      const categoryPosts = await getRelatedPosts(categoryId);
      relatedPosts = categoryPosts.filter((p: Record<string, any>) => p.slug !== slug && p.id !== post.id).slice(0, 3);
   }
-
+ 
   // Fallback if no related posts found in category
   if (relatedPosts.length === 0) {
      const allPosts = await getRelatedPosts();
      relatedPosts = allPosts.filter((p: Record<string, any>) => p.slug !== slug && p.id !== post.id).slice(0, 3);
   }
-
+ 
   const safeDescription = (post.meta_description && post.meta_description.trim() !== '') 
     ? post.meta_description.trim() 
     : 'Expert car rental insights from Autours.';
-
+ 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -159,7 +161,9 @@ export default async function BlogPostDetail({ params }: PageProps) {
     "dateModified": post.created_at,
     "author": {
       "@type": "Person",
-      "name": authorName
+      "name": authorName,
+      "url": authorLinkedin || undefined,
+      "image": authorImage || undefined
     },
     "description": safeDescription, 
     "publisher": {
@@ -167,7 +171,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
       "name": "Autours"
     }
   };
-
+ 
   return (
     <main className="min-h-screen bg-white">
       <script
@@ -175,15 +179,15 @@ export default async function BlogPostDetail({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Navbar />
-
-
+ 
+ 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="mb-5">
           <Link href="/blogs" className="inline-flex items-center gap-2 text-gray-700 font-bold text-sm uppercase tracking-wider hover:text-gray-900 transition-all focus:outline-none focus:underline">
             <ArrowLeft size={16} className="text-primary" aria-hidden="true" /> Back to Blog
           </Link>
         </div>
-
+ 
         <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[3/1] bg-gray-50 rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 mb-10">
           {blogImg ? (
             <Image
@@ -202,10 +206,10 @@ export default async function BlogPostDetail({ params }: PageProps) {
             </div>
           )}
         </div>
-
+ 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           <article className="lg:col-span-8 space-y-6">
-
+ 
             <header className="space-y-4">
               <div className="mb-2">
                 <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-gray-200">
@@ -218,8 +222,47 @@ export default async function BlogPostDetail({ params }: PageProps) {
               <div className="w-24 md:w-32 h-1.5 md:h-2 bg-primary rounded-full mb-6"></div>
               
               <div className="flex flex-wrap items-center gap-6 text-gray-600 border-b border-gray-100 pb-5">
-                <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
-                  <User size={15} className="text-primary" aria-hidden="true" /> By {authorName}
+                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
+                  {authorLinkedin ? (
+                    <a
+                      href={authorLinkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group"
+                    >
+                      {authorImage ? (
+                        <div className="relative w-[40px] h-[40px] rounded-full overflow-hidden border border-gray-200 transform translate-z-0">
+                          <Image
+                            src={authorImage}
+                            alt={authorName}
+                            width={100}
+                            height={100}
+                            className="object-cover w-full h-full"
+                          />
+                        </div>
+                      ) : (
+                        <User size={15} className="text-primary" aria-hidden="true" />
+                      )}
+                      <span>By <span className="underline decoration-dotted decoration-primary group-hover:decoration-solid">{authorName}</span></span>
+                    </a>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {authorImage ? (
+                        <div className="relative w-[40px] h-[40px] rounded-full overflow-hidden border border-gray-200 transform translate-z-0">
+                          <Image
+                            src={authorImage}
+                            alt={authorName}
+                            width={100}
+                            height={100}
+                            className="object-cover w-full h-full"
+                          />
+                        </div>
+                      ) : (
+                        <User size={15} className="text-primary" aria-hidden="true" />
+                      )}
+                      <span>By {authorName}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">
                   <Calendar size={15} className="text-primary" aria-hidden="true" /> {formattedDate}
@@ -232,9 +275,9 @@ export default async function BlogPostDetail({ params }: PageProps) {
                 </div>
               </div>
             </header>
-
+ 
             <ShareButtons url={`${siteConfig.url}/blogs/${post.slug || post.id}`} title={post.title} />
-
+ 
             <div 
               className="prose prose-base max-w-none text-gray-800 leading-relaxed space-y-4
                 prose-headings:font-black prose-headings:text-gray-900 
@@ -245,7 +288,7 @@ export default async function BlogPostDetail({ params }: PageProps) {
                 [!&_*]:font-inherit overflow-x-auto"
               dangerouslySetInnerHTML={{ __html: post.content || '' }}
             />
-
+ 
             {post.tags && post.tags.trim() !== '' && (
               <div className="mt-10 pt-6 border-t border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Related Tags</h3>
@@ -258,6 +301,45 @@ export default async function BlogPostDetail({ params }: PageProps) {
                 </div>
               </div>
             )}
+ 
+            {/* Author Profile Box (SEO & E-E-A-T) */}
+            <div className="mt-12 p-6 rounded-2xl bg-gray-50 border border-gray-100 flex flex-col sm:flex-row gap-5 items-center sm:items-start text-center sm:text-left">
+              <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0 transform translate-z-0">
+                {authorImage ? (
+                  <Image
+                    src={authorImage}
+                    alt={authorName}
+                    width={120}
+                    height={120}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary-100 text-primary-800 flex items-center justify-center font-black text-xl uppercase">
+                    {authorName.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h3 className="font-black text-gray-900 text-base">
+                    Published by: {authorName}
+                  </h3>
+                  {authorLinkedin && (
+                    <a
+                      href={authorLinkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-black text-[#0077b5] hover:text-[#005582] transition-colors"
+                    >
+                      🔗 Connect on LinkedIn
+                    </a>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                  Expert travel editor and contributor at Autours. Sharing insights, destination guides, and key tips to help you get the best value from car rental locations worldwide.
+                </p>
+              </div>
+            </div>
 
           </article>
 

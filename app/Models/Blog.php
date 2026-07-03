@@ -22,6 +22,8 @@ class Blog extends Model
         'published_at',
         'views',
         'tags',
+        'author_image',
+        'author_linkedin',
     ];
 
     protected $casts = [

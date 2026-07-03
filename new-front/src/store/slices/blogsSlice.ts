@@ -22,6 +22,8 @@ export interface Blog {
   views?: number;
   tags?: string;
   image_alt_text?: string;
+  author_image?: string;
+  author_linkedin?: string;
 }
 
 const mapApiBlog = (raw: any): Blog => {
@@ -73,6 +75,8 @@ const mapApiBlog = (raw: any): Blog => {
     views: raw.views ?? 0,
     tags: raw.tags || '',
     image_alt_text: raw.image_alt_text || '',
+    author_image: raw.author_image || '',
+    author_linkedin: raw.author_linkedin || '',
   };
 };
 
@@ -107,7 +111,7 @@ export const fetchBlogs = createAsyncThunk("blogs/fetchAll", async (_, { rejectW
   }
 });
 
-export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<Blog> & { imageFile?: File }, { rejectWithValue }) => {
+export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<Blog> & { imageFile?: File; authorImageFile?: File }, { rejectWithValue }) => {
   try {
     const payload = new FormData();
     if (data.title) payload.append('title', data.title);
@@ -125,6 +129,8 @@ export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<
     if (data.tags) payload.append('tags', data.tags);
     if (data.image_alt_text) payload.append('image_alt_text', data.image_alt_text);
     if (data.imageFile) payload.append('image', data.imageFile);
+    if (data.author_linkedin) payload.append('author_linkedin', data.author_linkedin);
+    if (data.authorImageFile) payload.append('author_image', data.authorImageFile);
 
     const response: any = await blogApi.create(payload);
     // response = { success, message, data: {...blog} }
@@ -134,7 +140,7 @@ export const createBlog = createAsyncThunk("blogs/create", async (data: Partial<
   }
 });
 
-export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: { id: number; data: Partial<Blog> & { imageFile?: File } }, { rejectWithValue }) => {
+export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: { id: number; data: Partial<Blog> & { imageFile?: File; authorImageFile?: File } }, { rejectWithValue }) => {
   try {
     const payload = new FormData();
     payload.append('_method', 'PUT'); // Laravel requires this for FormData PUT requests
@@ -155,6 +161,8 @@ export const updateBlog = createAsyncThunk("blogs/update", async ({ id, data }: 
     if (data.tags !== undefined) payload.append('tags', data.tags);
     if (data.image_alt_text !== undefined) payload.append('image_alt_text', data.image_alt_text);
     if (data.imageFile) payload.append('image', data.imageFile);
+    if (data.author_linkedin !== undefined) payload.append('author_linkedin', data.author_linkedin);
+    if (data.authorImageFile) payload.append('author_image', data.authorImageFile);
 
     const response: any = await blogApi.update(id, payload);
     return mapApiBlog(response?.data || response);
