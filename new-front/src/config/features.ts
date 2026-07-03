@@ -24,6 +24,9 @@ export const features = {
   /** Dynamic country pages (/countries/uae, /countries/egypt, etc.) */
   countryPages: true,
 
+  /** Car Rental Brands pages (/car-rental-brands, /car-rental-brands/[brand], etc.) */
+  carRentalBrands: true,
+
   // ── Global UI Features ────────────────────────────────────────────────────
 
   /** Contest promotional popup — shows on homepage only */
