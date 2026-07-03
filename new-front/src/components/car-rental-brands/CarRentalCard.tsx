@@ -1,6 +1,9 @@
+"use client";
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface CarRentalCardProps {
   href: string;
@@ -11,6 +14,12 @@ interface CarRentalCardProps {
 }
 
 export default function CarRentalCard({ href, title, logo, countryCode, id }: CarRentalCardProps) {
+  const [imgSrc, setImgSrc] = useState(logo);
+
+  useEffect(() => {
+    setImgSrc(logo);
+  }, [logo]);
+
   // Brand Card Layout (with White Header)
   if (logo) {
     return (
@@ -26,10 +35,11 @@ export default function CarRentalCard({ href, title, logo, countryCode, id }: Ca
         <div className="bg-white flex items-center justify-center h-[72px] border-b border-[#e5dcd0]/60 transition-colors group-hover:bg-white/90">
           <div className="relative flex items-center justify-center w-[95px] h-[42px] transition-transform duration-300 group-hover:scale-105">
             <Image
-              src={logo}
+              src={imgSrc || '/img/logo.png'}
               alt={`${title} logo`}
               fill
               className="object-contain"
+              onError={() => setImgSrc('/img/logo.png')}
             />
           </div>
         </div>

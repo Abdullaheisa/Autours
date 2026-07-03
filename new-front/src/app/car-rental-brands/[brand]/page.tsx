@@ -39,8 +39,12 @@ export default async function BrandDetailPage({ params }: PageProps) {
   const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`, { next: { revalidate: 60 } });
   if (!res.ok) notFound();
   const brand = await res.json();
-  if (brand.logo && !brand.logo.startsWith('http')) {
-    brand.logo = `${BACKEND_URL}${brand.logo.startsWith('/') ? '' : '/'}${brand.logo}`;
+  if (brand.logo) {
+    if (brand.logo.includes('default.png')) {
+      brand.logo = '/img/logo.png';
+    } else if (!brand.logo.startsWith('http')) {
+      brand.logo = `${BACKEND_URL}${brand.logo.startsWith('/') ? '' : '/'}${brand.logo}`;
+    }
   }
 
   const totalBranches = brand.countries.reduce(

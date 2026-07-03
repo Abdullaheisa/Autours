@@ -74,7 +74,7 @@ export default async function CarRentalBrandsPage() {
                   key={brand.id}
                   href={`/car-rental-brands/${brand.id}`}
                   title={brand.displayName}
-                  logo={brand.logo?.startsWith('http') ? brand.logo : `${BACKEND_URL}${brand.logo?.startsWith('/') ? '' : '/'}${brand.logo}`}
+                  logo={brand.logo?.includes('default.png') ? '/img/logo.png' : (brand.logo?.startsWith('http') ? brand.logo : `${BACKEND_URL}${brand.logo?.startsWith('/') ? '' : '/'}${brand.logo}`)}
                   id={`brand-card-${brand.id}`}
                 />
               ))}
