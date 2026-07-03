@@ -5,8 +5,7 @@ import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
 import CarRentalCard from '@/components/car-rental-brands/CarRentalCard';
-import { SERVER_API_BASE } from '@/config/api';
-
+import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
 export const metadata: Metadata = {
   title: 'All Car Rental Brands | Autours',
   description:
@@ -75,7 +74,7 @@ export default async function CarRentalBrandsPage() {
                   key={brand.id}
                   href={`/car-rental-brands/${brand.id}`}
                   title={brand.displayName}
-                  logo={brand.logo}
+                  logo={brand.logo?.startsWith('http') ? brand.logo : `${BACKEND_URL}${brand.logo?.startsWith('/') ? '' : '/'}${brand.logo}`}
                   id={`brand-card-${brand.id}`}
                 />
               ))}

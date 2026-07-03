@@ -7,7 +7,7 @@ import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
 import CarRentalCard from '@/components/car-rental-brands/CarRentalCard';
-import { SERVER_API_BASE } from '@/config/api';
+import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
 
 interface PageProps {
   params: Promise<{ brand: string }>;
@@ -38,6 +38,9 @@ export default async function BrandDetailPage({ params }: PageProps) {
   const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`, { next: { revalidate: 60 } });
   if (!res.ok) notFound();
   const brand = await res.json();
+  if (brand.logo && !brand.logo.startsWith('http')) {
+    brand.logo = `${BACKEND_URL}${brand.logo.startsWith('/') ? '' : '/'}${brand.logo}`;
+  }
 
   const totalBranches = brand.countries.reduce(
     (acc: number, c: any) => acc + c.airportBranches.length + c.cityBranches.length,
