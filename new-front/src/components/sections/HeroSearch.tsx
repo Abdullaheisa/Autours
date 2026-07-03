@@ -82,6 +82,38 @@ export default function HeroSearch({
       .catch(() => {/* fallback to static */});
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && locations.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const pickupParam = params.get('pickup') || params.get('pickup_loc') || params.get('location') || params.get('search');
+      if (pickupParam) {
+        const decoded = decodeURIComponent(pickupParam).toLowerCase().trim();
+        
+        // Try to find matching location
+        const matched = locations.find((loc) => {
+          return (
+            loc.name?.toLowerCase().trim() === decoded ||
+            getLocationDisplayLabel(loc).toLowerCase().trim().includes(decoded) ||
+            loc.location?.toLowerCase().trim() === decoded
+          );
+        });
+
+        if (matched) {
+          const display = getLocationDisplayLabel(matched);
+          const pickupVal = getLocationPickupValue(matched);
+          setLocation(display);
+          dispatch(setSearchParams({
+            location: pickupVal,
+            locationLabel: display,
+          }));
+        } else {
+          // Fallback to raw text
+          setLocation(decodeURIComponent(pickupParam));
+        }
+      }
+    }
+  }, [locations, dispatch]);
+
   const locationsRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const startRef = useRef<HTMLDivElement>(null);

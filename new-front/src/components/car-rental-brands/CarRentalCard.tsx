@@ -45,13 +45,13 @@ export default function CarRentalCard({ href, title, logo, countryCode, id }: Ca
         </div>
 
         {/* Content body */}
-        <div className="px-5 py-5 flex flex-col justify-between flex-1">
-          <h3 className="font-extrabold text-[14.5px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors">
+        <div className="px-4 py-4 sm:px-5 sm:py-5 flex flex-col justify-between flex-1">
+          <h3 className="font-extrabold text-[13.5px] sm:text-[14.5px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors">
             {title}
           </h3>
-          <div className="flex items-center gap-1.5 text-[12px] font-black text-gray-400 group-hover:text-primary transition-colors mt-3">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] font-black text-gray-400 group-hover:text-primary transition-colors mt-3">
             <span className="uppercase tracking-wider">Explore</span>
-            <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+            <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
           </div>
         </div>
       </Link>
@@ -68,10 +68,10 @@ export default function CarRentalCard({ href, title, logo, countryCode, id }: Ca
       {/* Decorative Top Accent Line (Visible on Hover) */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center" />
 
-      <div className="p-6 flex flex-col justify-between flex-1">
-        <div className="flex items-start gap-3.5">
+      <div className="p-4 sm:p-5 md:p-6 flex flex-col justify-between flex-1">
+        <div className="flex flex-col sm:flex-row items-start gap-2.5 sm:gap-3.5">
           {countryCode && (
-            <div className="shrink-0 rounded shadow-md overflow-hidden border border-black/5 w-[36px] h-[24px] relative mt-0.5">
+            <div className="shrink-0 rounded shadow-sm overflow-hidden border border-black/5 w-[30px] h-[20px] sm:w-[36px] sm:h-[24px] relative mt-0.5">
               <Image
                 src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`}
                 alt=""
@@ -80,13 +80,13 @@ export default function CarRentalCard({ href, title, logo, countryCode, id }: Ca
               />
             </div>
           )}
-          <h3 className="font-extrabold text-[15px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors">
+          <h3 className="font-extrabold text-[13.5px] sm:text-[15px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors">
             {title}
           </h3>
         </div>
-        <div className="flex items-center gap-1.5 text-[12px] font-black text-gray-400 group-hover:text-primary transition-colors mt-5">
+        <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] font-black text-gray-400 group-hover:text-primary transition-colors mt-4 sm:mt-5">
           <span className="uppercase tracking-wider">Explore</span>
-          <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+          <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
         </div>
       </div>
     </Link>

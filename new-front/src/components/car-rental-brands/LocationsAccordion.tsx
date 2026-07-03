@@ -64,14 +64,14 @@ export default function LocationsAccordion({
                   {airportBranches.map((branch) => (
                     <Link
                       key={branch.id}
-                      href="/"
+                      href={`/?pickup=${encodeURIComponent(branch.name)}`}
                       className="group/item flex items-center gap-3.5 p-4 bg-white border border-primary/15 rounded-xl shadow-[0_3px_8px_rgba(249,214,2,0.20)] hover:border-primary hover:shadow-[0_5px_12px_rgba(249,214,2,0.35)] transition-all duration-300 hover:-translate-y-0.5"
                     >
                       <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:bg-primary group-hover/item:text-black transition-colors shrink-0">
                         <Plane size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-[14.5px] font-bold text-gray-700 group-hover/item:text-gray-950 transition-colors leading-snug truncate">
+                        <h4 className="text-[14.5px] font-bold text-gray-700 group-hover/item:text-gray-950 transition-colors leading-snug break-words">
                           {brandName} at {branch.name}
                         </h4>
                         <span className="text-[11px] font-semibold text-gray-400 block mt-0.5">
@@ -128,15 +128,15 @@ export default function LocationsAccordion({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {cityBranches.map((branch) => (
                     <Link
-                      key={branch.id}
-                      href="/"
-                      className="group/item flex items-center gap-3.5 p-4 bg-white border border-primary/15 rounded-xl shadow-[0_3px_8px_rgba(249,214,2,0.20)] hover:border-primary hover:shadow-[0_5px_12px_rgba(249,214,2,0.35)] transition-all duration-300 hover:-translate-y-0.5"
+                       key={branch.id}
+                       href={`/?pickup=${encodeURIComponent(branch.name)}`}
+                       className="group/item flex items-center gap-3.5 p-4 bg-white border border-primary/15 rounded-xl shadow-[0_3px_8px_rgba(249,214,2,0.20)] hover:border-primary hover:shadow-[0_5px_12px_rgba(249,214,2,0.35)] transition-all duration-300 hover:-translate-y-0.5"
                     >
                       <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:bg-gray-950 group-hover/item:text-primary transition-colors shrink-0">
                         <Building2 size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-[14.5px] font-bold text-gray-700 group-hover/item:text-gray-950 transition-colors leading-snug truncate">
+                        <h4 className="text-[14.5px] font-bold text-gray-700 group-hover/item:text-gray-950 transition-colors leading-snug break-words">
                           {brandName} in {branch.name}
                         </h4>
                         <span className="text-[11px] font-semibold text-gray-400 block mt-0.5">

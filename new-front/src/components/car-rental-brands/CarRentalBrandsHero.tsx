@@ -99,11 +99,28 @@ export default function CarRentalBrandsHero({
               <div className="h-1.5 bg-primary" />
 
               <div className="px-6 py-7 sm:px-8 sm:py-8 md:px-9 md:py-9">
-                {badge && (
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 mb-5 rounded-full bg-gray-900 text-primary text-[10px] font-black uppercase tracking-[0.15em]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    {badge}
-                  </span>
+                {(badge || brandLogo) && (
+                  <div className="flex items-center justify-between gap-4 mb-5">
+                    {badge ? (
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900 text-primary text-[10px] font-black uppercase tracking-[0.15em]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        {badge}
+                      </span>
+                    ) : (
+                      <div />
+                    )}
+                    {brandLogo && (
+                      <div className="md:hidden shrink-0 bg-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-gray-100 p-1.5 w-[90px] h-[45px] flex items-center justify-center overflow-hidden">
+                        <Image
+                          src={brandLogo.src}
+                          alt={brandLogo.alt}
+                          width={90}
+                          height={45}
+                          className="object-contain max-h-[45px] w-[90px] select-none"
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 <h1 className="text-[1.65rem] sm:text-[1.85rem] md:text-[2rem] lg:text-[2.25rem] font-black tracking-tight text-gray-900 leading-[1.12] mb-4">
@@ -150,21 +167,6 @@ export default function CarRentalBrandsHero({
               </div>
             )}
           </div>
-
-          {/* Brand logo — mobile */}
-          {brandLogo && (
-            <div className="md:hidden flex justify-end -mt-2">
-              <div className="bg-white rounded-xl shadow-lg p-0 w-[120px] h-[60px] flex items-center justify-center overflow-hidden">
-                <Image
-                  src={brandLogo.src}
-                  alt={brandLogo.alt}
-                  width={120}
-                  height={60}
-                  className="object-contain max-h-[60px] w-[120px] select-none"
-                />
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </section>
