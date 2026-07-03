@@ -266,8 +266,8 @@ class CarRentalBrandsSeeder extends Seeder
                 // 1. Seed Airport Branches
                 foreach ($cData['airports'] as $apBranch) {
                     // Try to resolve airport_id
-                    $airport = Airport::where('name', 'like', '%' . $apBranch['city'] . '%')
-                        ->orWhere('code', 'like', '%' . $apBranch['city'] . '%')
+                    $airport = Airport::where('airport_name', 'like', '%' . $apBranch['city'] . '%')
+                        ->orWhere('iata_code', 'like', '%' . $apBranch['city'] . '%')
                         ->first();
                     
                     Branch::updateOrCreate(
