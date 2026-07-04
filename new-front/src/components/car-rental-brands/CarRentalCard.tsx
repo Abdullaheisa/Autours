@@ -46,7 +46,7 @@ export default function CarRentalCard({ href, title, logo, countryCode, id }: Ca
 
         {/* Content body */}
         <div className="px-4 py-4 sm:px-5 sm:py-5 flex flex-col justify-between flex-1">
-          <h3 className="font-extrabold text-[13.5px] sm:text-[14.5px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors">
+          <h3 className="font-extrabold text-[13.5px] sm:text-[14.5px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors truncate min-w-0 w-full" title={title}>
             {title}
           </h3>
           <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] font-black text-gray-400 group-hover:text-primary transition-colors mt-3">
@@ -80,7 +80,7 @@ export default function CarRentalCard({ href, title, logo, countryCode, id }: Ca
               />
             </div>
           )}
-          <h3 className="font-extrabold text-[13.5px] sm:text-[15px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors">
+          <h3 className="font-extrabold text-[13.5px] sm:text-[15px] text-gray-800 leading-snug tracking-tight group-hover:text-gray-900 transition-colors truncate min-w-0 w-full" title={title}>
             {title}
           </h3>
         </div>

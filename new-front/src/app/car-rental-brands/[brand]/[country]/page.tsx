@@ -58,6 +58,14 @@ export default async function BrandCountryPage({ params }: PageProps) {
 
   if (!country) notFound();
 
+  if (brand.logo) {
+    if (brand.logo.includes('default.png')) {
+      brand.logo = '/img/logo.png';
+    } else if (!brand.logo.startsWith('http')) {
+      brand.logo = `${BACKEND_URL}${brand.logo.startsWith('/') ? '' : '/'}${brand.logo}`;
+    }
+  }
+
   const totalBranches = country.airportBranches.length + country.cityBranches.length;
 
   const jsonLd = {
@@ -105,7 +113,7 @@ export default async function BrandCountryPage({ params }: PageProps) {
             <>
               Get instant access to all {brand.name} car rental locations in {country.countryName}{' '}
               and find rates as Low as Possible for your{' '}
-              <Link href="/" className="text-primary font-bold hover:underline">
+              <Link href="/" className="text-inherit font-bold hover:underline">
                 Car Rental
               </Link>
               . {totalBranches} locations including airports and city branches.

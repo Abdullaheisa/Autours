@@ -149,15 +149,15 @@ export default async function BrandDetailPage({ params }: PageProps) {
             <div className="mb-8">
               <p className="text-[16px] md:text-[18px] font-bold text-gray-700 leading-relaxed">
                 Get instant access to all{' '}
-                <Link href={`/car-rental-brands/${brand.id}`} className="text-primary font-black hover:underline underline-offset-2">
+                <Link href={`/car-rental-brands/${brand.id}`} className="text-gray-700 hover:text-gray-900 transition-colors font-bold hover:underline underline-offset-2">
                   {brand.name}
                 </Link>{' '}
                 car rental locations and find rates as Low as Possible for your{' '}
-                <Link href="/" className="text-primary font-black hover:underline underline-offset-2">Car Rental</Link>
+                <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors font-bold hover:underline underline-offset-2">Car Rental</Link>
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {brand.countries.map((country: any) => (
                 <CarRentalCard
                   key={country.countrySlug}
