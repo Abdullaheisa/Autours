@@ -50,6 +50,7 @@ class UserController extends Controller
         // CRITICAL: never allow a profile update to downgrade the user's role.
         // The frontend may include a 'role' field but it must never overwrite the DB value.
         unset($updateData['role']);
+        unset($updateData['description']);
 
         // Prevent unique constraint violations for phone_num
         if ($request->has('phone_num') && !empty(trim($request->phone_num))) {
@@ -107,6 +108,20 @@ class UserController extends Controller
         $oldCompany = $user->company;
 
         $user->update($updateData);
+
+        // Synchronize description to CarRentalBrand
+        if ($request->has('description')) {
+            \App\Models\CarRentalBrand::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'description' => $request->description,
+                    'name' => $user->company ?: $user->name,
+                    'slug' => \Illuminate\Support\Str::slug($user->company ?: $user->name),
+                    'display_name' => ($user->company ?: $user->name) . ' Car Rental',
+                    'logo' => $user->logo ?: '/img/company_logos/default.png',
+                ]
+            );
+        }
 
         // Dynamic propagation to associated models (e.g., Blog author string)
         if ($request->has('name') && $user->name !== $oldName && !empty($oldName)) {

@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/get/user/role', [\App\Http\Controllers\UserController::class, 'role']);
     Route::get('/my-current-user-profile', [\App\Http\Controllers\UserController::class, 'profile']);
     Route::post('/vehicles/bulk-upload', [\App\Http\Controllers\VehicleController::class, 'bulkUpload']);
+    Route::post('/upload', [\App\Http\Controllers\UserController::class, 'upload']);
 });
 
 Route::post('/jimpisoft/refresh-prices', [VehicleController::class, 'refreshJimpisoftPrices'])->name('jimpisoft.refresh-prices');

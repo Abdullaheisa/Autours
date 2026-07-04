@@ -104,9 +104,10 @@ export default function ProfileSection() {
       }
 
       toast.success("Profile saved successfully!");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to save profile. Please try again.");
+      const apiError = err?.response?.data?.message || err?.message || "Failed to save profile. Please try again.";
+      toast.error(apiError);
     } finally {
       setIsSaving(false);
     }

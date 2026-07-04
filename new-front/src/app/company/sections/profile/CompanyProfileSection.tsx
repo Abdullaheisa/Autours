@@ -19,6 +19,7 @@ export default function CompanyProfileSection() {
     city: "",
     address: "",
     language: "English",
+    description: "",
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logo, setLogo] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export default function CompanyProfileSection() {
           city: data.city || "",
           address: data.address || "",
           language: data.language || "English",
+          description: data.description || "",
         });
         setLogo(data.logo || null);
       })
@@ -52,6 +54,7 @@ export default function CompanyProfileSection() {
           city: "",
           address: "",
           language: "English",
+          description: "",
         });
       })
       .finally(() => setIsLoading(false));
@@ -78,6 +81,7 @@ export default function CompanyProfileSection() {
       form.append("city", formData.city);
       form.append("address", formData.address);
       form.append("language", formData.language);
+      form.append("description", formData.description);
       
       if (logoFile) {
         form.append("logo", logoFile);
@@ -85,9 +89,10 @@ export default function CompanyProfileSection() {
 
       await uploadApi.uploadProfile(form);
       toast.success("Profile updated successfully!");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update profile", err);
-      toast.error("Failed to update profile. Please try again.");
+      const apiError = err?.response?.data?.message || err?.message || "Failed to update profile. Please try again.";
+      toast.error(apiError);
     } finally {
       setIsSaving(false);
     }
@@ -224,6 +229,17 @@ export default function CompanyProfileSection() {
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
                   rows={2}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Company Description / Biography</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  rows={4}
+                  placeholder="Enter details about your company, when it started, and what services it offers..."
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                 />
               </div>

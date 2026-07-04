@@ -29,16 +29,53 @@ class CarRentalBrandsController extends Controller
             $logo = $brandDetails ? $brandDetails->logo : '/img/company_logos/default.png';
         }
 
+        // Calculate dynamic real rating from rentals
+        $rentalsQuery = \App\Models\Rental::where('supplier_id', $user->id)->whereNotNull('rate');
+        $realReviewsCount = $rentalsQuery->count();
+
+        if ($realReviewsCount > 0) {
+            $realRating = round($rentalsQuery->avg('rate'), 2);
+            
+            // Map rating to label
+            $realRatingLabel = 'Excellent';
+            if ($realRating >= 9.5) {
+                $realRatingLabel = 'Exceptional';
+            } elseif ($realRating >= 9.0) {
+                $realRatingLabel = 'Brilliant';
+            } elseif ($realRating >= 8.5) {
+                $realRatingLabel = 'Very Good';
+            } elseif ($realRating >= 8.0) {
+                $realRatingLabel = 'Good';
+            } else {
+                $realRatingLabel = 'Recommended';
+            }
+        } else {
+            // Fallback if no rental rates exist yet
+            $realRating = $brandDetails ? (float) $brandDetails->rating : 8.80;
+            $realReviewsCount = $brandDetails ? (int) $brandDetails->review_count : 150;
+            $realRatingLabel = $brandDetails ? $brandDetails->rating_label : 'Excellent';
+        }
+
+        // Fetch description prioritizing CarRentalBrand table, then user description column, then default fallback
+        $description = '';
+        if ($brandDetails && !empty($brandDetails->description)) {
+            $description = $brandDetails->description;
+        } elseif (!empty($user->description)) {
+            $description = $user->description;
+        } else {
+            $description = "Rent a car with {$name} through Autours to get the best prices and outstanding customer support.";
+        }
+
         return [
             'id' => $slug,
             'user_id' => $user->id,
             'name' => $name,
             'displayName' => $brandDetails ? $brandDetails->display_name : ($name . ' Car Rental'),
             'logo' => $logo,
-            'rating' => $brandDetails ? (float) $brandDetails->rating : 8.80,
-            'reviewCount' => $brandDetails ? (int) $brandDetails->review_count : 150,
-            'ratingLabel' => $brandDetails ? $brandDetails->rating_label : 'Excellent',
-            'description' => $brandDetails ? $brandDetails->description : "Rent a car with {$name} through Autours to get the best prices and outstanding customer support.",
+            'rating' => (float) $realRating,
+            'reviewCount' => (int) $realReviewsCount,
+            'ratingLabel' => $realRatingLabel,
+            'description' => $description,
         ];
     }
 
