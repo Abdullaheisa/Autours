@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\Included;
+use App\Models\Profit;
 use App\Models\Specification;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -17,7 +18,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\NormalizesVehicleNames;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 
@@ -34,9 +34,10 @@ class SyncRoutesVehicles extends Command
      * @var string
      */
     protected $signature = 'routes:sync-vehicles
-                            {--pickup-date= : Pickup date (yyyy-MM-dd), defaults to tomorrow}
+                            {--pickup-date= : Pickup date (yyyy-MM-dd), defaults to day-after-tomorrow}
                             {--prices-only : Only refresh per-branch prices, do not re-create vehicles}
-                            {--rate-codes=Domestic : Comma-separated list of rate codes to sync}';
+                            {--rate-codes=Domestic : Comma-separated list of rate codes to sync}
+                            {--concurrency=10 : Number of concurrent API requests per batch}';
 
     /**
      * The console command description.
@@ -55,25 +56,25 @@ class SyncRoutesVehicles extends Command
 
         $service = new RoutesApiService();
 
+        // ------------------------------------------------------------------
         // 1. Resolve supplier user
+        // ------------------------------------------------------------------
         $supplierUser = User::where('email', 'tsingh@routes.ca')->first();
         if (!$supplierUser) {
             $this->error('Routes supplier user not found. Run routes:sync-branches first.');
             return self::FAILURE;
         }
 
-        $pickupStr = $this->option('pickup-date');
-        $pickupDateCarbon = $pickupStr ? Carbon::parse($pickupStr) : Carbon::tomorrow()->addDay();
-        
-        // Validate inputs
-        if ($pickupDateCarbon <= Carbon::today()) {
-            $this->error('Pickup date must be in the future.');
-            return self::FAILURE;
-        }
+        $this->info("Supplier user resolved: ID {$supplierUser->id} ({$supplierUser->email})");
 
+        // ------------------------------------------------------------------
+        // 2. Load spec definitions
+        // ------------------------------------------------------------------
         $this->loadSpecificationDefinitions();
 
-        // 2. Fetch all Routes branches
+        // ------------------------------------------------------------------
+        // 3. Resolve all Routes branches
+        // ------------------------------------------------------------------
         $allBranches = Branch::where('company_id', $supplierUser->id)
             ->whereNotNull('station_id')
             ->get();
@@ -83,101 +84,107 @@ class SyncRoutesVehicles extends Command
             return self::FAILURE;
         }
 
-        $this->info("Starting Routes vehicle sync: " . $allBranches->count() . " branch(es), Pickup: {$pickupDateCarbon->toDateString()}");
+        $this->info('Branches loaded: ' . $allBranches->count());
 
-        $dropoffDate1 = $pickupDateCarbon->copy()->addDay();
-        $dropoffDate7 = $pickupDateCarbon->copy()->addDays(7);
+        // Resolve dates
+        $pickupStr = $this->option('pickup-date');
+        $pickupDateCarbon = $pickupStr ? Carbon::parse($pickupStr) : Carbon::now()->addDays(2)->startOfDay()->addHours(10);
+
+        if ($pickupDateCarbon <= Carbon::today()) {
+            $this->error('Pickup date must be in the future.');
+            return self::FAILURE;
+        }
+
+        $dropoffDate3  = $pickupDateCarbon->copy()->addDays(3);
+        $dropoffDate7  = $pickupDateCarbon->copy()->addDays(7);
         $dropoffDate30 = $pickupDateCarbon->copy()->addDays(30);
-        
-        $pricesOnly = $this->option('prices-only');
 
-        // Inclusions as requested by the user
+        $this->info("Using pickup: {$pickupDateCarbon->format('Y-m-d H:i')}");
+
+        // ------------------------------------------------------------------
+        // 4. Fetch rates for ALL branches with progress bars
+        // ------------------------------------------------------------------
+        $concurrency = (int) $this->option('concurrency');
+        $pricesOnly  = $this->option('prices-only');
+
+        // Inclusions
         $inclusions = [];
         $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Unlimited mileage']);
         $inclusions[] = $mileageIncluded->id;
-        
         $taxesIncluded = Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
         $inclusions[] = $taxesIncluded->id;
 
+        // Collect per-branch, per-classCode merged prices
+        $stationPrices = [];
+        $classModels   = []; // classCode => rate data (model name, seats, image)
+
+        $this->info("Fetching availability for {$allBranches->count()} branch(es)...");
+
+        foreach ([$dropoffDate3, $dropoffDate7, $dropoffDate30] as $idx => $dropDate) {
+            $days = [3, 7, 30][$idx];
+            $this->info("Fetching {$days}-day prices...");
+
+            $progress = $this->output->createProgressBar($allBranches->count());
+            $progress->start();
+
+            foreach ($allBranches->chunk($concurrency) as $chunk) {
+                foreach ($chunk as $branch) {
+                    $rates = $service->getRates($branch->station_id, $pickupDateCarbon, $dropDate) ?: [];
+
+                    foreach ($rates as $rate) {
+                        $classCode = $rate['ClassCode'] ?? null;
+                        if (!$classCode) continue;
+
+                        $price = (float) ($rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0);
+                        if ($price <= 0) continue;
+
+                        $dayPrice = round($price / $days, 2);
+
+                        if ($days === 3) {
+                            $stationPrices[$branch->id][$classCode]['day_value'] = $dayPrice;
+                            $classModels[$classCode] = [
+                                'model'      => $rate['ModelDesc'] ?? '',
+                                'classDesc'  => $rate['ClassDesc'] ?? '',
+                                'classImage' => $rate['ClassImage'] ?? null,
+                                'seats'      => $rate['Seats'] ?? null,
+                            ];
+                        } elseif ($days === 7) {
+                            $stationPrices[$branch->id][$classCode]['week_price'] = $dayPrice;
+                        } elseif ($days === 30) {
+                            $stationPrices[$branch->id][$classCode]['month_price'] = $dayPrice;
+                        }
+                    }
+
+                    $progress->advance();
+                }
+            }
+
+            $progress->finish();
+            $this->newLine();
+        }
+
+        // ------------------------------------------------------------------
+        // 5. Create / Update Vehicles
+        // ------------------------------------------------------------------
+        $created = 0;
+        $updated = 0;
+        $deleted = 0;
         $syncedVehicleIds = [];
 
-        foreach ($allBranches as $branch) {
-            $this->info("Processing branch: {$branch->station_id} - {$branch->name}");
-            
-            $rates1 = $service->getRates($branch->station_id, $pickupDateCarbon, $dropoffDate1) ?: [];
-            $rates7 = $service->getRates($branch->station_id, $pickupDateCarbon, $dropoffDate7) ?: [];
-            $rates30 = $service->getRates($branch->station_id, $pickupDateCarbon, $dropoffDate30) ?: [];
-            
-            if (empty($rates1) && empty($rates7) && empty($rates30)) {
-                $this->warn("No rates found for branch {$branch->station_id}");
-                continue;
-            }
+        foreach ($stationPrices as $branchId => $classes) {
+            foreach ($classes as $classCode => $priceData) {
+                $dayPrice = $priceData['day_value'] ?? 0;
+                if ($dayPrice <= 0) continue;
 
-            $mergedRates = [];
+                $weekPrice  = $priceData['week_price'] ?? $dayPrice;
+                $monthPrice = $priceData['month_price'] ?? $dayPrice;
 
-            // 1 Day Rates
-            foreach ($rates1 as $rate) {
-                $classCode = $rate['ClassCode'] ?? null;
-                if (!$classCode) continue;
-                    $mergedRates[$classCode] = [
-                        'model' => $rate['ModelDesc'],
-                        'classDesc' => $rate['ClassDesc'] ?? '',
-                        'classImage' => $rate['ClassImage'] ?? null,
-                        'seats' => $rate['Seats'] ?? null,
-                        'dayPrice' => $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0,
-                        'weekPrice' => null,
-                        'monthPrice' => null,
-                    ];
-            }
+                $model = $classModels[$classCode] ?? null;
+                if (!$model || empty($model['model'])) continue;
 
-            // 7 Day Rates
-            foreach ($rates7 as $rate) {
-                $classCode = $rate['ClassCode'] ?? null;
-                if (!$classCode) continue;
-                $price = $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0;
-                if (!isset($mergedRates[$classCode])) {
-                    $mergedRates[$classCode] = [
-                        'model' => $rate['ModelDesc'],
-                        'classDesc' => $rate['ClassDesc'] ?? '',
-                        'classImage' => $rate['ClassImage'] ?? null,
-                        'seats' => $rate['Seats'] ?? null,
-                        'dayPrice' => $price > 0 ? round($price / 7, 2) : 0, // Fallback if 1-day is missing
-                        'weekPrice' => $price > 0 ? round($price / 7, 2) : null,
-                        'monthPrice' => null,
-                    ];
-                } else {
-                    $mergedRates[$classCode]['weekPrice'] = $price > 0 ? round($price / 7, 2) : null;
-                }
-            }
-
-            // 30 Day Rates
-            foreach ($rates30 as $rate) {
-                $classCode = $rate['ClassCode'] ?? null;
-                if (!$classCode) continue;
-                $price = $rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0;
-                if (!isset($mergedRates[$classCode])) {
-                    $mergedRates[$classCode] = [
-                        'model' => $rate['ModelDesc'],
-                        'classDesc' => $rate['ClassDesc'] ?? '',
-                        'classImage' => $rate['ClassImage'] ?? null,
-                        'seats' => $rate['Seats'] ?? null,
-                        'dayPrice' => $price > 0 ? round($price / 30, 2) : 0, // Fallback
-                        'weekPrice' => null,
-                        'monthPrice' => $price > 0 ? round($price / 30, 2) : null,
-                    ];
-                } else {
-                    $mergedRates[$classCode]['monthPrice'] = $price > 0 ? round($price / 30, 2) : null;
-                }
-            }
-
-            foreach ($mergedRates as $classCode => $data) {
-                if (empty($data['model']) || $data['dayPrice'] <= 0) {
-                    continue;
-                }
-
-                $normalizedModel = $this->normalizeVehicleName($data['model']);
+                $normalizedModel = $this->normalizeVehicleName($model['model']);
                 $categoryId = $this->resolveCategoryFromSipp($classCode);
-                
+
                 // Add Transmission
                 $transmissionRaw = SippDecoder::getTransmissionAndDrive($classCode[2] ?? '');
                 $isAuto = str_contains(strtolower($transmissionRaw), 'automatic');
@@ -189,47 +196,103 @@ class SyncRoutesVehicles extends Command
                     $normalizedModel .= ' Manual';
                 }
 
-                $photoFilename = $this->resolveLocalPhoto($normalizedModel);
+                // Check if vehicle already exists
+                $existingVehicle = Vehicle::where('supplier', $supplierUser->id)
+                    ->where('pickup_loc', $branchId)
+                    ->where('name', $normalizedModel)
+                    ->first();
 
-                $vehicle = Vehicle::updateOrCreate(
-                    [
-                        'supplier' => $supplierUser->id,
-                        'pickup_loc' => $branch->id,
-                        'name' => $normalizedModel,
-                    ],
-                    [
-                        'category' => $categoryId,
-                        'price' => $data['dayPrice'],
-                        'week_price' => $data['weekPrice'] ?? $data['dayPrice'],
-                        'month_price' => $data['monthPrice'] ?? $data['dayPrice'],
-                        'activation' => true,
+                if ($existingVehicle) {
+                    $existingVehicle->update([
+                        'category'             => $categoryId,
+                        'price'                => $dayPrice,
+                        'week_price'           => $weekPrice,
+                        'month_price'          => $monthPrice,
+                        'activation'           => true,
                         'instant_confirmation' => 1,
-                        'photo' => $photoFilename,
-                    ]
-                );
+                    ]);
+                    $syncedVehicleIds[] = $existingVehicle->id;
+                    $updated++;
+                } elseif (!$pricesOnly) {
+                    $photoFilename = $this->resolveLocalPhoto($normalizedModel);
 
-                $this->syncVehicleSpecifications($vehicle, $classCode, $data['seats']);
-                
-                // Sync Inclusions
-                if (!$pricesOnly) {
+                    $vehicle = Vehicle::create([
+                        'name'                 => $normalizedModel,
+                        'photo'                => $photoFilename,
+                        'supplier'             => $supplierUser->id,
+                        'activation'           => true,
+                        'pickup_loc'           => $branchId,
+                        'category'             => $categoryId,
+                        'price'                => $dayPrice,
+                        'week_price'           => $weekPrice,
+                        'month_price'          => $monthPrice,
+                        'instant_confirmation' => 1,
+                    ]);
+
+                    Profit::create([
+                        'vehicle_id'       => $vehicle->id,
+                        'supplier_id'      => $supplierUser->id,
+                        'branch_id'        => $branchId,
+                        'per_day_profit'   => 0,
+                        'per_week_profit'  => 0,
+                        'per_month_profit' => 0,
+                        'weekend_profit'   => 0,
+                    ]);
+
+                    $this->syncVehicleSpecifications($vehicle, $classCode, $model['seats']);
+
+                    // Sync Inclusions
                     $vehicle->included()->sync($inclusions);
+
+                    $syncedVehicleIds[] = $vehicle->id;
+                    $created++;
                 }
-
-                $syncedVehicleIds[] = $vehicle->id;
             }
         }
 
-        // Deactivate or delete old vehicles not seen in this run
+        // ------------------------------------------------------------------
+        // 6. Delete vehicles not seen in this sync
+        // ------------------------------------------------------------------
         if (!$pricesOnly && !empty($syncedVehicleIds)) {
-            $deleted = Vehicle::where('supplier', $supplierUser->id)
+            $orphaned = Vehicle::where('supplier', $supplierUser->id)
                 ->whereNotIn('id', $syncedVehicleIds)
-                ->delete();
-            if ($deleted > 0) {
-                $this->info("Deleted {$deleted} obsolete vehicle records.");
+                ->get();
+
+            foreach ($orphaned as $ov) {
+                $ov->delete();
+                $deleted++;
             }
         }
 
+        // ------------------------------------------------------------------
+        // 7. Clean up branches without vehicles (orphan branches)
+        // ------------------------------------------------------------------
+        $branchesDeleted = 0;
+        $emptyBranches = Branch::where('company_id', $supplierUser->id)
+            ->whereDoesntHave('vehicles', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->get();
+
+        foreach ($emptyBranches as $emptyBranch) {
+            $emptyBranch->delete();
+            $branchesDeleted++;
+            $this->warn("Deleted empty branch: {$emptyBranch->name}");
+        }
+
+        // ------------------------------------------------------------------
+        // Summary
+        // ------------------------------------------------------------------
+        $this->newLine();
         $this->info('========== Routes Vehicle Sync Complete ==========');
+        $this->info("Created  : {$created}");
+        $this->info("Updated  : {$updated}");
+        $this->info("Deleted  : {$deleted}");
+        if ($branchesDeleted > 0) {
+            $this->info("Empty branches deleted: {$branchesDeleted}");
+        }
+        $this->info('==================================================');
+
         return self::SUCCESS;
     }
 

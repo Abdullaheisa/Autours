@@ -47,6 +47,10 @@ class Kernel extends ConsoleKernel
        //  $schedule->command('nissa:sync-branches --real')->dailyAt('06:00');
          $schedule->command('nissa:sync-vehicles --prices-only --real')->everyFourHours();
 
+         // Sync Routes branches daily and vehicle prices every 4 hours
+       //  $schedule->command('routes:sync-branches')->dailyAt('06:30');
+         $schedule->command('routes:sync-vehicles --prices-only')->everyFourHours();
+
          // Sync exchange rates daily
          $schedule->command('sync:exchange-rates')->everyFourHours();
     }   
