@@ -92,6 +92,18 @@ class NormalizeBranches extends Command
                     $changed = true;
                 }
 
+                $normalizedCountry = $branch->country;
+                if (!empty($branch->country)) {
+                    $code = \App\Services\CountryCurrencyResolver::resolveCountryCode($branch->country);
+                    if ($code) {
+                        $normalizedCountry = \App\Services\CountryCurrencyResolver::resolveCountryName($code);
+                    }
+                }
+
+                if ($branch->country !== $normalizedCountry) {
+                    $changed = true;
+                }
+
                 if ($changed) {
                     if ($isDryRun) {
                         $airportInfo = $result['airport_id'] ? " → Airport #{$result['airport_id']}" : '';
@@ -101,12 +113,16 @@ class NormalizeBranches extends Command
                         $normName = $result['normalized_name']
                             ? " | norm: '{$result['normalized_name']}'"
                             : '';
-                        $this->line("    WOULD UPDATE: [{$branch->id}] {$branch->name}{$airportInfo}{$locChange}{$normName}");
+                        $countryChange = $branch->country !== $normalizedCountry
+                            ? " | country: '{$branch->country}' → '{$normalizedCountry}'"
+                            : '';
+                        $this->line("    WOULD UPDATE: [{$branch->id}] {$branch->name}{$airportInfo}{$locChange}{$normName}{$countryChange}");
                     } else {
                         $branch->update([
                             'airport_id' => $result['airport_id'],
                             'normalized_name' => $result['normalized_name'],
                             'location' => $result['location'],
+                            'country' => $normalizedCountry,
                             'abriviation' => $result['abriviation'] ?? $branch->abriviation,
                         ]);
                     }

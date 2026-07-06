@@ -100,6 +100,7 @@ class CountryCurrencyResolver
             'PR' => 'USD',
             'US' => 'USD',
             'UY' => 'UYU',
+            'VI' => 'USD',
 
             // --- Caribbean & Central America ---
             'AG' => 'XCD',
@@ -232,6 +233,7 @@ class CountryCurrencyResolver
             'TT' => 'Trinidad and Tobago',
             'US' => 'United States',
             'UY' => 'Uruguay',
+            'VI' => 'U.S. Virgin Islands',
 
             // --- Asia & Oceania ---
             'AU' => 'Australia',
@@ -284,6 +286,7 @@ class CountryCurrencyResolver
             'saudi arabia' => 'SA',
             'seychelles' => 'SC',
             'south africa' => 'ZA',
+            'tanzania', 'tanzania, united republic of' => 'TZ',
             'albania' => 'AL',
             'armenia' => 'AM',
             'austria' => 'AT',
@@ -328,7 +331,7 @@ class CountryCurrencyResolver
             'slovenia' => 'SI',
             'slovakia' => 'SK',
             'sint maarten' => 'SX',
-            'turkey' => 'TR',
+            'turkey', 'türkiye' => 'TR',
             'ukraine' => 'UA',
             'kosovo' => 'XK',
             'argentina' => 'AR',
@@ -339,8 +342,9 @@ class CountryCurrencyResolver
             'mexico' => 'MX',
             'panama' => 'PA',
             'puerto rico' => 'PR',
-            'united states', 'usa' => 'US',
+            'united states', 'usa', 'united states of america' => 'US',
             'uruguay' => 'UY',
+            'u.s. virgin islands', 'us virgin islands' => 'VI',
             'australia' => 'AU',
             'sri lanka' => 'LK',
             'malaysia' => 'MY',
