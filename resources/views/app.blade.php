@@ -17,7 +17,8 @@
         <meta name="description" content="Autours offers reliable car rental and travel services with competitive prices, easy booking, and trusted support. Book your ride today.">
     @endif
 
-    <link rel="icon" type="image/x-icon" href="{{url('/images/favicon512*256.png')}}" sizes="32x32">
+    <link rel="icon" href="{{url('/favicon.ico')}}" sizes="any">
+    <link rel="apple-touch-icon" href="{{url('/images/favicon512_256.png')}}">
     <link rel="stylesheet" href="{{url('assets/css/styles.css')}}" />
 {{--    <link rel="stylesheet" href="{{url('assets/css/spinner.css')}}" />--}}
     <link rel="stylesheet" href="{{url('assets/css/fontawesome/css/fontawesome.min.css')}}" />
