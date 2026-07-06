@@ -640,7 +640,7 @@ class SyncEmrVehicles extends Command
         // --- Air Conditioner (default to available) ---
         if (isset($this->specDefinitions['Air Conditioner'])) {
             $acOptions = $this->specDefinitions['Air Conditioner']['options'] ?? [];
-            $acValue = $sipp ? \App\Services\SippDecoder::getLocalAcName($sipp) : ($acOptions[0] ?? 'cool & Heat');
+            $acValue = $sipp ? \App\Services\SippDecoder::getLocalAcName($sipp) : ($acOptions[0] ?? 'Air Conditioning');
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Air Conditioner',
