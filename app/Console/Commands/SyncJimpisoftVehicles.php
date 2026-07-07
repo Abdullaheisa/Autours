@@ -568,7 +568,7 @@ class SyncJimpisoftVehicles extends Command
         // --- Air Conditioner (default to available) ---
         if (isset($this->specDefinitions['Air Conditioner'])) {
             $acOptions = $this->specDefinitions['Air Conditioner']['options'] ?? [];
-            $acValue = $acOptions[0] ?? 'cool & Heat';
+            $acValue = $acOptions[0] ?? 'Air Conditioning';
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Air Conditioner',

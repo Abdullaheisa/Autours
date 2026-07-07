@@ -359,7 +359,7 @@ class SyncRentlyVehicles extends Command
         }
 
         if (isset($this->specDefinitions['Air Conditioner'])) {
-            $val = $sipp ? \App\Services\SippDecoder::getLocalAcName($sipp) : (($model['hasAirCondition'] ?? true) ? 'cool & Heat' : 'No AC');
+            $val = $sipp ? \App\Services\SippDecoder::getLocalAcName($sipp) : (($model['hasAirCondition'] ?? true) ? 'Air Conditioning' : 'No AC');
             $records[] = ['vehicle_id' => $vehicle->id, 'name' => 'Air Conditioner', 'value' => $val, 'icon' => $this->specDefinitions['Air Conditioner']['icon'], 'created_at' => $now, 'updated_at' => $now];
         }
 

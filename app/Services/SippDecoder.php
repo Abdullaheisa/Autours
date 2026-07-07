@@ -246,7 +246,7 @@ class SippDecoder
     public static function getLocalAcName(string $sipp): string
     {
         if (strlen($sipp) < 4) {
-            return 'cool & Heat';
+            return 'Air Conditioning';
         }
 
         $char = strtoupper($sipp[3]);
@@ -256,6 +256,6 @@ class SippDecoder
         // No AC chars: N, Q, I, C, B, F, Z, X
         $acChars = ['R', 'D', 'H', 'E', 'L', 'A', 'M', 'V', 'U'];
         
-        return in_array($char, $acChars) ? 'cool & Heat' : 'No AC';
+        return in_array($char, $acChars) ? 'Air Conditioning' : 'No AC';
     }
 }

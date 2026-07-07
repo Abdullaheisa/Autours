@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Hash;
+use App\Services\BranchNormalizationService;
 
 class UserController extends Controller
 {
@@ -275,6 +276,17 @@ class UserController extends Controller
             $branch->abriviation = $request->abriviation;
 
             $branch->save();
+
+            // Normalize branch name/location against canonical airports
+            $normalizer = new BranchNormalizationService();
+            $normData = $normalizer->normalize(
+                $branch->name ?? '',
+                $branch->city ?? '',
+                $branch->country ?? '',
+                $branch->station_id,
+                $branch->abriviation
+            );
+            $branch->update($normData);
 
             return response()->json([
                 'message' => 'Branch created successfully',
