@@ -263,25 +263,42 @@ export default function CountryPageContent({ data }: Props) {
               )}
             </div>
 
-            {/* Ascending Pyramid Logos Layout */}
+            {/* Dynamic Pyramid Logos Layout */}
             {(() => {
               const total = activeCompanies.length;
-              const maxPerRow = total > 20 ? 10 : 5;
-              const startSize = Math.max(2, Math.floor(maxPerRow / 3));
+              if (total === 0) return null;
 
+              // حساب أقصى ارتفاع هرمي h بحيث h*(h+1)/2 <= total
+              let h = 1;
+              while (((h + 1) * (h + 2)) / 2 <= total) {
+                h++;
+              }
+
+              // أحجام الصفوف الأساسية: [h, h-1, ..., 1]
+              const rowSizes: number[] = [];
+              for (let i = h; i >= 1; i--) {
+                rowSizes.push(i);
+              }
+
+              // توزيع الباقي على الصفوف لضمان استمرار التنازل
+              let remainder = total - (h * (h + 1)) / 2;
+              let idx = 0;
+              while (remainder > 0) {
+                rowSizes[idx]++;
+                remainder--;
+                idx = (idx + 1) % rowSizes.length;
+              }
+
+              // تقسيم العناصر على الصفوف بناءً على الأحجام المحسوبة
               const rows: typeof activeCompanies[] = [];
-              let remaining = [...activeCompanies];
-              let rowSize = startSize;
-
-              while (remaining.length > 0) {
-                const size = Math.min(rowSize, remaining.length);
-                rows.push(remaining.splice(0, size));
-                if (rowSize < maxPerRow) rowSize++;
+              const tempCompanies = [...activeCompanies];
+              for (const size of rowSizes) {
+                rows.push(tempCompanies.splice(0, size));
               }
 
               return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-3">
-                  {rows.reverse().map((row, rowIdx) => (
+                  {rows.map((row, rowIdx) => (
                     <div key={rowIdx} className="flex items-center justify-center gap-2 sm:gap-3">
                       {row.map((company) => (
                         <div
