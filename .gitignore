@@ -19,3 +19,4 @@ yarn-error.log
 /.vscode
 project_reference.md
 yarn.lock
+autours.sql
