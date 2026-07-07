@@ -286,7 +286,7 @@ export default function CountryPageContent({ data }: Props) {
                       {row.map((company) => (
                         <div
                           key={company.id}
-                          className="bg-white border border-gray-100 hover:border-primary rounded-xl p-1.5 flex items-center justify-center w-[80px] h-[40px] flex-shrink-0 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                          className="bg-white border border-gray-100 hover:border-primary rounded-xl p-1.5 flex items-center justify-center w-[80px] h-[40px] sm:w-[120px] sm:h-[60px] flex-shrink-0 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
                           title={company.name}
                         >
                           <PartnerLogo company={company} />
