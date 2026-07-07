@@ -1032,6 +1032,7 @@ class VehicleController extends Controller
 
         $locations = Branch::query()
             ->with(['airport', 'company:id,name,logo,company'])
+            ->where('activation', 1)
             ->whereHas('company', function ($query) {
                 $query->where('role', 'active_supplier');
             })
@@ -1046,26 +1047,29 @@ class VehicleController extends Controller
                     $branch->abriviation = $branch->airport->iata_code;
                 }
 
-                // حساب أقل سعر شهري (اليومي في الشهر) متوفر في هذا الفرع بالذات
+                // حساب أقل سعر متوفر في هذا الفرع بالذات
                 $minPrice1 = \App\Models\Vehicle::where('pickup_loc', $branch->id)
                     ->where('activation', 1)
-                    ->min('month_price');
+                    ->min(\DB::raw('CASE WHEN month_price > 0 THEN month_price ELSE price END'));
 
                 $minPrice2 = \App\Models\Vehicle::whereHas('branches', function ($query) use ($branch) {
                     $query->where('branches.id', $branch->id);
-                })->where('activation', 1)->min('month_price');
+                })->where('activation', 1)->min(\DB::raw('CASE WHEN month_price > 0 THEN month_price ELSE price END'));
 
                 $minPrice = null;
-                if ($minPrice1 && $minPrice2) {
+                if ($minPrice1 !== null && $minPrice2 !== null) {
                     $minPrice = min($minPrice1, $minPrice2);
                 } else {
-                    $minPrice = $minPrice1 ?: $minPrice2;
+                    $minPrice = $minPrice1 ?? $minPrice2;
                 }
 
                 // تعيين السعر كـ attribute لكي يتم إرساله في الـ JSON
-                $branch['min_price'] = $minPrice ? (float)$minPrice : null;
+                $branch['min_price'] = $minPrice !== null ? (float)$minPrice : null;
 
                 return $branch;
+            })
+            ->filter(function ($branch) {
+                return $branch['min_price'] !== null;
             })
             ->unique(function ($branch) {
                 return $branch->airport_id ? 'airport_' . $branch->airport_id : mb_strtolower(trim($branch->name));
