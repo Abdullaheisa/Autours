@@ -51,6 +51,9 @@ interface SearchState {
   currentPage: number;
   totalPages: number;
   perPage: number;
+  cheapestVehicles: Record<string, Record<string, { car_name: string; supplier: string; price: number; currency: string }>>;
+  isFetchingCheapest: boolean;
+  cheapestError: string | null;
 }
 
 const initialState: SearchState = {
@@ -92,6 +95,9 @@ const initialState: SearchState = {
   currentPage: 1,
   totalPages: 1,
   perPage: 15,
+  cheapestVehicles: {},
+  isFetchingCheapest: false,
+  cheapestError: null,
 };
 
 export const initiateSearch = createAsyncThunk(
@@ -222,6 +228,18 @@ const searchSlice = createSlice({
       .addCase(fetchVehicles.rejected, (state, action) => {
         state.isFiltering = false;
         state.filterError = action.payload as string;
+      })
+      .addCase(fetchCheapestVehicles.pending, (state) => {
+        state.isFetchingCheapest = true;
+        state.cheapestError = null;
+      })
+      .addCase(fetchCheapestVehicles.fulfilled, (state, action) => {
+        state.isFetchingCheapest = false;
+        state.cheapestVehicles = action.payload.data || action.payload;
+      })
+      .addCase(fetchCheapestVehicles.rejected, (state, action) => {
+        state.isFetchingCheapest = false;
+        state.cheapestError = action.payload as string || 'Failed to fetch cheapest vehicles';
       });
   },
 });
@@ -236,5 +254,18 @@ export const {
   applyLocalFilters,
   setPage,
 } = searchSlice.actions;
+export const fetchCheapestVehicles = createAsyncThunk(
+  'search/fetchCheapestVehicles',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await vehicleApi.getCheapestVehicles();
+      // نعيد البيانات المسترجعة (data) لحفظها في المخزن
+      return response.data || response;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch cheapest vehicles');
+    }
+  }
+);
+
 
 export default searchSlice.reducer;

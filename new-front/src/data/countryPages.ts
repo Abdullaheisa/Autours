@@ -6,7 +6,7 @@ export interface CountryPageData {
   heroHighlight: string;
   heroLead: string;
   heroBottomTitle: string;
-  airports: {
+  airports?: {
     name: string;
     code: string;
     location: string;
@@ -31,7 +31,7 @@ export interface CountryPageData {
     image: string;
     items: string[];
   };
-  gallery: {
+  gallery?: {
     big: string;
     small1: string;
     small2: string;
@@ -41,6 +41,11 @@ export interface CountryPageData {
     q: string;
     a: string;
   }[];
+  partnersDescription?: string;
+  ctaTitle?: string;
+  ctaDescription?: string;
+  ctaPrimaryText?: string;
+  ctaSecondaryText?: string;
 }
 
 export const countryPagesData: Record<string, CountryPageData> = {
@@ -52,76 +57,30 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroHighlight: 'Across the UAE',
     heroLead: 'Search pickup availability from Dubai, Abu Dhabi, Sharjah, Al Maktoum, Ras Al Khaimah, and Fujairah airports — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by UAE airport and land ready to drive.',
-    airports: [
-      {
-        name: 'Dubai International',
-        code: 'DXB',
-        location: 'United Arab Emirates',
-        description: "World's busiest airport for international travel. Pick up your rental right after baggage claim.",
-        image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80',
-        minPrice: 120,
-      },
-      {
-        name: 'Abu Dhabi International',
-        code: 'AUH',
-        location: 'United Arab Emirates',
-        description: 'Gateway to the capital. Premium and economy rentals available 24/7.',
-        image: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=600&q=80',
-        minPrice: 110,
-      },
-      {
-        name: 'Sharjah International',
-        code: 'SHJ',
-        location: 'United Arab Emirates',
-        description: 'Budget-friendly options with quick access to Dubai and the northern emirates.',
-        image: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=600&q=80',
-        minPrice: 90,
-      },
-      {
-        name: "Al Maktoum Int'l",
-        code: 'DWC',
-        location: 'United Arab Emirates',
-        description: "Dubai's second airport, ideal for Expo City and Dubai South business travelers.",
-        image: 'https://images.unsplash.com/photo-1542296332-2e44a0f94e9a?auto=format&fit=crop&w=600&q=80',
-        minPrice: 100,
-      },
-      {
-        name: 'Ras Al Khaimah',
-        code: 'RKT',
-        location: 'United Arab Emirates',
-        description: 'Explore the northern emirates, mountains, and beaches with a convenient pickup.',
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?auto=format&fit=crop&w=600&q=80',
-        minPrice: 95,
-      },
-      {
-        name: 'Fujairah International',
-        code: 'FJR',
-        location: 'United Arab Emirates',
-        description: 'East coast gateway. Perfect for beach getaways and mountain drives.',
-        image: 'https://images.unsplash.com/photo-1520340356584-462675fb9fbf?auto=format&fit=crop&w=600&q=80',
-        minPrice: 85,
-      }
-    ],
     travelInfo: {
-      title: "The UAE's Trusted Car Rental Partner",
-      subtitle: "We partner with top international and local brands to bring you the best rates, newest vehicles, and seamless pickup experience across all major UAE airports.",
+      title: "Why Choose Autours?",
+      subtitle: "The Smart Way to Rent a Car Across the UAE",
       image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=800&q=80",
       benefits: [
         {
-          title: "Airport Pickup",
-          description: "Collect your car minutes after landing at any major UAE airport terminal."
+          title: "Airport Pickup Across the UAE",
+          description: "Collect your car at Dubai International Airport (DXB), Abu Dhabi International Airport (AUH), Sharjah Airport (SHJ), and other major airport locations."
         },
         {
-          title: "No Hidden Fees",
-          description: "What you see is what you pay. Transparent pricing with full insurance included."
+          title: "Best Rates in Dubai, Abu Dhabi & Beyond",
+          description: "Compare prices from leading international and local rental companies to secure the best value for your trip."
         },
         {
-          title: "24/7 Support",
-          description: "Roadside assistance and customer service available around the clock."
+          title: "Transparent Pricing",
+          description: "No hidden charges or unexpected fees. See the total price before you book."
+        },
+        {
+          title: "24/7 Customer Support",
+          description: "Our team is available around the clock to help with bookings, changes, or roadside assistance anywhere in the UAE."
         },
         {
           title: "Free Cancellation",
-          description: "Plans change. Cancel up to 24 hours before pickup with no charge."
+          description: "Enjoy flexible travel with free cancellation up to 24 hours before pickup."
         }
       ]
     },
@@ -147,12 +106,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
         "Credit card for security deposit",
         "Booking confirmation (digital or printed)"
       ]
-    },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "SUVs & 4x4s"
     },
     faqs: [
       {
@@ -215,7 +168,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
         q: 'What is included in my car rental booking?',
         a: 'Most bookings include basic insurance, mileage options, and taxes in most cases. You can see the full details before confirming your booking.'
       }
-    ]
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across the UAE, including Auto Rent, KTC, Drivus, Highway, Routes, Surprice, and Street Rent a Car. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Dubai, Abu Dhabi, Sharjah, Ajman, Ras Al Khaimah, and Fujairah.",
+    ctaTitle: "Book Your UAE Airport Car Rental in Minutes",
+    ctaDescription: "Unlock exclusive deals from 50+ trusted suppliers at all major UAE airports. Enjoy transparent pricing, free cancellation, and instant booking confirmation.",
+    ctaPrimaryText: "Compare Prices",
+    ctaSecondaryText: "Get Expert Help"
   },
   egypt: {
     slug: 'egypt',
@@ -225,16 +183,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroHighlight: 'Across Egypt',
     heroLead: 'Search pickup availability from Cairo, Alexandria, Sharm El Sheikh, Hurghada, and Luxor airports — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by Egypt airport and land ready to drive.',
-    airports: [
-      {
-        name: 'Cairo International',
-        code: 'CAI',
-        location: 'Egypt',
-        description: 'The main gateway to Egypt. Pick up your rental right after baggage claim.',
-        image: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?auto=format&fit=crop&w=600&q=80',
-        minPrice: 900,
-      }
-    ],
     travelInfo: {
       title: "Egypt's Trusted Car Rental Partner",
       subtitle: "We partner with top international and local brands to bring you the best rates across all major Egyptian airports.",
@@ -257,12 +205,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
         "Credit card in driver's name"
       ]
     },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "Comfort & Economy"
-    },
     faqs: [
       {
         q: 'Do I need an International Driving Permit in Egypt?',
@@ -278,48 +220,67 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroHighlight: 'Across Saudi Arabia',
     heroLead: 'Search pickup availability from Riyadh, Jeddah, Dammam, and Medina airports — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by Saudi airport and land ready to drive.',
-    airports: [
-      {
-        name: 'King Khalid International',
-        code: 'RUH',
-        location: 'Saudi Arabia',
-        description: 'The main gateway to Riyadh. Excellent fleets available 24/7.',
-        image: 'https://images.unsplash.com/photo-1580418827493-f2b22c0a76cb?auto=format&fit=crop&w=600&q=80',
-        minPrice: 150,
-      }
-    ],
     travelInfo: {
-      title: "Saudi Arabia's Trusted Partner",
-      subtitle: "Partnering with top brands to bring you seamless airport pickups.",
+      title: "Why Autours",
+      subtitle: "Saudi Arabia's Trusted Car Rental & Travel Partner. Partnering with top-rated brands to deliver seamless, fast, and reliable airport pickup experiences right at the terminal.",
       image: "https://images.unsplash.com/photo-1551041777-ed277b8dd348?auto=format&fit=crop&w=800&q=80",
       benefits: [
-        { title: "Airport Pickup", description: "Quick collection directly from the terminal." },
-        { title: "Wide Selection", description: "From economy cars to luxury SUVs." }
+        { 
+          title: "Airport Pickup", 
+          description: "Instant collection directly from the terminal with zero waiting time." 
+        },
+        { 
+          title: "Wide Selection", 
+          description: "From budget-friendly economy cars to premium luxury SUVs for every journey." 
+        },
+        {
+          title: "Extra Benefits",
+          description: "No hidden fees — transparent pricing you can trust, with 24/7 customer support whenever you need assistance."
+        }
       ]
     },
     steps: [
-      { title: "Search", description: "Enter your airport, dates, and times." },
-      { title: "Compare", description: "Filter by price and car type." },
-      { title: "Book & Drive", description: "Reserve online and hit the road." }
+      { 
+        title: "Search Instantly", 
+        description: "Enter your airport, pickup date, and drop-off time in seconds." 
+      },
+      { 
+        title: "Compare Smartly", 
+        description: "Browse top deals and filter by price, car type, and travel needs." 
+      },
+      { 
+        title: "Book & Drive", 
+        description: "Confirm your booking online and pick up your car right at the terminal." 
+      }
     ],
     documents: {
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
-        "Passport and Visa / Iqama",
-        "Credit card"
+        "Passport and Visa or Iqama",
+        "Credit card for deposit or payment"
       ]
-    },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "Family SUVs"
     },
     faqs: [
       {
-        q: 'Can women rent and drive cars in Saudi Arabia?',
-        a: 'Yes, women can rent and drive cars in Saudi Arabia provided they meet the minimum age and hold a valid driving license.'
+        q: "What do I need to rent a car?",
+        a: "Just a valid driving license, passport/Iqama, and a credit card."
+      },
+      {
+        q: "Can I pick up my car at the airport?",
+        a: "Yes — instant airport pickup directly at the terminal, no waiting."
+      },
+      {
+        q: "Are there hidden fees?",
+        a: "No hidden fees. Transparent pricing from booking to drop-off."
+      },
+      {
+        q: "Is support available if I need help?",
+        a: "Yes — 24/7 customer support anytime during your trip."
+      },
+      {
+        q: "What cars can I book?",
+        a: "Economy, family cars, SUVs, and luxury vehicles available instantly."
       }
     ]
   },
@@ -331,16 +292,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroHighlight: 'Across Bahrain',
     heroLead: 'Search pickup availability from Bahrain International Airport — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by Bahrain airport and land ready to drive.',
-    airports: [
-      {
-        name: 'Bahrain International',
-        code: 'BAH',
-        location: 'Bahrain',
-        description: 'Bahrain\'s premier gateway. Find top-tier rentals 24/7.',
-        image: 'https://images.unsplash.com/photo-1544085311-11a028465b03?auto=format&fit=crop&w=600&q=80',
-        minPrice: 120,
-      }
-    ],
     travelInfo: {
       title: "Bahrain's Trusted Car Rental Partner",
       subtitle: "We partner with top international and local brands to bring you the best rates across Bahrain.",
@@ -363,12 +314,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
         "Credit card in driver's name"
       ]
     },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "Comfort & Economy"
-    },
     faqs: [
       {
         q: 'Do I need an International Driving Permit in Bahrain?',
@@ -384,16 +329,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroHighlight: 'Across Jordan',
     heroLead: 'Search pickup availability from Queen Alia International Airport — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by Jordan airport and land ready to drive.',
-    airports: [
-      {
-        name: 'Queen Alia International',
-        code: 'AMM',
-        location: 'Jordan',
-        description: 'Located in Amman. Premium and budget car rentals available 24/7.',
-        image: 'https://images.unsplash.com/photo-1549180030-48bbe079fb36?auto=format&fit=crop&w=600&q=80',
-        minPrice: 130,
-      }
-    ],
     travelInfo: {
       title: "Jordan's Trusted Car Rental Partner",
       subtitle: "We partner with top brands to bring you the best rates across all major Jordanian hubs.",
@@ -416,12 +351,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
         "Credit card in driver's name"
       ]
     },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "Comfort & Economy"
-    },
     faqs: [
       {
         q: 'Can I drive a rental car to Petra?',
@@ -435,18 +364,8 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroBadge: 'Autours Kuwait Airport Car Rental',
     heroTitle: 'Book Your Airport Rental',
     heroHighlight: 'Across Kuwait',
-    heroLead: 'Search pickup availability from Kuwait International Airport — then choose the right car for your trip.',
+    heroLead: 'Search pickup availability from Kuwait International Airport — then choose the right car.',
     heroBottomTitle: 'Search by Kuwait airport and land ready to drive.',
-    airports: [
-      {
-        name: 'Kuwait International',
-        code: 'KWI',
-        location: 'Kuwait',
-        description: 'Kuwait\'s primary airport. Grab premium sedan and SUV deals.',
-        image: 'https://images.unsplash.com/photo-1541417901255-6d30f1c53958?auto=format&fit=crop&w=600&q=80',
-        minPrice: 140,
-      }
-    ],
     travelInfo: {
       title: "Kuwait's Trusted Car Rental Partner",
       subtitle: "We partner with top brands to bring you the best rates across all major Kuwaiti hubs.",
@@ -469,12 +388,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
         "Credit card in driver's name"
       ]
     },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "Comfort & Economy"
-    },
     faqs: [
       {
         q: 'What is the minimum age to rent a car in Kuwait?',
@@ -490,16 +403,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroHighlight: 'Across Oman',
     heroLead: 'Search pickup availability from Muscat and Salalah airports — then choose the right car.',
     heroBottomTitle: 'Search by Oman airport and land ready to drive.',
-    airports: [
-      {
-        name: 'Muscat International',
-        code: 'MCT',
-        location: 'Oman',
-        description: 'Muscat\'s main hub. Perfect for exploring Omani wadis and beaches.',
-        image: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=600&q=80',
-        minPrice: 110,
-      }
-    ],
     travelInfo: {
       title: "Oman's Trusted Car Rental Partner",
       subtitle: "We partner with top brands to bring you the best rates across all major Omani hubs.",
@@ -522,12 +425,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
         "Credit card in driver's name"
       ]
     },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "Comfort & Economy"
-    },
     faqs: [
       {
         q: 'Do I need a 4x4 to explore Oman?',
@@ -541,25 +438,29 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroBadge: 'Autours Qatar Airport Car Rental',
     heroTitle: 'Book Your Airport Rental',
     heroHighlight: 'Across Qatar',
-    heroLead: 'Search pickup availability from Hamad International Airport — then choose the right car.',
+    heroLead: 'Compare the best car rental deals from trusted local and international suppliers across Doha, Hamad International Airport (DOH), Lusail, Al Wakrah, and major destinations throughout Qatar. Enjoy transparent pricing, fast booking, and reliable service every time.',
     heroBottomTitle: 'Search by Qatar airport and land ready to drive.',
-    airports: [
-      {
-        name: 'Hamad International',
-        code: 'DOH',
-        location: 'Qatar',
-        description: 'Award-winning airport in Doha. Access premium car rentals right after landing.',
-        image: 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=600&q=80',
-        minPrice: 125,
-      }
-    ],
     travelInfo: {
-      title: "Qatar's Trusted Car Rental Partner",
-      subtitle: "We partner with top brands to bring you the best rates across all major Qatari hubs.",
+      title: "Why Choose Autours?",
+      subtitle: "Qatar's Trusted Car Rental Partner",
       image: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80",
       benefits: [
-        { title: "Airport Pickup", description: "Collect your car right after landing." },
-        { title: "No Hidden Fees", description: "Transparent pricing with basic insurance included." }
+        {
+          title: "Airport Pickup",
+          description: "Pick up your rental car within minutes of landing at Hamad International Airport (DOH) and start your journey without delays."
+        },
+        {
+          title: "Best Price Guarantee",
+          description: "Compare offers from trusted car rental companies to secure the best value for your trip across Qatar."
+        },
+        {
+          title: "No Hidden Fees",
+          description: "Transparent pricing with no unexpected charges and basic insurance included."
+        },
+        {
+          title: "24/7 Customer Support",
+          description: "Our dedicated support team is available around the clock to assist you before, during, and after your rental."
+        }
       ]
     },
     steps: [
@@ -575,17 +476,52 @@ export const countryPagesData: Record<string, CountryPageData> = {
         "Credit card in driver's name"
       ]
     },
-    gallery: {
-      big: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-      small1: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80",
-      small2: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-      label: "Comfort & Economy"
-    },
     faqs: [
       {
-        q: 'Is insurance included in Qatar car rentals?',
-        a: 'Basic third-party liability insurance is always included in the price. CDW upgrades are available at checkout.'
+        q: "Can tourists rent a car in Qatar?",
+        a: "Yes. Most visitors can rent a car in Qatar using a valid driving license. Depending on your nationality, you may also need an International Driving Permit (IDP). Always check the supplier's requirements before booking."
+      },
+      {
+        q: "What documents do I need to rent a car in Qatar?",
+        a: "You'll typically need a valid passport, driving license, credit card in the main driver's name, and, where required, an International Driving Permit."
+      },
+      {
+        q: "Can I rent a car at Hamad International Airport (DOH)?",
+        a: "Yes. Many leading car rental companies operate at Hamad International Airport (DOH), allowing you to collect your vehicle shortly after arrival."
+      },
+      {
+        q: "How much does it cost to rent a car in Qatar?",
+        a: "Prices vary depending on the season, vehicle type, rental duration, and supplier. Economy cars are usually the most affordable, while SUVs and luxury vehicles cost more."
+      },
+      {
+        q: "Is insurance included with my rental?",
+        a: "Most rentals include basic insurance. Additional coverage options, such as Collision Damage Waiver (CDW) or full protection, can usually be added during the booking process."
+      },
+      {
+        q: "Are there any hidden fees?",
+        a: "No. Autours displays transparent pricing so you can review the total cost before confirming your booking. Optional extras and supplier-specific policies are shown during checkout."
+      },
+      {
+        q: "Can I cancel my booking for free?",
+        a: "Yes. Many suppliers offer free cancellation up to 24 hours before pickup. Check the cancellation policy shown for your selected vehicle before completing your reservation."
+      },
+      {
+        q: "Can I drive from Qatar to another country with a rental car?",
+        a: "Cross-border travel is generally not permitted unless explicitly approved by the rental company. Always check the supplier's terms before making travel plans."
+      },
+      {
+        q: "What is the minimum age to rent a car in Qatar?",
+        a: "Most rental companies require drivers to be at least 21 years old, while some vehicle categories may require drivers to be 25 or older."
+      },
+      {
+        q: "Which cities can I rent a car in Qatar?",
+        a: "You can book rental cars in Doha, at Hamad International Airport (DOH), and other major locations across Qatar, depending on supplier availability."
       }
-    ]
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Qatar. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Doha, Lusail, Al Wakrah, and Hamad International Airport (DOH).",
+    ctaTitle: "Find Your Perfect Car Rental in Qatar",
+    ctaDescription: "Whether you're arriving at Hamad International Airport or exploring Doha, Lusail, or Al Wakrah, compare prices from trusted suppliers and book with confidence. Free cancellation, transparent pricing, and instant confirmation included.",
+    ctaPrimaryText: "Find the Best Deal",
+    ctaSecondaryText: "Get Support"
   }
 };

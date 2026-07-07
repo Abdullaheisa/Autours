@@ -1,12 +1,40 @@
 import { CountryPageData } from '@/data/countryPages';
 import { MapPin, Plane, ArrowRight } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store';
+import { setSearchParams } from '@/store/slices/searchSlice';
+import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
 
 interface Props {
   name: string;
-  airports: CountryPageData['airports'];
+  currency: string;
+  airports: {
+    name: string;
+    code: string;
+    location: string;
+    description: string;
+    image: string;
+    minPrice: number;
+    rawLocation?: any;
+  }[];
 }
 
-export default function AirportsSection({ name, airports }: Props) {
+export default function AirportsSection({ name, airports = [], currency }: Props) {
+  const dispatch = useDispatch<AppDispatch>();
+
+  const handleSelectAirport = (rawLoc: any) => {
+    if (!rawLoc) return;
+    const display = getLocationDisplayLabel(rawLoc);
+    const pickupVal = getLocationPickupValue(rawLoc);
+
+    dispatch(setSearchParams({
+      location: pickupVal,
+      locationLabel: display,
+    }));
+
+    // Scroll smoothly to the search hero at the top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   return (
     <section className="py-20 bg-gradient-to-b from-white to-gray-50/50" id="airports">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,9 +103,12 @@ export default function AirportsSection({ name, airports }: Props) {
                 <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-auto">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Starting From</span>
-                    <span className="text-base font-extrabold text-gray-800">AED {airport.minPrice}/day</span>
+                    <span className="text-base font-extrabold text-gray-800">{currency} {airport.minPrice}/day</span>
                   </div>
-                  <button className="btn-primary px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider font-black flex items-center gap-2 group-hover:scale-105 transition-all">
+                  <button 
+                    onClick={() => handleSelectAirport(airport.rawLocation)}
+                    className="btn-primary px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider font-black flex items-center gap-2 group-hover:scale-105 transition-all"
+                  >
                     View Cars
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>

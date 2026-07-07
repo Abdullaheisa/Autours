@@ -54,7 +54,7 @@ export default function HeroSearch({
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const currencyCode = useSelector((state: RootState) => state.currency.code);
-  const { isSearching } = useSelector((state: RootState) => state.search);
+  const { isSearching, searchParams } = useSelector((state: RootState) => state.search);
 
   const [location, setLocation] = useState('');
   const [locations, setLocations] = useState<LocationBranch[]>([]);
@@ -81,6 +81,12 @@ export default function HeroSearch({
       })
       .catch(() => {/* fallback to static */});
   }, []);
+
+  useEffect(() => {
+    if (searchParams?.locationLabel) {
+      setLocation(searchParams.locationLabel);
+    }
+  }, [searchParams?.locationLabel]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && locations.length > 0) {

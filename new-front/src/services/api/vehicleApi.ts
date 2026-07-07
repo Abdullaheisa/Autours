@@ -54,9 +54,36 @@ export const vehicleApi = {
         location_address: loc.location_address || loc.adresse || '',
         location_type: loc.location_type || '',
         abriviation: loc.abriviation || loc.abbreviation || '',
+        min_price: loc.min_price != null ? Number(loc.min_price) : null,
+        currency: loc.currency || '',
+        airport_id: loc.airport_id || null,
+        company: loc.company || null,
       }));
     } catch (err) {
       console.error('[LOCATIONS ERROR]', err);
+      return [];
+    }
+  },
+
+  getLocationsByCountry: async (country: string): Promise<LocationBranch[]> => {
+    try {
+      const data = await apiClient.get<any[]>(`/get/locations/country/${country}`);
+      return (data || []).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name || '',
+        location: loc.location || '',
+        country: loc.country || '',
+        adresse: loc.adresse || loc.location_address || '',
+        location_address: loc.location_address || loc.adresse || '',
+        location_type: loc.location_type || '',
+        abriviation: loc.abriviation || loc.abbreviation || '',
+        min_price: loc.min_price != null ? Number(loc.min_price) : null,
+        currency: loc.currency || '',
+        airport_id: loc.airport_id || null,
+        company: loc.company || null,
+      }));
+    } catch (err) {
+      console.error('[LOCATIONS BY COUNTRY ERROR]', err);
       return [];
     }
   },
@@ -66,4 +93,10 @@ export const vehicleApi = {
     const response = await apiClient.post<any>('/get/vehicle/data', cleanPayload(payload as any));
     return response;
   },
+  getCheapestVehicles: async () => {
+    // يستدعي الرابط /api/get/cheapest-vehicle ويحصل على البيانات
+    const response = await apiClient.get<any>('/get/cheapest-vehicle');
+    return response;
+  },
+
 };

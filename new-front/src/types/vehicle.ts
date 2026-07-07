@@ -150,4 +150,8 @@ export interface LocationBranch {
   location_address?: string;
   location_type?: string;
   abriviation?: string;
+  min_price?: number | null;
+  currency?: string;
+  airport_id?: number | null;
+  company?: { id: number; name: string; logo: string; company: string } | null;
 }

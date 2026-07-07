@@ -232,6 +232,12 @@ function BookingContent() {
         }
       }
 
+      // If URL has vehicleId or bookId, but we didn't find a match yet, do not lock or fallback yet.
+      // Wait until the list is fully loaded or search parameters are resolved.
+      if (!found && (vehicleId || bookId)) {
+        return;
+      }
+
       // 4. Fallback: first vehicle
       if (!found) found = vehicles[0];
 
@@ -240,18 +246,22 @@ function BookingContent() {
         setLockedVehicle(found);
       }
     } else {
-      // Already locked: update pricing by finding the same car by name
+      // Already locked: update pricing by finding the same car by ID or name + supplier to prevent supplier swaps
+      const lockedId = lockedVehicle?.id;
       const lockedName = lockedVehicle?.name;
+      const lockedSupplierId = lockedVehicle?.supplier?.id;
+      
       if (lockedName) {
-        const updated = vehicles.find((v: Vehicle) => v.name === lockedName);
-        if (updated) {
+        const updated = vehicles.find((v: Vehicle) => 
+          (lockedId && v.id === lockedId) || 
+          (v.name === lockedName && v.supplier?.id === lockedSupplierId)
+        );
+        if (updated && updated.id !== lockedVehicle?.id) {
           setLockedVehicle(updated);
         }
-        // If not found by name, keep showing the old locked vehicle (don't swap)
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicles]);
+  }, [vehicles, vehicleId, bookId]);
 
   const selectedVehicle = lockedVehicle || vehicles[0] || null;
 

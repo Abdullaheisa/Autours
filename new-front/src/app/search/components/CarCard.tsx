@@ -367,29 +367,32 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="mx-4 mb-2 md:mb-2.5">
-          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center justify-between gap-x-5 md:gap-x-6 gap-y-3 flex-wrap">
-            <div className="bg-white p-1 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm overflow-hidden">
-  {carData.supplier.logo ? (
-    <Image
-      src={carData.supplier.logo}
-      alt={`${carData.supplier.name} Logo`}
-      width={333}
-      height={126}
-      className="w-full h-full object-cover object-center"
-      unoptimized
-    />
-  ) : (
-    <span className="text-[10px] font-bold text-gray-600">N/A</span>
-  )}
-</div>
+          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-3 flex-wrap">
+            {/* Supplier logo */}
+            <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-24 h-12 shrink-0 shadow-sm overflow-hidden border border-gray-100">
+              {carData.supplier.logo ? (
+                <Image
+                  src={carData.supplier.logo}
+                  alt={`${carData.supplier.name} Logo`}
+                  width={120}
+                  height={56}
+                  className="w-full h-full object-contain"
+                  unoptimized
+                />
+              ) : (
+                <span className="text-[10px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
+              )}
+            </div>
 
-            <div className="min-w-0">
-              <span className="text-xs md:text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
-              <button onClick={() => setShowTerms(true)} className="text-xs font-black text-blue-600 underline hover:text-blue-800 leading-none">
+            {/* Supplier name + Rental terms */}
+            <div className="flex flex-col min-w-0 flex-1 items-center text-center">
+              <span className="text-xs md:text-sm font-black text-gray-800 truncate w-full text-center">{carData.supplier.name}</span>
+              <button onClick={() => setShowTerms(true)} className="text-[11px] font-bold text-blue-600 underline hover:text-blue-800 whitespace-nowrap mt-0.5 leading-none">
                 Rental Terms
               </button>
             </div>
 
+            {/* Rating */}
             <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
               <span className="bg-[var(--primary)] text-gray-900 px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs md:text-sm font-black">{carData.supplier.rating}/10</span>
               <div className="flex flex-col leading-none">

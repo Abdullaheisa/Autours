@@ -93,12 +93,13 @@ class VehicleController extends Controller
                             $q->where('branches.id', $location);
                         }
                     } else {
-                        // String location: search by location, name, city, or adresse (partial match)
+                        // String location: search by location, name, city, adresse, or country (partial match)
                         $q->where(function ($q2) use ($location) {
                             $q2->where('branches.location', 'LIKE', "%{$location}%")
                                ->orWhere('branches.name', 'LIKE', "%{$location}%")
                                ->orWhere('branches.city', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.adresse', 'LIKE', "%{$location}%");
+                               ->orWhere('branches.adresse', 'LIKE', "%{$location}%")
+                               ->orWhere('branches.country', 'LIKE', "%{$location}%");
                         });
                     }
                 });
@@ -992,13 +993,78 @@ class VehicleController extends Controller
     public function getLocations()
     {
         $locations = Branch::query()
-            ->with('airport')
+            ->with(['airport', 'company:id,name,logo,company'])
+            ->whereHas('company', function ($query) {
+                $query->where('role', 'active_supplier');
+            })
             ->orderBy('name')
             ->get()
             ->map(function ($branch) {
                 if (empty($branch->abriviation) && $branch->airport) {
                     $branch->abriviation = $branch->airport->iata_code;
                 }
+                return $branch;
+            })
+            ->unique(function ($branch) {
+                return $branch->airport_id ? 'airport_' . $branch->airport_id : mb_strtolower(trim($branch->name));
+            })
+            ->values();
+        return response()->json($locations);
+    }
+
+    public function getLocationsByCountry($country)
+    {
+        $countryMap = [
+            'uae' => 'United Arab Emirates',
+            'ksa' => 'Saudi Arabia',
+            'saudi' => 'Saudi Arabia',
+            'bahrain' => 'Bahrain',
+            'jordan' => 'Jordan',
+            'kuwait' => 'Kuwait',
+            'oman' => 'Oman',
+            'qatar' => 'Qatar',
+            'egypt' => 'Egypt',
+        ];
+
+        $searchCountry = isset($countryMap[strtolower($country)]) 
+            ? $countryMap[strtolower($country)] 
+            : $country;
+
+        $locations = Branch::query()
+            ->with(['airport', 'company:id,name,logo,company'])
+            ->whereHas('company', function ($query) {
+                $query->where('role', 'active_supplier');
+            })
+            ->where(function ($query) use ($searchCountry) {
+                $query->where('country', 'ilike', '%' . $searchCountry . '%')
+                      ->orWhere('country', 'ilike', '%' . str_replace('-', ' ', $searchCountry) . '%');
+            })
+            ->orderBy('name')
+            ->get()
+            ->map(function ($branch) {
+                if (empty($branch->abriviation) && $branch->airport) {
+                    $branch->abriviation = $branch->airport->iata_code;
+                }
+
+                // حساب أقل سعر شهري (اليومي في الشهر) متوفر في هذا الفرع بالذات
+                $minPrice1 = \App\Models\Vehicle::where('pickup_loc', $branch->id)
+                    ->where('activation', 1)
+                    ->min('month_price');
+
+                $minPrice2 = \App\Models\Vehicle::whereHas('branches', function ($query) use ($branch) {
+                    $query->where('branches.id', $branch->id);
+                })->where('activation', 1)->min('month_price');
+
+                $minPrice = null;
+                if ($minPrice1 && $minPrice2) {
+                    $minPrice = min($minPrice1, $minPrice2);
+                } else {
+                    $minPrice = $minPrice1 ?: $minPrice2;
+                }
+
+                // تعيين السعر كـ attribute لكي يتم إرساله في الـ JSON
+                $branch['min_price'] = $minPrice ? (float)$minPrice : null;
+
                 return $branch;
             })
             ->unique(function ($branch) {
@@ -1854,4 +1920,110 @@ class VehicleController extends Controller
             ], 500);
         }
     }
+
+    public function getCheapestByCountry(Request $request)
+    {
+        // 1. جلب السيارات النشطة مع العلاقات الهامة بما فيها المواصفات
+        // 1. جلب السيارات النشطة مع العلاقات الهامة بما فيها المواصفات
+        $vehicles = Vehicle::where('activation', true)
+            ->with(['branch', 'vehicle_category', 'supplierUser', 'profit', 'vehicle_specifications'])
+            ->get();
+
+        $groupedData = [];
+
+        // 2. المرور على كل سيارة وحساب سعرها وتجميعها
+        foreach ($vehicles as $vehicle) {
+            $country = $vehicle->branch ? trim($vehicle->branch->country) : null;
+            $category = $vehicle->vehicle_category ? trim($vehicle->vehicle_category->name) : null;
+            $supplier = $vehicle->supplierUser ? ($vehicle->supplierUser->company ?: $vehicle->supplierUser->name) : null;
+
+            // إذا كانت أي معلومة أساسية ناقصة، نتخطى هذه السيارة
+            if (!$country || !$category || !$supplier) {
+                continue;
+            }
+
+            // حساب السعر اليومي بناءً على التعرفة الشهرية الموفرة
+            $basePrice = (float)($vehicle->month_price > 0 ? $vehicle->month_price : $vehicle->price);
+            $markupPercent = $vehicle->profit ? (float)$vehicle->profit->per_month_profit : 0;
+            $finalDailyPrice = $basePrice + ($basePrice * $markupPercent / 100);
+            
+            $currency = $vehicle->branch->currency ?? 'AED';
+
+            // استخراج المواصفات للسيارة الحالية
+            $specs = [];
+            if ($vehicle->vehicle_specifications) {
+                foreach ($vehicle->vehicle_specifications as $spec) {
+                    $name = strtolower(trim($spec->name));
+                    $val = trim($spec->value);
+                    if ($val) {
+                        $specs[$name] = $val;
+                    }
+                }
+            }
+
+            $transmission = $specs['transmission'] ?? $specs['gear'] ?? 'Automatic';
+            $fuelType = $specs['fuel'] ?? 'Petrol';
+            $seats = isset($specs['number of seats']) ? intval($specs['number of seats']) : (isset($specs['seats']) ? intval($specs['seats']) : 5);
+            $doors = isset($specs['doors']) ? intval($specs['doors']) : 4;
+            $suitcases = $specs['suitcase'] ?? $specs['suitcases'] ?? $specs['luggage'] ?? '';
+            $ac = isset($specs['air conditioner']) ? ($specs['air conditioner'] === 'Air Conditioning' || $specs['air conditioner'] === 'Yes') : true;
+
+            // تجميع الأسعار لمقارنتها
+            if (!isset($groupedData[$country][$category][$supplier]) || $finalDailyPrice < $groupedData[$country][$category][$supplier]['price']) {
+                $supplierLogo = $vehicle->supplierUser ? $vehicle->supplierUser->logo : null;
+                $groupedData[$country][$category][$supplier] = [
+                    'id' => $vehicle->id,
+                    'car_name' => $vehicle->name,
+                    'photo' => $vehicle->photo,
+                    'price' => round($finalDailyPrice, 2),
+                    'currency' => $currency,
+                    'supplier_name' => $supplier,
+                    'supplier_logo' => $supplierLogo,
+                    'transmission' => $transmission,
+                    'fuelType' => $fuelType,
+                    'seats' => $seats,
+                    'doors' => $doors,
+                    'suitcases' => $suitcases,
+                    'ac' => $ac
+                ];
+            }
+        }
+
+        // 3. الفرز واختيار الشركة الأرخص لكل فئة داخل كل دولة
+        $finalOutput = [];
+        foreach ($groupedData as $countryName => $categories) {
+            foreach ($categories as $categoryName => $suppliers) {
+                // ترتيب الشركات تصاعدياً حسب السعر
+                uasort($suppliers, function($a, $b) {
+                    return $a['price'] <=> $b['price'];
+                });
+                
+                // أول شركة بعد الترتيب هي الأرخص في هذه الفئة
+                $cheapestSupplier = array_values($suppliers)[0];
+                
+                $finalOutput[$countryName][$categoryName] = [
+                    'id' => $cheapestSupplier['id'],
+                    'car_name' => $cheapestSupplier['car_name'],
+                    'photo' => $cheapestSupplier['photo'],
+                    'supplier' => $cheapestSupplier['supplier_name'],
+                    'supplier_logo' => $cheapestSupplier['supplier_logo'],
+                    'price' => $cheapestSupplier['price'],
+                    'currency' => $cheapestSupplier['currency'],
+                    'transmission' => $cheapestSupplier['transmission'],
+                    'fuelType' => $cheapestSupplier['fuelType'],
+                    'seats' => $cheapestSupplier['seats'],
+                    'doors' => $cheapestSupplier['doors'],
+                    'suitcases' => $cheapestSupplier['suitcases'],
+                    'ac' => $cheapestSupplier['ac'],
+                ];
+            }
+        }
+
+        // 4. إرجاع النتيجة النهائية النظيفة للفرونت إند
+        return response()->json([
+            'status' => true,
+            'data' => $finalOutput
+        ]);
+    }
+
 }

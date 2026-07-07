@@ -117,14 +117,16 @@ export default async function BrandDetailPage({ params }: PageProps) {
                 <h3 className="text-2xl md:text-[28px] font-black text-gray-900 tracking-tight">
                   Why book your car rental with {brand.name}?
                 </h3>
-                {/* Logo without card background */}
-                <div className="shrink-0 self-start md:self-center w-[120px] h-[60px] flex items-center justify-end">
+                {/* Logo in styled box — matches hero */}
+                <div className="relative shrink-0 self-start md:self-center bg-white rounded-2xl border-2 border-[var(--primary)] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-3 w-[140px] h-[70px] flex items-center justify-center">
+                  <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-primary border-2 border-white z-10 shadow-sm" />
                   <Image
                     src={brand.logo}
                     alt={`${brand.name} logo`}
-                    width={120}
+                    width={130}
                     height={60}
-                    className="object-contain max-h-[60px] w-[120px] select-none"
+                    className="object-contain w-full h-full select-none"
+                    unoptimized
                   />
                 </div>
               </div>

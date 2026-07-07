@@ -55,6 +55,13 @@ export const getLogoUrl = (path: string | null | undefined): string => {
     cleanPath = cleanPath.replace('img/', '');
   }
   
+  // Auto-resolve known global webp logos stored in company_logos/
+  const lower = cleanPath.toLowerCase();
+  const knownLogos = ['alamo.webp', 'avis.webp', 'budget.webp', 'dollar.webp', 'enterprise.webp', 'europcar.webp', 'hertz.webp', 'national.webp', 'sixt.webp', 'thrifty.webp'];
+  if (knownLogos.includes(lower) || (lower.endsWith('.webp') && !lower.startsWith('company_logos/'))) {
+    cleanPath = `company_logos/${cleanPath}`;
+  }
+  
   return `${BACKEND_BASE}/img/${cleanPath}`;
 };
 

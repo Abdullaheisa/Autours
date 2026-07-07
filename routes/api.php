@@ -79,7 +79,6 @@ Route::prefix('external/supplier')->group(function () {
         Route::post('/vehicles/toggle-activation', [VehicleController::class, 'updateActivation'])->name('external.supplier.vehicles.toggle-activation');
         Route::put('/vehicles/{vehicleId}/price', [VehicleController::class, 'updatePriceExternal'])->name('external.supplier.vehicles.update-price');
         Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy'])->name('external.supplier.vehicles.destroy');
-
         // Rental routes
         Route::get('/rentals', [ExternalAuthController::class, 'getRentals'])->name('external.supplier.rentals');
 
@@ -264,6 +263,7 @@ Route::get('get/car-rental-brands', [CarRentalBrandsController::class, 'index'])
 Route::get('get/car-rental-brands/{brandSlug}', [CarRentalBrandsController::class, 'show']);
 Route::get('get/car-rental-brands/{brandSlug}/{countrySlug}', [CarRentalBrandsController::class, 'showCountry']);
 Route::post('/get/vehicle/data', [\App\Http\Controllers\VehicleController::class, 'getVehicle']);
+Route::get('get/cheapest-vehicle',[\App\Http\Controllers\VehicleController::class, 'getCheapestByCountry']);
 Route::get('/get/countries', [\App\Http\Controllers\CountryController::class, 'index']);
 Route::get('/my-current-user-profile', [\App\Http\Controllers\UserController::class, 'profile']);
 Route::get('get/categories', [\App\Http\Controllers\VehicleController::class, 'getCategories']);
@@ -283,6 +283,7 @@ Route::post('filter/vehicles', [\App\Http\Controllers\VehicleController::class, 
 Route::get('get/vehicles', [\App\Http\Controllers\VehicleController::class, 'show']);
 Route::post('/search/vehicles', [\App\Http\Controllers\VehicleController::class, 'search']);
 Route::get('/get/locations', [\App\Http\Controllers\VehicleController::class, 'getLocations']);
+Route::get('/get/locations/country/{country}', [\App\Http\Controllers\VehicleController::class, 'getLocationsByCountry']);
 Route::get('/get/rentals', [\App\Http\Controllers\BookingsController::class, 'getRentals'])->middleware('auth:sanctum');
 Route::get('/get/rentals/admin', [\App\Http\Controllers\BookingsController::class, 'getAdminRentals']);
 Route::post('/delete/rentals', [\App\Http\Controllers\BookingsController::class, 'destroy']);
