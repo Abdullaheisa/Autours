@@ -1923,103 +1923,75 @@ class VehicleController extends Controller
 
     public function getCheapestByCountry(Request $request)
     {
-        // 1. جلب السيارات النشطة مع العلاقات الهامة بما فيها المواصفات
-        // 1. جلب السيارات النشطة مع العلاقات الهامة بما فيها المواصفات
-        $vehicles = Vehicle::where('activation', true)
-            ->with(['branch', 'vehicle_category', 'supplierUser', 'profit', 'vehicle_specifications'])
-            ->get();
+        // Use PostgreSQL DISTINCT ON to find the cheapest vehicle per country+category in a single query
+        // instead of loading all 8000+ vehicles with relationships into PHP memory
+        $rows = DB::select("
+            SELECT DISTINCT ON (b.country, c.name)
+                v.id,
+                v.name AS car_name,
+                v.photo,
+                b.country,
+                b.currency,
+                c.name AS category_name,
+                COALESCE(u.company, u.name) AS supplier_name,
+                u.logo AS supplier_logo,
+                ROUND(
+                  ((CASE WHEN v.month_price > 0 THEN v.month_price ELSE v.price END)
+                  * (1 + COALESCE(p.per_month_profit, 0) / 100.0))::numeric
+                , 2) AS price
+            FROM vehicles v
+            INNER JOIN branches b ON b.id = v.pickup_loc
+            INNER JOIN categories c ON c.id = v.category
+            INNER JOIN users u ON u.id = v.supplier
+            LEFT JOIN profits p ON p.vehicle_id = v.id
+            WHERE v.activation = true
+              AND v.deleted_at IS NULL
+              AND b.country IS NOT NULL AND TRIM(b.country) != ''
+              AND c.name IS NOT NULL AND TRIM(c.name) != ''
+              AND (u.company IS NOT NULL OR u.name IS NOT NULL)
+            ORDER BY b.country, c.name,
+                (CASE WHEN v.month_price > 0 THEN v.month_price ELSE v.price END)
+                * (1 + COALESCE(p.per_month_profit, 0) / 100.0) ASC
+        ");
 
-        $groupedData = [];
+        // Fetch specs only for the winning vehicles (not all 8000+)
+        $vehicleIds = array_map(fn($r) => $r->id, $rows);
+        $specs = DB::table('vehicle_specifications')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->get()
+            ->groupBy('vehicle_id');
 
-        // 2. المرور على كل سيارة وحساب سعرها وتجميعها
-        foreach ($vehicles as $vehicle) {
-            $country = $vehicle->branch ? trim($vehicle->branch->country) : null;
-            $category = $vehicle->vehicle_category ? trim($vehicle->vehicle_category->name) : null;
-            $supplier = $vehicle->supplierUser ? ($vehicle->supplierUser->company ?: $vehicle->supplierUser->name) : null;
-
-            // إذا كانت أي معلومة أساسية ناقصة، نتخطى هذه السيارة
-            if (!$country || !$category || !$supplier) {
-                continue;
-            }
-
-            // حساب السعر اليومي بناءً على التعرفة الشهرية الموفرة
-            $basePrice = (float)($vehicle->month_price > 0 ? $vehicle->month_price : $vehicle->price);
-            $markupPercent = $vehicle->profit ? (float)$vehicle->profit->per_month_profit : 0;
-            $finalDailyPrice = $basePrice + ($basePrice * $markupPercent / 100);
-            
-            $currency = $vehicle->branch->currency ?? 'AED';
-
-            // استخراج المواصفات للسيارة الحالية
-            $specs = [];
-            if ($vehicle->vehicle_specifications) {
-                foreach ($vehicle->vehicle_specifications as $spec) {
-                    $name = strtolower(trim($spec->name));
-                    $val = trim($spec->value);
+        // Build output matching the original format
+        $finalOutput = [];
+        foreach ($rows as $row) {
+            $vSpecs = [];
+            if (isset($specs[$row->id])) {
+                foreach ($specs[$row->id] as $sp) {
+                    $name = strtolower(trim($sp->name));
+                    $val = trim($sp->value);
                     if ($val) {
-                        $specs[$name] = $val;
+                        $vSpecs[$name] = $val;
                     }
                 }
             }
 
-            $transmission = $specs['transmission'] ?? $specs['gear'] ?? 'Automatic';
-            $fuelType = $specs['fuel'] ?? 'Petrol';
-            $seats = isset($specs['number of seats']) ? intval($specs['number of seats']) : (isset($specs['seats']) ? intval($specs['seats']) : 5);
-            $doors = isset($specs['doors']) ? intval($specs['doors']) : 4;
-            $suitcases = $specs['suitcase'] ?? $specs['suitcases'] ?? $specs['luggage'] ?? '';
-            $ac = isset($specs['air conditioner']) ? ($specs['air conditioner'] === 'Air Conditioning' || $specs['air conditioner'] === 'Yes') : true;
-
-            // تجميع الأسعار لمقارنتها
-            if (!isset($groupedData[$country][$category][$supplier]) || $finalDailyPrice < $groupedData[$country][$category][$supplier]['price']) {
-                $supplierLogo = $vehicle->supplierUser ? $vehicle->supplierUser->logo : null;
-                $groupedData[$country][$category][$supplier] = [
-                    'id' => $vehicle->id,
-                    'car_name' => $vehicle->name,
-                    'photo' => $vehicle->photo,
-                    'price' => round($finalDailyPrice, 2),
-                    'currency' => $currency,
-                    'supplier_name' => $supplier,
-                    'supplier_logo' => $supplierLogo,
-                    'transmission' => $transmission,
-                    'fuelType' => $fuelType,
-                    'seats' => $seats,
-                    'doors' => $doors,
-                    'suitcases' => $suitcases,
-                    'ac' => $ac
-                ];
-            }
+            $finalOutput[$row->country][$row->category_name] = [
+                'id' => $row->id,
+                'car_name' => $row->car_name,
+                'photo' => $row->photo,
+                'supplier' => $row->supplier_name,
+                'supplier_logo' => $row->supplier_logo,
+                'price' => (float)$row->price,
+                'currency' => $row->currency ?? 'AED',
+                'transmission' => $vSpecs['transmission'] ?? $vSpecs['gear'] ?? 'Automatic',
+                'fuelType' => $vSpecs['fuel'] ?? 'Petrol',
+                'seats' => isset($vSpecs['number of seats']) ? (int)$vSpecs['number of seats'] : (isset($vSpecs['seats']) ? (int)$vSpecs['seats'] : 5),
+                'doors' => isset($vSpecs['doors']) ? (int)$vSpecs['doors'] : 4,
+                'suitcases' => $vSpecs['suitcase'] ?? $vSpecs['suitcases'] ?? $vSpecs['luggage'] ?? '',
+                'ac' => isset($vSpecs['air conditioner']) ? ($vSpecs['air conditioner'] === 'Air Conditioning' || $vSpecs['air conditioner'] === 'Yes') : true,
+            ];
         }
 
-        // 3. الفرز واختيار الشركة الأرخص لكل فئة داخل كل دولة
-        $finalOutput = [];
-        foreach ($groupedData as $countryName => $categories) {
-            foreach ($categories as $categoryName => $suppliers) {
-                // ترتيب الشركات تصاعدياً حسب السعر
-                uasort($suppliers, function($a, $b) {
-                    return $a['price'] <=> $b['price'];
-                });
-                
-                // أول شركة بعد الترتيب هي الأرخص في هذه الفئة
-                $cheapestSupplier = array_values($suppliers)[0];
-                
-                $finalOutput[$countryName][$categoryName] = [
-                    'id' => $cheapestSupplier['id'],
-                    'car_name' => $cheapestSupplier['car_name'],
-                    'photo' => $cheapestSupplier['photo'],
-                    'supplier' => $cheapestSupplier['supplier_name'],
-                    'supplier_logo' => $cheapestSupplier['supplier_logo'],
-                    'price' => $cheapestSupplier['price'],
-                    'currency' => $cheapestSupplier['currency'],
-                    'transmission' => $cheapestSupplier['transmission'],
-                    'fuelType' => $cheapestSupplier['fuelType'],
-                    'seats' => $cheapestSupplier['seats'],
-                    'doors' => $cheapestSupplier['doors'],
-                    'suitcases' => $cheapestSupplier['suitcases'],
-                    'ac' => $cheapestSupplier['ac'],
-                ];
-            }
-        }
-
-        // 4. إرجاع النتيجة النهائية النظيفة للفرونت إند
         return response()->json([
             'status' => true,
             'data' => $finalOutput
