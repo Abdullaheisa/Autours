@@ -1,9 +1,10 @@
 import { CountryPageData } from '@/data/countryPages';
-import { MapPin, Plane, ArrowRight } from 'lucide-react';
+import { MapPin, Plane, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store';
 import { setSearchParams } from '@/store/slices/searchSlice';
 import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
+import { useState, useEffect } from 'react';
 
 interface Props {
   name: string;
@@ -21,6 +22,23 @@ interface Props {
 
 export default function AirportsSection({ name, airports = [], currency }: Props) {
   const dispatch = useDispatch<AppDispatch>();
+  const [limit, setLimit] = useState(6);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    const updateLimit = () => {
+      if (window.innerWidth < 768) {
+        setLimit(3); // 3 items on mobile
+      } else if (window.innerWidth < 1024) {
+        setLimit(4); // 2 rows of 2 on tablet
+      } else {
+        setLimit(6); // 2 rows of 3 on desktop
+      }
+    };
+    updateLimit();
+    window.addEventListener('resize', updateLimit);
+    return () => window.removeEventListener('resize', updateLimit);
+  }, []);
 
   const handleSelectAirport = (rawLoc: any) => {
     if (!rawLoc) return;
@@ -35,6 +53,9 @@ export default function AirportsSection({ name, airports = [], currency }: Props
     // Scroll smoothly to the search hero at the top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const visibleAirports = isExpanded ? airports : airports.slice(0, limit);
+
   return (
     <section className="py-20 bg-gradient-to-b from-white to-gray-50/50" id="airports">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,7 +82,7 @@ export default function AirportsSection({ name, airports = [], currency }: Props
 
         {/* Airport Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {airports.map((airport, idx) => (
+          {visibleAirports.map((airport, idx) => (
             <article 
               key={idx} 
               className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-lg shadow-gray-200/40 hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 group flex flex-col h-full"
@@ -80,7 +101,7 @@ export default function AirportsSection({ name, airports = [], currency }: Props
                 <div className="absolute left-6 top-6 z-10 bg-primary text-black px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-md">
                   {airport.code}
                 </div>
-
+ 
                 {/* Meta details over overlay */}
                 <div className="absolute left-6 bottom-6 right-6 z-10 text-white">
                   <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary">
@@ -117,6 +138,28 @@ export default function AirportsSection({ name, airports = [], currency }: Props
             </article>
           ))}
         </div>
+
+        {/* See More Button */}
+        {airports.length > limit && (
+          <div className="flex justify-center mt-12">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-white border-2 border-gray-100 hover:border-primary text-gray-800 font-black text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              {isExpanded ? (
+                <>
+                  See Less
+                  <ChevronUp className="w-4 h-4 text-primary stroke-[3]" />
+                </>
+              ) : (
+                <>
+                  See More ({airports.length - limit} more)
+                  <ChevronDown className="w-4 h-4 text-primary stroke-[3]" />
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
       </div>
     </section>

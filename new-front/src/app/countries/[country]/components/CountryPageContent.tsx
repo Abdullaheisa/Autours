@@ -27,7 +27,7 @@ const AIRPORT_IMAGES: Record<string, string> = {
   'DXB': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80',
   'AUH': 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=600&q=80',
   'SHJ': 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=600&q=80',
-  'DWC': 'https://images.unsplash.com/photo-1542296332-2e44a0f94e9a?auto=format&fit=crop&w=600&q=80',
+  'DWC': 'https://images.unsplash.com/photo-1530521951414-70b95b9a930b?auto=format&fit=crop&w=600&q=80',
   'RUH': 'https://images.unsplash.com/photo-1580418827493-f2b22c0a76cb?auto=format&fit=crop&w=600&q=80',
   'JED': 'https://images.unsplash.com/photo-1551041777-ed277b8dd348?auto=format&fit=crop&w=600&q=80',
   'MED': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=600&q=80',
@@ -60,7 +60,7 @@ const PartnerLogo = ({ company }: { company: { name: string; logo: string } }) =
       src={logoUrl} 
       alt={company.name} 
       onError={() => setHasError(true)}
-      className="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300"
+      className="w-full h-full object-contain transition-all duration-300"
     />
   );
 };
@@ -176,6 +176,10 @@ export default function CountryPageContent({ data }: Props) {
     .forEach((loc) => {
       const name = loc.name || '';
       let code = loc.abriviation?.toUpperCase() || '';
+      if (code.includes('-')) {
+        const parts = code.split('-');
+        code = parts[parts.length - 1].trim();
+      }
       
       // إذا كان الكود فارغاً، نحاول التعرف عليه من خلال الاسم (خاص ببعض مطارات السعودية المسجلة بدون كود)
       if (!code && name) {
@@ -242,33 +246,57 @@ export default function CountryPageContent({ data }: Props) {
 
         {/* Trusted Partners Section */}
         {activeCompanies.length > 0 && (
-          <section className="py-12 bg-white border-b border-gray-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-8">
-                <span className="text-xs font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
-                  Trusted Partners
-                </span>
-                <h3 className="text-xl md:text-2xl font-black text-black uppercase italic tracking-tight font-title mt-2">
-                  {data.slug === 'uae' ? "Our Trusted Car Rental Suppliers in the UAE" : `Our Trusted Car Rental Suppliers in ${data.name}`}
-                </h3>
-                {data.partnersDescription && (
-                  <p className="text-gray-500 mt-3 text-sm md:text-base font-semibold max-w-4xl mx-auto leading-relaxed">
-                    {data.partnersDescription}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-                {activeCompanies.map((company) => (
-                  <div 
-                    key={company.id}
-                    className="bg-white border border-gray-100 hover:border-primary rounded-2xl p-2.5 flex items-center justify-center w-[150px] h-[60px] shadow-sm hover:shadow-md transition-all duration-300 group shrink-0"
-                    title={company.name}
-                  >
-                    <PartnerLogo company={company} />
-                  </div>
-                ))}
-              </div>
+          <section className="py-14 overflow-hidden bg-white border-b border-gray-100">
+            {/* Header */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-10">
+              <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Trusted Partners
+              </span>
+              <h3 className="text-2xl md:text-3xl font-black text-black uppercase italic tracking-tight font-title mt-3">
+                {data.slug === 'uae' ? "Our Trusted Car Rental Suppliers in the UAE" : `Our Trusted Car Rental Suppliers in ${data.name}`}
+              </h3>
+              {data.partnersDescription && (
+                <p className="text-gray-500 mt-3 text-sm md:text-base font-semibold max-w-4xl mx-auto leading-relaxed">
+                  {data.partnersDescription}
+                </p>
+              )}
             </div>
+
+            {/* Ascending Pyramid Logos Layout */}
+            {(() => {
+              const total = activeCompanies.length;
+              const maxPerRow = total > 20 ? 10 : 5;
+              const startSize = Math.max(2, Math.floor(maxPerRow / 3));
+
+              const rows: typeof activeCompanies[] = [];
+              let remaining = [...activeCompanies];
+              let rowSize = startSize;
+
+              while (remaining.length > 0) {
+                const size = Math.min(rowSize, remaining.length);
+                rows.push(remaining.splice(0, size));
+                if (rowSize < maxPerRow) rowSize++;
+              }
+
+              return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-3">
+                  {rows.reverse().map((row, rowIdx) => (
+                    <div key={rowIdx} className="flex items-center justify-center gap-2 sm:gap-3">
+                      {row.map((company) => (
+                        <div
+                          key={company.id}
+                          className="bg-white border border-gray-100 hover:border-primary rounded-xl p-1.5 flex items-center justify-center w-[80px] h-[40px] flex-shrink-0 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                          title={company.name}
+                        >
+                          <PartnerLogo company={company} />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </section>
         )}
 
@@ -309,7 +337,7 @@ export default function CountryPageContent({ data }: Props) {
                     className="bg-white rounded-3xl border-2 border-gray-100 hover:border-primary transition-all duration-300 overflow-hidden shadow-md flex flex-col sm:flex-row items-stretch"
                   >
                     {/* Left: Car Image */}
-                    <div className="relative w-full sm:w-[200px] md:w-[220px] shrink-0 bg-gray-50 flex items-center justify-center p-4 min-h-[180px]">
+                    <div className="relative w-full sm:w-[200px] md:w-[220px] shrink-0 bg-white flex items-center justify-center p-4 min-h-[180px]">
                       <span className="absolute top-3 left-3 bg-primary text-gray-900 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm z-10">
                         {categoryName}
                       </span>
@@ -366,12 +394,12 @@ export default function CountryPageContent({ data }: Props) {
                       {/* Bottom Row: Supplier & Price */}
                       <div className="pt-4 border-t border-gray-100 flex justify-between items-center gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="bg-white border border-gray-200 rounded-xl p-1 flex items-center justify-center w-16 h-8 shrink-0 shadow-sm">
+                          <div className="bg-white border border-gray-200 rounded-xl p-1 flex items-center justify-center w-[80px] h-[40px] shrink-0 shadow-sm">
                             {car.supplier_logo ? (
                               <img 
                                 src={`/img/${car.supplier_logo}`} 
                                 alt={car.supplier} 
-                                className="h-5 w-auto max-w-[56px] object-contain"
+                                className="h-7 w-auto max-w-[72px] object-contain"
                               />
                             ) : (
                               <span className="text-[8px] font-black text-gray-600 truncate">{car.supplier}</span>

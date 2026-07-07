@@ -106,7 +106,9 @@ export default async function BrandCountryPage({ params }: PageProps) {
               All {brand.name} Car Rental
               <br />
               Destinations in{' '}
-              <span className="text-primary">{country.countryName}</span>
+              <Link href={`/countries/${country.countrySlug}`} className="text-primary hover:underline transition-all">
+                {country.countryName}
+              </Link>
             </>
           }
           description={

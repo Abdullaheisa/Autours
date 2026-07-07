@@ -367,44 +367,49 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
 
         <div className="mx-4 mb-2 md:mb-2.5">
-          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-3 flex-wrap">
-            {/* Supplier logo */}
-            <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-24 h-12 shrink-0 shadow-sm overflow-hidden border border-gray-100">
-              {carData.supplier.logo ? (
-                <Image
-                  src={carData.supplier.logo}
-                  alt={`${carData.supplier.name} Logo`}
-                  width={120}
-                  height={56}
-                  className="w-full h-full object-contain"
-                  unoptimized
-                />
-              ) : (
-                <span className="text-[10px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
-              )}
-            </div>
+          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex flex-col gap-2">
 
-            {/* Supplier name + Rental terms */}
-            <div className="flex flex-col min-w-0 flex-1 items-center text-center">
-              <span className="text-xs md:text-sm font-black text-gray-800 truncate w-full text-center">{carData.supplier.name}</span>
-              <button onClick={() => setShowTerms(true)} className="text-[11px] font-bold text-blue-600 underline hover:text-blue-800 whitespace-nowrap mt-0.5 leading-none">
-                Rental Terms
-              </button>
-            </div>
+            {/* Row 1: Logo + Name/Terms + Rating */}
+            <div className="flex items-center gap-2.5">
+              {/* Supplier logo */}
+              <div className="bg-white p-1 rounded-lg flex items-center justify-center w-[80px] h-[40px] shrink-0 shadow-sm overflow-hidden border border-gray-100">
+                {carData.supplier.logo ? (
+                  <Image
+                    src={carData.supplier.logo}
+                    alt={`${carData.supplier.name} Logo`}
+                    width={80}
+                    height={40}
+                    className="w-full h-full object-contain"
+                    unoptimized
+                  />
+                ) : (
+                  <span className="text-[9px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
+                )}
+              </div>
 
-            {/* Rating */}
-            <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
-              <span className="bg-[var(--primary)] text-gray-900 px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs md:text-sm font-black">{carData.supplier.rating}/10</span>
-              <div className="flex flex-col leading-none">
-                <span className="text-xs font-black text-gray-700">Excellent</span>
-                <span className="text-[10px] font-black text-gray-600">({carData.supplier.reviewsCount}+)</span>
+              {/* Supplier name + Rental terms */}
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[11px] font-black text-gray-800 truncate">{carData.supplier.name}</span>
+                <button onClick={() => setShowTerms(true)} className="text-[10px] font-bold text-blue-600 underline hover:text-blue-800 whitespace-nowrap leading-none mt-0.5 text-left">
+                  Rental Terms
+                </button>
+              </div>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1 shrink-0 ml-auto">
+                <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-xs font-black">{carData.supplier.rating}/10</span>
+                <div className="flex flex-col leading-none">
+                  <span className="text-[10px] font-black text-gray-700">Excellent</span>
+                  <span className="text-[9px] font-black text-gray-500">({carData.supplier.reviewsCount}+)</span>
+                </div>
               </div>
             </div>
 
+            {/* Row 2: Instant confirmation */}
             {carData.supplier.instantConfirmation && (
-              <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
+              <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-200">
                 <img src={assets.icons.instant} alt="" className="w-4 h-4 object-contain shrink-0" aria-hidden="true" />
-                <span className="text-xs font-black text-gray-700">Instant confirmation</span>
+                <span className="text-[11px] font-black text-gray-700">Instant confirmation</span>
                 <div
                   className="relative"
                   onMouseEnter={() => setShowInstantTooltip(true)}
@@ -431,6 +436,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 </div>
               </div>
             )}
+
           </div>
         </div>
 
