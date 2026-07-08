@@ -45,7 +45,12 @@ export default function StepsDocsSection({ steps, documents }: Props) {
               </div>
             </div>
 
-            <button className="btn-primary bg-black text-primary shadow-none hover:bg-black/90 mt-6 w-fit flex items-center gap-2 group-hover:scale-105 transition-all py-3 px-5 text-sm rounded-xl">
+            <button 
+              onClick={() => {
+                document.getElementById('search-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="btn-primary bg-black text-primary shadow-none hover:bg-black/90 mt-6 w-fit flex items-center gap-2 group-hover:scale-105 transition-all py-3 px-5 text-sm rounded-xl tracking-normal cursor-pointer"
+            >
               Compare Car Deals Now
               <ChevronRight className="w-4 h-4" />
             </button>

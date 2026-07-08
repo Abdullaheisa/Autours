@@ -15,7 +15,7 @@ import CarCard from './components/CarCard';
 import CarCardSkeleton from './components/CarCardSkeleton';
 import CategoryFilterBar from './components/CategoryFilterBar';
 import { RootState, AppDispatch } from '@/store';
-import { setSearchParams, fetchVehicles, setPage } from '@/store/slices/searchSlice';
+import { setSearchParams, fetchVehicles, setPage, resetFilters } from '@/store/slices/searchSlice';
 import type { FilterPayload } from '@/types';
 import { FILTER_SPEC_NAMES } from '@/constants/filterSpecNames';
 
@@ -36,6 +36,27 @@ function SearchPageContent() {
       document.body.style.overflow = '';
     };
   }, [isSearchDrawerOpen]);
+
+  // Dynamic Scroll-up Sticky Category Filter Bar tracking
+  const [showStickyCategory, setShowStickyCategory] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY <= 120) {
+        setShowStickyCategory(true);
+      } else if (currentScrollY > lastScrollY.current) {
+        setShowStickyCategory(false);
+      } else {
+        setShowStickyCategory(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
 
 
@@ -185,8 +206,16 @@ function SearchPageContent() {
     }
   }, [urlParams, dispatch]);
 
+  const lastSearchQuery = useRef<string>('');
+
   useEffect(() => {
     if (searchParams.location && searchParams.dateFrom && searchParams.dateTo) {
+      const currentQuery = `${searchParams.location}|${searchParams.dateFrom}|${searchParams.dateTo}`;
+      if (lastSearchQuery.current !== currentQuery) {
+        // Reset all active filters on a new search query
+        dispatch(resetFilters());
+      }
+      lastSearchQuery.current = currentQuery;
       doFetchVehicles();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -217,86 +246,8 @@ function SearchPageContent() {
   }, [doFetchVehicles]);
 
   const displayedVehicles = useMemo(() => {
-    let result = vehicles;
-
-    // 1. Price Range Client Filter
-    if (filterParams.priceRange) {
-      const [min, max] = filterParams.priceRange;
-      result = result.filter((vehicle: any) => {
-        const price = Number(vehicle.final_price || vehicle.price || 0);
-        return price >= min && price <= max;
-      });
-    }
-
-    // 2. 🚀 STRICT CLIENT-SIDE ENFORCEMENT: Fix Legacy "Fail-Open" Bug
-    const hasSpec = (vehicle: any, specName: string, selectedOptions: string[]) => {
-      if (!selectedOptions || selectedOptions.length === 0) return true;
-      const vehicleSpec = vehicle.specifications?.find((s: any) => s.name === specName);
-      if (!vehicleSpec) return false;
-
-      const val = vehicleSpec.option || vehicleSpec.value;
-      if (!val) return false;
-
-      // Strict exact match
-      if (selectedOptions.includes(val)) return true;
-
-      // Fallback: Handle numerical matches (e.g., '4' vs '4 Seats') just in case
-      return selectedOptions.some(opt => String(opt).trim() === String(val).trim() || String(val).includes(String(opt).trim()));
-    };
-
-    if (filterParams.seats && filterParams.seats.length > 0) {
-      result = result.filter((v: any) => {
-        const vSeats = v.seats ? String(v.seats) : '';
-        return filterParams.seats.includes(vSeats) || filterParams.seats.some(opt => vSeats.includes(opt));
-      });
-    }
-    if (filterParams.doors && filterParams.doors.length > 0) {
-      result = result.filter((v: any) => {
-        const vDoors = v.doors ? String(v.doors) : '';
-        return filterParams.doors.includes(vDoors) || filterParams.doors.some(opt => vDoors.includes(opt));
-      });
-    }
-    if (filterParams.transmission && filterParams.transmission.length > 0) {
-      result = result.filter((v: any) => {
-        // First check the normalized transmission property
-        if (v.transmission && filterParams.transmission.some(t => v.transmission.toLowerCase().includes(t.toLowerCase()))) {
-          return true;
-        }
-        // Fallback to strict spec match
-        const mappedTrans = filterParams.transmission.map(t => t === 'Automatic' ? 'Automatic Transmission' : 'Manual Transmission');
-        return hasSpec(v, FILTER_SPEC_NAMES.transmission, mappedTrans);
-      });
-    }
-    if (filterParams.fuelType && filterParams.fuelType.length > 0) {
-      const mappedFuel = filterParams.fuelType.map(f => f === 'Hybrid' ? 'Hybrid Petrol & Gas' : f);
-      result = result.filter((v: any) => hasSpec(v, FILTER_SPEC_NAMES.fuelType, mappedFuel));
-    }
-    if (filterParams.suitcases && filterParams.suitcases.length > 0) {
-      const mappedSuitcases = filterParams.suitcases.map(s => s === 'Large' ? 'large' : s);
-      result = result.filter((v: any) => hasSpec(v, FILTER_SPEC_NAMES.suitcases, mappedSuitcases));
-    }
-
-    // Air Conditioning Strict Client-Side check
-    if (filterParams.airConditioning === 'Air Conditioning') {
-      result = result.filter((v: any) => {
-        const acSpec = v.specifications?.find((s: any) => s.name === FILTER_SPEC_NAMES.airConditioning);
-        if (!acSpec) return false;
-        const val = acSpec.option || acSpec.value;
-        return val === 'cool & Heat' || val === 'Air Conditioning' || val === 'Yes';
-      });
-    } else if (filterParams.airConditioning === 'No Air Conditioning') {
-      result = result.filter((v: any) => {
-        const acSpec = v.specifications?.find((s: any) => s.name === FILTER_SPEC_NAMES.airConditioning);
-        if (!acSpec) return true;
-        const val = acSpec.option || acSpec.value;
-        return val !== 'cool & Heat' && val !== 'Air Conditioning' && val !== 'Yes';
-      });
-    }
-
-
-
-    return result;
-  }, [vehicles, filterParams]);
+    return vehicles;
+  }, [vehicles]);
 
 
 
@@ -325,14 +276,32 @@ function SearchPageContent() {
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-start">
-            <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
+            <style>{`
+              .sidebar-no-scrollbar::-webkit-scrollbar {
+                display: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                background: transparent !important;
+              }
+              .sidebar-no-scrollbar {
+                -ms-overflow-style: none !important;
+                scrollbar-width: none !important;
+                background-color: transparent !important;
+                background: transparent !important;
+              }
+            `}</style>
+            <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4 lg:sticky lg:top-[90px] lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto pr-1 sidebar-no-scrollbar bg-transparent">
               <div className="hidden lg:block"><SearchSummary /></div>
               <div className="hidden lg:block"><ResultsSearchBar onSearch={handleReSearch} isOpen={true} /></div>
               <div className="hidden lg:block"><SearchFilters onFilterChange={handleFilterChange} /></div>
             </aside>
 
             <div className="flex-1 w-full min-w-0 space-y-4">
-              <CategoryFilterBar />
+              <div className={`sticky z-30 bg-gray-100 pt-2 pb-2 transition-all duration-300 ${
+                showStickyCategory ? 'top-[69px] opacity-100' : 'top-[-100px] opacity-0 pointer-events-none'
+              }`}>
+                <CategoryFilterBar />
+              </div>
 
               <div className="lg:hidden">
                 <SearchFilters onFilterChange={handleFilterChange} />
@@ -355,7 +324,7 @@ function SearchPageContent() {
                 )}
               </div>
 
-              {isFiltering && displayedVehicles.length === 0 && (
+              {isFiltering && currentPage === 1 && (
                 <div className="space-y-4">
                   {Array.from({ length: 4 }).map((_, i) => <CarCardSkeleton key={i} />)}
                 </div>
@@ -377,7 +346,7 @@ function SearchPageContent() {
                 </div>
               )}
 
-              {!filterError && displayedVehicles.length > 0 && (
+              {!filterError && displayedVehicles.length > 0 && !(isFiltering && currentPage === 1) && (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`vehicles-${displayedVehicles.length}-${filterParams.priceRange}`}

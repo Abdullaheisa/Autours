@@ -8,6 +8,10 @@ import {
   LocationBranch 
 } from '@/types';
 
+// Cache structures to prevent HTTP 429 Rate Limiting (Too Many Attempts)
+let memoryLocationsCache: LocationBranch[] | null = null;
+const memoryCountryLocationsCache: Record<string, LocationBranch[]> = {};
+
 export const vehicleApi = {
   search: async (payload: SearchPayload) => {
     // تم إضافة as any لتخطي فحص التايب سكريبت هنا
@@ -44,8 +48,19 @@ export const vehicleApi = {
 
   getLocations: async (): Promise<LocationBranch[]> => {
     try {
+      if (memoryLocationsCache) {
+        return memoryLocationsCache;
+      }
+      if (typeof window !== 'undefined') {
+        const cached = sessionStorage.getItem('autours_locations');
+        if (cached) {
+          memoryLocationsCache = JSON.parse(cached);
+          return memoryLocationsCache!;
+        }
+      }
+
       const data = await apiClient.get<any[]>('/get/locations');
-      return (data || []).map((loc: any) => ({
+      const mapped = (data || []).map((loc: any) => ({
         id: loc.id,
         name: loc.name || '',
         location: loc.location || '',
@@ -59,6 +74,12 @@ export const vehicleApi = {
         airport_id: loc.airport_id || null,
         company: loc.company || null,
       }));
+
+      memoryLocationsCache = mapped;
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('autours_locations', JSON.stringify(mapped));
+      }
+      return mapped;
     } catch (err) {
       console.error('[LOCATIONS ERROR]', err);
       return [];
@@ -67,8 +88,20 @@ export const vehicleApi = {
 
   getLocationsByCountry: async (country: string): Promise<LocationBranch[]> => {
     try {
+      const countryKey = country.toLowerCase().trim();
+      if (memoryCountryLocationsCache[countryKey]) {
+        return memoryCountryLocationsCache[countryKey];
+      }
+      if (typeof window !== 'undefined') {
+        const cached = sessionStorage.getItem(`autours_locations_${countryKey}`);
+        if (cached) {
+          memoryCountryLocationsCache[countryKey] = JSON.parse(cached);
+          return memoryCountryLocationsCache[countryKey];
+        }
+      }
+
       const data = await apiClient.get<any[]>(`/get/locations/country/${country}`);
-      return (data || []).map((loc: any) => ({
+      const mapped = (data || []).map((loc: any) => ({
         id: loc.id,
         name: loc.name || '',
         location: loc.location || '',
@@ -82,6 +115,12 @@ export const vehicleApi = {
         airport_id: loc.airport_id || null,
         company: loc.company || null,
       }));
+
+      memoryCountryLocationsCache[countryKey] = mapped;
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`autours_locations_${countryKey}`, JSON.stringify(mapped));
+      }
+      return mapped;
     } catch (err) {
       console.error('[LOCATIONS BY COUNTRY ERROR]', err);
       return [];

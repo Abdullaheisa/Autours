@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
 import { fetchCheapestVehicles } from '@/store/slices/searchSlice';
 import { fallbackRates } from '@/store/slices/currencySlice';
+import Link from 'next/link';
+import { getLocationDisplayLabel } from '@/utils/location';
 
 
 import { getVehicleImageUrl, getLogoUrl } from '@/utils/getImageUrl';
@@ -177,6 +179,12 @@ export default function CountryPageContent({ data }: Props) {
         }
       }
 
+      // Get the clean displayed airport name matching the Hero Search list exactly
+      const cleanLabel = getLocationDisplayLabel(loc);
+      const cleanAirportName = loc.abriviation 
+        ? cleanLabel.replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`, 'i'), '')
+        : cleanLabel;
+
       const displayCode = code || 'APT';
       const uniqueKey = code || name.toLowerCase().trim();
 
@@ -187,10 +195,10 @@ export default function CountryPageContent({ data }: Props) {
 
       if (!uniqueAirportsMap[uniqueKey]) {
         uniqueAirportsMap[uniqueKey] = {
-          name: name || `Airport ${displayCode}`,
+          name: cleanAirportName || `Airport ${displayCode}`,
           code: displayCode,
           location: loc.location || currentCountryName,
-          description: `Rent a car at ${name || `Airport ${displayCode}`} and land ready to drive. Compare rates from multiple top suppliers in seconds.`,
+          description: `Rent a car at ${cleanAirportName || `Airport ${displayCode}`} and land ready to drive. Compare rates from multiple top suppliers in seconds.`,
           image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80',
           minPrice: currentPrice,
           rawLocation: loc,
@@ -220,7 +228,7 @@ export default function CountryPageContent({ data }: Props) {
       
       <main className="flex-grow">
         {/* Blend HeroSearch component with HTML layout spacing */}
-        <div className="relative">
+        <div id="search-section" className="relative">
           <HeroSearch 
             title={`${data.heroTitle} `} 
             titleHighlight={data.heroHighlight}
@@ -458,14 +466,21 @@ export default function CountryPageContent({ data }: Props) {
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <a 
-                    className="btn-primary px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20" 
-                    href="#airports"
+                    className="btn-primary px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 cursor-pointer" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('search-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    href="#search-section"
                   >
                     {data.ctaPrimaryText || "Search Cars Now"}
                   </a>
-                  <button className="px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-wider bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95 transition-all">
+                  <Link 
+                    href="/contact-us"
+                    className="px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-wider bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                  >
                     {data.ctaSecondaryText || "Contact Support"}
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

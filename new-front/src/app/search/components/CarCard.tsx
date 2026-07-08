@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
   Check, Info, X, ChevronDown, ChevronUp,
-  Globe, Fuel, Handshake, Plane, Droplets, Zap
+  Globe, Fuel, Handshake, Plane, Droplets, Zap, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -298,6 +298,23 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       viewport={{ once: true }}
       className="bg-white rounded-2xl border-2 shadow-md border-gray-100 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all duration-300 w-full overflow-visible relative text-sm"
     >
+      {/* Dynamic Badge (Top Seller, Best Value, Best Deal) */}
+      {vehicle.tag && (
+        <div className="absolute top-4 right-4 z-10">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm border ${
+            vehicle.tag === 'Top Seller'
+              ? 'bg-pink-50 border-pink-200 text-pink-700'
+              : vehicle.tag === 'Best Value'
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-amber-50 border-amber-200 text-amber-700'
+          }`}>
+            {vehicle.tag === 'Top Seller' && <Zap className="w-3 h-3 fill-current" />}
+            {vehicle.tag === 'Best Value' && <Check className="w-3 h-3 stroke-[3]" />}
+            {vehicle.tag === 'Best Deal' && <Sparkles className="w-3 h-3" />}
+            {vehicle.tag}
+          </span>
+        </div>
+      )}
       <div className="flex flex-col md:hidden">
         <div className="p-4 pb-2 flex justify-center">
           <Image

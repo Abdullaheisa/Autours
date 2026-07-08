@@ -65,7 +65,11 @@ export default function Footer() {
     }
   };
 
-  const displayedCountries = showAll ? countries : countries.slice(0, 5);
+  // Order of countries in footer: UAE, Turkey, Morocco, Jordan, Oman
+  const footerCountryIds = ['uae', 'turkey', 'morocco', 'jordan', 'oman'];
+  const displayedCountries = footerCountryIds
+    .map(id => countries.find(c => c.id === id))
+    .filter(Boolean);
 
   return (
     <footer className="bg-primary pt-10 pb-6 text-black border-t border-black/5">
@@ -132,25 +136,22 @@ export default function Footer() {
             </h2>
             <ul className="space-y-0.5">
               {displayedCountries.map((country) => (
-                <li key={country.id}>
+                <li key={country?.id}>
                   <Link 
-                    href={`/countries/${country.id}`}
+                    href={`/countries/${country?.id}`}
                     className="text-[13px] sm:text-[14px] lg:text-[15px] xl:text-[16px] 2xl:text-[17px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
                   >
-                    {country.name} Car Rental
+                    {country?.name} Car Rental
                   </Link>
                 </li>
               ))}
             </ul>
-            {countries.length > 5 && (
-              <button 
-                onClick={() => setShowAll(!showAll)}
-                aria-expanded={showAll}
-                className="text-[11px] sm:text-[12px] font-black text-black/60 hover:text-black transition-colors mt-1 block focus:outline-none focus:underline min-h-[20px]"
-              >
-                {showAll ? '- Show Less' : `+ Show ${countries.length - 5} More`}
-              </button>
-            )}
+            <Link 
+              href="/where-we-are"
+              className="text-[11px] sm:text-[12px] font-black text-black/60 hover:text-black hover:underline transition-colors mt-2 block focus:outline-none min-h-[20px]"
+            >
+              + View All Locations
+            </Link>
           </motion.div>
         </div>
 

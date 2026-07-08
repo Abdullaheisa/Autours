@@ -181,7 +181,7 @@ function FiltersContent({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden">
       <div className="bg-yellow-50 px-5 py-3.5 border-b-2 border-yellow-100 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={14} className="text-yellow-700" />
@@ -240,24 +240,18 @@ function FiltersContent({
 
         {/* 3. Car Suppliers */}
         <FilterSection title="Suppliers" expanded>
-          {filteredSuppliers && filteredSuppliers.length > 0
-            ? filteredSuppliers.map((sup: any) => (
-                <FilterOption
-                  key={sup.id}
-                  label={`${sup.name} (${sup.vehicle_count})`}
-                  checked={isChecked('supplier', String(sup.id))}
-                  onToggle={() => handleToggle('supplier', String(sup.id))}
-                />
-              ))
-            : filterOptions.suppliers.map(opt => (
-                <FilterOption
-                  key={opt.value}
-                  label={opt.label}
-                  checked={isChecked('supplier', opt.value)}
-                  onToggle={() => handleToggle('supplier', opt.value)}
-                />
-              ))
-          }
+          {filteredSuppliers && filteredSuppliers.length > 0 ? (
+            filteredSuppliers.map((sup: any) => (
+              <FilterOption
+                key={sup.id}
+                label={`${sup.name} (${sup.vehicle_count})`}
+                checked={isChecked('supplier', String(sup.id))}
+                onToggle={() => handleToggle('supplier', String(sup.id))}
+              />
+            ))
+          ) : (
+            <p className="text-xs text-gray-400 px-4 py-2">No suppliers available</p>
+          )}
         </FilterSection>
 
         {/* 4. Transmission Filter */}

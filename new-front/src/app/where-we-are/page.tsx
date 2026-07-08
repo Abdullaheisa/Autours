@@ -23,7 +23,7 @@ export default function WhereWeArePage() {
 
   const countriesData = [
     {
-      countryName: 'UAE',
+      countryName: 'United Arab Emirates',
       titleSuffix: 'Fusion of Cultures',
       description: 'The UAE is a dazzling blend of cultures and experiences. Drive through Dubai and experience the opulence of the Burj Khalifa and the unique architecture of the Dubai Mall. Visit the cultural heart of Abu Dhabi or enjoy the spectacular Dubai Fountain.',
       images: ['/img/whereWeAre/18.png', '/img/whereWeAre/17.png', '/img/whereWeAre/16.png']
@@ -43,9 +43,9 @@ export default function WhereWeArePage() {
       titleSuffix: 'Gateway to Africa',
       description: "Morocco is a gateway to Africa, offering a fascinating blend of Arabian, Berber, and European cultures. Drive through the narrow alleys of Marrakech's bustling Medina, explore the majestic Sahara Desert dunes at Merzouga, relax in the coastal breeze of Agadir, or wander the stunning blue-painted streets of Chefchaouen.",
       images: [
-        'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1509529711801-deac231925ac?auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1504198458649-012dbb00d418?auto=format&fit=crop&w=600&q=80'
+        'https://images.unsplash.com/photo-1506477331477-33d5d8b3dc85?auto=format&fit=crop&w=600&q=80'
       ]
     },
     {
@@ -55,10 +55,22 @@ export default function WhereWeArePage() {
       images: ['/img/whereWeAre/3.png', '/img/whereWeAre/2.png', '/img/whereWeAre/25.png']
     },
     {
+      countryName: 'Oman',
+      titleSuffix: 'Soul of Arabia',
+      description: "Oman is a land of diverse landscapes and warm hospitality. Explore the capital city of Muscat, home to the magnificent Sultan Qaboos Grand Mosque and the historic Mutrah Souq. Drive to the Sur coast and see the Al Ayjah Lighthouse. Oman's pristine coastline and ancient forts offer a peaceful and authentic Arabian experience.",
+      images: ['/img/whereWeAre/2.png', '/img/whereWeAre/3.png', '/img/whereWeAre/25.png']
+    },
+    {
       countryName: 'Egypt',
       titleSuffix: 'Land of the Pharaohs',
       description: 'Egypt is a land of wonders, where ancient monuments stand alongside vibrant modern cities. Explore the majestic Cairo Tower and sail across the Nile, icons of human history. Drive along the scenic riverbanks, or visit the historic temples of Luxor and Karnak, showcasing the grandeur of the Pharaohs. Cairo offers a rich mix of Islamic and modern heritage.',
       images: ['/img/whereWeAre/5.png', '/img/whereWeAre/6.png', '/img/whereWeAre/4.png']
+    },
+    {
+      countryName: 'Qatar',
+      titleSuffix: 'Heritage Meets Future',
+      description: 'Qatar is a dynamic peninsula where traditional Bedouin culture blends with futuristic design. Explore the modern skyline of West Bay in Doha, or walk through the historic spiral Fanar and Souq. Visit the Museum of Islamic Art, a masterpiece of modern architecture.',
+      images: ['/img/whereWeAre/10.png', '/img/whereWeAre/11.png', '/img/whereWeAre/12.png']
     },
     {
       countryName: 'Saudi Arabia',
@@ -73,22 +85,10 @@ export default function WhereWeArePage() {
       images: ['/img/whereWeAre/24.png', '/img/whereWeAre/22.png', '/img/whereWeAre/23.png']
     },
     {
-      countryName: 'Qatar',
-      titleSuffix: 'Heritage Meets Future',
-      description: 'Qatar is a dynamic peninsula where traditional Bedouin culture blends with futuristic design. Explore the modern skyline of West Bay in Doha, or walk through the historic spiral Fanar and Souq. Visit the Museum of Islamic Art, a masterpiece of modern architecture.',
-      images: ['/img/whereWeAre/10.png', '/img/whereWeAre/11.png', '/img/whereWeAre/12.png']
-    },
-    {
       countryName: 'Kuwait',
       titleSuffix: 'Old & New',
       description: 'Kuwait is a vibrant nation with a rich history and a bright future. Start your journey at the iconic Kuwait Towers, where panoramic views of the city await. The Grand Mosque showcases the rich Islamic art and culture, while the Scientific Center offers a modern architectural and educational experience.',
       images: ['/img/whereWeAre/15.png', '/img/whereWeAre/14.png', '/img/whereWeAre/13.png']
-    },
-    {
-      countryName: 'Oman',
-      titleSuffix: 'Soul of Arabia',
-      description: "Oman is a land of diverse landscapes and warm hospitality. Explore the capital city of Muscat, home to the magnificent Sultan Qaboos Grand Mosque and the historic Mutrah Souq. Drive to the Sur coast and see the Al Ayjah Lighthouse. Oman's pristine coastline and ancient forts offer a peaceful and authentic Arabian experience.",
-      images: ['/img/whereWeAre/2.png', '/img/whereWeAre/3.png', '/img/whereWeAre/25.png']
     }
   ];
 

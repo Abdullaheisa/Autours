@@ -22,7 +22,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <div className="bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-sm">
       {/* Desktop Sidebar Header - lg and above only */}
       {!forceMobileLayout && (
         <div className="hidden lg:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">

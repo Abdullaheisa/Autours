@@ -50,20 +50,12 @@ export default function WhereWeAreSection() {
 
   // Custom ordering:
   // First 4: UAE, Turkey, Morocco, Jordan
-  // Middle 3: any other countries
+  // Next: Oman, Egypt, Qatar
   // Last (8th): Saudi Arabia
-  const firstFourIds = ['uae', 'turkey', 'morocco', 'jordan'];
-  const firstFour = firstFourIds.map(id => countries.find(c => c.id === id)).filter(Boolean) as Country[];
-  const saudi = countries.find(c => c.id === 'saudi');
-  
-  const remaining = countries.filter(c => !firstFourIds.includes(c.id) && c.id !== 'saudi');
-  const middleThree = remaining.slice(0, 3);
-
-  const displayedCountries = [
-    ...firstFour,
-    ...middleThree,
-    ...(saudi ? [saudi] : [])
-  ].slice(0, 8); // Ensure exactly 8
+  const orderIds = ['uae', 'turkey', 'morocco', 'jordan', 'oman', 'egypt', 'qatar', 'saudi'];
+  const displayedCountries = orderIds
+    .map(id => countries.find(c => c.id === id))
+    .filter(Boolean) as Country[];
 
   return (
     <section 

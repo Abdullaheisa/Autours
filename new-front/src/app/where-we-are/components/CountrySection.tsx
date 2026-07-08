@@ -25,6 +25,7 @@ export default function CountrySection({
     'Qatar': 'qatar',
     'Kuwait': 'kuwait',
     'UAE': 'uae',
+    'United Arab Emirates': 'uae',
     'Oman': 'oman',
     'Jordan': 'jordan',
     'Turkey': 'turkey',
