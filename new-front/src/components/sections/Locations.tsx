@@ -48,11 +48,28 @@ export default function WhereWeAreSection() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-50px" });
 
+  // Custom ordering:
+  // First 4: UAE, Turkey, Morocco, Jordan
+  // Middle 3: any other countries
+  // Last (8th): Saudi Arabia
+  const firstFourIds = ['uae', 'turkey', 'morocco', 'jordan'];
+  const firstFour = firstFourIds.map(id => countries.find(c => c.id === id)).filter(Boolean) as Country[];
+  const saudi = countries.find(c => c.id === 'saudi');
+  
+  const remaining = countries.filter(c => !firstFourIds.includes(c.id) && c.id !== 'saudi');
+  const middleThree = remaining.slice(0, 3);
+
+  const displayedCountries = [
+    ...firstFour,
+    ...middleThree,
+    ...(saudi ? [saudi] : [])
+  ].slice(0, 8); // Ensure exactly 8
+
   return (
     <section 
       id="locations" 
       ref={sectionRef} 
-      className="relative py-[45px] bg-primary flex flex-col items-center justify-center overflow-hidden px-4 md:px-8"
+      className="relative py-[50px] pb-[60px] bg-primary flex flex-col items-center justify-center overflow-hidden px-4 md:px-8"
     >
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-0 left-0 w-64 h-64 border-t-8 border-l-8 border-black rounded-tl-[100px]" />
@@ -71,10 +88,21 @@ export default function WhereWeAreSection() {
       </div>
 
       <div className="w-full max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
-        {countries.map((country, index) => (
+        {displayedCountries.map((country, index) => (
           <CountryCard key={country.id} country={country} index={index} />
         ))}
       </div>
+
+      {countries.length > 8 && (
+        <div className="text-center mt-10 relative z-10">
+          <Link
+            href="/where-we-are"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-black text-primary text-sm font-black uppercase tracking-wider rounded-full hover:bg-black/95 hover:scale-105 active:scale-95 shadow-md hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+          >
+            View All Locations
+          </Link>
+        </div>
+      )}
     </section>
   );
 }
