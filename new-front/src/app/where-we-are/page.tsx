@@ -23,6 +23,38 @@ export default function WhereWeArePage() {
 
   const countriesData = [
     {
+      countryName: 'UAE',
+      titleSuffix: 'Fusion of Cultures',
+      description: 'The UAE is a dazzling blend of cultures and experiences. Drive through Dubai and experience the opulence of the Burj Khalifa and the unique architecture of the Dubai Mall. Visit the cultural heart of Abu Dhabi or enjoy the spectacular Dubai Fountain.',
+      images: ['/img/whereWeAre/18.png', '/img/whereWeAre/17.png', '/img/whereWeAre/16.png']
+    },
+    {
+      countryName: 'Turkey',
+      titleSuffix: 'Where East Meets West',
+      description: 'Turkey is a treasure trove of history, rich culture, and breathtaking landscapes. Drive from the bustling, historic metropolis of Istanbul with its iconic mosques, down to the sun-soaked Mediterranean beaches of Antalya. Explore the surreal rock formations and hot air balloons of Cappadocia, or visit the historic ruins of Ephesus and Izmir.',
+      images: [
+        'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=600&q=80'
+      ]
+    },
+    {
+      countryName: 'Morocco',
+      titleSuffix: 'Gateway to Africa',
+      description: "Morocco is a gateway to Africa, offering a fascinating blend of Arabian, Berber, and European cultures. Drive through the narrow alleys of Marrakech's bustling Medina, explore the majestic Sahara Desert dunes at Merzouga, relax in the coastal breeze of Agadir, or wander the stunning blue-painted streets of Chefchaouen.",
+      images: [
+        'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1504198458649-012dbb00d418?auto=format&fit=crop&w=600&q=80'
+      ]
+    },
+    {
+      countryName: 'Jordan',
+      titleSuffix: 'Cradle of History',
+      description: 'Discover Jordan with the freedom to travel at your own pace. Drive to the spectacular rose-red ancient city of Petra, a world wonder carved into cliffs. Float in the therapeutic waters of the Dead Sea, camp in the dramatic desert sands of Wadi Rum, or dive in the Red Sea at Aqaba.',
+      images: ['/img/whereWeAre/3.png', '/img/whereWeAre/2.png', '/img/whereWeAre/25.png']
+    },
+    {
       countryName: 'Egypt',
       titleSuffix: 'Land of the Pharaohs',
       description: 'Egypt is a land of wonders, where ancient monuments stand alongside vibrant modern cities. Explore the majestic Cairo Tower and sail across the Nile, icons of human history. Drive along the scenic riverbanks, or visit the historic temples of Luxor and Karnak, showcasing the grandeur of the Pharaohs. Cairo offers a rich mix of Islamic and modern heritage.',
@@ -51,12 +83,6 @@ export default function WhereWeArePage() {
       titleSuffix: 'Old & New',
       description: 'Kuwait is a vibrant nation with a rich history and a bright future. Start your journey at the iconic Kuwait Towers, where panoramic views of the city await. The Grand Mosque showcases the rich Islamic art and culture, while the Scientific Center offers a modern architectural and educational experience.',
       images: ['/img/whereWeAre/15.png', '/img/whereWeAre/14.png', '/img/whereWeAre/13.png']
-    },
-    {
-      countryName: 'UAE',
-      titleSuffix: 'Fusion of Cultures',
-      description: 'The UAE is a dazzling blend of cultures and experiences. Drive through Dubai and experience the opulence of the Burj Khalifa and the unique architecture of the Dubai Mall. Visit the cultural heart of Abu Dhabi or enjoy the spectacular Dubai Fountain.',
-      images: ['/img/whereWeAre/18.png', '/img/whereWeAre/17.png', '/img/whereWeAre/16.png']
     },
     {
       countryName: 'Oman',
@@ -93,27 +119,17 @@ export default function WhereWeArePage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium">
               <Globe className="w-4 h-4" />
-              Seven Vibrant Destinations
+              Ten Vibrant Destinations
             </span>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-tight mb-6"
-          >
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-tight mb-6">
             Where We Are
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-white/80 text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed mb-10"
-          >
-            A journey through seven vibrant destinations. Explore the rich tapestry of culture, history, and adventure across the Middle East.
-          </motion.p>
+          <p className="text-white/80 text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed mb-10">
+            A journey through ten vibrant destinations. Explore the rich tapestry of culture, history, and adventure across the Middle East and beyond.
+          </p>
 
           <motion.div
             initial={{ opacity: 0 }}

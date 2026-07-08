@@ -1,7 +1,6 @@
-'use client';
-
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
+import Link from 'next/link';
 
 interface CountrySectionProps {
   countryName: string;
@@ -19,6 +18,20 @@ export default function CountrySection({
   images,
   isReversed
 }: CountrySectionProps) {
+  const slugMap: Record<string, string> = {
+    'Egypt': 'egypt',
+    'Saudi Arabia': 'saudi',
+    'Bahrain': 'bahrain',
+    'Qatar': 'qatar',
+    'Kuwait': 'kuwait',
+    'UAE': 'uae',
+    'Oman': 'oman',
+    'Jordan': 'jordan',
+    'Turkey': 'turkey',
+    'Morocco': 'morocco'
+  };
+  const countrySlug = slugMap[countryName] || countryName.toLowerCase();
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 40 }}
@@ -39,7 +52,12 @@ export default function CountrySection({
           </div>
 
           <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-neutral-900 leading-tight">
-            {countryName}
+            <Link 
+              href={`/countries/${countrySlug}`} 
+              className="hover:text-primary transition-colors cursor-pointer"
+            >
+              {countryName}
+            </Link>
             <span className="block text-neutral-400 font-light text-lg sm:text-xl md:text-2xl mt-0.5">
               {titleSuffix}
             </span>
@@ -61,11 +79,13 @@ export default function CountrySection({
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             className="col-span-2 aspect-[16/10] rounded-xl sm:rounded-2xl overflow-hidden shadow-md group"
           >
-            <img
-              src={images[0]}
-              alt={`${countryName} main`}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+            <Link href={`/countries/${countrySlug}`}>
+              <img
+                src={images[0]}
+                alt={`${countryName} main`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+              />
+            </Link>
           </motion.div>
 
           {/* Two Smaller Images */}
@@ -76,11 +96,13 @@ export default function CountrySection({
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-sm group"
             >
-              <img
-                src={imgUrl}
-                alt={`${countryName} ${imgIdx + 2}`}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              <Link href={`/countries/${countrySlug}`}>
+                <img
+                  src={imgUrl}
+                  alt={`${countryName} ${imgIdx + 2}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+                />
+              </Link>
             </motion.div>
           ))}
         </div>
