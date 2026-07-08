@@ -5,6 +5,7 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     optimizeCss: true, // 🚀 يمنع الـ Render-blocking للـ CSS
+    outputFileTracingRoot: require('path').join(__dirname, '../'),
   },
   images: {
     // 🚀 السطر السحري لضغط الصور وتقليل مساحتها لأقصى درجة
