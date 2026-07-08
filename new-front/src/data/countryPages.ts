@@ -186,9 +186,10 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Egypt with Autours?",
       subtitle: "Experience Egypt beyond the guidebooks with the freedom of your own rental car. From the iconic Pyramids of Giza and the bustling streets of Cairo to the temples of Luxor, the Nile views of Aswan, and the Red Sea resorts of Hurghada, Sharm El Sheikh, Marsa Alam, and El Gouna, Autours helps you compare trusted airport car rental deals across Egypt in one place. Whether you're planning a business trip, a family holiday, or an unforgettable road trip, enjoy the flexibility to discover Egypt on your own schedule.",
-      image: "/img/egypt.png",
+      image: "egypt.png",
       benefits: [
         {
+          
           title: "Airport Pickup Across Egypt",
           description: "Pick up your rental car from major airports, including Cairo International Airport, Hurghada International Airport, Sharm El Sheikh International Airport, Alexandria Borg El Arab Airport, Luxor International Airport, Aswan International Airport, Marsa Alam International Airport, and other key locations nationwide."
         },
@@ -352,7 +353,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Bahrain with Autours?",
       subtitle: "Discover Bahrain with the flexibility of your own rental car. Whether you're arriving at Bahrain International Airport, exploring the vibrant streets of Manama, relaxing in Amwaj Islands, shopping in Seef, or visiting Muharraq, Riffa, Isa Town, Sakhir, Zallaq, or Budaiya, Autours helps you compare trusted airport car rental deals from leading local and international suppliers. Whether you're visiting for business, a Formula 1 weekend, or a relaxing Gulf getaway, finding the right rental car is fast, simple, and affordable.",
-      image: "/img/bahrain.png",
+      image: "bahrain.png",
       benefits: [
         {
           title: "Convenient Airport Pickup",
@@ -446,7 +447,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Jordan with Autours?",
       subtitle: "Discover Jordan with the freedom to travel at your own pace. Whether you're arriving at Queen Alia International Airport in Amman, exploring the ancient city of Petra, floating in the Dead Sea, diving in Aqaba, or visiting Wadi Rum, Jerash, Madaba, Mount Nebo, Irbid, or Ajloun, Autours lets you compare trusted car rental deals in one place.",
-      image: "/img/jordan.png",
+      image: "jordan.png",
       benefits: [
         {
           title: "Airport Pickup Across Jordan",
@@ -540,7 +541,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Kuwait with Autours?",
       subtitle: "Explore Kuwait with the freedom to travel on your own schedule. Whether you're arriving at Kuwait International Airport, visiting Kuwait City for business, relaxing in Salmiya, shopping in Hawally, or heading to Mahboula, Fahaheel, Farwaniya, Jahra, Mangaf, or Sabah Al Ahmad Sea City, Autours helps you compare the best airport car rental deals from trusted suppliers.",
-      image: "/img/kuwait.png",
+      image: "kuwait.png",
       benefits: [
         {
           title: "Convenient Airport Pickup",
@@ -605,7 +606,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Oman with Autours?",
       subtitle: "Explore Oman on your own schedule with trusted airport car rentals from leading local and international suppliers. Whether you're arriving in Muscat for business, discovering the historic forts of Nizwa, relaxing on the beaches of Salalah, or planning an adventure to Jebel Akhdar, Jebel Shams, Sur, Sohar, Duqm, or Khasab, Autours helps you compare the best rental deals in one place.",
-      image: "/img/oman.png",
+      image: "oman.png",
       benefits: [
         {
           title: "Nationwide Airport Coverage",
@@ -790,7 +791,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Turkey with Autours?",
       subtitle: "Explore Turkey with the freedom to travel on your own schedule. Whether you're arriving in Istanbul, discovering Cappadocia, relaxing in Antalya, or visiting Izmir, Ankara, Dalaman, or Bodrum, Autours helps you compare the best airport car rental deals from trusted suppliers.",
-      image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80",
+      image: "countries/turkey.webp",
       benefits: [
         {
           title: "Convenient Airport Pickup",
@@ -855,7 +856,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Morocco with Autours?",
       subtitle: "Explore Morocco with the freedom to travel on your own schedule. Whether you're arriving in Casablanca, discovering the blue city of Chefchaouen, wandering the souks of Marrakech, or visiting Agadir, Fes, Tangier, or Rabat, Autours helps you compare the best airport car rental deals from trusted suppliers.",
-      image: "/img/countries/morocco.webp",
+      image: "countries/morocco.webp",
       benefits: [
         {
           title: "Convenient Airport Pickup",

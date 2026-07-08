@@ -1,5 +1,6 @@
 import { CountryPageData } from '@/data/countryPages';
 import { Award, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { getImageUrl } from '@/utils/getImageUrl';
 
 interface Props {
   travelInfo: CountryPageData['travelInfo'];
@@ -27,7 +28,7 @@ export default function TravelInfoSection({ travelInfo }: Props) {
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-amber-500/10 rounded-[2.6rem] blur-xl opacity-50 group-hover:opacity-75 transition duration-500" />
             <div className="relative h-[380px] lg:h-[480px] w-full rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-xl group-hover:shadow-2xl transition duration-500">
               <img 
-                src={travelInfo.image} 
+                src={getImageUrl(travelInfo.image)} 
                 alt={travelInfo.title}
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
