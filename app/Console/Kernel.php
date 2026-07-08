@@ -51,6 +51,10 @@ class Kernel extends ConsoleKernel
        //  $schedule->command('routes:sync-branches')->dailyAt('06:30');
          $schedule->command('routes:sync-vehicles --prices-only')->everyFourHours();
 
+         // Sync Allmeet branches daily and vehicles every 4 hours
+       //  $schedule->command('allmeet:sync-branches --real')->dailyAt('07:00');
+         $schedule->command('allmeet:sync-vehicles --real')->everyFourHours();
+
          // Sync exchange rates daily
          $schedule->command('sync:exchange-rates')->everyFourHours();
     }   
