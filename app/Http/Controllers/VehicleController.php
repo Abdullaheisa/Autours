@@ -1071,9 +1071,6 @@ class VehicleController extends Controller
             ->filter(function ($branch) {
                 return $branch['min_price'] !== null;
             })
-            ->unique(function ($branch) {
-                return $branch->airport_id ? 'airport_' . $branch->airport_id : mb_strtolower(trim($branch->name));
-            })
             ->values();
         return response()->json($locations);
     }
