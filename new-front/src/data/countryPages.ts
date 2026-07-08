@@ -184,12 +184,26 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroLead: 'Search pickup availability from Cairo, Alexandria, Sharm El Sheikh, Hurghada, and Luxor airports — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by Egypt airport and land ready to drive.',
     travelInfo: {
-      title: "Egypt's Trusted Car Rental Partner",
-      subtitle: "We partner with top international and local brands to bring you the best rates across all major Egyptian airports.",
-      image: "https://images.unsplash.com/photo-1539664030485-a936c7d29c6e?auto=format&fit=crop&w=800&q=80",
+      title: "Why Rent a Car in Egypt with Autours?",
+      subtitle: "Experience Egypt beyond the guidebooks with the freedom of your own rental car. From the iconic Pyramids of Giza and the bustling streets of Cairo to the temples of Luxor, the Nile views of Aswan, and the Red Sea resorts of Hurghada, Sharm El Sheikh, Marsa Alam, and El Gouna, Autours helps you compare trusted airport car rental deals across Egypt in one place. Whether you're planning a business trip, a family holiday, or an unforgettable road trip, enjoy the flexibility to discover Egypt on your own schedule.",
+      image: "/img/egypt.png",
       benefits: [
-        { title: "Airport Pickup", description: "Collect your car minutes after landing." },
-        { title: "No Hidden Fees", description: "Transparent pricing with basic insurance included." }
+        {
+          title: "Airport Pickup Across Egypt",
+          description: "Pick up your rental car from major airports, including Cairo International Airport, Hurghada International Airport, Sharm El Sheikh International Airport, Alexandria Borg El Arab Airport, Luxor International Airport, Aswan International Airport, Marsa Alam International Airport, and other key locations nationwide."
+        },
+        {
+          title: "Compare Egypt's Best Car Rental Deals",
+          description: "Compare prices from trusted local and international suppliers to find the perfect vehicle for city breaks, business travel, family vacations, or long-distance road trips."
+        },
+        {
+          title: "Free Cancellation on Most Bookings",
+          description: "Book with confidence thanks to flexible cancellation policies available on most rentals, giving you complete peace of mind if your plans change."
+        },
+        {
+          title: "Instant Confirmation",
+          description: "Reserve your car online in minutes and receive instant confirmation before you land, so your vehicle is waiting when your journey begins."
+        }
       ]
     },
     steps: [
@@ -200,17 +214,60 @@ export const countryPagesData: Record<string, CountryPageData> = {
     documents: {
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
-        "Valid driving license (International permit required)",
-        "Passport with valid entry visa",
-        "Credit card in driver's name"
+        "Valid driving license",
+        "International Driving Permit (if required)",
+        "Passport",
+        "Valid visa (if applicable)",
+        "Credit card in the main driver's name"
       ]
     },
     faqs: [
       {
-        q: 'Do I need an International Driving Permit in Egypt?',
-        a: 'Yes, if your driving license is not issued in Egypt, an International Driving Permit (IDP) is required by law.'
+        q: "Do I need an International Driving Permit to rent a car in Egypt?",
+        a: "Many visitors can rent a car using their national driving licence, but an International Driving Permit (IDP) is recommended and may be required by some rental companies depending on your country of residence."
+      },
+      {
+        q: "Can tourists rent a car in Egypt?",
+        a: "Yes. Tourists can easily rent a car by presenting a valid driving licence, passport, and a credit card in the main driver's name. Some suppliers may also request an International Driving Permit."
+      },
+      {
+        q: "What documents do I need to rent a car in Egypt?",
+        a: "You'll usually need: a valid driving licence, International Driving Permit (if required), passport, valid visa (if applicable), and a credit card in the main driver's name."
+      },
+      {
+        q: "What is the minimum age to rent a car in Egypt?",
+        a: "Most suppliers require drivers to be at least 21 years old, while luxury vehicles, premium SUVs, and larger cars may require drivers to be 25 or older."
+      },
+      {
+        q: "Which airports can I pick up my rental car from?",
+        a: "You can collect your vehicle from major airports across Egypt, including Cairo, Hurghada, Sharm El Sheikh, Alexandria, Luxor, Aswan, and Marsa Alam, depending on availability."
+      },
+      {
+        q: "Can I drive from Cairo to Hurghada, Alexandria, Luxor, or Aswan?",
+        a: "Yes. Egypt's modern highway network makes it easy to travel between major cities and tourist destinations. Many travelers choose to rent a car for flexible road trips across the country."
+      },
+      {
+        q: "Is driving in Egypt safe for tourists?",
+        a: "Yes. Driving is common in major cities and tourist areas. For the best experience, follow local traffic rules, avoid driving late at night in unfamiliar areas, and use GPS navigation."
+      },
+      {
+        q: "What type of rental car is best for Egypt?",
+        a: "Economy cars are perfect for city driving, while SUVs are ideal for families, longer road trips, and exploring destinations across Upper Egypt, the Red Sea coast, and desert regions."
+      },
+      {
+        q: "Are unlimited mileage rentals available?",
+        a: "Many suppliers include unlimited mileage, while others apply mileage limits. You'll always see the mileage policy before confirming your booking."
+      },
+      {
+        q: "When is the best time to book a rental car in Egypt?",
+        a: "For the lowest prices and the widest vehicle selection, book 2–4 weeks in advance, especially if you're travelling during winter, Christmas, New Year, Easter, or other peak tourist seasons."
       }
-    ]
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Egypt. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Cairo, Alexandria, Sharm El Sheikh, Hurghada, Luxor, and Aswan.",
+    ctaTitle: "Ready to Discover Egypt Your Way?",
+    ctaDescription: "Compare airport car rental deals from trusted suppliers across Cairo, Giza, Alexandria, Luxor, Aswan, Hurghada, Sharm El Sheikh, Marsa Alam, El Gouna, and more. Book in minutes, enjoy competitive prices, free cancellation on most rentals, and instant confirmation—so you can spend less time waiting and more time exploring Egypt's world-famous landmarks.",
+    ctaPrimaryText: "Search Cars Now",
+    ctaSecondaryText: "Contact Support"
   },
   'saudi': {
     slug: 'saudi',
@@ -293,12 +350,26 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroLead: 'Search pickup availability from Bahrain International Airport — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by Bahrain airport and land ready to drive.',
     travelInfo: {
-      title: "Bahrain's Trusted Car Rental Partner",
-      subtitle: "We partner with top international and local brands to bring you the best rates across Bahrain.",
-      image: "https://images.unsplash.com/photo-1544085311-11a028465b03?auto=format&fit=crop&w=800&q=80",
+      title: "Why Rent a Car in Bahrain with Autours?",
+      subtitle: "Discover Bahrain with the flexibility of your own rental car. Whether you're arriving at Bahrain International Airport, exploring the vibrant streets of Manama, relaxing in Amwaj Islands, shopping in Seef, or visiting Muharraq, Riffa, Isa Town, Sakhir, Zallaq, or Budaiya, Autours helps you compare trusted airport car rental deals from leading local and international suppliers. Whether you're visiting for business, a Formula 1 weekend, or a relaxing Gulf getaway, finding the right rental car is fast, simple, and affordable.",
+      image: "/img/bahrain.png",
       benefits: [
-        { title: "Airport Pickup", description: "Collect your car right after landing." },
-        { title: "No Hidden Fees", description: "Transparent pricing with basic insurance included." }
+        {
+          title: "Convenient Airport Pickup",
+          description: "Collect your rental car directly from Bahrain International Airport and start your trip as soon as you land."
+        },
+        {
+          title: "Compare the Best Car Rental Deals",
+          description: "Compare prices from trusted local and international rental companies to find the ideal vehicle for your journey across Bahrain."
+        },
+        {
+          title: "Free Cancellation on Most Bookings",
+          description: "Book with confidence thanks to flexible cancellation policies available on most rentals."
+        },
+        {
+          title: "Instant Booking Confirmation",
+          description: "Reserve online in minutes and receive instant confirmation before your arrival."
+        }
       ]
     },
     steps: [
@@ -309,17 +380,60 @@ export const countryPagesData: Record<string, CountryPageData> = {
     documents: {
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
-        "Valid driving license (International permit required)",
-        "Passport with valid entry visa",
-        "Credit card in driver's name"
+        "Valid driving license",
+        "International Driving Permit (if required)",
+        "Passport",
+        "Valid visa or entry permit (if applicable)",
+        "Credit card in the driver's name"
       ]
     },
     faqs: [
       {
-        q: 'Do I need an International Driving Permit in Bahrain?',
-        a: 'Tourists generally need an International Driving Permit (IDP) along with their national driving license to rent a car in Bahrain.'
+        q: "Do I need an International Driving Permit in Bahrain?",
+        a: "Many visitors can drive using their national driving licence, while others may need an International Driving Permit (IDP). Requirements depend on your nationality and the rental supplier."
+      },
+      {
+        q: "Can tourists rent a car in Bahrain?",
+        a: "Yes. Tourists can rent a car with a valid driving licence, passport, and a credit card in the main driver's name. Some nationalities may also need an International Driving Permit."
+      },
+      {
+        q: "What documents do I need to rent a car in Bahrain?",
+        a: "You'll usually need a valid driving licence, International Driving Permit (if required), passport, valid visa or entry permit (if applicable), and a credit card in the driver's name."
+      },
+      {
+        q: "What is the minimum age to rent a car in Bahrain?",
+        a: "Most suppliers require drivers to be at least 21 years old, while premium vehicles and luxury cars may require drivers to be 25 or older."
+      },
+      {
+        q: "Can I pick up my rental car at Bahrain International Airport?",
+        a: "Yes. Airport pickup is available, allowing you to collect your vehicle immediately after arrival and begin your journey without delay."
+      },
+      {
+        q: "Is driving in Bahrain easy for tourists?",
+        a: "Yes. Bahrain has modern roads, clear road signs in both Arabic and English, and relatively short driving distances, making it one of the easiest Gulf countries to explore by car."
+      },
+      {
+        q: "What are the best places to visit with a rental car in Bahrain?",
+        a: "A rental car makes it easy to explore Manama, Muharraq, Riffa, Seef, Amwaj Islands, Bahrain International Circuit, Tree of Life, Al Areen Wildlife Park, Bahrain Fort, and Zallaq Beach."
+      },
+      {
+        q: "Can I drive a rental car to Saudi Arabia?",
+        a: "Some suppliers allow travel across the King Fahd Causeway into Saudi Arabia with prior approval, additional insurance, and the required documentation. Always check the rental conditions before booking."
+      },
+      {
+        q: "What type of rental car is best for Bahrain?",
+        a: "Economy cars are perfect for city driving, while SUVs provide extra comfort for families, business travelers, and trips around the island."
+      },
+      {
+        q: "When should I book my Bahrain car rental for the best price?",
+        a: "Booking 2–4 weeks in advance usually offers the best prices and the widest choice of vehicles, especially during the Formula 1 Bahrain Grand Prix, public holidays, and peak travel seasons."
       }
-    ]
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Bahrain. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Manama, Muharraq, Riffa, Seef, and Bahrain International Airport.",
+    ctaTitle: "Ready to Explore Bahrain?",
+    ctaDescription: "Compare airport car rental deals from trusted suppliers across Bahrain International Airport and enjoy the freedom to explore Manama, Muharraq, Riffa, Seef, Amwaj Islands, Sakhir, Zallaq, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation before you travel.",
+    ctaPrimaryText: "Search Cars Now",
+    ctaSecondaryText: "Contact Support"
   },
   'jordan': {
     slug: 'jordan',
@@ -330,12 +444,26 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroLead: 'Search pickup availability from Queen Alia International Airport — then choose the right car for your trip before you land.',
     heroBottomTitle: 'Search by Jordan airport and land ready to drive.',
     travelInfo: {
-      title: "Jordan's Trusted Car Rental Partner",
-      subtitle: "We partner with top brands to bring you the best rates across all major Jordanian hubs.",
-      image: "https://images.unsplash.com/photo-1549180030-48bbe079fb36?auto=format&fit=crop&w=800&q=80",
+      title: "Why Rent a Car in Jordan with Autours?",
+      subtitle: "Discover Jordan with the freedom to travel at your own pace. Whether you're arriving at Queen Alia International Airport in Amman, exploring the ancient city of Petra, floating in the Dead Sea, diving in Aqaba, or visiting Wadi Rum, Jerash, Madaba, Mount Nebo, Irbid, or Ajloun, Autours lets you compare trusted car rental deals in one place.",
+      image: "/img/jordan.png",
       benefits: [
-        { title: "Airport Pickup", description: "Collect your car right after landing." },
-        { title: "No Hidden Fees", description: "Transparent pricing with basic insurance included." }
+        {
+          title: "Airport Pickup Across Jordan",
+          description: "Collect your rental car from major locations including Queen Alia International Airport, King Hussein International Airport (Aqaba), and selected city locations for a smooth start to your journey."
+        },
+        {
+          title: "Compare the Best Prices",
+          description: "Browse offers from leading local and international rental companies to find the right vehicle at a competitive price."
+        },
+        {
+          title: "Free Cancellation on Most Bookings",
+          description: "Travel with confidence thanks to flexible cancellation policies available on most rentals."
+        },
+        {
+          title: "Instant Booking Confirmation",
+          description: "Book online in minutes and receive instant confirmation before your arrival in Jordan."
+        }
       ]
     },
     steps: [
@@ -346,17 +474,60 @@ export const countryPagesData: Record<string, CountryPageData> = {
     documents: {
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
-        "Valid driving license (International permit required)",
-        "Passport with valid entry visa",
-        "Credit card in driver's name"
+        "Valid driving license",
+        "International Driving Permit (if required)",
+        "Passport",
+        "Valid entry visa (when applicable)",
+        "Credit card in the driver's name"
       ]
     },
     faqs: [
       {
-        q: 'Can I drive a rental car to Petra?',
-        a: 'Yes! Driving is one of the best ways to explore Jordan, including Petra and the Dead Sea. All cars are equipped for long distance journeys.'
+        q: "Can I drive a rental car to Petra?",
+        a: "Yes. Petra is easily accessible by car from Amman, Aqaba, and the Dead Sea. Renting a car is one of the most convenient ways to visit Jordan's top attractions."
+      },
+      {
+        q: "Can tourists rent a car in Jordan?",
+        a: "Yes. International visitors can rent a car with a valid driving licence. Many nationalities should also carry an International Driving Permit (IDP), depending on the rental company's requirements."
+      },
+      {
+        q: "What documents do I need to rent a car in Jordan?",
+        a: "You'll usually need a valid driving licence, International Driving Permit (if required), passport, valid entry visa (when applicable), and a credit card in the driver's name."
+      },
+      {
+        q: "What is the minimum age to rent a car in Jordan?",
+        a: "Most suppliers require drivers to be at least 21 years old. Luxury vehicles and larger SUVs may require drivers to be 25 or older."
+      },
+      {
+        q: "Is a credit card required to collect the rental car?",
+        a: "Yes. Most rental companies require a credit card in the primary driver's name for the refundable security deposit."
+      },
+      {
+        q: "Can I pick up my rental car at Amman Airport?",
+        a: "Yes. Airport pickup is available at Queen Alia International Airport (AMM), and rentals are also offered at King Hussein International Airport (AQJ) in Aqaba."
+      },
+      {
+        q: "Is it easy to drive between Jordan's major attractions?",
+        a: "Yes. Jordan has a well-developed road network connecting Amman, Petra, Dead Sea, Wadi Rum, Aqaba, Jerash, Madaba, and Mount Nebo, making self-drive travel a popular option."
+      },
+      {
+        q: "Can I drive a rental car into Israel or Saudi Arabia?",
+        a: "Cross-border travel is generally restricted or requires special approval, insurance, and documentation. Check your supplier's rental terms before booking."
+      },
+      {
+        q: "What type of rental car is best for Jordan?",
+        a: "Economy cars are ideal for city driving and highways, while SUVs offer extra comfort for families and longer trips to destinations like Wadi Rum or Dana Biosphere Reserve."
+      },
+      {
+        q: "When should I book my Jordan car rental for the best price?",
+        a: "Booking two to four weeks in advance usually provides better prices and a wider selection of vehicles, especially during spring, holidays, and peak tourist seasons."
       }
-    ]
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Jordan. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Amman, Aqaba, and other major hubs.",
+    ctaTitle: "Ready to Explore Jordan?",
+    ctaDescription: "Compare airport car rental deals from trusted suppliers across Amman, Aqaba, and other major locations. Drive to Petra, Wadi Rum, the Dead Sea, Jerash, Madaba, and beyond with competitive prices, free cancellation on most bookings, and instant confirmation.",
+    ctaPrimaryText: "Search Cars Now",
+    ctaSecondaryText: "Contact Support"
   },
   'kuwait': {
     slug: 'kuwait',
@@ -367,12 +538,26 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroLead: 'Search pickup availability from Kuwait International Airport — then choose the right car.',
     heroBottomTitle: 'Search by Kuwait airport and land ready to drive.',
     travelInfo: {
-      title: "Kuwait's Trusted Car Rental Partner",
-      subtitle: "We partner with top brands to bring you the best rates across all major Kuwaiti hubs.",
-      image: "https://images.unsplash.com/photo-1541417901255-6d30f1c53958?auto=format&fit=crop&w=800&q=80",
+      title: "Why Rent a Car in Kuwait with Autours?",
+      subtitle: "Explore Kuwait with the freedom to travel on your own schedule. Whether you're arriving at Kuwait International Airport, visiting Kuwait City for business, relaxing in Salmiya, shopping in Hawally, or heading to Mahboula, Fahaheel, Farwaniya, Jahra, Mangaf, or Sabah Al Ahmad Sea City, Autours helps you compare the best airport car rental deals from trusted suppliers.",
+      image: "/img/kuwait.png",
       benefits: [
-        { title: "Airport Pickup", description: "Collect your car right after landing." },
-        { title: "No Hidden Fees", description: "Transparent pricing with basic insurance included." }
+        {
+          title: "Convenient Airport Pickup",
+          description: "Collect your rental car directly from Kuwait International Airport and start your journey without waiting for taxis or public transport."
+        },
+        {
+          title: "Compare the Best Deals",
+          description: "Compare prices from leading local and international car rental companies to find the perfect vehicle at a competitive rate."
+        },
+        {
+          title: "Free Cancellation on Most Bookings",
+          description: "Enjoy flexible travel plans with free cancellation available on most reservations."
+        },
+        {
+          title: "Instant Booking Confirmation",
+          description: "Reserve your vehicle online in minutes and receive instant confirmation."
+        }
       ]
     },
     steps: [
@@ -384,16 +569,30 @@ export const countryPagesData: Record<string, CountryPageData> = {
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
-        "Passport with valid entry visa",
-        "Credit card in driver's name"
+        "Passport with valid entry visa (if required)",
+        "Credit card in the main driver's name",
+        "International Driving Permit (IDP) where applicable"
       ]
     },
     faqs: [
       {
-        q: 'What is the minimum age to rent a car in Kuwait?',
-        a: 'The standard minimum age is 21, though luxury categories may require the driver to be 25 years or older.'
+        q: "What is the minimum age to rent a car in Kuwait?",
+        a: "The standard minimum age is 21, though luxury categories may require the driver to be 25 years or older."
+      },
+      {
+        q: "Do I need a credit card to rent a car in Kuwait?",
+        a: "Yes. Most suppliers require a credit card in the main driver's name to hold the security deposit upon vehicle collection."
+      },
+      {
+        q: "What documents do I need to rent a car in Kuwait?",
+        a: "You will typically need a valid national driving license, passport, visa (if tourist), credit card, and an International Driving Permit (IDP) depending on your license origin."
       }
-    ]
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Kuwait. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Kuwait City, Salmiya, Hawally, and Kuwait International Airport.",
+    ctaTitle: "Ready to Explore Kuwait?",
+    ctaDescription: "Compare car rental deals from trusted suppliers across Kuwait City, Salmiya, Kuwait International Airport, and other locations. Book in minutes, enjoy competitive rates, free cancellation on most rentals, and instant confirmation.",
+    ctaPrimaryText: "Search Cars Now",
+    ctaSecondaryText: "Contact Support"
   },
   'oman': {
     slug: 'oman',
@@ -404,12 +603,26 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroLead: 'Search pickup availability from Muscat and Salalah airports — then choose the right car.',
     heroBottomTitle: 'Search by Oman airport and land ready to drive.',
     travelInfo: {
-      title: "Oman's Trusted Car Rental Partner",
-      subtitle: "We partner with top brands to bring you the best rates across all major Omani hubs.",
-      image: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=800&q=80",
+      title: "Why Rent a Car in Oman with Autours?",
+      subtitle: "Explore Oman on your own schedule with trusted airport car rentals from leading local and international suppliers. Whether you're arriving in Muscat for business, discovering the historic forts of Nizwa, relaxing on the beaches of Salalah, or planning an adventure to Jebel Akhdar, Jebel Shams, Sur, Sohar, Duqm, or Khasab, Autours helps you compare the best rental deals in one place.",
+      image: "/img/oman.png",
       benefits: [
-        { title: "Airport Pickup", description: "Collect your car right after landing." },
-        { title: "No Hidden Fees", description: "Transparent pricing with basic insurance included." }
+        {
+          title: "Nationwide Airport Coverage",
+          description: "Pick up your rental car from major Oman airports and enjoy easy access to Muscat, Salalah, Nizwa, Sohar, Sur, Bahla, Rustaq, Duqm, Khasab, Wahiba Sands, Wadi Shab, Wadi Bani Khalid, and more."
+        },
+        {
+          title: "Compare the Best Prices",
+          description: "Instantly compare offers from trusted local and international rental companies to find the right car at the best price."
+        },
+        {
+          title: "Free Cancellation on Most Bookings",
+          description: "Travel with confidence thanks to flexible cancellation policies available on most rentals."
+        },
+        {
+          title: "Instant Booking Confirmation",
+          description: "Reserve online in minutes and receive immediate confirmation, so your car is ready when you arrive."
+        }
       ]
     },
     steps: [
@@ -421,16 +634,58 @@ export const countryPagesData: Record<string, CountryPageData> = {
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
-        "Passport with valid entry visa",
-        "Credit card in driver's name"
+        "Passport with valid entry visa (if required)",
+        "Credit card in the main driver's name",
+        "International Driving Permit (when applicable)"
       ]
     },
     faqs: [
       {
-        q: 'Do I need a 4x4 to explore Oman?',
-        a: 'While standard sedans are fine for cities, a 4x4 is highly recommended if you plan to explore wadis, deserts, or mountain areas.'
+        q: "Do I need a 4x4 to explore Oman?",
+        a: "Not always. A standard car is suitable for cities such as Muscat, Nizwa, Sohar, and Salalah. If you plan to visit Jebel Shams, Jebel Akhdar, Wadi Bani Awf, or remote desert areas, a 4WD vehicle is highly recommended."
+      },
+      {
+        q: "Can tourists rent a car in Oman?",
+        a: "Yes. Visitors can rent a car with a valid driving licence. Depending on your nationality, you may also need an International Driving Permit (IDP) together with your passport."
+      },
+      {
+        q: "What is the minimum age to rent a car in Oman?",
+        a: "Most suppliers require drivers to be at least 21 years old. Some premium vehicles and SUVs may require drivers to be 25 or older."
+      },
+      {
+        q: "Is a credit card required when collecting the car?",
+        a: "Yes. Most rental companies require a credit card in the main driver's name to cover the refundable security deposit."
+      },
+      {
+        q: "What documents do I need to rent a car in Oman?",
+        a: "You'll usually need a valid driving licence, passport, entry visa (if required), credit card in the driver's name, and an International Driving Permit (when applicable)."
+      },
+      {
+        q: "Which airports can I rent a car from in Oman?",
+        a: "Autours offers airport car rentals at major locations, including Muscat International Airport, Salalah International Airport, Sohar Airport, and Duqm Airport, with availability depending on your travel dates."
+      },
+      {
+        q: "Are unlimited mileage rentals available?",
+        a: "Many suppliers include unlimited mileage, while others apply daily or total mileage limits. The mileage policy is always displayed before you book."
+      },
+      {
+        q: "Can I drive a rental car from Oman to the UAE?",
+        a: "Some suppliers allow cross-border travel to the UAE with prior approval and additional insurance. Availability varies by rental company."
+      },
+      {
+        q: "What type of car should I rent in Oman?",
+        a: "Economy cars are ideal for city driving and highways, while SUVs and 4x4 vehicles are the best choice for mountain roads, desert trips, and destinations like Jebel Shams, Jebel Akhdar, and Wahiba Sands."
+      },
+      {
+        q: "When is the best time to book a rental car in Oman?",
+        a: "Booking at least two to four weeks before your trip usually gives you the widest vehicle selection and the best prices, especially during holidays and the Khareef season in Salalah."
       }
-    ]
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Oman. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Muscat, Salalah, Sohar, Duqm, and major airports.",
+    ctaTitle: "Ready to Explore Oman?",
+    ctaDescription: "Compare car rental deals from trusted suppliers across Muscat, Salalah, Sohar, Duqm, and other major Oman airports. Book in minutes, enjoy competitive rates, free cancellation on most rentals, and instant confirmation before you travel.",
+    ctaPrimaryText: "Search Cars Now",
+    ctaSecondaryText: "Contact Support"
   },
   'qatar': {
     slug: 'qatar',
@@ -523,5 +778,135 @@ export const countryPagesData: Record<string, CountryPageData> = {
     ctaDescription: "Whether you're arriving at Hamad International Airport or exploring Doha, Lusail, or Al Wakrah, compare prices from trusted suppliers and book with confidence. Free cancellation, transparent pricing, and instant confirmation included.",
     ctaPrimaryText: "Find the Best Deal",
     ctaSecondaryText: "Get Support"
+  },
+  'turkey': {
+    slug: 'turkey',
+    name: 'Turkey',
+    heroBadge: 'Autours Turkey Airport Car Rental',
+    heroTitle: 'Book Your Airport Rental',
+    heroHighlight: 'Across Turkey',
+    heroLead: 'Search pickup availability from Istanbul, Antalya, Izmir, Ankara, and Dalaman airports — then choose the right car.',
+    heroBottomTitle: 'Search by Turkey airport and land ready to drive.',
+    travelInfo: {
+      title: "Why Rent a Car in Turkey with Autours?",
+      subtitle: "Explore Turkey with the freedom to travel on your own schedule. Whether you're arriving in Istanbul, discovering Cappadocia, relaxing in Antalya, or visiting Izmir, Ankara, Dalaman, or Bodrum, Autours helps you compare the best airport car rental deals from trusted suppliers.",
+      image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80",
+      benefits: [
+        {
+          title: "Convenient Airport Pickup",
+          description: "Collect your rental car directly from major Turkish airports and start your journey without waiting."
+        },
+        {
+          title: "Compare the Best Deals",
+          description: "Compare prices from leading local and international car rental companies to find the perfect vehicle."
+        },
+        {
+          title: "Free Cancellation on Most Bookings",
+          description: "Enjoy flexible travel plans with free cancellation available on most reservations."
+        },
+        {
+          title: "Instant Booking Confirmation",
+          description: "Reserve your vehicle online in minutes and receive instant confirmation."
+        }
+      ]
+    },
+    steps: [
+      { title: "Search", description: "Enter your airport, dates, and times." },
+      { title: "Compare", description: "Filter by price and car type." },
+      { title: "Book & Drive", description: "Reserve online and hit the road." }
+    ],
+    documents: {
+      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
+      items: [
+        "Valid driving license",
+        "Passport with valid entry visa (if required)",
+        "Credit card in the main driver's name",
+        "International Driving Permit (IDP) where applicable"
+      ]
+    },
+    faqs: [
+      {
+        q: "What is the minimum age to rent a car in Turkey?",
+        a: "The standard minimum age is 21, though luxury categories may require the driver to be 25 years or older."
+      },
+      {
+        q: "Do I need a credit card to rent a car in Turkey?",
+        a: "Yes. Most suppliers require a credit card in the main driver's name to hold the security deposit upon vehicle collection."
+      },
+      {
+        q: "What documents do I need to rent a car in Turkey?",
+        a: "You will typically need a valid national driving license, passport, visa (if tourist), credit card, and an International Driving Permit (IDP) depending on your license origin."
+      }
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Turkey. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Istanbul, Antalya, Izmir, Ankara, and major airports.",
+    ctaTitle: "Ready to Explore Turkey?",
+    ctaDescription: "Compare airport car rental deals from trusted suppliers across Istanbul, Antalya, Izmir, Ankara, and other locations. Book in minutes with competitive rates, free cancellation on most rentals, and instant confirmation.",
+    ctaPrimaryText: "Search Cars Now",
+    ctaSecondaryText: "Contact Support"
+  },
+  'morocco': {
+    slug: 'morocco',
+    name: 'Morocco',
+    heroBadge: 'Autours Morocco Airport Car Rental',
+    heroTitle: 'Book Your Airport Rental',
+    heroHighlight: 'Across Morocco',
+    heroLead: 'Search pickup availability from Casablanca, Marrakech, Agadir, Fes, and Tangier airports — then choose the right car.',
+    heroBottomTitle: 'Search by Morocco airport and land ready to drive.',
+    travelInfo: {
+      title: "Why Rent a Car in Morocco with Autours?",
+      subtitle: "Explore Morocco with the freedom to travel on your own schedule. Whether you're arriving in Casablanca, discovering the blue city of Chefchaouen, wandering the souks of Marrakech, or visiting Agadir, Fes, Tangier, or Rabat, Autours helps you compare the best airport car rental deals from trusted suppliers.",
+      image: "/img/countries/morocco.webp",
+      benefits: [
+        {
+          title: "Convenient Airport Pickup",
+          description: "Collect your rental car directly from major Moroccan airports and start your journey without waiting."
+        },
+        {
+          title: "Compare the Best Deals",
+          description: "Compare prices from leading local and international car rental companies to find the perfect vehicle."
+        },
+        {
+          title: "Free Cancellation on Most Bookings",
+          description: "Enjoy flexible travel plans with free cancellation available on most reservations."
+        },
+        {
+          title: "Instant Booking Confirmation",
+          description: "Reserve your vehicle online in minutes and receive instant confirmation."
+        }
+      ]
+    },
+    steps: [
+      { title: "Search", description: "Enter your airport, dates, and times." },
+      { title: "Compare", description: "Filter by price and car type." },
+      { title: "Book & Drive", description: "Reserve online and hit the road." }
+    ],
+    documents: {
+      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
+      items: [
+        "Valid driving license",
+        "Passport with valid entry visa (if required)",
+        "Credit card in the main driver's name",
+        "International Driving Permit (IDP) where applicable"
+      ]
+    },
+    faqs: [
+      {
+        q: "What is the minimum age to rent a car in Morocco?",
+        a: "The standard minimum age is 21, though luxury categories may require the driver to be 25 years or older."
+      },
+      {
+        q: "Do I need a credit card to rent a car in Morocco?",
+        a: "Yes. Most suppliers require a credit card in the main driver's name to hold the security deposit upon vehicle collection."
+      },
+      {
+        q: "What documents do I need to rent a car in Morocco?",
+        a: "You will typically need a valid national driving license, passport, visa (if tourist), credit card, and an International Driving Permit (IDP) depending on your license origin."
+      }
+    ],
+    partnersDescription: "Autours partners with leading car rental providers across Morocco. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Casablanca, Marrakech, Agadir, Tangier, and major airports.",
+    ctaTitle: "Ready to Explore Morocco?",
+    ctaDescription: "Compare airport car rental deals from trusted suppliers across Casablanca, Marrakech, Agadir, Tangier, and other locations. Book in minutes with competitive rates, free cancellation on most rentals, and instant confirmation.",
+    ctaPrimaryText: "Search Cars Now",
+    ctaSecondaryText: "Contact Support"
   }
 };

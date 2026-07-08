@@ -5,8 +5,7 @@ import { AppDispatch, RootState } from '@/store';
 import { fetchCheapestVehicles } from '@/store/slices/searchSlice';
 import { fallbackRates } from '@/store/slices/currencySlice';
 
-import { useRouter } from 'next/navigation';
-import { setSearchParams } from '@/store/slices/searchSlice';
+
 import { getVehicleImageUrl, getLogoUrl } from '@/utils/getImageUrl';
 import { Sparkles, Info } from 'lucide-react';
 import { assets } from '@/config/assets';
@@ -21,23 +20,9 @@ import FAQ from '@/components/sections/FAQ';
 import AirportsSection from './AirportsSection';
 import TravelInfoSection from './TravelInfoSection';
 import StepsDocsSection from './StepsDocsSection';
-import FleetGallerySection from './FleetGallerySection';
 
-const AIRPORT_IMAGES: Record<string, string> = {
-  'DXB': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80',
-  'AUH': 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=600&q=80',
-  'SHJ': 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=600&q=80',
-  'DWC': 'https://images.unsplash.com/photo-1530521951414-70b95b9a930b?auto=format&fit=crop&w=600&q=80',
-  'RUH': 'https://images.unsplash.com/photo-1580418827493-f2b22c0a76cb?auto=format&fit=crop&w=600&q=80',
-  'JED': 'https://images.unsplash.com/photo-1551041777-ed277b8dd348?auto=format&fit=crop&w=600&q=80',
-  'MED': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=600&q=80',
-  'CAI': 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?auto=format&fit=crop&w=600&q=80',
-  'BAH': 'https://images.unsplash.com/photo-1544085311-11a028465b03?auto=format&fit=crop&w=600&q=80',
-  'AMM': 'https://images.unsplash.com/photo-1549180030-48bbe079fb36?auto=format&fit=crop&w=600&q=80',
-  'KWI': 'https://images.unsplash.com/photo-1541417901255-6d30f1c53958?auto=format&fit=crop&w=600&q=80',
-  'MCT': 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=600&q=80',
-  'DOH': 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=600&q=80',
-};
+
+
 
 interface Props {
   data: CountryPageData;
@@ -206,7 +191,7 @@ export default function CountryPageContent({ data }: Props) {
           code: displayCode,
           location: loc.location || currentCountryName,
           description: `Rent a car at ${name || `Airport ${displayCode}`} and land ready to drive. Compare rates from multiple top suppliers in seconds.`,
-          image: AIRPORT_IMAGES[code] || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80',
+          image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80',
           minPrice: currentPrice,
           rawLocation: loc,
         };

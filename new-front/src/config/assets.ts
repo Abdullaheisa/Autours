@@ -22,9 +22,11 @@ export const assets = {
     egypt: '/img/countries/egypt.webp',
     jordan: '/img/countries/jordan.webp',
     kuwait: '/img/countries/kuwait.webp',
+    morocco: '/img/countries/morocco.webp',
     oman: '/img/countries/oman.webp',
     qatar: '/img/countries/qatar.webp',
     saudi: '/img/countries/saudi.webp',
+    turkey: '/img/countries/turkey.webp',
     uae: '/img/countries/uae.webp',
   },
   categories: {
