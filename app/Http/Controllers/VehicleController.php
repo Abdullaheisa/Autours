@@ -1948,6 +1948,9 @@ class VehicleController extends Controller
             WHERE v.activation = true
               AND v.deleted_at IS NULL
               AND b.country IS NOT NULL AND TRIM(b.country) != ''
+              AND b.deleted_at IS NULL
+              AND b.activation = true
+              AND u.role = 'active_supplier'
               AND c.name IS NOT NULL AND TRIM(c.name) != ''
               AND (u.company IS NOT NULL OR u.name IS NOT NULL)
             ORDER BY b.country, c.name,
