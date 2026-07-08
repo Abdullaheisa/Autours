@@ -337,14 +337,25 @@ class DashboardController extends Controller
             $charts->real_total_revenue = $totalRevenue;
             $charts->real_avg_rating = $avgRating;
 
-            // 1. Country, Branch & Airport Statistics
+            // 1. Country, Branch & Airport Statistics (Normalized & Unique)
+            $normalizeCountry = function($country) {
+                $c = mb_strtolower(trim($country));
+                if ($c === 'uae' || $c === 'united arab emirates') {
+                    return 'united arab emirates';
+                }
+                if ($c === 'turkey' || $c === 'türkiye') {
+                    return 'türkiye';
+                }
+                return $c;
+            };
+
             $branchesByCountry = DB::table('branches')
                 ->select('country', DB::raw('count(*) as branch_count'))
                 ->whereNotNull('country')
                 ->where('country', '!=', '')
                 ->groupBy('country')
                 ->get()
-                ->keyBy('country');
+                ->keyBy(fn($row) => $normalizeCountry($row->country));
 
             // Branch names grouped by country (up to 20 per country)
             $branchNamesByCountry = DB::table('branches')
@@ -353,38 +364,27 @@ class DashboardController extends Controller
                 ->where('country', '!=', '')
                 ->whereNotNull('name')
                 ->get()
-                ->groupBy('country')
+                ->groupBy(fn($row) => $normalizeCountry($row->country))
                 ->map(fn($rows) => $rows->pluck('name')->unique()->values()->take(20));
 
+            // Count actual unique airports per country (joined with canonical airports table)
             $airportsByCountry = DB::table('branches')
-                ->select('country', DB::raw('count(*) as airport_count'))
-                ->whereNotNull('country')
-                ->where('country', '!=', '')
-                ->where(function($q) {
-                    $q->where('location_type', 'Airport')
-                      ->orWhere('name', 'like', '%Airport%')
-                      ->orWhere('name', 'like', '%Havaliman%');
-                })
-                ->groupBy('country')
+                ->join('airports', 'airports.id', '=', 'branches.airport_id')
+                ->select('airports.country', DB::raw('count(distinct branches.airport_id) as airport_count'))
+                ->groupBy('airports.country')
                 ->get()
-                ->keyBy('country');
+                ->keyBy(fn($row) => $normalizeCountry($row->country));
 
-            // Airport names grouped by country
+            // Airport names grouped by country (unique canonical names)
             $airportNamesByCountry = DB::table('branches')
-                ->select('country', 'name')
-                ->whereNotNull('country')
-                ->where('country', '!=', '')
-                ->whereNotNull('name')
-                ->where(function($q) {
-                    $q->where('location_type', 'Airport')
-                      ->orWhere('name', 'like', '%Airport%')
-                      ->orWhere('name', 'like', '%Havaliman%');
-                })
+                ->join('airports', 'airports.id', '=', 'branches.airport_id')
+                ->select('airports.country', 'airports.airport_name as name')
+                ->groupBy('airports.country', 'airports.airport_name')
                 ->get()
-                ->groupBy('country')
+                ->groupBy(fn($row) => $normalizeCountry($row->country))
                 ->map(fn($rows) => $rows->pluck('name')->unique()->values()->take(20));
 
-            $allCountries = $branchesByCountry->keys()->merge($airportsByCountry->keys())->unique()->values();
+            $countryKeys = $branchesByCountry->keys()->merge($airportsByCountry->keys())->unique()->values();
 
             // Bookings count per country (for sorting by most booked)
             $bookingsByCountryMap = DB::table('rentals')
@@ -395,28 +395,36 @@ class DashboardController extends Controller
                 ->where('branches.country', '!=', '')
                 ->groupBy('branches.country')
                 ->get()
-                ->keyBy('country');
+                ->keyBy(fn($row) => $normalizeCountry($row->country));
 
-            $countryLocationsList = $allCountries->map(function($countryName) use ($branchesByCountry, $airportsByCountry, $branchNamesByCountry, $airportNamesByCountry, $bookingsByCountryMap) {
+            $countryLocationsList = $countryKeys->map(function($countryKey) use ($branchesByCountry, $airportsByCountry, $branchNamesByCountry, $airportNamesByCountry, $bookingsByCountryMap) {
+                $displayName = '';
+                if (isset($branchesByCountry[$countryKey])) {
+                    $displayName = $branchesByCountry[$countryKey]->country;
+                } elseif (isset($airportsByCountry[$countryKey])) {
+                    $displayName = $airportsByCountry[$countryKey]->country;
+                } else {
+                    $displayName = ucwords($countryKey);
+                }
+
                 return [
-                    'country'        => $countryName,
-                    'branches'       => isset($branchesByCountry[$countryName]) ? (int)$branchesByCountry[$countryName]->branch_count : 0,
-                    'airports'       => isset($airportsByCountry[$countryName]) ? (int)$airportsByCountry[$countryName]->airport_count : 0,
-                    'bookings'       => isset($bookingsByCountryMap[$countryName]) ? (int)$bookingsByCountryMap[$countryName]->bookings_count : 0,
-                    'branch_names'   => isset($branchNamesByCountry[$countryName]) ? $branchNamesByCountry[$countryName]->toArray() : [],
-                    'airport_names'  => isset($airportNamesByCountry[$countryName]) ? $airportNamesByCountry[$countryName]->toArray() : [],
+                    'country'        => $displayName,
+                    'branches'       => isset($branchesByCountry[$countryKey]) ? (int)$branchesByCountry[$countryKey]->branch_count : 0,
+                    'airports'       => isset($airportsByCountry[$countryKey]) ? (int)$airportsByCountry[$countryKey]->airport_count : 0,
+                    'bookings'       => isset($bookingsByCountryMap[$countryKey]) ? (int)$bookingsByCountryMap[$countryKey]->bookings_count : 0,
+                    'branch_names'   => isset($branchNamesByCountry[$countryKey]) ? $branchNamesByCountry[$countryKey]->toArray() : [],
+                    'airport_names'  => isset($airportNamesByCountry[$countryKey]) ? $airportNamesByCountry[$countryKey]->toArray() : [],
                 ];
             })->sortByDesc('bookings')->values(); // ← مرتبة بالأكثر حجوزات أولاً
 
             $totalBranchesCount = DB::table('branches')->count();
-            $totalAirportsCount = DB::table('branches')->where(function($q) {
-                $q->where('location_type', 'Airport')
-                  ->orWhere('name', 'like', '%Airport%')
-                  ->orWhere('name', 'like', '%Havaliman%');
-            })->count();
+            $totalAirportsCount = DB::table('branches')
+                ->whereNotNull('airport_id')
+                ->distinct('airport_id')
+                ->count('airport_id');
 
             $charts->country_locations_stats = [
-                'total_countries' => $allCountries->count(),
+                'total_countries' => $countryKeys->count(),
                 'total_branches'  => $totalBranchesCount,
                 'total_airports'  => $totalAirportsCount,
                 'list'            => $countryLocationsList,
