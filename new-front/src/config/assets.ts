@@ -22,7 +22,7 @@ export const assets = {
     egypt: '/img/countries/egypt.webp',
     jordan: '/img/countries/jordan.webp',
     kuwait: '/img/countries/kuwait.webp',
-    morocco: '/img/countries/morocco.webp',
+    morocco: '/img/countries/morocco.png',
     oman: '/img/countries/oman.webp',
     qatar: '/img/countries/qatar.webp',
     saudi: '/img/countries/saudi.webp',

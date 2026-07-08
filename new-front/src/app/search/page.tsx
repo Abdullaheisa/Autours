@@ -37,27 +37,6 @@ function SearchPageContent() {
     };
   }, [isSearchDrawerOpen]);
 
-  // Dynamic Scroll-up Sticky Category Filter Bar tracking
-  const [showStickyCategory, setShowStickyCategory] = useState(true);
-  const lastScrollY = useRef(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY <= 120) {
-        setShowStickyCategory(true);
-      } else if (currentScrollY > lastScrollY.current) {
-        setShowStickyCategory(false);
-      } else {
-        setShowStickyCategory(true);
-      }
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
 
 
   const {
@@ -276,32 +255,14 @@ function SearchPageContent() {
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-start">
-            <style>{`
-              .sidebar-no-scrollbar::-webkit-scrollbar {
-                display: none !important;
-                width: 0 !important;
-                height: 0 !important;
-                background: transparent !important;
-              }
-              .sidebar-no-scrollbar {
-                -ms-overflow-style: none !important;
-                scrollbar-width: none !important;
-                background-color: transparent !important;
-                background: transparent !important;
-              }
-            `}</style>
-            <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4 lg:sticky lg:top-[90px] lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto pr-1 sidebar-no-scrollbar bg-transparent">
+            <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
               <div className="hidden lg:block"><SearchSummary /></div>
               <div className="hidden lg:block"><ResultsSearchBar onSearch={handleReSearch} isOpen={true} /></div>
               <div className="hidden lg:block"><SearchFilters onFilterChange={handleFilterChange} /></div>
             </aside>
 
             <div className="flex-1 w-full min-w-0 space-y-4">
-              <div className={`sticky z-30 bg-gray-100 pt-2 pb-2 transition-all duration-300 ${
-                showStickyCategory ? 'top-[69px] opacity-100' : 'top-[-100px] opacity-0 pointer-events-none'
-              }`}>
-                <CategoryFilterBar />
-              </div>
+              <CategoryFilterBar />
 
               <div className="lg:hidden">
                 <SearchFilters onFilterChange={handleFilterChange} />

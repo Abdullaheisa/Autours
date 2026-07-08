@@ -82,7 +82,6 @@ export const vehicleMapper = {
       promos: raw.promos || [],
       available_branches: raw.available_branches || [],
       branch_vehicle_ids: raw.branch_vehicle_ids || {},
-      tag: raw.tag || null,
     };
   },
 
