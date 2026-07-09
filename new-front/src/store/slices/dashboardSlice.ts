@@ -129,7 +129,8 @@ const dashboardSlice = createSlice({
 
           // 2. Map Recent Bookings
           const recentBookings = (data.customerTransactions || data.latestRentalsTransactions || []).map((booking: any) => ({
-            id: booking.order_number || `BK-${booking.id}`,
+            id: booking.id ? `BK-${booking.id}` : (booking.order_number || Math.random().toString()), // Guaranteed unique React key
+            orderNumber: booking.order_number || `BK-${booking.id}`, // Human readable display
             customer: booking.customer?.name || "Unknown Customer",
             vehicle: booking.vehicle?.name || `${booking.vehicle?.brand || ""} ${booking.vehicle?.model || ""}`.trim() || "Unknown Vehicle",
             company: booking.supplier?.name || "Unknown Company",

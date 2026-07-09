@@ -14,6 +14,21 @@ import dashboardReducer from "./slices/dashboardSlice";
 import supplierAnalyticsReducer from "./slices/supplierAnalyticsSlice";
 import contestReducer from "./slices/contestSlice";
 import blogCategoriesReducer from "./slices/blogCategoriesSlice";
+import { axiosClient } from "@/services/api/axiosClient";
+
+// ── Eagerly restore Bearer token ─────────────────────────────────────────────
+// Set the Authorization header IMMEDIATELY when the store is created (module
+// load time). This ensures that any API request fired from a useEffect on the
+// first render already carries the token — eliminating the 401 race condition
+// that happened when fetchDashboard / fetchNotifications fired before the
+// restoreAuth action had a chance to run.
+if (typeof window !== "undefined") {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  if (token) {
+    axiosClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }
+}
 
 export const store = configureStore({
   reducer: {

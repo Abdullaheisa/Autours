@@ -106,8 +106,10 @@ export default function BookingsCalendarSection() {
 
   useEffect(() => {
     setIsLoading(true);
-    rentalApi.getAdmin().then((res: any) => {
-      const list = res?.rentals || res?.data?.rentals || (Array.isArray(res) ? res : []);
+    // Request a large per_page value so the calendar can display all bookings
+    rentalApi.getAdmin({ per_page: 1000 }).then((res: any) => {
+      // Laravel paginated response returns the array in res.data
+      const list = Array.isArray(res?.data) ? res.data : (res?.rentals || res?.data?.rentals || (Array.isArray(res) ? res : []));
       const formatted = list.map((r: any) => {
         const type = r.order_status === 2 || r.order_status === 7 ? "completed" : r.order_status === 3 || r.order_status === 5 ? "cancelled" : "pending";
         return {
@@ -125,6 +127,16 @@ export default function BookingsCalendarSection() {
         };
       });
       setAllBookings(formatted);
+
+      // ✅ Dynamically set selected date & current month to the latest booking's date
+      // so the calendar starts at a populated month instead of a blank month (e.g. today)
+      if (formatted.length > 0) {
+        const latest = formatted.reduce((latest: Booking, current: Booking) => {
+          return current.date > latest.date ? current : latest;
+        }, formatted[0]);
+        setSelectedDate(latest.date);
+        setCurrentMonth(latest.date);
+      }
     }).catch((err) => {
       console.warn("Failed to fetch bookings, using fallback mock data:", err.message);
       setAllBookings(ALL_BOOKINGS_FALLBACK);

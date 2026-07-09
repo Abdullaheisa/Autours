@@ -4,6 +4,7 @@ import { authApi } from '@/services/api';
 import { normalizeAuthRole } from '@/utils/auth';
 import { axiosClient } from '@/services/api/axiosClient';
 
+
 interface UserDataResponse {
   id?: string | number;
   user_name?: string;
@@ -198,9 +199,13 @@ const authSlice = createSlice({
           state.token = token;
           state.user = { ...parsed, role: normalizeAuthRole(parsed.role), status: parsed.status || parsed.role };
           state.isAuthenticated = true;
+          // ✅ Set the Bearer token on axiosClient immediately so all
+          // subsequent requests are authenticated without waiting for another render.
+          axiosClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         }
       }
     },
+
     logout: (state) => {
       authApi.logout().catch(() => {});
       state.user = null;

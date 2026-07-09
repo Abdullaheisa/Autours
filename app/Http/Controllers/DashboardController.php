@@ -34,13 +34,9 @@ class DashboardController extends Controller
                 ->whereIn('order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
                 ->sum(DB::raw('CASE WHEN supplier_price > 0 THEN supplier_price ELSE price END'));
             $avgRatingVal = Rental::where('supplier_id', $supplierId)->whereNotNull('rate')->avg('rate');
-            $avgRating = $avgRatingVal ? round($avgRatingVal, 1) : 4.8;
+            $avgRating = $avgRatingVal ? round($avgRatingVal, 1) : null;
 
-            // Debug fields
-            $charts->debug_user_id = $supplierId;
-            $charts->debug_user_role = $user->role;
-            $charts->debug_total_vehicles_in_db = Vehicle::count();
-            $charts->debug_vehicles_by_supplier = Vehicle::where('supplier', $supplierId)->get(['id', 'name', 'supplier'])->toArray();
+            // (debug fields removed)
 
 
             $supplierRevenue = DB::select("SELECT SUM(rentals.price - supplier_price) as profit,
@@ -166,18 +162,22 @@ class DashboardController extends Controller
                 ->sum(DB::raw('price - supplier_price'));
             
             $avgRatingVal = Rental::whereNotNull('rate')->avg('rate');
-            $avgRating = $avgRatingVal ? round($avgRatingVal, 1) : 4.8; // Fallback to 4.8 if no ratings exist yet
+            $avgRating = $avgRatingVal ? round($avgRatingVal, 1) : null;
             
             // Legacy / Chart Queries
             $supplierRevenue = DB::select("SELECT SUM(price - supplier_price) as profit,
-                                                COUNT(*) as bookings,
-                                                supplier_id,
-                                                users.name as supplier_name
-                                             FROM rentals
-                                             JOIN users on users.id = rentals.supplier_id
-                                             GROUP BY rentals.supplier_id,users.name
-                                             ORDER BY bookings desc
-                                             ");
+                                                 COUNT(*) as bookings,
+                                                 supplier_id,
+                                                 users.name as supplier_name
+                                              FROM rentals
+                                              JOIN users on users.id = rentals.supplier_id
+                                              WHERE rentals.order_status IN (:confirmed, :reconciled)
+                                              GROUP BY rentals.supplier_id,users.name
+                                              ORDER BY bookings desc
+                                              ", [
+                                                  'confirmed' => RentalStatuses::CONFIRMED,
+                                                  'reconciled' => RentalStatuses::RECONCILED
+                                              ]);
 
             $driver = DB::getDriverName();
             $isSqlite = $driver === 'sqlite';
@@ -312,19 +312,16 @@ class DashboardController extends Controller
             // Real Top Vehicles from rentals join vehicles
             $topVehiclesFromRentals = DB::table('rentals')
                 ->join('vehicles', 'vehicles.id', '=', 'rentals.vehicle_id')
+                ->whereIn('rentals.order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
                 ->select('vehicles.name', DB::raw('count(*) as bookings'))
                 ->groupBy('vehicles.id', 'vehicles.name')
                 ->orderByDesc('bookings')
                 ->limit(8)
                 ->get()
-                ->map(function($v, $i) {
-                    $cleanName = $v->name;
-                    if (!$cleanName || str_contains($cleanName, 'ص') || str_contains($cleanName, 'ؤ')) {
-                        $names = ["TOYOTA Corolla", "HYUNDAI Sonata", "MERCEDES E-Class", "CHEVROLET Tahoe", "KIA Rio", "NISSAN Sentra"];
-                        $cleanName = $names[$i % count($names)];
-                    }
+                ->map(function($v) {
+                    $name = trim($v->name ?? '');
                     return [
-                        'name' => $cleanName,
+                        'name'     => $name ?: 'Unknown Vehicle',
                         'bookings' => (int) $v->bookings,
                     ];
                 });
@@ -350,35 +347,51 @@ class DashboardController extends Controller
             };
 
             $branchesByCountry = DB::table('branches')
-                ->select('country', DB::raw('count(*) as branch_count'))
-                ->whereNotNull('country')
-                ->where('country', '!=', '')
-                ->groupBy('country')
+                ->join('users', 'users.id', '=', 'branches.company_id')
+                ->select('branches.country', DB::raw('count(*) as branch_count'))
+                ->whereNull('branches.deleted_at')
+                ->where('branches.activation', true)
+                ->where('users.role', 'active_supplier')
+                ->whereNotNull('branches.country')
+                ->where('branches.country', '!=', '')
+                ->groupBy('branches.country')
                 ->get()
                 ->keyBy(fn($row) => $normalizeCountry($row->country));
 
             // Branch names grouped by country (up to 20 per country)
             $branchNamesByCountry = DB::table('branches')
-                ->select('country', 'name')
-                ->whereNotNull('country')
-                ->where('country', '!=', '')
-                ->whereNotNull('name')
+                ->join('users', 'users.id', '=', 'branches.company_id')
+                ->select('branches.country', 'branches.name')
+                ->whereNull('branches.deleted_at')
+                ->where('branches.activation', true)
+                ->where('users.role', 'active_supplier')
+                ->whereNotNull('branches.country')
+                ->where('branches.country', '!=', '')
+                ->whereNotNull('branches.name')
                 ->get()
                 ->groupBy(fn($row) => $normalizeCountry($row->country))
                 ->map(fn($rows) => $rows->pluck('name')->unique()->values()->take(20));
 
             // Count actual unique airports per country (joined with canonical airports table)
             $airportsByCountry = DB::table('branches')
+                ->join('users', 'users.id', '=', 'branches.company_id')
                 ->join('airports', 'airports.id', '=', 'branches.airport_id')
                 ->select('airports.country', DB::raw('count(distinct branches.airport_id) as airport_count'))
+                ->whereNull('branches.deleted_at')
+                ->where('branches.activation', true)
+                ->where('users.role', 'active_supplier')
                 ->groupBy('airports.country')
                 ->get()
                 ->keyBy(fn($row) => $normalizeCountry($row->country));
 
             // Airport names grouped by country (unique canonical names)
             $airportNamesByCountry = DB::table('branches')
+                ->join('users', 'users.id', '=', 'branches.company_id')
                 ->join('airports', 'airports.id', '=', 'branches.airport_id')
                 ->select('airports.country', 'airports.airport_name as name')
+                ->whereNull('branches.deleted_at')
+                ->where('branches.activation', true)
+                ->where('users.role', 'active_supplier')
                 ->groupBy('airports.country', 'airports.airport_name')
                 ->get()
                 ->groupBy(fn($row) => $normalizeCountry($row->country))
@@ -390,6 +403,7 @@ class DashboardController extends Controller
             $bookingsByCountryMap = DB::table('rentals')
                 ->join('vehicles', 'vehicles.id', '=', 'rentals.vehicle_id')
                 ->join('branches', 'branches.id', '=', 'vehicles.pickup_loc')
+                ->whereIn('rentals.order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
                 ->select('branches.country', DB::raw('count(*) as bookings_count'))
                 ->whereNotNull('branches.country')
                 ->where('branches.country', '!=', '')
@@ -417,8 +431,18 @@ class DashboardController extends Controller
                 ];
             })->sortByDesc('bookings')->values(); // ← مرتبة بالأكثر حجوزات أولاً
 
-            $totalBranchesCount = DB::table('branches')->count();
+            $totalBranchesCount = DB::table('branches')
+                ->join('users', 'users.id', '=', 'branches.company_id')
+                ->whereNull('branches.deleted_at')
+                ->where('branches.activation', true)
+                ->where('users.role', 'active_supplier')
+                ->count();
+
             $totalAirportsCount = DB::table('branches')
+                ->join('users', 'users.id', '=', 'branches.company_id')
+                ->whereNull('branches.deleted_at')
+                ->where('branches.activation', true)
+                ->where('users.role', 'active_supplier')
                 ->whereNotNull('airport_id')
                 ->distinct('airport_id')
                 ->count('airport_id');
@@ -440,6 +464,7 @@ class DashboardController extends Controller
                 $bCount = DB::table('rentals')
                     ->join('vehicles', 'vehicles.id', '=', 'rentals.vehicle_id')
                     ->where('vehicles.category', $cat->id)
+                    ->whereIn('rentals.order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
                     ->count();
 
                 // Companies offering this category per country
@@ -489,6 +514,7 @@ class DashboardController extends Controller
             $charts->bookingsByCountry = DB::table('rentals')
                 ->join('vehicles', 'vehicles.id', '=', 'rentals.vehicle_id')
                 ->join('branches', 'branches.id', '=', 'vehicles.pickup_loc')
+                ->whereIn('rentals.order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
                 ->select(
                     'branches.country',
                     DB::raw('count(*) as bookings'),

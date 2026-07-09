@@ -21,7 +21,8 @@ export function CompanyRecentBookingsTable({ bookings }: { bookings?: any[] }) {
   const filteredBookings = useMemo(() => {
     if (bookings) {
       return bookings.map((b: any) => ({
-        id: b.order_number || `BK-${b.id}`,
+        id: b.id ? `BK-${b.id}` : (b.order_number || Math.random().toString()), // Unique key id
+        orderNumber: b.order_number || `BK-${b.id}`, // Human readable code
         customer: b.customer?.name || "Unknown Customer",
         vehicle: b.vehicle?.name || `${b.vehicle?.brand || ""} ${b.vehicle?.model || ""}`.trim() || "Unknown Vehicle",
         amount: Number(b.price || b.supplier_price || 0),
@@ -74,8 +75,8 @@ export function CompanyRecentBookingsTable({ bookings }: { bookings?: any[] }) {
                 const status = statusConfig[booking.status] || statusConfig.pending;
                 const StatusIcon = status.icon;
                 return (
-                  <tr key={booking.id || idx} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 sm:px-5 py-3 font-mono text-sm font-medium text-gray-900">{booking.id}</td>
+                  <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-4 sm:px-5 py-3 font-mono text-sm font-medium text-gray-900">{booking.orderNumber}</td>
                     <td className="px-4 sm:px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center shrink-0">

@@ -138,7 +138,7 @@ export default function RecentBookingsTable({ isMaximized = false, onMaximize, o
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   {/* Booking ID - styled inside a bold code badge */}
                   <span className="text-[10px] font-bold font-mono bg-blue-50 border border-blue-100/50 text-blue-700 px-2.5 py-1 rounded-xl shrink-0">
-                    {booking.id}
+                    {booking.orderNumber}
                   </span>
 
                   {/* Customer Name */}

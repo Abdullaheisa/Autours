@@ -6,7 +6,6 @@ import StatsGrid from "@/app/company/components/StatsGrid";
 import { CompanyRecentBookingsTable, CompanyMonthlyBookingsChart, CompanyVehicleCards } from "@/app/company/components/CompanyDashboardComponents";
 import { useState, useEffect } from "react";
 import { dashboardApi } from "@/services/api";
-import { companies, recentBookings, vehiclesPhotos } from "@/lib/data";
 
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -22,16 +21,15 @@ export default function CompanyDashboardOverview() {
       const charts = res?.data || {};
       
 
-      const vehicles = charts.debug_total_vehicles_in_db;
+      const vehicles = charts.real_total_vehicles !== undefined ? Number(charts.real_total_vehicles) : 0;
       const supplierRevenue = charts.supplierRevenue || [];
       const NumberOfActiveVehicles = charts.NumberOfActiveVehicles || {};
       const numberOfRentalsMonthly = charts.numberOfRentalsMonthly || {};
       
       const totalEarnings = charts.real_total_earnings !== undefined ? Number(charts.real_total_earnings) : supplierRevenue.reduce((acc: number, curr: any) => acc + Number(curr.profit || 0), 0);
       const totalRentals = charts.real_total_rentals !== undefined ? Number(charts.real_total_rentals) : (numberOfRentalsMonthly.done || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0);
-      const totalVehicles = charts.real_total_vehicles !== undefined ? Number(charts.real_total_vehicles) : ((NumberOfActiveVehicles.currentYear?.[0]?.count) || 
-                            (NumberOfActiveVehicles.monthly || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0) || 0);
-      const rating = charts.real_avg_rating !== undefined ? String(charts.real_avg_rating) : "4.8";
+      const totalVehicles = charts.real_total_vehicles !== undefined ? Number(charts.real_total_vehicles) : 0;
+      const rating = (charts.real_avg_rating !== null && charts.real_avg_rating !== undefined) ? String(charts.real_avg_rating) : null;
 
       setStatsData({
         totalEarnings: totalEarnings.toLocaleString(),
@@ -87,9 +85,8 @@ export default function CompanyDashboardOverview() {
       },
       { 
         label: "Avg. Rating", 
-        value: data.rating || "0.0", 
+        value: data.rating ?? "N/A", 
         icon: <Building2 size={20} />, 
-        change: "+0.0", 
         trend: "up" as const, 
         color: "amber" as const 
       },

@@ -442,7 +442,7 @@ class BookingsController extends Controller
     }
 
     /**
-     * Send WhatsApp Booking Notification to site owners via official Meta WhatsApp Business Cloud API.
+     * Send WhatsApp Booking Notification to site owners via UltraMsg WhatsApp API Gateway.
      */
     private function sendWhatsAppBookingNotification($rental)
     {
@@ -476,88 +476,49 @@ class BookingsController extends Controller
             $price = $rental->price ? $rental->price : 'N/A';
             $currency = $rental->currency ? $rental->currency : '';
 
-            $token = env('WHATSAPP_TOKEN');
-            $phoneNumberId = env('WHATSAPP_PHONE_NUMBER_ID');
-            $version = env('WHATSAPP_VERSION', 'v21.0');
-            $templateName = env('WHATSAPP_TEMPLATE_NAME');
+            $token = env('ULTRAMSG_TOKEN') ?: env('WHATSAPP_TOKEN');
+            $instanceId = env('ULTRAMSG_INSTANCE_ID') ?: env('WHATSAPP_PHONE_NUMBER_ID');
 
-            if (empty($token) || empty($phoneNumberId)) {
-                Log::warning('WhatsApp Cloud API notification skipped: WHATSAPP_TOKEN or WHATSAPP_PHONE_NUMBER_ID is not configured in .env');
+            if (empty($token) || empty($instanceId)) {
+                Log::warning('UltraMsg notification skipped: ULTRAMSG_TOKEN or ULTRAMSG_INSTANCE_ID is not configured in .env');
                 return;
             }
 
-            $url = "https://graph.facebook.com/{$version}/{$phoneNumberId}/messages";
-            $numbersString = env('WHATSAPP_NOTIFY_NUMBERS', '96560480382,201067320128');
+            $url = "https://api.ultramsg.com/{$instanceId}/messages/chat";
+            $numbersString = env('ULTRAMSG_NOTIFY_NUMBERS') ?: env('WHATSAPP_NOTIFY_NUMBERS') ?: '96560480382,201067320128';
             $numbers = array_filter(array_map('trim', explode(',', $numbersString)));
+
+            $message = "🔔 *حجز سيارة جديد على Autours*\n\n"
+                     . "👤 *اسم العميل:* " . $customerName . "\n"
+                     . "📞 *رقم العميل:* " . $customerPhone . "\n"
+                     . "🚗 *السيارة المحجوزة:* " . $vehicleName . "\n"
+                     . "🏢 *الشركة الموردة:* " . $supplierName . "\n"
+                     . "📍 *موقع/بلد الحجز:* " . $locationDetails . "\n"
+                     . "📅 *تاريخ ووقت الاستلام:* " . $startDate . " " . $startTime . "\n"
+                     . "📅 *تاريخ ووقت التسليم:* " . $endDate . " " . $endTime . "\n"
+                     . "⏱️ *مدة الحجز:* " . $duration . " يوم/أيام\n"
+                     . "💰 *القيمة الإجمالية:* " . $price . " " . $currency;
 
             foreach ($numbers as $number) {
                 // Ensure international format (numbers only)
                 $cleanNumber = preg_replace('/[^0-9]/', '', $number);
 
-                if (!empty($templateName)) {
-                    // Send official Meta Template message (Recommended for initiating chats)
-                    $payload = [
-                        'messaging_product' => 'whatsapp',
-                        'to' => $cleanNumber,
-                        'type' => 'template',
-                        'template' => [
-                            'name' => $templateName,
-                            'language' => [
-                                'code' => 'ar'
-                            ],
-                            'components' => [
-                                [
-                                    'type' => 'body',
-                                    'parameters' => [
-                                        ['type' => 'text', 'text' => $customerName],
-                                        ['type' => 'text', 'text' => $customerPhone],
-                                        ['type' => 'text', 'text' => $vehicleName],
-                                        ['type' => 'text', 'text' => $supplierName],
-                                        ['type' => 'text', 'text' => $locationDetails],
-                                        ['type' => 'text', 'text' => $startDate . ' ' . $startTime],
-                                        ['type' => 'text', 'text' => $endDate . ' ' . $endTime],
-                                        ['type' => 'text', 'text' => $duration],
-                                        ['type' => 'text', 'text' => $price . ' ' . $currency],
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ];
-                } else {
-                    // Send custom text message (requires active 24-hour customer service window)
-                    $message = "🔔 *حجز سيارة جديد على Autours*\n\n"
-                             . "👤 *اسم العميل:* " . $customerName . "\n"
-                             . "📞 *رقم العميل:* " . $customerPhone . "\n"
-                             . "🚗 *السيارة المحجوزة:* " . $vehicleName . "\n"
-                             . "🏢 *الشركة الموردة:* " . $supplierName . "\n"
-                             . "📍 *موقع/بلد الحجز:* " . $locationDetails . "\n"
-                             . "📅 *تاريخ ووقت الاستلام:* " . $startDate . " " . $startTime . "\n"
-                             . "📅 *تاريخ ووقت التسليم:* " . $endDate . " " . $endTime . "\n"
-                             . "⏱️ *مدة الحجز:* " . $duration . " يوم/أيام\n"
-                             . "💰 *القيمة الإجمالية:* " . $price . " " . $currency;
+                $payload = [
+                    'token' => $token,
+                    'to' => $cleanNumber,
+                    'body' => $message
+                ];
 
-                    $payload = [
-                        'messaging_product' => 'whatsapp',
-                        'recipient_type' => 'individual',
-                        'to' => $cleanNumber,
-                        'type' => 'text',
-                        'text' => [
-                            'preview_url' => false,
-                            'body' => $message
-                        ]
-                    ];
-                }
-
-                $response = Http::withToken($token)->post($url, $payload);
+                $response = Http::post($url, $payload);
 
                 if ($response->failed()) {
-                    Log::error("Failed to send WhatsApp Cloud API notification to " . $cleanNumber . ": " . $response->body());
+                    Log::error("Failed to send UltraMsg notification to " . $cleanNumber . ": " . $response->body());
                 } else {
-                    Log::info("WhatsApp Cloud API notification sent successfully to " . $cleanNumber);
+                    Log::info("UltraMsg notification sent successfully to " . $cleanNumber);
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error sending WhatsApp booking notification: ' . $e->getMessage());
+            Log::error('Error sending UltraMsg booking notification: ' . $e->getMessage());
         }
     }
 }

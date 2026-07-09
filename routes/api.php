@@ -340,4 +340,10 @@ Route::post('/rating', [\App\Http\Controllers\RatesController::class, 'store']);
 // Booking Invoice (Sanctum protected)
 Route::get('/invoice/booking/{id}', [\App\Http\Controllers\BookingsController::class, 'bookingInvoice'])->middleware('auth:sanctum');
 
+// Notifications (Sanctum protected)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications',                            [\App\Http\Controllers\NotificationController::class, 'index']);
+    Route::patch('/notifications/{id}/read',               [\App\Http\Controllers\NotificationController::class, 'markRead']);
+    Route::patch('/notifications/read-all',                [\App\Http\Controllers\NotificationController::class, 'markAllRead']);
+});
 

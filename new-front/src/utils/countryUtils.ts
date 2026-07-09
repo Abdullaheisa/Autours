@@ -56,6 +56,19 @@ export const countryNamesMap: Record<string, string> = {
   "GERMANY": "Germany",
   "FR": "France",
   "FRANCE": "France",
+  "JM": "Jamaica",
+  "JAMAICA": "Jamaica",
+  "GT": "Guatemala",
+  "GUATEMALA": "Guatemala",
+  "PA": "Panama",
+  "PANAMA": "Panama",
+  "Türkiye": "Turkey",
+  "TÜRKIYE": "Turkey",
+  "TÜRKİYE": "Turkey",
+  "Gaziemir": "Turkey",
+  "GAZIEMIR": "Turkey",
+  "Demo Street": "United Arab Emirates",
+  "DEMO STREET": "United Arab Emirates",
 };
 
 export const countryFlags: Record<string, string> = {
@@ -90,20 +103,8 @@ export const countryFlags: Record<string, string> = {
   "France": "🇫🇷",
 };
 
-export function getCountryFullName(countryName?: string): string {
-  if (!countryName) return "Global";
-  const trimmed = countryName.trim();
-  return countryNamesMap[trimmed] || countryNamesMap[trimmed.toUpperCase()] || trimmed;
-}
-
-export function getCountryFlag(countryName?: string): string {
-  if (!countryName) return "🌐";
-  const fullName = getCountryFullName(countryName);
-  return countryFlags[fullName] || countryFlags[countryName.trim()] || "🌐";
-}
-
 // ISO 2-letter codes for flagcdn.com image flags (works on all platforms including Windows)
-const countryIsoMap: Record<string, string> = {
+export const countryIsoMap: Record<string, string> = {
   "Egypt": "eg",
   "United Arab Emirates": "ae",
   "Turkey": "tr",
@@ -185,7 +186,61 @@ const countryIsoMap: Record<string, string> = {
   "Malta": "mt",
   "Nepal": "np",
   "Estonia": "ee",
+  "Jamaica": "jm",
+  "Guatemala": "gt",
+  "Panama": "pa",
+  "Antigua and Barbuda": "ag",
+  "Antigua And Barbuda": "ag",
+  "Armenia": "am",
+  "Chile": "cl",
+  "Dominican Republic": "do",
+  "Mauritius": "mu",
+  "Saint Martin": "mf",
+  "Sint Maarten": "sx",
+  "St. Lucia": "lc",
+  "U.s. Virgin Islands": "vi",
+  "Venezuela": "ve",
+  "Liechtenstein": "li",
+  "Grenada": "gd",
+  "Iceland": "is",
+  "Puerto Rico": "pr",
 };
+
+export function getCountryFullName(countryName?: string): string {
+  if (!countryName) return "Global";
+  const trimmed = countryName.trim();
+  return countryNamesMap[trimmed] || countryNamesMap[trimmed.toUpperCase()] || trimmed;
+}
+
+// Convert ISO 2-letter code to Emoji flag dynamically
+function getFlagEmoji(isoCode: string): string {
+  const codePoints = isoCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
+export function getCountryFlag(countryName?: string): string {
+  if (!countryName) return "🌐";
+  const fullName = getCountryFullName(countryName);
+  
+  // 1. Try hardcoded dictionary
+  if (countryFlags[fullName]) return countryFlags[fullName];
+  if (countryFlags[countryName.trim()]) return countryFlags[countryName.trim()];
+
+  // 2. Eagerly generate dynamically using ISO code
+  const iso = getCountryIso(countryName);
+  if (iso) {
+    try {
+      return getFlagEmoji(iso);
+    } catch (e) {
+      // Fallback
+    }
+  }
+
+  return "🌐";
+}
 
 /**
  * Returns the ISO 2-letter code for flagcdn.com
@@ -196,4 +251,3 @@ export function getCountryIso(countryName?: string): string | null {
   const fullName = getCountryFullName(countryName);
   return countryIsoMap[fullName] || countryIsoMap[countryName.trim()] || null;
 }
-
