@@ -1,3 +1,4 @@
+import { assets } from '@/config/assets';
 export interface CountryPageData {
   slug: string;
   name: string;
@@ -28,7 +29,7 @@ export interface CountryPageData {
     description: string;
   }[];
   documents: {
-    image: string;
+
     items: string[];
   };
   gallery?: {
@@ -99,7 +100,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       }
     ],
     documents: {
-      image: "",
       items: [
         "Valid driving license (UAE or International)",
         "Passport or Emirates ID",
@@ -213,7 +213,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "International Driving Permit (if required)",
@@ -312,7 +311,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "Passport and Visa or Iqama",
@@ -379,7 +377,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "International Driving Permit (if required)",
@@ -473,7 +470,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "International Driving Permit (if required)",
@@ -567,7 +563,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "Passport with valid entry visa (if required)",
@@ -632,7 +627,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "Passport with valid entry visa (if required)",
@@ -725,7 +719,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "Passport with valid entry visa",
@@ -817,7 +810,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "Passport with valid entry visa (if required)",
@@ -882,7 +874,6 @@ export const countryPagesData: Record<string, CountryPageData> = {
       { title: "Book & Drive", description: "Reserve online and hit the road." }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
       items: [
         "Valid driving license",
         "Passport with valid entry visa (if required)",

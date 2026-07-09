@@ -18,7 +18,7 @@ export const assets = {
     eid: '/assets/banners/eid-banner.jpg',
   },
   steps_docs : {
-    docs: '/img/document.jpeg',
+    docs: 'document.jpeg',
   },
   countries: {
     bahrain: '/img/countries/bahrain.webp',
