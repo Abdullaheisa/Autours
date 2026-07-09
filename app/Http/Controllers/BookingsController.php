@@ -509,7 +509,7 @@ class BookingsController extends Controller
                     'body' => $message
                 ];
 
-                $response = Http::post($url, $payload);
+                $response = Http::withoutVerifying()->post($url, $payload);
 
                 if ($response->failed()) {
                     Log::error("Failed to send UltraMsg notification to " . $cleanNumber . ": " . $response->body());
