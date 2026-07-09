@@ -99,7 +99,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
       }
     ],
     documents: {
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
+      image: "",
       items: [
         "Valid driving license (UAE or International)",
         "Passport or Emirates ID",
@@ -856,7 +856,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Morocco with Autours?",
       subtitle: "Explore Morocco with the freedom to travel on your own schedule. Whether you're arriving in Casablanca, discovering the blue city of Chefchaouen, wandering the souks of Marrakech, or visiting Agadir, Fes, Tangier, or Rabat, Autours helps you compare the best airport car rental deals from trusted suppliers.",
-      image: "countries/morocco.webp",
+      image: "countries/morocco.png",
       benefits: [
         {
           title: "Convenient Airport Pickup",

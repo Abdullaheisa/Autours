@@ -1,4 +1,5 @@
 import { CountryPageData } from '@/data/countryPages';
+import { assets } from '@/config/assets';
 import { CheckCircle2, ChevronRight, HelpCircle, FileText } from 'lucide-react';
 
 interface Props {
@@ -61,7 +62,7 @@ export default function StepsDocsSection({ steps, documents }: Props) {
             {/* Header Image */}
             <div className="h-40 md:h-[216px] relative overflow-hidden">
               <img 
-                src={documents.image} 
+                src={assets.steps_docs.docs} 
                 alt="Required Documents" 
                 className="w-full h-full object-cover"
               />

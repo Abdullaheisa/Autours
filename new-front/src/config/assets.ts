@@ -17,6 +17,9 @@ export const assets = {
     supplier: '/assets/banners/supplier-banner.jpg',
     eid: '/assets/banners/eid-banner.jpg',
   },
+  steps_docs : {
+    docs: '/img/document.jpeg',
+  },
   countries: {
     bahrain: '/img/countries/bahrain.webp',
     egypt: '/img/countries/egypt.webp',

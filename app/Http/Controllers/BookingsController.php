@@ -31,6 +31,8 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Mpdf\Mpdf;
 
 class BookingsController extends Controller
@@ -263,6 +265,9 @@ class BookingsController extends Controller
             $item->save();
 
             DB::commit();
+
+            // Send WhatsApp Notification to site owners via BeOn API
+            $this->sendWhatsAppBookingNotification($item);
             if ($request->old_rental_id) {
                 event(new UpdateBooking($oldRental, $item));
             }
@@ -433,6 +438,126 @@ class BookingsController extends Controller
                 "status" => 0,
                 "message" => $e->getMessage(),
             ], StatusCodes::SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Send WhatsApp Booking Notification to site owners via official Meta WhatsApp Business Cloud API.
+     */
+    private function sendWhatsAppBookingNotification($rental)
+    {
+        try {
+            $rental->load(['customer', 'vehicle.supplierUser', 'vehicle.branch']);
+
+            $customerName = $rental->customer ? $rental->customer->name : 'N/A';
+            $customerPhone = $rental->customer ? $rental->customer->phone_num : 'N/A';
+            
+            $vehicle = $rental->vehicle;
+            $vehicleName = $vehicle ? $vehicle->name : 'N/A';
+            
+            $supplierName = ($vehicle && $vehicle->supplierUser) 
+                ? ($vehicle->supplierUser->company ?: $vehicle->supplierUser->name) 
+                : 'N/A';
+                
+            $country = ($vehicle && $vehicle->branch) ? $vehicle->branch->country : 'N/A';
+            $branchAddress = ($vehicle && $vehicle->branch) ? $vehicle->branch->address : '';
+            
+            $locationDetails = $country;
+            if (!empty($branchAddress)) {
+                $locationDetails .= " (" . $branchAddress . ")";
+            }
+
+            $startDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : 'N/A';
+            $startTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : 'N/A';
+            $endDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : 'N/A';
+            $endTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : 'N/A';
+            
+            $duration = $rental->number_of_days ? $rental->number_of_days : 'N/A';
+            $price = $rental->price ? $rental->price : 'N/A';
+            $currency = $rental->currency ? $rental->currency : '';
+
+            $token = env('WHATSAPP_TOKEN');
+            $phoneNumberId = env('WHATSAPP_PHONE_NUMBER_ID');
+            $version = env('WHATSAPP_VERSION', 'v21.0');
+            $templateName = env('WHATSAPP_TEMPLATE_NAME');
+
+            if (empty($token) || empty($phoneNumberId)) {
+                Log::warning('WhatsApp Cloud API notification skipped: WHATSAPP_TOKEN or WHATSAPP_PHONE_NUMBER_ID is not configured in .env');
+                return;
+            }
+
+            $url = "https://graph.facebook.com/{$version}/{$phoneNumberId}/messages";
+            $numbersString = env('WHATSAPP_NOTIFY_NUMBERS', '96560480382,201067320128');
+            $numbers = array_filter(array_map('trim', explode(',', $numbersString)));
+
+            foreach ($numbers as $number) {
+                // Ensure international format (numbers only)
+                $cleanNumber = preg_replace('/[^0-9]/', '', $number);
+
+                if (!empty($templateName)) {
+                    // Send official Meta Template message (Recommended for initiating chats)
+                    $payload = [
+                        'messaging_product' => 'whatsapp',
+                        'to' => $cleanNumber,
+                        'type' => 'template',
+                        'template' => [
+                            'name' => $templateName,
+                            'language' => [
+                                'code' => 'ar'
+                            ],
+                            'components' => [
+                                [
+                                    'type' => 'body',
+                                    'parameters' => [
+                                        ['type' => 'text', 'text' => $customerName],
+                                        ['type' => 'text', 'text' => $customerPhone],
+                                        ['type' => 'text', 'text' => $vehicleName],
+                                        ['type' => 'text', 'text' => $supplierName],
+                                        ['type' => 'text', 'text' => $locationDetails],
+                                        ['type' => 'text', 'text' => $startDate . ' ' . $startTime],
+                                        ['type' => 'text', 'text' => $endDate . ' ' . $endTime],
+                                        ['type' => 'text', 'text' => $duration],
+                                        ['type' => 'text', 'text' => $price . ' ' . $currency],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ];
+                } else {
+                    // Send custom text message (requires active 24-hour customer service window)
+                    $message = "🔔 *حجز سيارة جديد على Autours*\n\n"
+                             . "👤 *اسم العميل:* " . $customerName . "\n"
+                             . "📞 *رقم العميل:* " . $customerPhone . "\n"
+                             . "🚗 *السيارة المحجوزة:* " . $vehicleName . "\n"
+                             . "🏢 *الشركة الموردة:* " . $supplierName . "\n"
+                             . "📍 *موقع/بلد الحجز:* " . $locationDetails . "\n"
+                             . "📅 *تاريخ ووقت الاستلام:* " . $startDate . " " . $startTime . "\n"
+                             . "📅 *تاريخ ووقت التسليم:* " . $endDate . " " . $endTime . "\n"
+                             . "⏱️ *مدة الحجز:* " . $duration . " يوم/أيام\n"
+                             . "💰 *القيمة الإجمالية:* " . $price . " " . $currency;
+
+                    $payload = [
+                        'messaging_product' => 'whatsapp',
+                        'recipient_type' => 'individual',
+                        'to' => $cleanNumber,
+                        'type' => 'text',
+                        'text' => [
+                            'preview_url' => false,
+                            'body' => $message
+                        ]
+                    ];
+                }
+
+                $response = Http::withToken($token)->post($url, $payload);
+
+                if ($response->failed()) {
+                    Log::error("Failed to send WhatsApp Cloud API notification to " . $cleanNumber . ": " . $response->body());
+                } else {
+                    Log::info("WhatsApp Cloud API notification sent successfully to " . $cleanNumber);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending WhatsApp booking notification: ' . $e->getMessage());
         }
     }
 }
