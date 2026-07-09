@@ -10,12 +10,20 @@ use Illuminate\Support\Facades\Log;
 class KolaycarApiService
 {
     private const BASE_URL = 'https://resws.kolaycar.com/service.asmx';
-    private const API_KEY = 'U512MCczch8mDe9c3x/Ekw==';
-    private const API_PASSWORD = 'KzzZZ894tH84.!Eu';
+    private const DEFAULT_API_KEY = 'U512MCczch8mDe9c3x/Ekw==';
+    private const DEFAULT_API_PASSWORD = 'KzzZZ894tH84.!Eu';
     private const LANG_ISO_CODE = 'EN';
     private const CURRENCY_ISO_CODE = 'EUR';
 
     private int $requestTimeout = 30;
+    private string $apiKey;
+    private string $apiPassword;
+
+    public function __construct(?string $apiKey = null, ?string $apiPassword = null)
+    {
+        $this->apiKey = $apiKey ?? self::DEFAULT_API_KEY;
+        $this->apiPassword = $apiPassword ?? self::DEFAULT_API_PASSWORD;
+    }
 
     /**
      * Send a SOAP request to the Kolaycar API.
@@ -29,8 +37,8 @@ class KolaycarApiService
         $body .= "<tem:{$method}>";
 
         // Append credentials
-        $body .= '<tem:APIKEY>' . htmlspecialchars(self::API_KEY) . '</tem:APIKEY>';
-        $body .= '<tem:APIPASSWORD>' . htmlspecialchars(self::API_PASSWORD) . '</tem:APIPASSWORD>';
+        $body .= '<tem:APIKEY>' . htmlspecialchars($this->apiKey) . '</tem:APIKEY>';
+        $body .= '<tem:APIPASSWORD>' . htmlspecialchars($this->apiPassword) . '</tem:APIPASSWORD>';
         $body .= '<tem:LANGISOCODE>' . htmlspecialchars(self::LANG_ISO_CODE) . '</tem:LANGISOCODE>';
         $body .= '<tem:CURRENCYISOCODE>' . htmlspecialchars(self::CURRENCY_ISO_CODE) . '</tem:CURRENCYISOCODE>';
 

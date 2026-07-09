@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 use App\Console\Commands\Traits\NormalizesVehicleNames;
 
-class SyncKolaycarVehicles extends Command
+class SyncAllmeetVehicles extends Command
 {
     use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
@@ -26,7 +26,7 @@ class SyncKolaycarVehicles extends Command
      *
      * @var string
      */
-    protected $signature = 'kolaycar:sync-vehicles
+    protected $signature = 'allmeet:sync-vehicles
                             {--pickup-date= : Pickup date (yyyy-MM-dd HH:mm), defaults to tomorrow 10:00}
                             {--dropoff-date= : Dropoff date (yyyy-MM-dd HH:mm), defaults to day-after-tomorrow 10:00}
                             {--pickup= : Pickup date DD.MM.YYYY}
@@ -39,7 +39,7 @@ class SyncKolaycarVehicles extends Command
      *
      * @var string
      */
-    protected $description = 'Sync vehicles from Kolaycar (Arscar) API into Autours.';
+    protected $description = 'Sync vehicles from Allmeet API into Autours.';
 
     /**
      * Cache of Specification definitions keyed by name.
@@ -63,18 +63,18 @@ class SyncKolaycarVehicles extends Command
             return self::FAILURE;
         }
 
-        $service = new KolaycarApiService();
+        $service = new KolaycarApiService('pQX1iJ70I9eKepswD8dsAw==', '!Cu89.!Wi4691');
 
         // ------------------------------------------------------------------
         // 1. Resolve supplier user
         // ------------------------------------------------------------------
         $supplierUser = User::firstOrCreate(
-            ['email' => 'info@arscar.com.tr'],
+            ['email' => 'info@allmeetrentacar.com'],
             [
-                'name' => 'Arscar',
+                'name' => 'Allmeet',
                 'role' => 'active_supplier',
                 'password' => Hash::make('Qrentals@12345'),
-                'company' => 'Arscar / Kolaycar',
+                'company' => 'Allmeet Rent a Car',
             ]
         );
 
@@ -96,7 +96,7 @@ class SyncKolaycarVehicles extends Command
             if ($this->option('dry-run')) {
                 $this->warn('[DRY RUN] No branches found. Please run the sync-branches command first.');
             } else {
-                $this->error('No active branches found for Arscar. Please run the sync-branches command first.');
+                $this->error('No active branches found for Allmeet. Please run the sync-branches command first.');
                 return self::FAILURE;
             }
         } else {
@@ -279,7 +279,7 @@ class SyncKolaycarVehicles extends Command
 
         if (!$this->option('dry-run')) {
             $this->newLine();
-            $this->info('========== Kolaycar Vehicle Sync Complete ==========');
+            $this->info('========== Allmeet Vehicle Sync Complete ==========');
             $this->info("Created     : {$totalVehiclesCreated}");
             $this->info("Updated     : {$totalVehiclesUpdated}");
             $this->info("Deactivated : 0");

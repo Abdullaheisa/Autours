@@ -142,13 +142,17 @@ class SyncXdriveVehicles extends Command
             $this->info("Deleted {$cleaned} orphaned image(s).");
         }
 
-        // Resolve dates
-        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addDay()->format('Y-m-d 10:00');
-        $dropoffDate1 = Carbon::parse($pickupDate)->addDay()->format('Y-m-d 10:00');
-        $dropoffDate7 = Carbon::parse($pickupDate)->addDays(7)->format('Y-m-d 10:00');
-        $dropoffDate30 = Carbon::parse($pickupDate)->addDays(30)->format('Y-m-d 10:00');
+        // Resolve candidate dates
+        $baseDate = $this->option('pickup-date') ? \Carbon\Carbon::parse($this->option('pickup-date')) : \Carbon\Carbon::now()->addDay();
+        
+        $candidateDates = [
+            $baseDate->format('Y-m-d 10:00'),
+            $baseDate->copy()->addDays(7)->format('Y-m-d 10:00'),
+            $baseDate->copy()->addDays(14)->format('Y-m-d 10:00'),
+            $baseDate->copy()->addDays(30)->format('Y-m-d 10:00'),
+        ];
 
-        $this->info("Using pickup: {$pickupDate}");
+        $this->info("Base pickup date: " . $baseDate->format('Y-m-d 10:00'));
 
         // ------------------------------------------------------------------
         // 4. Fetch all groups
@@ -172,7 +176,7 @@ class SyncXdriveVehicles extends Command
         }
 
         // ------------------------------------------------------------------
-        // 5. Fetch prices for ALL stations concurrently
+        // 5. Fetch prices for ALL stations concurrently using candidate dates
         // ------------------------------------------------------------------
         $pricesOnly = $this->option('prices-only');
 
@@ -226,53 +230,126 @@ class SyncXdriveVehicles extends Command
             return self::FAILURE;
         }
 
-        $this->info("Fetching 1-day prices for {$totalStations} station(s) with concurrency {$concurrency} and timeout {$timeout}s...");
-        $progress1 = $this->output->createProgressBar($totalStations);
-        $progress1->start();
-        $stationPrices1 = $service->getAvailableCarsForStations(
-            $filteredStationMap,
-            $pickupDate,
-            $dropoffDate1,
-            'TL',
-            $concurrency,
-            function (int $processed) use ($progress1) {
-                $progress1->advance($processed);
-            }
-        );
-        $progress1->finish();
-        $this->newLine();
+        $branchWorkingDates = [];
+        $stationPrices1 = [];
+        $stationsToTest = $filteredStationMap;
 
-        $this->info('Fetching 7-day prices...');
-        $progress7 = $this->output->createProgressBar($totalStations);
-        $progress7->start();
-        $stationPrices7 = $service->getAvailableCarsForStations(
-            $filteredStationMap,
-            $pickupDate,
-            $dropoffDate7,
-            'TL',
-            $concurrency,
-            function (int $processed) use ($progress7) {
-                $progress7->advance($processed);
+        foreach ($candidateDates as $idx => $testDate) {
+            if (empty($stationsToTest)) {
+                break; // All branches have found a working date
             }
-        );
-        $progress7->finish();
-        $this->newLine();
 
-        $this->info('Fetching 30-day prices...');
-        $progress30 = $this->output->createProgressBar($totalStations);
-        $progress30->start();
-        $stationPrices30 = $service->getAvailableCarsForStations(
-            $filteredStationMap,
-            $pickupDate,
-            $dropoffDate30,
-            'TL',
-            $concurrency,
-            function (int $processed) use ($progress30) {
-                $progress30->advance($processed);
+            // Test with a 7-day rental to bypass minimum rental duration rules
+            $dropoff = \Carbon\Carbon::parse($testDate)->addDays(7)->format('Y-m-d 10:00');
+            $this->info(sprintf('Testing %d branch(es) for availability (using 7-day rental) starting on %s...', count($stationsToTest), $testDate));
+
+            $progress = $this->output->createProgressBar(count($stationsToTest));
+            $progress->start();
+
+            $prices = $service->getAvailableCarsForStations(
+                $stationsToTest,
+                $testDate,
+                $dropoff,
+                'TL',
+                $concurrency,
+                function (int $processed) use ($progress) {
+                    $progress->advance($processed);
+                }
+            );
+            $progress->finish();
+            $this->newLine();
+
+            // Check which branches returned results
+            foreach ($stationsToTest as $stationId => $branchId) {
+                if (!empty($prices[$branchId])) {
+                    $branchWorkingDates[$branchId] = $testDate;
+                    unset($stationsToTest[$stationId]);
+                }
             }
-        );
-        $progress30->finish();
-        $this->newLine();
+        }
+
+        $failedCount = count($stationsToTest);
+        if ($failedCount > 0) {
+            $this->warn(sprintf('%d branch(es) returned no availability across all candidate dates.', $failedCount));
+        }
+
+        // Group successful branches by their working date to fetch 7-day and 30-day prices
+        $dateGroups = [];
+        foreach ($filteredStationMap as $stationId => $branchId) {
+            if (isset($branchWorkingDates[$branchId])) {
+                $dateGroups[$branchWorkingDates[$branchId]][$stationId] = $branchId;
+            }
+        }
+
+        $stationPrices1 = [];
+        $stationPrices7 = [];
+        $stationPrices30 = [];
+
+        foreach ($dateGroups as $workingDate => $groupStations) {
+            $dropoff1 = \Carbon\Carbon::parse($workingDate)->addDays(1)->format('Y-m-d 10:00');
+            $dropoff7 = \Carbon\Carbon::parse($workingDate)->addDays(7)->format('Y-m-d 10:00');
+            $dropoff30 = \Carbon\Carbon::parse($workingDate)->addDays(30)->format('Y-m-d 10:00');
+
+            $this->info(sprintf('Fetching 1-day prices for %d branch(es) starting on %s...', count($groupStations), $workingDate));
+            $progress1 = $this->output->createProgressBar(count($groupStations));
+            $progress1->start();
+            $prices1 = $service->getAvailableCarsForStations(
+                $groupStations,
+                $workingDate,
+                $dropoff1,
+                'TL',
+                $concurrency,
+                function (int $processed) use ($progress1) {
+                    $progress1->advance($processed);
+                }
+            );
+            $progress1->finish();
+            $this->newLine();
+
+            foreach ($prices1 as $bId => $p) {
+                $stationPrices1[$bId] = $p;
+            }
+
+            $this->info(sprintf('Fetching 7-day prices for %d branch(es) starting on %s...', count($groupStations), $workingDate));
+            $progress7 = $this->output->createProgressBar(count($groupStations));
+            $progress7->start();
+            $prices7 = $service->getAvailableCarsForStations(
+                $groupStations,
+                $workingDate,
+                $dropoff7,
+                'TL',
+                $concurrency,
+                function (int $processed) use ($progress7) {
+                    $progress7->advance($processed);
+                }
+            );
+            $progress7->finish();
+            $this->newLine();
+
+            foreach ($prices7 as $bId => $p) {
+                $stationPrices7[$bId] = $p;
+            }
+
+            $this->info(sprintf('Fetching 30-day prices for %d branch(es) starting on %s...', count($groupStations), $workingDate));
+            $progress30 = $this->output->createProgressBar(count($groupStations));
+            $progress30->start();
+            $prices30 = $service->getAvailableCarsForStations(
+                $groupStations,
+                $workingDate,
+                $dropoff30,
+                'TL',
+                $concurrency,
+                function (int $processed) use ($progress30) {
+                    $progress30->advance($processed);
+                }
+            );
+            $progress30->finish();
+            $this->newLine();
+
+            foreach ($prices30 as $bId => $p) {
+                $stationPrices30[$bId] = $p;
+            }
+        }
 
         // Load branch currencies
         $branchCurrencies = Branch::whereIn('id', array_values($filteredStationMap))
@@ -297,12 +374,21 @@ class SyncXdriveVehicles extends Command
                 $multiplier = $ratesFromTry[$branchCurrency] ?? 1.0;
             }
 
-            foreach ($groups1 as $groupId => $priceData) {
-                $baseDayValue = $priceData['day_value'] ?? 0;
+            $allGroupIds = array_unique(array_merge(
+                array_keys($groups1),
+                array_keys($groups7),
+                array_keys($groups30)
+            ));
+
+            foreach ($allGroupIds as $groupId) {
+                // If it's missing from 1-day rental (groups1), it means it's not available for 1 day
+                $baseDayValue = $groups1[$groupId]['day_value'] ?? 0;
+                
                 $dayValue7 = $groups7[$groupId]['day_value'] ?? $baseDayValue;
                 $dayValue30 = $groups30[$groupId]['day_value'] ?? $baseDayValue;
                 
-                if ($baseDayValue > 0) {
+                if ($baseDayValue > 0 || $dayValue7 > 0 || $dayValue30 > 0) {
+                    $priceData = $groups1[$groupId] ?? $groups7[$groupId] ?? $groups30[$groupId];
                     $priceData['day_value'] = round($baseDayValue * $multiplier, 2);
                     $priceData['week_price'] = round($dayValue7 * $multiplier, 2);
                     $priceData['month_price'] = round($dayValue30 * $multiplier, 2);
@@ -345,7 +431,7 @@ class SyncXdriveVehicles extends Command
                 $branchesWithPrice = [];
                 foreach ($stationPrices as $branchId => $prices) {
                     $priceData = $prices[$groupId] ?? null;
-                    if ($priceData !== null && ($priceData['day_value'] ?? 0) > 0) {
+                    if ($priceData !== null && (($priceData['day_value'] ?? 0) > 0 || ($priceData['week_price'] ?? 0) > 0 || ($priceData['month_price'] ?? 0) > 0)) {
                         $branchesWithPrice[$branchId] = $priceData;
                     }
                 }

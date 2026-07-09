@@ -196,6 +196,47 @@ class VehicleController extends Controller
                 }
             }
             $vehicles = $groupedVehicles;
+            $startDate = Carbon::parse($dateFrom);
+            $endDate = Carbon::parse($dateTo);
+
+            $diffInDays = $startDate->diffInDays($endDate);
+            $validVehicles = collect();
+
+            foreach ($vehicles as $vehicle) {
+                // Use profit margins if available, default to 0% markup
+                $perDayProfit   = $vehicle->profit->per_day_profit   ?? 0;
+                $perWeekProfit  = $vehicle->profit->per_week_profit  ?? 0;
+                $perMonthProfit = $vehicle->profit->per_month_profit ?? 0;
+
+                if ($diffInDays >= '1' && $diffInDays < '3') {
+                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * $diffInDays;
+                    $priceTax = $perDayProfit;
+                } else if ($diffInDays >= '3' && $diffInDays <= '7') {
+                    $vehicle->final_price = ($vehicle->week_price + (($vehicle->week_price * $perWeekProfit) / 100)) * $diffInDays;
+                    $priceTax = $perWeekProfit;
+                } else if ($diffInDays >= 8) {
+                    $vehicle->final_price = ($vehicle->month_price + (($vehicle->month_price * $perMonthProfit) / 100)) * $diffInDays;
+                    $priceTax = $perMonthProfit;
+                } else {
+                    // fallback: use daily price
+                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * max($diffInDays, 1);
+                }
+                $vehicle->final_price = round($vehicle->final_price, 2);
+                if ($vehicle->branch && $currency != $vehicle->branch->currency) {
+                    $rate = CurrencyRate::query()->where('currency_from', $vehicle->branch->currency)->where('currency_to', $currency)->first();
+                    if ($rate != null) {
+                        $vehicle->final_price *= $rate->rate;
+                        $vehicle->final_price = round($vehicle->final_price, 2);
+                    }
+                }
+
+                if ($vehicle->final_price > 0) {
+                    $validVehicles->push($vehicle);
+                    if ($vehicle->final_price >= $maxPrice) $maxPrice = round($vehicle->final_price) + 1;
+                    if ($vehicle->final_price <= $minPrice) $minPrice = round($vehicle->final_price);
+                }
+            }
+            $vehicles = $validVehicles;
 
             $locationTypeIds = $vehicles->flatMap(function ($vehicle) {
                 return $vehicle->locationType->pluck('id');
@@ -250,42 +291,6 @@ class VehicleController extends Controller
             $suppliers = $suppliers->filter(function($supplier) {
                 return $supplier->vehicle_count > 0;
             })->values();
-
-            $startDate = Carbon::parse($dateFrom);
-            $endDate = Carbon::parse($dateTo);
-
-            $diffInDays = $startDate->diffInDays($endDate);
-            foreach ($vehicles as $vehicle) {
-                // Use profit margins if available, default to 0% markup
-                $perDayProfit   = $vehicle->profit->per_day_profit   ?? 0;
-                $perWeekProfit  = $vehicle->profit->per_week_profit  ?? 0;
-                $perMonthProfit = $vehicle->profit->per_month_profit ?? 0;
-
-                if ($diffInDays >= '1' && $diffInDays < '3') {
-                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * $diffInDays;
-                    $priceTax = $perDayProfit;
-                } else if ($diffInDays >= '3' && $diffInDays <= '7') {
-                    $vehicle->final_price = ($vehicle->week_price + (($vehicle->week_price * $perWeekProfit) / 100)) * $diffInDays;
-                    $priceTax = $perWeekProfit;
-                } else if ($diffInDays >= 8) {
-                    $vehicle->final_price = ($vehicle->month_price + (($vehicle->month_price * $perMonthProfit) / 100)) * $diffInDays;
-                    $priceTax = $perMonthProfit;
-                } else {
-                    // fallback: use daily price
-                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * max($diffInDays, 1);
-                }
-                $vehicle->final_price = round($vehicle->final_price, 2);
-                if ($vehicle->branch && $currency != $vehicle->branch->currency) {
-                    $rate = CurrencyRate::query()->where('currency_from', $vehicle->branch->currency)->where('currency_to', $currency)->first();
-                    if ($rate != null) {
-                        $vehicle->final_price *= $rate->rate;
-                        $vehicle->final_price = round($vehicle->final_price, 2);
-                    }
-                }
-                if ($vehicle->final_price >= $maxPrice) $maxPrice = round($vehicle->final_price) + 1;
-                if ($vehicle->final_price <= $minPrice) $minPrice = round($vehicle->final_price);
-
-            }
 
             if ($request->has('priceRange')) {
                 $priceRange = (float) $request->input('priceRange');
