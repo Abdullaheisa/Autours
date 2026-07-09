@@ -60,8 +60,8 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroBottomTitle: 'Search by UAE airport and land ready to drive.',
     travelInfo: {
       title: "Why Choose Autours?",
-      subtitle: "The Smart Way to Rent a Car Across the UAE",
-      image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=800&q=80",
+      subtitle: "The Smart Way to Rent a Car Across the UAE. Book with trusted car rental companies and compare the best deals across Dubai, Abu Dhabi, Sharjah, Ajman, Ras Al Khaimah, Fujairah, and Al Ain.",
+      image: "countries/uae.webp",
       benefits: [
         {
           title: "Airport Pickup Across the UAE",
@@ -186,7 +186,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Egypt with Autours?",
       subtitle: "Experience Egypt beyond the guidebooks with the freedom of your own rental car. From the iconic Pyramids of Giza and the bustling streets of Cairo to the temples of Luxor, the Nile views of Aswan, and the Red Sea resorts of Hurghada, Sharm El Sheikh, Marsa Alam, and El Gouna, Autours helps you compare trusted airport car rental deals across Egypt in one place. Whether you're planning a business trip, a family holiday, or an unforgettable road trip, enjoy the flexibility to discover Egypt on your own schedule.",
-      image: "egypt.png",
+      image: "countries/egypt.png",
       benefits: [
         {
           
@@ -280,7 +280,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Autours",
       subtitle: "Saudi Arabia's Trusted Car Rental & Travel Partner. Partnering with top-rated brands to deliver seamless, fast, and reliable airport pickup experiences right at the terminal.",
-      image: "https://images.unsplash.com/photo-1551041777-ed277b8dd348?auto=format&fit=crop&w=800&q=80",
+      image: "countries/saudi.png",
       benefits: [
         { 
           title: "Airport Pickup", 
@@ -351,7 +351,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Bahrain with Autours?",
       subtitle: "Discover Bahrain with the flexibility of your own rental car. Whether you're arriving at Bahrain International Airport, exploring the vibrant streets of Manama, relaxing in Amwaj Islands, shopping in Seef, or visiting Muharraq, Riffa, Isa Town, Sakhir, Zallaq, or Budaiya, Autours helps you compare trusted airport car rental deals from leading local and international suppliers. Whether you're visiting for business, a Formula 1 weekend, or a relaxing Gulf getaway, finding the right rental car is fast, simple, and affordable.",
-      image: "bahrain.png",
+      image: "countries/bahrain.png",
       benefits: [
         {
           title: "Convenient Airport Pickup",
@@ -444,7 +444,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Jordan with Autours?",
       subtitle: "Discover Jordan with the freedom to travel at your own pace. Whether you're arriving at Queen Alia International Airport in Amman, exploring the ancient city of Petra, floating in the Dead Sea, diving in Aqaba, or visiting Wadi Rum, Jerash, Madaba, Mount Nebo, Irbid, or Ajloun, Autours lets you compare trusted car rental deals in one place.",
-      image: "jordan.png",
+      image: "countries/jordan.png",
       benefits: [
         {
           title: "Airport Pickup Across Jordan",
@@ -537,7 +537,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Kuwait with Autours?",
       subtitle: "Explore Kuwait with the freedom to travel on your own schedule. Whether you're arriving at Kuwait International Airport, visiting Kuwait City for business, relaxing in Salmiya, shopping in Hawally, or heading to Mahboula, Fahaheel, Farwaniya, Jahra, Mangaf, or Sabah Al Ahmad Sea City, Autours helps you compare the best airport car rental deals from trusted suppliers.",
-      image: "kuwait.png",
+      image: "countries/kuwait.png",
       benefits: [
         {
           title: "Convenient Airport Pickup",
@@ -601,7 +601,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
     travelInfo: {
       title: "Why Rent a Car in Oman with Autours?",
       subtitle: "Explore Oman on your own schedule with trusted airport car rentals from leading local and international suppliers. Whether you're arriving in Muscat for business, discovering the historic forts of Nizwa, relaxing on the beaches of Salalah, or planning an adventure to Jebel Akhdar, Jebel Shams, Sur, Sohar, Duqm, or Khasab, Autours helps you compare the best rental deals in one place.",
-      image: "oman.png",
+      image: "countries/oman.png",
       benefits: [
         {
           title: "Nationwide Airport Coverage",
@@ -783,16 +783,16 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroBottomTitle: 'Search by Turkey airport and land ready to drive.',
     travelInfo: {
       title: "Why Rent a Car in Turkey with Autours?",
-      subtitle: "Explore Turkey with the freedom to travel on your own schedule. Whether you're arriving in Istanbul, discovering Cappadocia, relaxing in Antalya, or visiting Izmir, Ankara, Dalaman, or Bodrum, Autours helps you compare the best airport car rental deals from trusted suppliers.",
-      image: "countries/turkey.webp",
+      subtitle: "Discover Turkey with the freedom to travel beyond the tourist hotspots. Whether you're exploring the vibrant streets of Istanbul, the fairy chimneys of Cappadocia, the Mediterranean coast of Antalya, the beaches of Bodrum, or the historic cities of Izmir, Ankara, Fethiye, Marmaris, Kuşadası, Trabzon, or Pamukkale, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.\n\nFrom city breaks and coastal escapes to scenic road trips across the Turkish Riviera, enjoy the flexibility to travel at your own pace.",
+      image: "countries/turkey.png",
       benefits: [
         {
-          title: "Convenient Airport Pickup",
-          description: "Collect your rental car directly from major Turkish airports and start your journey without waiting."
+          title: "Airport Pickup Across Turkey",
+          description: "Collect your rental car from major airports, including Istanbul Airport (IST), Sabiha Gökçen Airport (SAW), Antalya Airport (AYT), Izmir Adnan Menderes Airport (ADB), Ankara Esenboğa Airport (ESB), Dalaman Airport (DLM), Milas-Bodrum Airport (BJV), Kayseri Airport (ASR), and many more."
         },
         {
-          title: "Compare the Best Deals",
-          description: "Compare prices from leading local and international car rental companies to find the perfect vehicle."
+          title: "Compare the Best Car Rental Deals",
+          description: "Compare prices from trusted local and international suppliers to find the right vehicle for your holiday, business trip, or road adventure across Turkey."
         },
         {
           title: "Free Cancellation on Most Bookings",
@@ -800,7 +800,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         },
         {
           title: "Instant Booking Confirmation",
-          description: "Reserve your vehicle online in minutes and receive instant confirmation."
+          description: "Book your rental car online in minutes and receive instant confirmation before your flight."
         }
       ]
     },
@@ -820,20 +820,48 @@ export const countryPagesData: Record<string, CountryPageData> = {
     faqs: [
       {
         q: "What is the minimum age to rent a car in Turkey?",
-        a: "The standard minimum age is 21, though luxury categories may require the driver to be 25 years or older."
+        a: "Most rental companies require drivers to be at least 21 years old. Premium vehicles and luxury cars may require drivers to be 25 years or older."
       },
       {
         q: "Do I need a credit card to rent a car in Turkey?",
-        a: "Yes. Most suppliers require a credit card in the main driver's name to hold the security deposit upon vehicle collection."
+        a: "Yes. Most suppliers require a credit card in the main driver's name to cover the refundable security deposit."
       },
       {
         q: "What documents do I need to rent a car in Turkey?",
-        a: "You will typically need a valid national driving license, passport, visa (if tourist), credit card, and an International Driving Permit (IDP) depending on your license origin."
+        a: "You'll usually need a valid driving licence, passport, credit card in the main driver's name, and an International Driving Permit (IDP), if required for your nationality."
+      },
+      {
+        q: "Can tourists rent a car in Turkey?",
+        a: "Yes. International visitors can rent a car with a valid driving licence. Some nationalities may also need an International Driving Permit."
+      },
+      {
+        q: "Which airports can I pick up my rental car from?",
+        a: "Autours offers airport car rentals at major Turkish airports, including Istanbul, Antalya, Izmir, Ankara, Dalaman, Bodrum, Kayseri, Trabzon, Gaziantep, and many more."
+      },
+      {
+        q: "Is driving in Turkey easy for tourists?",
+        a: "Yes. Turkey has an extensive motorway network connecting major cities and tourist destinations. Road signs are clear, and driving is generally straightforward for international visitors."
+      },
+      {
+        q: "Can I drive from Istanbul to Cappadocia or Antalya?",
+        a: "Yes. Renting a car is a popular way to explore Turkey. Many travelers enjoy road trips between Istanbul, Ankara, Cappadocia, Pamukkale, Antalya, Fethiye, Marmaris, Izmir, and Bodrum."
+      },
+      {
+        q: "What type of rental car is best for Turkey?",
+        a: "Economy cars are ideal for city driving, while SUVs offer extra comfort for mountain routes, family holidays, and longer road trips across the country."
+      },
+      {
+        q: "Are unlimited mileage rentals available?",
+        a: "Many suppliers offer unlimited mileage, while others have mileage limits. The mileage policy is always displayed before you complete your booking."
+      },
+      {
+        q: "When should I book my Turkey car rental for the best price?",
+        a: "Booking 2–4 weeks in advance usually gives you the best prices and the widest selection of vehicles, especially during the summer season, public holidays, and school vacations."
       }
     ],
     partnersDescription: "Autours partners with leading car rental providers across Turkey. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Istanbul, Antalya, Izmir, Ankara, and major airports.",
     ctaTitle: "Ready to Explore Turkey?",
-    ctaDescription: "Compare airport car rental deals from trusted suppliers across Istanbul, Antalya, Izmir, Ankara, and other locations. Book in minutes with competitive rates, free cancellation on most rentals, and instant confirmation.",
+    ctaDescription: "Compare airport car rental deals from trusted suppliers across Istanbul, Antalya, Cappadocia, Izmir, Ankara, Bodrum, Dalaman, Fethiye, Marmaris, Trabzon, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation—so you can start exploring Turkey the moment you arrive.",
     ctaPrimaryText: "Search Cars Now",
     ctaSecondaryText: "Contact Support"
   },
@@ -847,24 +875,24 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroBottomTitle: 'Search by Morocco airport and land ready to drive.',
     travelInfo: {
       title: "Why Rent a Car in Morocco with Autours?",
-      subtitle: "Explore Morocco with the freedom to travel on your own schedule. Whether you're arriving in Casablanca, discovering the blue city of Chefchaouen, wandering the souks of Marrakech, or visiting Agadir, Fes, Tangier, or Rabat, Autours helps you compare the best airport car rental deals from trusted suppliers.",
+      subtitle: "Experience Morocco with the freedom to explore beyond the usual tourist routes. Whether you're arriving in Casablanca, discovering the blue streets of Chefchaouen, wandering the vibrant souks of Marrakech, or visiting Fes, Tangier, Rabat, Essaouira, Ouarzazate, Merzouga, or the Atlas Mountains, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.\n\nFrom coastal road trips to desert adventures and imperial city tours, renting a car gives you the flexibility to experience Morocco on your own schedule.",
       image: "countries/morocco.png",
       benefits: [
         {
-          title: "Convenient Airport Pickup",
-          description: "Collect your rental car directly from major Moroccan airports and start your journey without waiting."
+          title: "Airport Pickup Across Morocco",
+          description: "Collect your rental car from major airports, including Mohammed V International Airport (Casablanca), Marrakech Menara Airport, Agadir Al Massira Airport, Fès–Saïss Airport, Tangier Ibn Battuta Airport, Rabat–Salé Airport, Oujda Angads Airport, Nador Airport, and other key locations across Morocco."
         },
         {
-          title: "Compare the Best Deals",
-          description: "Compare prices from leading local and international car rental companies to find the perfect vehicle."
+          title: "Compare the Best Car Rental Deals",
+          description: "Compare offers from trusted local and international rental companies to find the perfect vehicle for city breaks, business trips, family holidays, or scenic road trips across Morocco."
         },
         {
           title: "Free Cancellation on Most Bookings",
-          description: "Enjoy flexible travel plans with free cancellation available on most reservations."
+          description: "Book with confidence thanks to flexible cancellation policies available on most rentals."
         },
         {
           title: "Instant Booking Confirmation",
-          description: "Reserve your vehicle online in minutes and receive instant confirmation."
+          description: "Reserve your rental car online in minutes and receive instant confirmation before you arrive."
         }
       ]
     },
@@ -884,20 +912,48 @@ export const countryPagesData: Record<string, CountryPageData> = {
     faqs: [
       {
         q: "What is the minimum age to rent a car in Morocco?",
-        a: "The standard minimum age is 21, though luxury categories may require the driver to be 25 years or older."
+        a: "Most rental companies require drivers to be at least 21 years old. Some premium vehicles and luxury SUVs may require drivers to be 25 years or older."
       },
       {
         q: "Do I need a credit card to rent a car in Morocco?",
-        a: "Yes. Most suppliers require a credit card in the main driver's name to hold the security deposit upon vehicle collection."
+        a: "Yes. Most suppliers require a credit card in the main driver's name to cover the refundable security deposit when collecting the vehicle."
       },
       {
         q: "What documents do I need to rent a car in Morocco?",
-        a: "You will typically need a valid national driving license, passport, visa (if tourist), credit card, and an International Driving Permit (IDP) depending on your license origin."
+        a: "You'll usually need a valid driving licence, passport, credit card in the main driver's name, International Driving Permit (IDP) if required for your nationality, and a valid visa or entry permit (where applicable)."
+      },
+      {
+        q: "Can tourists rent a car in Morocco?",
+        a: "Yes. International visitors can rent a car using a valid driving licence. Depending on your nationality and the supplier's policy, an International Driving Permit may also be required."
+      },
+      {
+        q: "Which airports can I collect my rental car from?",
+        a: "Autours offers airport car rental at major Moroccan airports, including Casablanca, Marrakech, Agadir, Fes, Tangier, Rabat, Oujda, and other popular destinations."
+      },
+      {
+        q: "Is driving in Morocco easy for tourists?",
+        a: "Yes. Morocco has an extensive road network connecting major cities and tourist attractions. Modern highways make it easy to travel between destinations such as Casablanca, Rabat, Marrakech, Agadir, and Fes."
+      },
+      {
+        q: "Can I drive from Casablanca to Marrakech or Chefchaouen?",
+        a: "Yes. Renting a car is one of the best ways to explore Morocco. Popular road trips include Casablanca, Rabat, Chefchaouen, Fes, Marrakech, Essaouira, Agadir, Merzouga, and the Atlas Mountains."
+      },
+      {
+        q: "What type of rental car is best for Morocco?",
+        a: "Economy cars are ideal for city travel and highways, while SUVs are recommended for mountain roads, desert excursions, and longer journeys through the Atlas Mountains or to Merzouga."
+      },
+      {
+        q: "Are unlimited mileage rentals available?",
+        a: "Many suppliers offer unlimited mileage, while others apply mileage limits. You'll always see the mileage policy before confirming your reservation."
+      },
+      {
+        q: "When should I book my Morocco car rental for the best price?",
+        a: "Booking 2–4 weeks in advance usually gives you the best prices and the widest choice of vehicles, especially during spring, summer holidays, Christmas, and other peak travel seasons."
       }
     ],
     partnersDescription: "Autours partners with leading car rental providers across Morocco. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Casablanca, Marrakech, Agadir, Tangier, and major airports.",
     ctaTitle: "Ready to Explore Morocco?",
-    ctaDescription: "Compare airport car rental deals from trusted suppliers across Casablanca, Marrakech, Agadir, Tangier, and other locations. Book in minutes with competitive rates, free cancellation on most rentals, and instant confirmation.",
+    ctaDescription: "Compare airport car rental deals from trusted suppliers across Casablanca, Marrakech, Agadir, Fes, Tangier, Rabat, Chefchaouen, Essaouira, Ouarzazate, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation—so you can start discovering Morocco the moment you arrive.",
     ctaPrimaryText: "Search Cars Now",
     ctaSecondaryText: "Contact Support"
   }

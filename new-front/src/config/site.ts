@@ -7,7 +7,7 @@ export const siteConfig = {
     phone: '+965 6048 0382',
     phoneVal: '+96560480382',
     whatsapp: 'https://wa.me/96560480382',
-    address: 'Dubai, United Arab Emirates',
+    address: '',
   },
   socials: {
     facebook: 'https://www.facebook.com/people/Autours/61560740824598/?_rdc=1&_rdr#',

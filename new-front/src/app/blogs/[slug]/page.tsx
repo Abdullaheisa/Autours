@@ -20,13 +20,13 @@ async function getBlogBySlugOrId(slug: string) {
   try {
     let res = await fetch(`${SERVER_API_BASE}/blogs/slug/${slug}`, {
       headers: { 'Accept': 'application/json' },
-      next: { revalidate: 3600 } // Enable ISR
+      cache: 'no-store'
     });
 
     if (!res.ok) {
       res = await fetch(`${SERVER_API_BASE}/blogs/${slug}`, {
         headers: { 'Accept': 'application/json' },
-        next: { revalidate: 3600 } // Enable ISR
+        cache: 'no-store'
       });
     }
 

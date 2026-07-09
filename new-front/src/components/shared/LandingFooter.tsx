@@ -79,10 +79,21 @@ export default function LandingFooter() {
               Follow us on social media for exclusive offers and updates.
             </p>
             <div className="flex gap-3">
-              {[Facebook, Instagram, Linkedin, Twitter].map((Icon, i) => (
-                <Link key={i} href="#" className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-black hover:scale-110 transition-all shadow-xl shadow-black/10">
+              {[
+                { Icon: Facebook, href: siteConfig.socials.facebook },
+                { Icon: Instagram, href: siteConfig.socials.instagram },
+                { Icon: Linkedin, href: siteConfig.socials.linkedin },
+                { Icon: Twitter, href: siteConfig.socials.x },
+              ].map(({ Icon, href }, i) => (
+                <a 
+                  key={i} 
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-black hover:scale-110 transition-all shadow-xl shadow-black/10"
+                >
                   <Icon size={20} />
-                </Link>
+                </a>
               ))}
             </div>
           </div>

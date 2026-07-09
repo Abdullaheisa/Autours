@@ -7,65 +7,66 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Data - move to contactData.ts
-const contactInfoData = [
-  {
-    icon: Mail,
-    label: 'Email Us',
-    labelAr: 'راسلنا',
-    value: 'info@autours.net',
-    href: 'mailto:info@autours.net',
-  },
-  {
-    icon: Phone,
-    label: 'Call Us',
-    labelAr: 'اتصل بنا',
-    value: '361-688-5824',
-    href: 'tel:+13616885824',
-  },
-  {
-    icon: MapPin,
-    label: 'Our Location',
-    labelAr: 'موقعنا',
-    value: '4826 White Avenue, Corpus Christi, Texas',
-    href: 'https://maps.google.com/?q=4826+White+Avenue,+Corpus+Christi,+Texas',
-  },
-];
-
-const socialLinksData = [
-  {
-    name: 'X (Twitter)',
-    icon: Twitter,
-    url: 'https://x.com/Autours_',
-    color: '#000000',
-  },
-  {
-    name: 'LinkedIn',
-    icon: Linkedin,
-    url: 'https://www.linkedin.com/company/autours/',
-    color: '#0A66C2',
-  },
-  {
-    name: 'Facebook',
-    icon: Facebook,
-    url: 'https://web.facebook.com/people/Autours/61560740824598/',
-    color: '#1877F2',
-  },
-  {
-    name: 'Instagram',
-    icon: Instagram,
-    url: 'https://www.instagram.com/autours_/',
-    color: '#E4405F',
-  },
-];
+import { siteConfig } from '@/config/site';
 
 export default function Contact() {
   const [hoveredSocial, setHoveredSocial] = useState<number | null>(null);
   const [emailHref, setEmailHref] = useState('javascript:void(0)');
 
   useEffect(() => {
-    setEmailHref('mailto:' + ['info', 'autours.net'].join('@'));
+    setEmailHref('mailto:' + siteConfig.contact.email);
   }, []);
+
+  const contactInfoData = [
+    {
+      icon: Mail,
+      label: 'Email Us',
+      labelAr: 'راسلنا',
+      value: siteConfig.contact.email,
+      href: `mailto:${siteConfig.contact.email}`,
+    },
+    {
+      icon: Phone,
+      label: 'Call Us',
+      labelAr: 'اتصل بنا',
+      value: siteConfig.contact.phone,
+      href: `tel:${siteConfig.contact.phoneVal}`,
+    },
+    {
+      icon: MapPin,
+      label: 'Our Location',
+      labelAr: 'موقعنا',
+      value: siteConfig.contact.address,
+      href: `https://maps.google.com/?q=${encodeURIComponent(siteConfig.contact.address)}`,
+    },
+  ];
+
+  const socialLinksData = [
+    {
+      name: 'X (Twitter)',
+      icon: Twitter,
+      url: siteConfig.socials.x,
+      color: '#000000',
+    },
+    {
+      name: 'LinkedIn',
+      icon: Linkedin,
+      url: siteConfig.socials.linkedin,
+      color: '#0A66C2',
+    },
+    {
+      name: 'Facebook',
+      icon: Facebook,
+      url: siteConfig.socials.facebook,
+      color: '#1877F2',
+    },
+    {
+      name: 'Instagram',
+      icon: Instagram,
+      url: siteConfig.socials.instagram,
+      color: '#E4405F',
+    },
+  ];
 
   return (
     <section id="contact" className="relative overflow-hidden bg-white w-full">

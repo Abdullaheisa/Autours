@@ -27,8 +27,8 @@ const initialState: ContentState = {
   cinemaBanner: 'https://images.unsplash.com/photo-1517604412417-af920252538b?w=1920&q=80',
   contactInfo: {
     email: 'info@autours.net',
-    phone: '361-688-5824',
-    address: '4826 White Avenue, Corpus Christi, Texas',
+    phone: '+965 6048 0382',
+    address: 'Dubai, United Arab Emirates',
   },
   seo: {
     homeTitle: 'Autours | Premium Car Rental Aggregator',
