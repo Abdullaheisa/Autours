@@ -267,8 +267,9 @@ class SyncAllmeetVehicles extends Command
 
             if (!$branchHasVehicles) {
                 if (!$this->option('dry-run')) {
-                    Vehicle::where('pickup_loc', $branch->id)->where('supplier', $supplierUserId)->delete();
-                    $branch->delete();
+                    // Do not delete branch or vehicles just because API returned 0 results for a specific date
+                    // Vehicle::where('pickup_loc', $branch->id)->where('supplier', $supplierUserId)->delete();
+                    // $branch->delete();
                 }
             }
             $progress->advance();
