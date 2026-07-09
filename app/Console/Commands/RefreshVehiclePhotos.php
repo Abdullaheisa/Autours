@@ -36,8 +36,8 @@ class RefreshVehiclePhotos extends Command
         $csvFile = fopen($reportPath, 'w');
         fputcsv($csvFile, ['Vehicle ID', 'Vehicle Name', 'Supplier ID', 'Pickup Loc', 'Old Photo', 'New Photo', 'Status']);
 
-        // Fetch only vehicles that were created via sync (they contain GROUP-ID in description)
-        $vehicles = Vehicle::where('description', 'like', '%GROUP-ID%')->get();
+        // Fetch all vehicles across all suppliers to refresh their local photos from VehiclesPhotos mapping
+        $vehicles = Vehicle::all();
         $updatedCount = 0;
         $unchangedCount = 0;
         $notFoundCount = 0;

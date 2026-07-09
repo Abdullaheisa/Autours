@@ -34,6 +34,14 @@ trait ResolvesLocalVehiclePhoto
             }
         }
 
+        // If still no match, check if the database name substring matches inside the vehicle name (reverse check)
+        if ($photo === null) {
+            $photo = VehiclesPhotos::query()
+                ->whereRaw('? LIKE CONCAT(\'%\', LOWER(name), \'%\')', [$lowerName])
+                ->whereRaw('LENGTH(name) >= 4') // prevent very short generic names from false matching
+                ->first();
+        }
+
 
         return $photo ? $photo->photo : null;
     }
