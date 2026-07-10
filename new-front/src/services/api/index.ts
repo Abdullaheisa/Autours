@@ -1,5 +1,16 @@
-import { apiClient } from "./axiosClient";
+import { apiClient, cleanPayload } from "./axiosClient";
+import { vehicleMapper } from "../mappers/vehicleMapper";
+import { 
+  Vehicle, 
+  SearchPayload, 
+  FilterPayload, 
+  FilterResponse, 
+  LocationBranch 
+} from '@/types';
 
+// Cache structures to prevent HTTP 429 Rate Limiting (Too Many Attempts)
+let memoryLocationsCache: LocationBranch[] | null = null;
+const memoryCountryLocationsCache: Record<string, LocationBranch[]> = {};
 // Blog API - uses /api/blogs endpoints
 export const blogApi = {
   getAll: () => apiClient.get("/api/blogs?per_page=1000"),
@@ -250,13 +261,217 @@ export const uploadApi = {
   uploadProfile: (data: unknown) => apiClient.post("/upload", data),
 };
 
+// Vehicle API
+export const vehicleApi = {
+  search: async (payload: SearchPayload) => {
+    return apiClient.post('/search/vehicles', cleanPayload(payload as any));
+  },
+
+  filter: async (payload: FilterPayload): Promise<FilterResponse> => {
+    const response = await apiClient.post<any>('/filter/vehicles', cleanPayload(payload as any));
+
+    return {
+      filteredVehicles: vehicleMapper.toLocalList(response.filteredVehicles || []),
+      count: response.count || 0,
+      daysNumber: response.daysNumber || 0,
+      max: response.max || 0,
+      min: response.min || 0,
+      filteredCategories: (response.filteredCategories || []).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        photo: c.photo || '',
+        vehicle_count: c.vehicle_count ?? c.pivot?.vehicle_count ?? 0,
+      })),
+      filteredSuppliers: (response.filteredSuppliers || []).map((s: any) => ({
+        id: s.id,
+        name: s.company || s.name,
+        logo: s.logo || '',
+        vehicle_count: s.vehicle_count ?? 0,
+      })),
+      current_page: response.current_page || 1,
+      last_page: response.last_page || response.total_pages || 1,
+      total: response.total || response.count || 0,
+    };
+  },
+
+  getLocations: async (): Promise<LocationBranch[]> => {
+    try {
+      if (memoryLocationsCache) {
+        return memoryLocationsCache;
+      }
+      if (typeof window !== 'undefined') {
+        const cached = sessionStorage.getItem('autours_locations');
+        if (cached) {
+          memoryLocationsCache = JSON.parse(cached);
+          return memoryLocationsCache!;
+        }
+      }
+
+      const data = await apiClient.get<any[]>('/get/locations');
+      const mapped = (data || []).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name || '',
+        location: loc.location || '',
+        country: loc.country || '',
+        adresse: loc.adresse || loc.location_address || '',
+        location_address: loc.location_address || loc.adresse || '',
+        location_type: loc.location_type || '',
+        abriviation: loc.abriviation || loc.abbreviation || '',
+        min_price: loc.min_price != null ? Number(loc.min_price) : null,
+        currency: loc.currency || '',
+        airport_id: loc.airport_id || null,
+        company: loc.company || null,
+      }));
+
+      memoryLocationsCache = mapped;
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('autours_locations', JSON.stringify(mapped));
+      }
+      return mapped;
+    } catch (err) {
+      console.error('[LOCATIONS ERROR]', err);
+      return [];
+    }
+  },
+
+  getLocationsByCountry: async (country: string): Promise<LocationBranch[]> => {
+    try {
+      const countryKey = country.toLowerCase().trim();
+      if (memoryCountryLocationsCache[countryKey]) {
+        return memoryCountryLocationsCache[countryKey];
+      }
+      if (typeof window !== 'undefined') {
+        const cached = sessionStorage.getItem(`autours_locations_${countryKey}`);
+        if (cached) {
+          memoryCountryLocationsCache[countryKey] = JSON.parse(cached);
+          return memoryCountryLocationsCache[countryKey];
+        }
+      }
+
+      const data = await apiClient.get<any[]>(`/get/locations/country/${country}`);
+      const mapped = (data || []).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name || '',
+        location: loc.location || '',
+        country: loc.country || '',
+        adresse: loc.adresse || loc.location_address || '',
+        location_address: loc.location_address || loc.adresse || '',
+        location_type: loc.location_type || '',
+        abriviation: loc.abriviation || loc.abbreviation || '',
+        min_price: loc.min_price != null ? Number(loc.min_price) : null,
+        currency: loc.currency || '',
+        airport_id: loc.airport_id || null,
+        company: loc.company || null,
+      }));
+
+      memoryCountryLocationsCache[countryKey] = mapped;
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`autours_locations_${countryKey}`, JSON.stringify(mapped));
+      }
+      return mapped;
+    } catch (err) {
+      console.error('[LOCATIONS BY COUNTRY ERROR]', err);
+      return [];
+    }
+  },
+
+  getVehicleData: async (payload: { id: number; location: string; date_from: string; date_to: string; currency: string }) => {
+    const response = await apiClient.post<any>('/get/vehicle/data', cleanPayload(payload as any));
+    return response;
+  },
+
+  getCheapestVehicles: async () => {
+    const response = await apiClient.get<any>('/get/cheapest-vehicle');
+    return response;
+  },
+};
+
+// Supplier API types
+export interface LoginRequest {
+  email: string;
+  password?: string;
+}
+
+export interface ProfileResponse {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  company_name?: string;
+  integration?: boolean;
+  webhook_url?: string;
+  created_at?: string;
+}
+
+export interface VehicleListResponse {
+  data: any[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
+
+export interface RentalListResponse {
+  data: any[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
+
 // Supplier Specific API
 export const supplierApi = {
-  getProfile: () => apiClient.get("/api/external/supplier/profile"),
-  getRentals: (params?: any) => apiClient.get("/api/external/supplier/rentals", { params }),
-  getIncluded: () => apiClient.get("/api/external/supplier/included"),
-  getCategories: () => apiClient.get("/api/external/supplier/categories"),
-  getFuelPolicies: () => apiClient.get("/api/external/supplier/fuel-policies"),
-  getLocationTypes: () => apiClient.get("/api/external/supplier/location-types"),
-  getBranches: () => apiClient.get("/api/external/supplier/branches"),
+  login: (data: LoginRequest) => apiClient.post('/api/external/supplier/login', data),
+  logout: () => apiClient.post('/api/external/supplier/logout', {}),
+
+  getProfile: () => apiClient.get<ProfileResponse>('/api/external/supplier/profile'),
+
+  updateIntegrationSettings: (data: { integration: boolean; webhook_url?: string }) =>
+    apiClient.put('/api/external/supplier/integration-settings', data),
+
+  getVehicles: (page: number = 1, perPage: number = 15, filters?: { branch_id?: string; country?: string; search?: string; address?: string }) => {
+    let url = `/api/external/supplier/vehicles?page=${page}&per_page=${perPage}`;
+    if (filters?.branch_id) url += `&branch_id=${filters.branch_id}`;
+    if (filters?.country)   url += `&country=${encodeURIComponent(filters.country)}`;
+    if (filters?.search)    url += `&search=${encodeURIComponent(filters.search)}`;
+    if (filters?.address)   url += `&address=${encodeURIComponent(filters.address)}`;
+    return apiClient.get<VehicleListResponse>(url);
+  },
+
+  createVehicle: (data: FormData | any) => {
+    return apiClient.post('/api/external/supplier/vehicles', cleanPayload(data));
+  },
+
+  deleteVehicle: (id: number) => apiClient.delete(`/api/external/supplier/vehicles/${id}`),
+
+  toggleVehicleActivation: (id: number, activation: boolean) => apiClient.post('/api/external/supplier/vehicles/toggle-activation', { vehicle_id: id, activation }),
+
+  updateVehiclePrice: (vehicleId: number, data: { price?: number; week_price?: number; month_price?: number }) =>
+    apiClient.put(`/api/external/supplier/vehicles/${vehicleId}/price`, cleanPayload(data)),
+
+  getRentals: (page: number = 1, perPage: number = 15, hasReview?: boolean) => {
+    let url = `/api/external/supplier/rentals?page=${page}&per_page=${perPage}`;
+    if (hasReview) url += `&has_review=true`;
+    return apiClient.get<RentalListResponse>(url);
+  },
+
+  getCategories: () => apiClient.get('/api/external/supplier/categories'),
+  getBranches: () => apiClient.get('/api/external/supplier/branches'),
+  getFuelPolicies: () => apiClient.get('/api/external/supplier/fuel-policies'),
+  getLocationTypes: () => apiClient.get('/api/external/supplier/location-types'),
+  getIncluded: () => apiClient.get('/api/external/supplier/included'),
+  getRentalTerms: () => apiClient.get('/get/rental-terms'),
+  selectRentalTerm: (rental_term_id: number) => apiClient.post('/select-rental-terms', { rental_term_id }),
+  getPaymentMethods: () => apiClient.get('/get/payment_methods'),
+  updatePaymentMethods: (payment_methods: number[]) => apiClient.post('/payment_methods', { selectedMethodId: payment_methods[0] }),
+  getPromos: (includedId?: number) => {
+    let url = '/api/supplier/promo';
+    if (includedId !== undefined) {
+      url += `?included_id=${includedId}`;
+    }
+    return apiClient.get(url);
+  },
+  createPromo: (data: { vehicle_id?: number, selected_vehicles?: string, included_id: number }) => apiClient.post('/api/supplier/promo', data),
+  deletePromo: (id: number) => apiClient.delete(`/api/supplier/promo/${id}`),
+  requestMembership: () => apiClient.post('/post/request', {}),
+  getRole: () => apiClient.get<string>('/get/user/role'),
 };
