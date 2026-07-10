@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { loginThunk } from '@/store/slices/authSlice';
+import { loginThunk, restoreAuth } from '@/store/slices/authSlice';
 import { getPostLoginPath } from '@/utils/auth';
 import { AppDispatch, RootState } from '@/store';
+import { axiosClient } from '@/services/api/axiosClient';
 import Link from 'next/link';
 import { Mail, Lock, Loader2, ArrowRight, Car, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -24,18 +25,56 @@ export default function LoginPage() {
 
   const emailParam = searchParams.get('email');
   const passwordParam = searchParams.get('password');
+  const impersonateToken = searchParams.get('impersonate_token');
+  const impersonateUserJson = searchParams.get('user');
 
   useEffect(() => {
-    if (emailParam) {
+    if (impersonateToken && impersonateUserJson) {
+      const runImpersonate = async () => {
+        try {
+          const userObj = JSON.parse(impersonateUserJson);
+
+          // Clear old sessionStorage (leave localStorage intact so Admin session is untouched!)
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+
+          // Write new session to sessionStorage
+          sessionStorage.setItem('token', impersonateToken);
+          sessionStorage.setItem('user', JSON.stringify(userObj));
+          sessionStorage.setItem('isImpersonated', 'true');
+
+          // Set Bearer token on axiosClient globally
+          axiosClient.defaults.headers.common['Authorization'] = `Bearer ${impersonateToken}`;
+
+          // Dispatch restoreAuth so Redux state is hydrated immediately
+          dispatch(restoreAuth());
+
+          toast.success('Successfully logged in as supplier!');
+
+          // Redirect to the supplier dashboard
+          setTimeout(() => {
+            router.replace(getPostLoginPath(userObj.role));
+          }, 100);
+        } catch (err) {
+          console.error('Impersonation handling error:', err);
+          toast.error('Failed to parse impersonation data.');
+        }
+      };
+      runImpersonate();
+    }
+  }, [impersonateToken, impersonateUserJson, dispatch, router]);
+
+  useEffect(() => {
+    if (emailParam && !impersonateToken) {
       setEmail(emailParam);
     }
-    if (passwordParam) {
+    if (passwordParam && !impersonateToken) {
       setPassword(passwordParam);
     }
-  }, [emailParam, passwordParam]);
+  }, [emailParam, passwordParam, impersonateToken]);
 
   useEffect(() => {
-    if (emailParam && passwordParam) {
+    if (emailParam && passwordParam && !impersonateToken) {
       const autoSubmit = async () => {
         // Wait a brief moment to show the auto-filled credentials (great UX)
         await new Promise((resolve) => setTimeout(resolve, 800));
@@ -49,17 +88,17 @@ export default function LoginPage() {
       };
       autoSubmit();
     }
-  }, [emailParam, passwordParam, dispatch, router]);
+  }, [emailParam, passwordParam, impersonateToken, dispatch, router]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedEmail = localStorage.getItem('rememberedEmail');
-      if (savedEmail && !emailParam) {
+      if (savedEmail && !emailParam && !impersonateToken) {
         setEmail(savedEmail);
         setRememberMe(true);
       }
     }
-  }, [emailParam]);
+  }, [emailParam, impersonateToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

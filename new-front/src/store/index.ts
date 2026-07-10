@@ -23,8 +23,13 @@ import { axiosClient } from "@/services/api/axiosClient";
 // that happened when fetchDashboard / fetchNotifications fired before the
 // restoreAuth action had a chance to run.
 if (typeof window !== "undefined") {
-  const token =
-    localStorage.getItem("token") || sessionStorage.getItem("token");
+  let token = null;
+  if (sessionStorage.getItem("isImpersonated") === "true") {
+    token = sessionStorage.getItem("token");
+  }
+  if (!token) {
+    token = localStorage.getItem("token") || sessionStorage.getItem("token");
+  }
   if (token) {
     axiosClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   }

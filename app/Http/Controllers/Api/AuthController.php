@@ -177,4 +177,50 @@ class AuthController extends Controller
             ], StatusCodes::SUCCESS);
         }
     }
+
+    /**
+     * Securely impersonate a supplier/user. Only accessible to administrators.
+     */
+    public function impersonate(Request $request, $userId): JsonResponse
+    {
+        $admin = $request->user();
+        if (!$admin || $admin->role !== 'admin') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized. Only administrators can impersonate.',
+            ], StatusCodes::UNAUTHORIZED);
+        }
+
+        try {
+            $user = User::findOrFail($userId);
+
+            // Create Sanctum Plain Text Token for the impersonated user
+            $token = $user->createToken('API_TOKEN')->plainTextToken;
+
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'logo' => $user->logo,
+                'phone_num' => $user->phone_num,
+                'country' => $user->country,
+            ];
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Impersonation successful.',
+                'token' => $token,
+                'user' => $userData,
+                'data' => $userData,
+            ], StatusCodes::SUCCESS);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Server error during impersonation.',
+                'error' => $e->getMessage(),
+            ], StatusCodes::SERVER_ERROR);
+        }
+    }
 }

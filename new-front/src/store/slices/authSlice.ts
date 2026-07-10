@@ -188,12 +188,24 @@ const authSlice = createSlice({
   reducers: {
     restoreAuth: (state) => {
       if (typeof window !== 'undefined') {
-        let token = localStorage.getItem('token');
-        let userRaw = localStorage.getItem('user');
+        let token = null;
+        let userRaw = null;
+
+        // If this tab is impersonating, we MUST use sessionStorage to avoid conflicting with admin session in localStorage
+        if (sessionStorage.getItem('isImpersonated') === 'true') {
+          token = sessionStorage.getItem('token');
+          userRaw = sessionStorage.getItem('user');
+        }
+
+        if (!token || !userRaw) {
+          token = localStorage.getItem('token');
+          userRaw = localStorage.getItem('user');
+        }
         if (!token || !userRaw) {
           token = sessionStorage.getItem('token');
           userRaw = sessionStorage.getItem('user');
         }
+
         if (token && userRaw) {
           const parsed = JSON.parse(userRaw) as User;
           state.token = token;
@@ -214,10 +226,16 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
+        if (sessionStorage.getItem('isImpersonated') === 'true') {
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('isImpersonated');
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+        }
       }
     },
     updateUser: (state, action: PayloadAction<User>) => {

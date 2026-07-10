@@ -93,7 +93,7 @@ unicode-range: U+0000-002F, U+003A-FFFD;
    2. HubotSans      → كل الحروف (إنجليزي + عربي fallback)
    3. var(--font-tajawal) → عربي (Next.js fallback)
    4. system-ui      → fallback نهائي */
-*, *::before, *::after {
+body, html, button, input, select, textarea, .default-font {
   font-family: 'TajawalNumbers', 'HubotSans', var(--font-tajawal), system-ui, sans-serif;
 }
 
@@ -245,10 +245,25 @@ unicode-range: U+0000-002F, U+003A-FFFD;
   margin: 0.5rem 0;
 }
 
-.rich-text-editor__body a {
-  color: #2563eb;
-  text-decoration: underline;
+.rich-text-editor__body font[size="1"] { font-size: 0.75rem; }
+.rich-text-editor__body font[size="2"] { font-size: 0.875rem; }
+.rich-text-editor__body font[size="3"] { font-size: 1rem; }
+.rich-text-editor__body font[size="4"] { font-size: 1.25rem; }
+.rich-text-editor__body font[size="5"] { font-size: 1.5rem; }
+.rich-text-editor__body font[size="6"] { font-size: 1.875rem; }
+.rich-text-editor__body font[size="7"] { font-size: 2.25rem; }
+
+.rich-text-editor__body font[face] {
+  font-family: attr(face);
 }
+/* Explicit font-family utility overrides inside editor */
+.rich-text-editor__body font[face="Arial"] { font-family: Arial, sans-serif; }
+.rich-text-editor__body font[face="Inter"] { font-family: 'Inter', sans-serif; }
+.rich-text-editor__body font[face="Outfit"] { font-family: 'Outfit', sans-serif; }
+.rich-text-editor__body font[face="Times New Roman"] { font-family: 'Times New Roman', Times, serif; }
+.rich-text-editor__body font[face="Georgia"] { font-family: Georgia, serif; }
+.rich-text-editor__body font[face="Courier New"] { font-family: 'Courier New', Courier, monospace; }
+.rich-text-editor__body font[face="Tahoma"] { font-family: Tahoma, sans-serif; }
 
 /* no-scrollbar: hide scrollbar but allow scrolling */
 .no-scrollbar::-webkit-scrollbar {

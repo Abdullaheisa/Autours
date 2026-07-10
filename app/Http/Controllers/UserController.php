@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Hash;
 use App\Services\BranchNormalizationService;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {

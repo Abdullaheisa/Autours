@@ -1,6 +1,8 @@
 "use client";
 
 import { ExternalLink, ShieldCheck, Clock } from "lucide-react";
+import { apiClient } from "@/services/api/axiosClient";
+import toast from "react-hot-toast";
 
 interface CompanyDetailsSidebarProps {
   company: any;
@@ -30,8 +32,33 @@ export default function CompanyDetailsSidebar({ company }: CompanyDetailsSidebar
           </div>
         </div>
         <button 
-          onClick={() => {
-            window.open(`/login?email=${encodeURIComponent(company.email)}&password=0000`, '_blank');
+          onClick={async () => {
+            const loadId = toast.loading("Connecting to supplier dashboard...");
+            try {
+              const res: any = await apiClient.post(`/admin/impersonate/${company.id}`, {});
+              if (res && (res.status === true || res.status === 'true')) {
+                toast.dismiss(loadId);
+                const token = res.token;
+                const userObj = {
+                  id: res.user.id?.toString() || '1',
+                  name: res.user.user_name || res.user.name || company.email,
+                  email: res.user.email || company.email,
+                  role: res.user.role || 'supplier',
+                  status: res.user.role || 'supplier',
+                  avatar: res.user.logo || undefined,
+                  logo: res.user.logo || undefined,
+                };
+                const url = `/login?impersonate_token=${token}&user=${encodeURIComponent(JSON.stringify(userObj))}`;
+                window.open(url, '_blank');
+              } else {
+                toast.dismiss(loadId);
+                toast.error(res?.message || 'Impersonation failed.');
+              }
+            } catch (e: any) {
+              toast.dismiss(loadId);
+              console.error(e);
+              toast.error(e.response?.data?.message || 'Failed to impersonate supplier.');
+            }
           }}
           className="w-full mt-6 flex items-center justify-center gap-2 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
         >

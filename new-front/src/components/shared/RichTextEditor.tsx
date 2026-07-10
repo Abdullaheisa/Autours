@@ -59,6 +59,10 @@ export default function RichTextEditor({
 
   const [isSourceMode, setIsSourceMode] = useState(false);
 
+  const [currentBlock, setCurrentBlock] = useState('p');
+  const [currentFont, setCurrentFont] = useState('Arial');
+  const [currentSize, setCurrentSize] = useState('3');
+
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageAlt, setImageAlt] = useState('');
@@ -99,6 +103,29 @@ export default function RichTextEditor({
       insertUnorderedList: document.queryCommandState('insertUnorderedList'),
       insertOrderedList: document.queryCommandState('insertOrderedList'),
     });
+
+    try {
+      const block = document.queryCommandValue('formatBlock');
+      if (block) {
+        const cleanBlock = block.replace(/[<>]/g, '').toLowerCase();
+        setCurrentBlock(cleanBlock || 'p');
+      }
+    } catch (e) {}
+
+    try {
+      const font = document.queryCommandValue('fontName');
+      if (font) {
+        const cleanFont = font.replace(/['"]/g, '');
+        setCurrentFont(cleanFont || 'Arial');
+      }
+    } catch (e) {}
+
+    try {
+      const size = document.queryCommandValue('fontSize');
+      if (size) {
+        setCurrentSize(size.toString() || '3');
+      }
+    } catch (e) {}
   }, [saveSelection]);
 
   useEffect(() => {
@@ -136,7 +163,9 @@ export default function RichTextEditor({
   };
 
   const handleFormatBlock = (tag: string) => {
-    runCommand('formatBlock', tag);
+    setCurrentBlock(tag);
+    const blockTag = tag.startsWith('<') ? tag : `<${tag.toUpperCase()}>`;
+    runCommand('formatBlock', blockTag);
   };
 
   const handleLink = () => {
@@ -221,9 +250,8 @@ export default function RichTextEditor({
       <div className="bg-gray-50 px-3 py-2 flex flex-wrap items-center gap-1 border-b border-gray-200">
         <select
           className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 cursor-pointer font-medium"
-          defaultValue="p"
+          value={currentBlock}
           onChange={(e) => handleFormatBlock(e.target.value)}
-          onMouseDown={(e) => e.preventDefault()}
         >
           <option value="p">Paragraph</option>
           <option value="h1">Heading 1</option>
@@ -233,9 +261,12 @@ export default function RichTextEditor({
 
         <select
           className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 cursor-pointer font-medium max-w-[120px]"
-          defaultValue="Arial"
-          onChange={(e) => runCommand('fontName', e.target.value)}
-          onMouseDown={(e) => e.preventDefault()}
+          value={currentFont}
+          onChange={(e) => {
+            const font = e.target.value;
+            setCurrentFont(font);
+            runCommand('fontName', font);
+          }}
         >
           <option value="Arial">Arial</option>
           <option value="Inter">Inter</option>
@@ -248,9 +279,12 @@ export default function RichTextEditor({
 
         <select
           className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 cursor-pointer font-medium max-w-[110px]"
-          defaultValue="3"
-          onChange={(e) => runCommand('fontSize', e.target.value)}
-          onMouseDown={(e) => e.preventDefault()}
+          value={currentSize}
+          onChange={(e) => {
+            const size = e.target.value;
+            setCurrentSize(size);
+            runCommand('fontSize', size);
+          }}
         >
           <option value="2">Small</option>
           <option value="3">Normal</option>
