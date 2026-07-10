@@ -53,9 +53,8 @@ export default function CompaniesSection() {
       const mapped = rawData.map((user: any) => {
         const role = user.role || 'supplier';
         let status = 'active';
-        if (role === 'under_review') status = 'pending';
-        else if (role === 'suspended') status = 'suspended';
-        else if (role === 'inactive') status = 'inactive';
+        if (role === 'under_review' || role === 'supplier') status = 'pending';
+        else if (role === 'suspended' || role === 'suspended_supplier') status = 'suspended';
         
         return {
           id: user.id,

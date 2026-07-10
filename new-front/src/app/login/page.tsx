@@ -22,15 +22,44 @@ export default function LoginPage() {
   const isRegistered = searchParams.get('registered') === 'true';
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
+  const emailParam = searchParams.get('email');
+  const passwordParam = searchParams.get('password');
+
+  useEffect(() => {
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+    if (passwordParam) {
+      setPassword(passwordParam);
+    }
+  }, [emailParam, passwordParam]);
+
+  useEffect(() => {
+    if (emailParam && passwordParam) {
+      const autoSubmit = async () => {
+        // Wait a brief moment to show the auto-filled credentials (great UX)
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const result = await dispatch(loginThunk({ email: emailParam, password: passwordParam, rememberMe: false }));
+        if (loginThunk.fulfilled.match(result)) {
+          toast.success('Auto login successful!');
+          router.replace(getPostLoginPath(result.payload.user.role));
+        } else {
+          toast.error(result.payload as string || 'Auto login failed');
+        }
+      };
+      autoSubmit();
+    }
+  }, [emailParam, passwordParam, dispatch, router]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedEmail = localStorage.getItem('rememberedEmail');
-      if (savedEmail) {
+      if (savedEmail && !emailParam) {
         setEmail(savedEmail);
         setRememberMe(true);
       }
     }
-  }, []);
+  }, [emailParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

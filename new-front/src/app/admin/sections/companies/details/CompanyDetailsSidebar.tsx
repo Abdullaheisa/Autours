@@ -29,7 +29,12 @@ export default function CompanyDetailsSidebar({ company }: CompanyDetailsSidebar
             <span className="text-sm font-medium text-gray-900">Active Supplier</span>
           </div>
         </div>
-        <button className="w-full mt-6 flex items-center justify-center gap-2 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+        <button 
+          onClick={() => {
+            window.open(`/login?email=${encodeURIComponent(company.email)}&password=0000`, '_blank');
+          }}
+          className="w-full mt-6 flex items-center justify-center gap-2 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+        >
           <ExternalLink size={16} />
           Visit Website
         </button>

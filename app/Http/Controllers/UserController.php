@@ -190,19 +190,34 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        if ($user->role == 'admin') {
-            return User::query()
-                ->whereIn('role', ['active_supplier', 'under_review'])
-                ->with(['parent'])
-                ->withCount(['vehicles', 'rentals'])
-                ->get();
-        } else {
-            return User::query()
-                ->whereIn('role', ['active_supplier', 'under_review'])
-                ->where('parent_company_id', $user->id)
-                ->withCount(['vehicles', 'rentals'])
-                ->get();
+        $query = User::query()
+            ->whereIn('role', ['active_supplier', 'supplier', 'under_review', 'suspended_supplier']);
+
+        if ($user->role != 'admin') {
+            $query->where('parent_company_id', $user->id);
         }
+
+        $companies = $query->with(['parent'])
+            ->withCount(['vehicles'])
+            ->get();
+
+        // Calculate real rental stats, revenue, and average ratings from database
+        $stats = DB::table('rentals')
+            ->select('supplier_id')
+            ->selectRaw('count(*) as bookings_count')
+            ->selectRaw('avg(rate) as average_rating')
+            ->selectRaw("sum(case when order_status in (2, 7) then (case when supplier_price > 0 then supplier_price else price end) else 0 end) as total_revenue")
+            ->groupBy('supplier_id')
+            ->get()
+            ->keyBy('supplier_id');
+
+        return $companies->map(function($company) use ($stats) {
+            $companyStats = $stats->get($company->id);
+            $company->rentals_count = $companyStats ? (int) $companyStats->bookings_count : 0;
+            $company->revenue = $companyStats ? (float) $companyStats->total_revenue : 0.0;
+            $company->rating = $companyStats && $companyStats->average_rating !== null ? round((float) $companyStats->average_rating, 2) : 0.0;
+            return $company;
+        });
     }
 
     public function getLogos()
