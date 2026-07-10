@@ -74,7 +74,7 @@ export default function PartnersBanner({
                   alt={`${partner.name} logo`}
                   fill
                   sizes="(max-width: 768px) 112px, 128px"
-                  className="object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                  className="object-contain opacity-60 hover:opacity-100 transition-all duration-300"
                 />
               </div>
             </div>

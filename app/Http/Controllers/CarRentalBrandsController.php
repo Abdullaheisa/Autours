@@ -210,10 +210,20 @@ class CarRentalBrandsController extends Controller
             $cityBranches = [];
 
             foreach ($countryBranches as $branch) {
+                $branchNameLower = strtolower($branch->name);
+                $isAirportByName = str_contains($branchNameLower, 'airport') || 
+                                   str_contains($branchNameLower, 'aeroport') || 
+                                   str_contains($branchNameLower, 'havalim') || 
+                                   str_contains($branch->name, 'مطار');
+
+                $isAirport = strtolower($branch->location_type) === 'airport' || 
+                             $branch->airport_id !== null || 
+                             $isAirportByName;
+
                 $formattedBranch = [
                     'id' => (string) $branch->id,
                     'name' => $branch->name,
-                    'type' => strtolower($branch->location_type) === 'airport' || $branch->airport_id !== null ? 'airport' : 'city',
+                    'type' => $isAirport ? 'airport' : 'city',
                     'city' => $branch->city,
                     'address' => $branch->adresse,
                     'phone' => $branch->phone,
@@ -227,6 +237,18 @@ class CarRentalBrandsController extends Controller
                 }
             }
 
+            // Calculate real total active vehicles in this country for this brand/supplier
+            $branchIds = $countryBranches->pluck('id')->toArray();
+            $totalVehicles = \App\Models\Vehicle::where('supplier', $userId)
+                ->where('activation', 1)
+                ->where(function($query) use ($branchIds) {
+                    $query->whereIn('pickup_loc', $branchIds)
+                          ->orWhereHas('branches', function($q) use ($branchIds) {
+                              $q->whereIn('branches.id', $branchIds);
+                          });
+                })
+                ->count();
+
             $countries[] = [
                 'countrySlug' => $countrySlug,
                 'countryCode' => $countryCode,
@@ -234,6 +256,7 @@ class CarRentalBrandsController extends Controller
                 'countryFlag' => $this->getCountryFlagEmoji($countryCode),
                 'airportBranches' => $airportBranches,
                 'cityBranches' => $cityBranches,
+                'totalCars' => $totalVehicles,
             ];
         }
 

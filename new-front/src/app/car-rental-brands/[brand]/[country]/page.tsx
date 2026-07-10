@@ -99,7 +99,8 @@ export default async function BrandCountryPage({ params }: PageProps) {
           stats={[
             { value: String(country.airportBranches.length), label: 'Airports' },
             { value: String(country.cityBranches.length), label: 'Cities' },
-            { value: String(totalBranches), label: 'Total' },
+            { value: String(totalBranches), label: 'Locations' },
+            { value: String(country.totalCars || 0), label: 'Cars' },
           ]}
           title={
             <>
