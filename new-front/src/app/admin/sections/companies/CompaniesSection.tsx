@@ -56,11 +56,37 @@ export default function CompaniesSection() {
         if (role === 'under_review' || role === 'supplier') status = 'pending';
         else if (role === 'suspended' || role === 'suspended_supplier') status = 'suspended';
         
+        const countryMap: Record<string, string> = {
+          'jordan': 'Jordan',
+          'kuwait': 'Kuwait',
+          'morocco': 'Morocco',
+          'united arab emirates': 'United Arab Emirates',
+          'uae': 'United Arab Emirates',
+          'saudi arabia': 'Saudi Arabia',
+          'saudi': 'Saudi Arabia',
+          'ksa': 'Saudi Arabia',
+          'egypt': 'Egypt',
+          'qatar': 'Qatar'
+        };
+
+        const operatingCountries = Array.from(new Set(
+          [
+            user.country,
+            ...(user.branches || []).map((b: any) => b.country)
+          ]
+            .filter(Boolean)
+            .map(c => {
+              const cleaned = c.trim().toLowerCase();
+              return countryMap[cleaned] || c.trim();
+            })
+        ));
+
         return {
           id: user.id,
           name: user.company || user.email || user.name || 'Unknown',
           branchName: user.name || '',
           country: user.country || '',
+          operatingCountries,
           address: user.address || user.adresse || '',
           email: user.email || '',
           phone: user.phone_num || user.phone || '',
@@ -91,7 +117,9 @@ export default function CompaniesSection() {
       const matchesSearch = company.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            company.country.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            company.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCountry = selectedCountry === "All" || company.country === selectedCountry;
+      const matchesCountry = selectedCountry === "All" || 
+                            company.country === selectedCountry ||
+                            company.operatingCountries.includes(selectedCountry);
       const matchesStatus = selectedStatus === "All" || company.status === selectedStatus;
       return matchesSearch && matchesCountry && matchesStatus;
     });

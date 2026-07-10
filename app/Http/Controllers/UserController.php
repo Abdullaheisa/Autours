@@ -198,7 +198,7 @@ class UserController extends Controller
             $query->where('parent_company_id', $user->id);
         }
 
-        $companies = $query->with(['parent'])
+        $companies = $query->with(['parent', 'branches:id,company_id,country'])
             ->withCount(['vehicles'])
             ->get();
 
