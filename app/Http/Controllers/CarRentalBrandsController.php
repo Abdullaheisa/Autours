@@ -79,16 +79,42 @@ class CarRentalBrandsController extends Controller
         ];
     }
 
+    private function getActiveSuppliersWithData()
+    {
+        $suppliers = User::where('role', 'active_supplier')
+            ->whereNotNull('logo')
+            ->where('logo', '!=', '')
+            ->where('logo', '!=', 'company_logos/default.png')
+            ->where('logo', '!=', '/img/company_logos/default.png')
+            ->get();
+            
+        return $suppliers->filter(function ($user) {
+            $hasBranches = Branch::where('company_id', $user->id)
+                ->where('activation', 1)
+                ->exists();
+                
+            if (!$hasBranches) {
+                return false;
+            }
+            
+            $hasVehicles = \App\Models\Vehicle::where('supplier', $user->id)
+                ->where('activation', 1)
+                ->exists();
+                
+            return $hasVehicles;
+        });
+    }
+
     public function index()
     {
-        // Get all active suppliers
-        $suppliers = User::where('role', 'active_supplier')->get();
+        // Get only active suppliers with real data (branches and vehicles)
+        $suppliers = $this->getActiveSuppliersWithData();
         
         $formatted = $suppliers->map(function ($user) {
             return $this->resolveBrand($user);
-        });
+        })->values();
 
-        // Calculate global stats dynamically
+        // Calculate global stats dynamically based on filtered suppliers
         $activeSupplierIds = $suppliers->pluck('id')->toArray();
         $totalBrands = $suppliers->count();
         $totalCountries = Branch::whereIn('company_id', $activeSupplierIds)
@@ -112,7 +138,7 @@ class CarRentalBrandsController extends Controller
     public function show($brandSlug)
     {
         // Find supplier by slug (comparing slug of company or name)
-        $suppliers = User::where('role', 'active_supplier')->get();
+        $suppliers = $this->getActiveSuppliersWithData();
         $matchedSupplier = null;
         $matchedBrand = null;
 
@@ -138,7 +164,7 @@ class CarRentalBrandsController extends Controller
 
     public function showCountry($brandSlug, $countrySlug)
     {
-        $suppliers = User::where('role', 'active_supplier')->get();
+        $suppliers = $this->getActiveSuppliersWithData();
         $matchedSupplier = null;
         $matchedBrand = null;
 
