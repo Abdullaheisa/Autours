@@ -12,8 +12,6 @@ import Pagination from "@/components/ui/Pagination";
 import { customerApi } from "@/services/api";
 import toast from "react-hot-toast";
 
-const countries = ["All", "UAE", "Saudi", "Egypt", "Qatar", "Kuwait", "Bahrain"];
-
 export default function CustomersSection() {
   const [customersData, setCustomersData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +19,54 @@ export default function CustomersSection() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const [isLoading, setIsLoading] = useState(true);
+
+  const countryMap: Record<string, string> = {
+    'jordan': 'Jordan',
+    'kuwait': 'Kuwait',
+    'morocco': 'Morocco',
+    'united arab emirates': 'United Arab Emirates',
+    'uae': 'United Arab Emirates',
+    'u.a.e.': 'United Arab Emirates',
+    'emirates': 'United Arab Emirates',
+    'saudi arabia': 'Saudi Arabia',
+    'saudi': 'Saudi Arabia',
+    'ksa': 'Saudi Arabia',
+    'k.s.a.': 'Saudi Arabia',
+    'egypt': 'Egypt',
+    'qatar': 'Qatar',
+    'bahrain': 'Bahrain',
+    'oman': 'Oman',
+    'turkey': 'Turkey',
+    'turkiye': 'Turkey',
+    'türkiye': 'Turkey',
+    'canada': 'Canada',
+    'canda': 'Canada'
+  };
+
+  const getNormalizedCountry = (c: string | null | undefined): string => {
+    if (!c) return '';
+    const cleaned = c.trim().toLowerCase();
+    if (countryMap[cleaned]) return countryMap[cleaned];
+    
+    // Title case capitalization for other countries
+    return c.trim()
+      .split(/\s+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  const countries = useMemo(() => {
+    const list = new Set<string>();
+    customersData.forEach((customer) => {
+      if (customer.country) {
+        list.add(getNormalizedCountry(customer.country));
+      }
+    });
+    const sorted = Array.from(list)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    return ["All", ...sorted];
+  }, [customersData]);
 
   const loadCustomers = () => {
     setIsLoading(true);
@@ -42,7 +88,7 @@ export default function CustomersSection() {
       const name = customer.name || customer.first_name || "";
       const email = customer.email || "";
       const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) || email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCountry = selectedCountry === "All" || customer.country === selectedCountry;
+      const matchesCountry = selectedCountry === "All" || getNormalizedCountry(customer.country) === selectedCountry;
       return matchesSearch && matchesCountry;
     });
   }, [customersData, searchQuery, selectedCountry]);

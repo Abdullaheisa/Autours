@@ -213,11 +213,11 @@ export const authApi = {
 export const branchApi = {
   getAll: () => apiClient.get("/api/supplier/get/branches"),
   create: (data: unknown) => apiClient.post("/api/supplier/upload/branch", data),
-  getById: (id: number) => apiClient.get(`/branches/edit/${id}`),
-  update: (data: unknown) => apiClient.post("/branches/update", data),
+  getById: (id: number) => apiClient.get(`/api/supplier/branches/edit/${id}`),
+  update: (data: unknown) => apiClient.post("/api/supplier/branches/update", data),
   delete: (data: unknown) => apiClient.post("/api/supplier/delete/branches", data),
   toggleActivation: (id: number, activation: boolean) =>
-    apiClient.post("/branches/update", { id, activation }),
+    apiClient.post("/api/supplier/branches/update", { id, activation }),
 };
 
 // Vehicle Management API (Supplier)

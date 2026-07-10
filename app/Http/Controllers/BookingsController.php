@@ -145,7 +145,14 @@ class BookingsController extends Controller
     public function destroy(Request $request)
     {
         try {
-            Rental::query()->where('id', $request->id)->delete();
+            DB::transaction(function () use ($request) {
+                // Delete related rental rates to satisfy foreign key constraint
+                DB::table('rental_rates')->where('rental_id', $request->id)->delete();
+                
+                // Delete the rental record itself
+                Rental::query()->where('id', $request->id)->delete();
+            });
+
             return response()->json([
                 'status' => true,
                 'message' => 'Rental deleted successfully'

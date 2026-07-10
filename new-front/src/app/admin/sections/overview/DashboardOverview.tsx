@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import { fetchDashboard } from "@/store/slices/dashboardSlice";
@@ -19,10 +20,24 @@ export default function DashboardOverview() {
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading } = useSelector((state: RootState) => state.dashboard);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     dispatch(fetchDashboard());
+    setMounted(true);
   }, [dispatch]);
+
+  // Lock background scroll when modal is active
+  useEffect(() => {
+    if (activeModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [activeModal]);
 
   if (isLoading) {
     return (
@@ -86,8 +101,8 @@ export default function DashboardOverview() {
       </div>
 
       {/* ── Modal Overlay ── */}
-      {activeModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-10 transition-all duration-300">
+      {activeModal && mounted && createPortal(
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[6px] z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-10 transition-all duration-300">
           {/* Backdrop Click Closes Modal */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setActiveModal(null)} />
           
@@ -96,7 +111,8 @@ export default function DashboardOverview() {
               {renderComponent(activeModal, true)}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

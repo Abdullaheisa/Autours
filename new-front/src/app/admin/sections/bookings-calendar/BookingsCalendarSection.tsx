@@ -104,6 +104,54 @@ export default function BookingsCalendarSection() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const countryMap: Record<string, string> = {
+    'jordan': 'Jordan',
+    'kuwait': 'Kuwait',
+    'morocco': 'Morocco',
+    'united arab emirates': 'UAE',
+    'uae': 'UAE',
+    'u.a.e.': 'UAE',
+    'emirates': 'UAE',
+    'saudi arabia': 'Saudi Arabia',
+    'saudi': 'Saudi Arabia',
+    'ksa': 'Saudi Arabia',
+    'k.s.a.': 'Saudi Arabia',
+    'egypt': 'Egypt',
+    'qatar': 'Qatar',
+    'bahrain': 'Bahrain',
+    'oman': 'Oman',
+    'turkey': 'Turkey',
+    'turkiye': 'Turkey',
+    'türkiye': 'Turkey',
+    'canada': 'Canada',
+    'canda': 'Canada'
+  };
+
+  const getNormalizedCountry = (c: string | null | undefined): string => {
+    if (!c) return 'UAE';
+    const cleaned = c.trim().toLowerCase();
+    if (countryMap[cleaned]) return countryMap[cleaned];
+    
+    // Title case capitalization for other countries
+    return c.trim()
+      .split(/\s+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  const countriesList = useMemo(() => {
+    const list = new Set<string>();
+    allBookings.forEach((b) => {
+      if (b.countryName) {
+        list.add(b.countryName.trim());
+      }
+    });
+    const sorted = Array.from(list)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    return ["All", ...sorted];
+  }, [allBookings]);
+
   useEffect(() => {
     setIsLoading(true);
     // Request a large per_page value so the calendar can display all bookings
@@ -118,8 +166,8 @@ export default function BookingsCalendarSection() {
           category: r.vehicle?.category?.name || r.vehicle?.category || "Economy",
           grade: r.vehicle?.specifications?.[0]?.value || "Standard",
           companyName: r.supplier?.name || "Company",
-          country: r.vehicle?.branch?.country || "UAE",
-          countryName: r.vehicle?.branch?.country || "UAE",
+          country: getNormalizedCountry(r.vehicle?.branch?.country),
+          countryName: getNormalizedCountry(r.vehicle?.branch?.country),
           duration: `${r.number_of_days || 1} Days`,
           status: r.status?.name_en || (r.order_status === 2 ? "Confirmed" : r.order_status === 3 ? "Canceled" : r.order_status === 4 ? "Pending" : "Pending"),
           type,
@@ -339,7 +387,7 @@ export default function BookingsCalendarSection() {
                       <div>
                         <p className="text-[9px] font-bold text-gray-400 uppercase mb-2">Country</p>
                         <div className="flex flex-wrap gap-2">
-                          {["All", "Saudi Arabia", "UAE", "Kuwait", "Qatar", "Egypt"].map((name) => (
+                          {countriesList.map((name) => (
                             <button
                               key={name}
                               onClick={() => setCountryFilter(name)}

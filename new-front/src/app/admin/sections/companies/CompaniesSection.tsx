@@ -14,8 +14,42 @@ import { companyApi } from "@/services/api";
 import { getLogoUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
 
-const countries = ["All", "Jordan", "Kuwait", "Morocco", "United Arab Emirates", "Saudi Arabia", "Egypt", "Qatar"];
 const statuses = ["All", "active", "pending", "suspended"];
+
+const countryMap: Record<string, string> = {
+  'jordan': 'Jordan',
+  'kuwait': 'Kuwait',
+  'morocco': 'Morocco',
+  'united arab emirates': 'United Arab Emirates',
+  'uae': 'United Arab Emirates',
+  'u.a.e.': 'United Arab Emirates',
+  'emirates': 'United Arab Emirates',
+  'saudi arabia': 'Saudi Arabia',
+  'saudi': 'Saudi Arabia',
+  'ksa': 'Saudi Arabia',
+  'k.s.a.': 'Saudi Arabia',
+  'egypt': 'Egypt',
+  'qatar': 'Qatar',
+  'turkey': 'Turkey',
+  'turkiye': 'Turkey',
+  'türkiye': 'Turkey',
+  'canada': 'Canada',
+  'canda': 'Canada',
+  'oman': 'Oman',
+  'bahrain': 'Bahrain'
+};
+
+const getNormalizedCountry = (c: string | null | undefined): string => {
+  if (!c) return '';
+  const cleaned = c.trim().toLowerCase();
+  if (countryMap[cleaned]) return countryMap[cleaned];
+  
+  // Title case capitalization for other countries
+  return c.trim()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
 
 const statusColorMap: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -56,18 +90,7 @@ export default function CompaniesSection() {
         if (role === 'under_review' || role === 'supplier') status = 'pending';
         else if (role === 'suspended' || role === 'suspended_supplier') status = 'suspended';
         
-        const countryMap: Record<string, string> = {
-          'jordan': 'Jordan',
-          'kuwait': 'Kuwait',
-          'morocco': 'Morocco',
-          'united arab emirates': 'United Arab Emirates',
-          'uae': 'United Arab Emirates',
-          'saudi arabia': 'Saudi Arabia',
-          'saudi': 'Saudi Arabia',
-          'ksa': 'Saudi Arabia',
-          'egypt': 'Egypt',
-          'qatar': 'Qatar'
-        };
+        const normalizedHomeCountry = getNormalizedCountry(user.country);
 
         const operatingCountries = Array.from(new Set(
           [
@@ -75,17 +98,14 @@ export default function CompaniesSection() {
             ...(user.branches || []).map((b: any) => b.country)
           ]
             .filter(Boolean)
-            .map(c => {
-              const cleaned = c.trim().toLowerCase();
-              return countryMap[cleaned] || c.trim();
-            })
+            .map(c => getNormalizedCountry(c))
         ));
 
         return {
           id: user.id,
           name: user.company || user.email || user.name || 'Unknown',
           branchName: user.name || '',
-          country: user.country || '',
+          country: normalizedHomeCountry,
           operatingCountries,
           address: user.address || user.adresse || '',
           email: user.email || '',
@@ -111,6 +131,24 @@ export default function CompaniesSection() {
       setLoading(false);
     }
   };
+
+  const countries = useMemo(() => {
+    const list = new Set<string>();
+    companiesData.forEach((company) => {
+      if (company.country) {
+        list.add(company.country.trim());
+      }
+      if (company.operatingCountries) {
+        company.operatingCountries.forEach((c: string) => {
+          list.add(c.trim());
+        });
+      }
+    });
+    const sorted = Array.from(list)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    return ["All", ...sorted];
+  }, [companiesData]);
 
   const filteredCompanies = useMemo(() => {
     return companiesData.filter((company) => {

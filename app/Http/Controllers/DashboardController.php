@@ -335,20 +335,17 @@ class DashboardController extends Controller
             $charts->real_avg_rating = $avgRating;
 
             // 1. Country, Branch & Airport Statistics (Normalized & Unique)
-            $normalizeCountry = function($country) {
-                $c = mb_strtolower(trim($country));
-                if ($c === 'uae' || $c === 'united arab emirates') {
-                    return 'united arab emirates';
-                }
-                if ($c === 'turkey' || $c === 'türkiye') {
-                    return 'türkiye';
-                }
-                return $c;
-            };
-
             $rawBranches = DB::table('branches')
                 ->join('users', 'users.id', '=', 'branches.company_id')
-                ->select('branches.id', 'branches.country', 'branches.location_type', 'branches.airport_id', 'branches.name')
+                ->leftJoin('airports', 'airports.id', '=', 'branches.airport_id')
+                ->select(
+                    'branches.id', 
+                    'branches.country', 
+                    'branches.location_type', 
+                    'branches.airport_id', 
+                    'branches.name',
+                    'airports.airport_name as canonical_airport_name'
+                )
                 ->whereNull('branches.deleted_at')
                 ->where('branches.activation', true)
                 ->where('users.role', 'active_supplier')
@@ -369,18 +366,43 @@ class DashboardController extends Controller
             $normalizeCountryName = function($country) {
                 $c = trim($country);
                 $lower = mb_strtolower($c);
-                if ($lower === 'uae' || $lower === 'united arab emirates') {
-                    return 'United Arab Emirates';
+
+                $countryMap = [
+                    'uae' => 'United Arab Emirates',
+                    'united arab emirates' => 'United Arab Emirates',
+                    'u.a.e.' => 'United Arab Emirates',
+                    'emirates' => 'United Arab Emirates',
+
+                    'saudi' => 'Saudi Arabia',
+                    'saudi arabia' => 'Saudi Arabia',
+                    'ksa' => 'Saudi Arabia',
+                    'k.s.a.' => 'Saudi Arabia',
+
+                    'turkey' => 'Turkey',
+                    'turkiye' => 'Turkey',
+                    'türkiye' => 'Turkey',
+
+                    'canada' => 'Canada',
+                    'canda' => 'Canada',
+
+                    'jordan' => 'Jordan',
+                    'kuwait' => 'Kuwait',
+                    'morocco' => 'Morocco',
+                    'moroco' => 'Morocco',
+                    'maghreb' => 'Morocco',
+                    'egypt' => 'Egypt',
+                    'misr' => 'Egypt',
+                    'qatar' => 'Qatar',
+                    'oman' => 'Oman',
+                    'bahrain' => 'Bahrain',
+                    'bosnia and herzegovina' => 'Bosnia and Herzegovina'
+                ];
+
+                if (isset($countryMap[$lower])) {
+                    return $countryMap[$lower];
                 }
-                if ($lower === 'turkey' || $lower === 'türkiye') {
-                    return 'Turkey';
-                }
-                if ($lower === 'saudi' || $lower === 'saudi arabia') {
-                    return 'Saudi Arabia';
-                }
-                if ($lower === 'bosnia and herzegovina' || $lower === 'bosnia and herzegovina') {
-                    return 'Bosnia and Herzegovina';
-                }
+
+                // Title case capitalization for other countries
                 return ucwords($lower);
             };
 
@@ -416,15 +438,16 @@ class DashboardController extends Controller
                              $isAirportByName;
 
                 if ($isAirport) {
-                    // Check if it's a unique airport ID or name for this country
-                    $airportKey = $branch->airport_id ?: $branch->name;
+                    $airportName = $branch->canonical_airport_name ?: $branch->name;
+                    $airportKey = $branch->airport_id ?: $airportName;
+                    
                     if (!in_array($airportKey, $aggregated[$normalized]['seen_airports'])) {
                         $aggregated[$normalized]['seen_airports'][] = $airportKey;
                         $aggregated[$normalized]['airports']++;
                     }
                     
-                    if (!empty($branch->name)) {
-                        $aggregated[$normalized]['airport_names'][] = $branch->name;
+                    if (!empty($airportName)) {
+                        $aggregated[$normalized]['airport_names'][] = $airportName;
                     }
                 } else {
                     if (!empty($branch->name)) {
@@ -442,17 +465,24 @@ class DashboardController extends Controller
                 }
             }
 
-            // Format lists (unique, values, limit to 20) and sort by bookings desc
+            // Format lists (unique, values) and sort by bookings desc
             $countryLocationsList = collect($aggregated)->map(function($item) {
-                $item['branch_names'] = collect($item['branch_names'])->unique()->values()->take(20)->toArray();
-                $item['airport_names'] = collect($item['airport_names'])->unique()->values()->take(20)->toArray();
+                $uniqueBranches = collect($item['branch_names'])->unique()->values();
+                $uniqueAirports = collect($item['airport_names'])->unique()->values();
+
+                $item['branches'] = $uniqueBranches->count();
+                $item['airports'] = $uniqueAirports->count();
+
+                $item['branch_names'] = $uniqueBranches->toArray();
+                $item['airport_names'] = $uniqueAirports->toArray();
+
                 unset($item['seen_airports']);
                 return $item;
             })->sortByDesc('bookings')->values();
 
             $totalCountriesCount = collect($aggregated)->count();
-            $totalAirportsCount = collect($aggregated)->sum('airports');
-            $totalBranchesCount = collect($aggregated)->sum('branches');
+            $totalAirportsCount = $countryLocationsList->sum('airports');
+            $totalBranchesCount = $countryLocationsList->sum('branches');
 
             $charts->country_locations_stats = [
                 'total_countries' => $totalCountriesCount,
