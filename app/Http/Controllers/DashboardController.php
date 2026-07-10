@@ -346,61 +346,16 @@ class DashboardController extends Controller
                 return $c;
             };
 
-            $branchesByCountry = DB::table('branches')
+            $rawBranches = DB::table('branches')
                 ->join('users', 'users.id', '=', 'branches.company_id')
-                ->select('branches.country', DB::raw('count(*) as branch_count'))
+                ->select('branches.id', 'branches.country', 'branches.location_type', 'branches.airport_id', 'branches.name')
                 ->whereNull('branches.deleted_at')
                 ->where('branches.activation', true)
                 ->where('users.role', 'active_supplier')
-                ->whereNotNull('branches.country')
-                ->where('branches.country', '!=', '')
-                ->groupBy('branches.country')
-                ->get()
-                ->keyBy(fn($row) => $normalizeCountry($row->country));
+                ->get();
 
-            // Branch names grouped by country (up to 20 per country)
-            $branchNamesByCountry = DB::table('branches')
-                ->join('users', 'users.id', '=', 'branches.company_id')
-                ->select('branches.country', 'branches.name')
-                ->whereNull('branches.deleted_at')
-                ->where('branches.activation', true)
-                ->where('users.role', 'active_supplier')
-                ->whereNotNull('branches.country')
-                ->where('branches.country', '!=', '')
-                ->whereNotNull('branches.name')
-                ->get()
-                ->groupBy(fn($row) => $normalizeCountry($row->country))
-                ->map(fn($rows) => $rows->pluck('name')->unique()->values()->take(20));
-
-            // Count actual unique airports per country (joined with canonical airports table)
-            $airportsByCountry = DB::table('branches')
-                ->join('users', 'users.id', '=', 'branches.company_id')
-                ->join('airports', 'airports.id', '=', 'branches.airport_id')
-                ->select('airports.country', DB::raw('count(distinct branches.airport_id) as airport_count'))
-                ->whereNull('branches.deleted_at')
-                ->where('branches.activation', true)
-                ->where('users.role', 'active_supplier')
-                ->groupBy('airports.country')
-                ->get()
-                ->keyBy(fn($row) => $normalizeCountry($row->country));
-
-            // Airport names grouped by country (unique canonical names)
-            $airportNamesByCountry = DB::table('branches')
-                ->join('users', 'users.id', '=', 'branches.company_id')
-                ->join('airports', 'airports.id', '=', 'branches.airport_id')
-                ->select('airports.country', 'airports.airport_name as name')
-                ->whereNull('branches.deleted_at')
-                ->where('branches.activation', true)
-                ->where('users.role', 'active_supplier')
-                ->groupBy('airports.country', 'airports.airport_name')
-                ->get()
-                ->groupBy(fn($row) => $normalizeCountry($row->country))
-                ->map(fn($rows) => $rows->pluck('name')->unique()->values()->take(20));
-
-            $countryKeys = $branchesByCountry->keys()->merge($airportsByCountry->keys())->unique()->values();
-
-            // Bookings count per country (for sorting by most booked)
-            $bookingsByCountryMap = DB::table('rentals')
+            // Bookings count per country (raw database query)
+            $rawBookings = DB::table('rentals')
                 ->join('vehicles', 'vehicles.id', '=', 'rentals.vehicle_id')
                 ->join('branches', 'branches.id', '=', 'vehicles.pickup_loc')
                 ->whereIn('rentals.order_status', [RentalStatuses::CONFIRMED, RentalStatuses::RECONCILED])
@@ -408,47 +363,99 @@ class DashboardController extends Controller
                 ->whereNotNull('branches.country')
                 ->where('branches.country', '!=', '')
                 ->groupBy('branches.country')
-                ->get()
-                ->keyBy(fn($row) => $normalizeCountry($row->country));
+                ->get();
 
-            $countryLocationsList = $countryKeys->map(function($countryKey) use ($branchesByCountry, $airportsByCountry, $branchNamesByCountry, $airportNamesByCountry, $bookingsByCountryMap) {
-                $displayName = '';
-                if (isset($branchesByCountry[$countryKey])) {
-                    $displayName = $branchesByCountry[$countryKey]->country;
-                } elseif (isset($airportsByCountry[$countryKey])) {
-                    $displayName = $airportsByCountry[$countryKey]->country;
-                } else {
-                    $displayName = ucwords($countryKey);
+            // Let's normalize country names consistently
+            $normalizeCountryName = function($country) {
+                $c = trim($country);
+                $lower = mb_strtolower($c);
+                if ($lower === 'uae' || $lower === 'united arab emirates') {
+                    return 'United Arab Emirates';
+                }
+                if ($lower === 'turkey' || $lower === 'türkiye') {
+                    return 'Turkey';
+                }
+                if ($lower === 'saudi' || $lower === 'saudi arabia') {
+                    return 'Saudi Arabia';
+                }
+                if ($lower === 'bosnia and herzegovina' || $lower === 'bosnia and herzegovina') {
+                    return 'Bosnia and Herzegovina';
+                }
+                return ucwords($lower);
+            };
+
+            // Aggregate branch details in PHP
+            $aggregated = [];
+            foreach ($rawBranches as $branch) {
+                if (empty($branch->country)) continue;
+                $normalized = $normalizeCountryName($branch->country);
+                
+                if (!isset($aggregated[$normalized])) {
+                    $aggregated[$normalized] = [
+                        'country' => $normalized,
+                        'branches' => 0,
+                        'airports' => 0,
+                        'bookings' => 0,
+                        'branch_names' => [],
+                        'airport_names' => [],
+                        'seen_airports' => [], // helper to distinct airport_id
+                    ];
                 }
 
-                return [
-                    'country'        => $displayName,
-                    'branches'       => isset($branchesByCountry[$countryKey]) ? (int)$branchesByCountry[$countryKey]->branch_count : 0,
-                    'airports'       => isset($airportsByCountry[$countryKey]) ? (int)$airportsByCountry[$countryKey]->airport_count : 0,
-                    'bookings'       => isset($bookingsByCountryMap[$countryKey]) ? (int)$bookingsByCountryMap[$countryKey]->bookings_count : 0,
-                    'branch_names'   => isset($branchNamesByCountry[$countryKey]) ? $branchNamesByCountry[$countryKey]->toArray() : [],
-                    'airport_names'  => isset($airportNamesByCountry[$countryKey]) ? $airportNamesByCountry[$countryKey]->toArray() : [],
-                ];
-            })->sortByDesc('bookings')->values(); // ← مرتبة بالأكثر حجوزات أولاً
+                $aggregated[$normalized]['branches']++;
+                
+                // Determine if it is airport type
+                $branchNameLower = strtolower($branch->name);
+                $isAirportByName = str_contains($branchNameLower, 'airport') || 
+                                   str_contains($branchNameLower, 'aeroport') || 
+                                   str_contains($branchNameLower, 'havalim') || 
+                                   str_contains($branch->name, 'مطار');
 
-            $totalBranchesCount = DB::table('branches')
-                ->join('users', 'users.id', '=', 'branches.company_id')
-                ->whereNull('branches.deleted_at')
-                ->where('branches.activation', true)
-                ->where('users.role', 'active_supplier')
-                ->count();
+                $isAirport = strtolower($branch->location_type) === 'airport' || 
+                             $branch->airport_id !== null || 
+                             $isAirportByName;
 
-            $totalAirportsCount = DB::table('branches')
-                ->join('users', 'users.id', '=', 'branches.company_id')
-                ->whereNull('branches.deleted_at')
-                ->where('branches.activation', true)
-                ->where('users.role', 'active_supplier')
-                ->whereNotNull('airport_id')
-                ->distinct('airport_id')
-                ->count('airport_id');
+                if ($isAirport) {
+                    // Check if it's a unique airport ID or name for this country
+                    $airportKey = $branch->airport_id ?: $branch->name;
+                    if (!in_array($airportKey, $aggregated[$normalized]['seen_airports'])) {
+                        $aggregated[$normalized]['seen_airports'][] = $airportKey;
+                        $aggregated[$normalized]['airports']++;
+                    }
+                    
+                    if (!empty($branch->name)) {
+                        $aggregated[$normalized]['airport_names'][] = $branch->name;
+                    }
+                } else {
+                    if (!empty($branch->name)) {
+                        $aggregated[$normalized]['branch_names'][] = $branch->name;
+                    }
+                }
+            }
+
+            // Add bookings to aggregated
+            foreach ($rawBookings as $row) {
+                if (empty($row->country)) continue;
+                $normalized = $normalizeCountryName($row->country);
+                if (isset($aggregated[$normalized])) {
+                    $aggregated[$normalized]['bookings'] += (int) $row->bookings_count;
+                }
+            }
+
+            // Format lists (unique, values, limit to 20) and sort by bookings desc
+            $countryLocationsList = collect($aggregated)->map(function($item) {
+                $item['branch_names'] = collect($item['branch_names'])->unique()->values()->take(20)->toArray();
+                $item['airport_names'] = collect($item['airport_names'])->unique()->values()->take(20)->toArray();
+                unset($item['seen_airports']);
+                return $item;
+            })->sortByDesc('bookings')->values();
+
+            $totalCountriesCount = collect($aggregated)->count();
+            $totalAirportsCount = collect($aggregated)->sum('airports');
+            $totalBranchesCount = collect($aggregated)->sum('branches');
 
             $charts->country_locations_stats = [
-                'total_countries' => $countryKeys->count(),
+                'total_countries' => $totalCountriesCount,
                 'total_branches'  => $totalBranchesCount,
                 'total_airports'  => $totalAirportsCount,
                 'list'            => $countryLocationsList,
