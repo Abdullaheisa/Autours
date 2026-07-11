@@ -40,8 +40,16 @@ trait NormalizesVehicleNames
             return $name;
         }
 
-        // Fix common misspelling
+        // Replace special characters / Turkish / Unicode letters (e.g. Škoda -> Skoda, İ10 -> I10)
+        $name = str_replace(['Š', 'š', 'İ', 'ı', 'ž', 'ć', 'č'], ['S', 's', 'I', 'i', 'z', 'c', 'c'], $name);
+
+        // Fix common brand/model misspellings and synonyms
         $name = preg_replace('/\bRenaut\b/i', 'Renault', $name);
+        $name = preg_replace('/\bx\s*-?\s*terr+a\b/i', 'Xterra', $name);
+        $name = preg_replace('/\bx\s*-?\s*trail\b/i', 'X-Trail', $name);
+        $name = preg_replace('/\bmicro\b/i', 'Micra', $name);
+        $name = preg_replace('/\btleberzer\b/i', 'Trailblazer', $name);
+        $name = preg_replace('/\bKikcs\b/i', 'Kicks', $name);
 
         // Normalize Toyota RAV4 to Toyota RAV 4
         $name = preg_replace('/\bRAV4\b/i', 'RAV 4', $name);
@@ -49,8 +57,15 @@ trait NormalizesVehicleNames
         // Normalize Toyota 4runner to Toyota 4 Runner
         $name = preg_replace('/\b4runner\b/i', '4 Runner', $name);
 
-        // Replace special characters to make names normal (e.g. Škoda -> Skoda)
-        $name = str_replace(['Š', 'š'], ['S', 's'], $name);
+        // Normalize MG model names like "MG Mg5" or "Mg5" -> "MG 5", "MG Mg3" -> "MG 3"
+        $name = preg_replace('/\bMG\s*Mg?(\d+)\b/i', 'MG $1', $name);
+        $name = preg_replace('/^Mg(\d+)/i', 'MG $1', $name);
+
+        // Clean up stray hyphens or extra spaces around hyphens in names (e.g. "C- Elysee" -> "C-Elysee", " - Up" -> " Up", " -Up" -> " Up")
+        $name = preg_replace('/\b([a-zA-Z]+)\s+-\s*([a-zA-Z]+)\b/', '$1-$2', $name);
+        $name = preg_replace('/\b([a-zA-Z]+)\s*-\s+([a-zA-Z]+)\b/', '$1-$2', $name);
+        $name = preg_replace('/\s+-\s*([a-zA-Z0-9]+)\b/', ' $1', $name);
+        $name = preg_replace('/\s+-\b/', ' ', $name);
 
         // Normalize transmission types often appended to car names
         // Matches whole words like AUT, AUTO, AUTOMATIC, AUTOMATiC (case-insensitive)
