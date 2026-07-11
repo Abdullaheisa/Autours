@@ -35,7 +35,7 @@ export default function CompanyDetailsSidebar({ company }: CompanyDetailsSidebar
           onClick={async () => {
             const loadId = toast.loading("Connecting to supplier dashboard...");
             try {
-              const res: any = await apiClient.post(`/admin/impersonate/${company.id}`, {});
+              const res: any = await apiClient.post(`/api/admin/impersonate/${company.id}`, {});
               if (res && (res.status === true || res.status === 'true')) {
                 toast.dismiss(loadId);
                 const token = res.token;

@@ -291,6 +291,7 @@ Route::middleware(['auth:sanctum', 'admin_or_supplier'])->group(function () {
 
 });
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/admin/impersonate/{userId}', [\App\Http\Controllers\Api\AuthController::class, 'impersonate']);
     Route::get('/get/rentals/admin', [BookingsController::class, 'getAdminRentals']);
     Route::get('/get/supplier/invoice', [BookingsController::class, 'getSupplierInvoices']);
     Route::inertia('admin-reviews', 'Dashboard/AdminReviews');
