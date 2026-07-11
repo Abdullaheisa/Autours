@@ -368,8 +368,8 @@ class SyncSurpriceVehicles extends Command
                         if ($vehicle->supplier != $supplierUser->id) {
                             $updateData['supplier'] = $supplierUser->id;
                         }
-                        if (empty($vehicle->photo) && !empty($photoUrl)) {
-                            $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($photoUrl, $groupId);
+                        if (empty($vehicle->photo)) {
+                            $photoFilename = $this->resolveLocalPhoto($vehicleName);
                             if ($photoFilename) {
                                 $updateData['photo'] = $photoFilename;
                             }
@@ -384,7 +384,7 @@ class SyncSurpriceVehicles extends Command
                             continue;
                         }
 
-                        $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($photoUrl, $groupId);
+                        $photoFilename = $this->resolveLocalPhoto($vehicleName);
                         $categoryId = $this->resolveCategoryFromSipp($vehicleInfo['code'] ?? '');
 
                         $vehicle = Vehicle::create([

@@ -389,13 +389,8 @@ class SyncNissaVehicles extends Command
                     }
                 }
 
-                // Try local photo first
+                // Use local photo only
                 $photoFilename = $this->resolveLocalPhoto($vehicleName);
-
-                // Download image once per group, only if needed and local not found
-                if (empty($photoFilename) && $needsImageDownload) {
-                    $photoFilename = $this->downloadImage($imageUrl, $groupId);
-                }
 
                 // Process branches WITH prices
                 foreach ($branchesWithPrice as $branchId => $priceData) {

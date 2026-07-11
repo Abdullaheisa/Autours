@@ -297,10 +297,7 @@ class SyncJimpisoftVehicles extends Command
                         }
                         $vehicleName = $this->normalizeVehicleName($vehicleName);
 
-                        $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage(
-                            $details['imageURL'] ?? $details['ImageURL'] ?? null,
-                            $groupId
-                        );
+                        $photoFilename = $this->resolveLocalPhoto($vehicleName);
                     }
                 }
 

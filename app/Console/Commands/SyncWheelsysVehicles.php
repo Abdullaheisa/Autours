@@ -168,7 +168,7 @@ class SyncWheelsysVehicles extends Command
                 $vehicleName = $data1['name'] ?: 'Unknown Model';
                 $vehicleName = $this->normalizeVehicleName($vehicleName);
                 $photoUrl = $data1['imageurl'] ?? null;
-                $photoFilename = $this->resolveLocalPhoto($vehicleName) ?? $this->downloadImage($photoUrl, $groupId);
+                $photoFilename = $this->resolveLocalPhoto($vehicleName);
                 
                 $categoryId = $this->resolveCategoryFromSipp($data1['acriss']);
 
