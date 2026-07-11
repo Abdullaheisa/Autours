@@ -15,7 +15,8 @@ class RefreshVehiclePhotos extends Command
      *
      * @var string
      */
-    protected $signature = 'vehicles:refresh-photos';
+    protected $signature = 'vehicles:refresh-photos
+                            {--clear-external : Null out all externally-downloaded supplier photos before refreshing}';
 
     /**
      * The console command description.
@@ -25,10 +26,28 @@ class RefreshVehiclePhotos extends Command
     protected $description = 'Refresh images of existing vehicles based on our local VehiclesPhotos matching logic without requiring a full sync. Generates a CSV report.';
 
     /**
+     * Prefixes used by supplier sync commands when downloading images from external APIs.
+     */
+    private const EXTERNAL_PHOTO_PREFIXES = [
+        'surprice_',
+        'jimpisoft_',
+        'wheelsys_',
+        'xdrive_',
+        'nissa_',
+        'emr_',
+        'renteon_',
+    ];
+
+    /**
      * Execute the console command.
      */
     public function handle()
     {
+        // Step 1: Optionally clear external photos
+        if ($this->option('clear-external')) {
+            $this->clearExternalPhotos();
+        }
+
         $this->info('Starting vehicle photos refresh...');
 
         // Create CSV file for the report
@@ -85,5 +104,39 @@ class RefreshVehiclePhotos extends Command
         $this->info("Vehicles missing photos: {$notFoundCount} (" . count($missingNames) . " unique)");
         $this->info("Report generated at: {$reportPath}");
         return self::SUCCESS;
+    }
+
+    /**
+     * Null out all vehicle photos that were downloaded from external supplier APIs.
+     * This includes photos with known supplier prefixes and full HTTP URLs.
+     */
+    private function clearExternalPhotos(): void
+    {
+        $this->info('Clearing externally-downloaded supplier photos...');
+
+        $query = Vehicle::query();
+
+        // Match supplier-prefixed filenames (e.g. surprice_xxx.jpg, emr_xxx.png)
+        $query->where(function ($q) {
+            foreach (self::EXTERNAL_PHOTO_PREFIXES as $prefix) {
+                $q->orWhere('photo', 'LIKE', $prefix . '%');
+            }
+            // Also match full HTTP/HTTPS URLs stored directly
+            $q->orWhere('photo', 'LIKE', 'http://%');
+            $q->orWhere('photo', 'LIKE', 'https://%');
+        });
+
+        $count = $query->count();
+
+        if ($count === 0) {
+            $this->info('No external photos found to clear.');
+            return;
+        }
+
+        $this->info("Found {$count} vehicles with external photos. Nulling them out...");
+
+        $query->update(['photo' => null]);
+
+        $this->info("Cleared {$count} external photos.");
     }
 }
