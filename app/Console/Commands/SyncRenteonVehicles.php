@@ -21,7 +21,9 @@ use Symfony\Component\Mime\MimeTypes;
 use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 use App\Console\Commands\Traits\NormalizesVehicleNames;
 
-class SyncRenteonVehicles extends Command
+use App\Console\Commands\Base\AbstractVehicleSyncCommand;
+
+class SyncRenteonVehicles extends AbstractVehicleSyncCommand
 {
     use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
@@ -32,7 +34,8 @@ class SyncRenteonVehicles extends Command
      */
     protected $signature = 'renteon:sync-vehicles
                             {--pickup-date= : Pickup date (yyyy-MM-dd), defaults to tomorrow}
-                            {--full : Check availability for ALL Renteon branches, otherwise only checks branches that already have vehicles}';
+                            {--full : Check availability for ALL Renteon branches, otherwise only checks branches that already have vehicles}
+                            {--prices-only : Only refresh per-branch prices, do not create vehicles or specs}';
 
     /**
      * The console command description.
@@ -44,10 +47,15 @@ class SyncRenteonVehicles extends Command
     private ?array $specDefinitions = null;
     private array $imageCache = [];
 
+    protected function getSupplierDisplayName(): string
+    {
+        return 'Renteon';
+    }
+
     /**
-     * Execute the console command.
+     * Execute the console command synchronization logic.
      */
-    public function handle(): int
+    protected function performSync(): int
     {
         error_reporting(E_ALL & ~E_DEPRECATED);
         ini_set('memory_limit', '512M');
@@ -165,7 +173,11 @@ class SyncRenteonVehicles extends Command
                         'month_price' => $monthPrice,
                         'instant_confirmation' => 1,
                     ]);
-                    $updated++;
+                    $this->updatedCount++;
+                    continue;
+                }
+
+                if ($this->hasOption('prices-only') && $this->option('prices-only')) {
                     continue;
                 }
 
@@ -206,30 +218,23 @@ class SyncRenteonVehicles extends Command
 
                 // Mark as existing so we don't duplicate within same run if somehow repeated
                 $existingVehiclesByTag[$groupId][$branch->id] = $vehicle;
-                $created++;
+                $this->createdCount++;
             }
 
             $progress->advance();
         }
 
         $progress->finish();
-        $this->newLine();
 
-        // 7. Clean up branches without vehicles
-        $orphanedCount = 0;
-        foreach ($allBranches as $branch) {
-            if ($branch->vehicles()->count() === 0) {
-                $branch->delete();
-                $orphanedCount++;
+        // 7. Clean up branches without vehicles only in full sync mode
+        if (!$this->hasOption('prices-only') || !$this->option('prices-only')) {
+            foreach ($allBranches as $branch) {
+                if ($branch->vehicles()->count() === 0) {
+                    $branch->delete();
+                    $this->deactivatedCount++;
+                }
             }
         }
-
-        $this->info('========== Renteon Vehicle Sync Complete ==========');
-        $this->info("Created  : {$created}");
-        $this->info("Updated  : {$updated}");
-        $this->info("Skipped  : {$skipped}");
-        $this->info("Deleted  : {$orphanedCount} (Empty branches)");
-        $this->info('===================================================');
 
         return self::SUCCESS;
     }
