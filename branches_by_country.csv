@@ -1,0 +1,936 @@
+Country,"Branch Name",City,"Location Type",Abbreviation
+Albania,"Durres Port",DURRËS,Port,DBVP01
+Albania,"Saranda Downtown",SARANDË,City,EXTC03
+Albania,"Saranda Liman","Saranda Liman",Downtown,411
+Albania,"Saranda Port",SARANDË,Port,EXTP02
+Albania,"Shkodra Downtown",SHKODËR,City,EXTC04
+Albania,"Tirana Airport",RINAS,Airport,TIAA01
+Albania,"Tirana Airport","Tirana Airport",Airport,
+Albania,"Tirana Airport, Tirana",Tirana,Airport,TIA
+Albania,"Tirana City",Tirana,Office,TIAC
+Albania,"Tirana International Airport (TIA)","Tirana International Airport (TIA)",Airport,TIA
+Albania,"Tirana Office",TIRANA,Office,TIAC02
+Albania,"Tiran Uluslararası Havalimanı (TIA)","Tiran Uluslararası Havalimanı (TIA)",Airport,TIA
+Albania,"Vlora Port",VLORË,Port,EXTP05
+"Antigua And Barbuda","St John Airport","Saint John",Airport,ANU
+"Antigua And Barbuda","VC Bird International Airport (ANU)","VC Bird International Airport (ANU)",Airport,ANU
+Argentina,"Bahia Blanca","Bahía Blanca",Airport,BHI
+Argentina,"Bariloche Airport","San Carlos de Bariloche",Airport,BRC
+Argentina,"Bariloche Downtown","San Carlos de Bariloche",Office,BRCZ
+Argentina,"Bariloche Playa Bonita","San Carlos de Bariloche",Office,BRCHC
+Argentina,"Buenos Aires City","Buenos Aires",Office,AEPZ
+Argentina,"Buenos Aires delivery - Belgrano","Buenos Aires",BusTerminal,AEPB
+Argentina,"Buenos Aires delivery - Nuñez","Buenos Aires",BusTerminal,AEPN
+Argentina,"Buenos Aires delivery - Puerto Madero","Buenos Aires",BusTerminal,AEPM
+Argentina,"Buenos Aires delivery - Saavedra","Buenos Aires",BusTerminal,AEPS
+Argentina,"Buenos Aires Entrega a domicilio Palermo","Buenos Aires",BusTerminal,AEPP
+Argentina,"Comodoro Rivadavia Airport","Comodoro Rivadavia",Airport,CRD
+Argentina,"El Calafate Airport","El Calafate",Airport,FTE
+Argentina,"Ezeiza Airport","Buenos Aires",Airport,EZE
+Argentina,"Mendoza Airport",Mendoza,Airport,MDZ
+Argentina,"Neuquen Airport",Neuquen,Airport,NQN
+Argentina,"Puerto Madryn Airport","Puerto Madryn",Airport,PMY
+Argentina,"Rio Gallegos Airport","Rio gallegos",Airport,RGL
+Argentina,"Salta Airport",Salta,Airport,SLA
+Argentina,"Salta Downtown",Salta,Office,SLAZ
+Argentina,"San Juan Airport","San Juan",Airport,UAQ
+Argentina,"San Martín de los Andes Airport","San Martin de los Andes",Airport,CPC
+Argentina,"Trelew Airport",Trelew,Airport,REL
+Argentina,"Vicente Lopez","Vicente Lopez",Office,AEPVL
+Armenia,"Armenia Downtown","Armenia Downtown",,
+Armenia,"Yerevan City",Yerevan,Office,EVNZ
+Armenia,"Zvartnots international airport","Zvartnots international airport",Airport,
+Armenia,"Zvartnots International Airport",Yerevan,Airport,EVN
+Australia,"Gold Coast Airport (OOL)","Gold Coast Airport (OOL)",Airport,OOL
+Australia,"Hobart Airport (HBA)","Hobart Airport (HBA)",Airport,HBA
+Australia,"Launceston Airport (LST)","Launceston Airport (LST)",Airport,LST
+Australia,"Melbourne Airport (MEL)","Melbourne Airport (MEL)",Airport,MEL
+Australia,"Perth Airport",REDCLIFFE,Airport,PERA01
+Australia,"Perth Downtown","VICTORIA PARK",Office,PERC01
+Australia,"Sydney International Airport (SYD)","Sydney International Airport (SYD)",Airport,SYD
+Azerbaijan,"Baku Airport",BAKU,Airport,GYDA01
+Azerbaijan,"Baku Hotel",BAKI,Hotel,GYDH01
+Azerbaijan,"Baku Office",BAKI,Office,GYDC01
+Bahamas,"Nassau Airport (NAS)","Nassau Airport (NAS)",Airport,NAS
+Bahrain,"Arad Dwtn,Bahrain",Muharraq,Downtown,ARD
+Bahrain,"Bahrain Apt, Bahrain",Manama,Downtown,BHA
+Bahrain,"Budaiya Dwtn,Bahrain",Budaiya,Downtown,BYD
+Bahrain,"Jumeirah, Bahrain",Zallaq,Downtown,JMH
+Bahrain,"Manama All Loc, Bahrain",Manama,Downtown,MLA
+Bahrain,"Manama Dwtn, Bahrain",Manama,Downtown,MAD
+Bahrain,"Manama Gulf Htl,Bahrain",Manama,Downtown,MGH
+Bahrain,"Manama HiltonHtl, Bahrain",Manama,Downtown,MHH
+Bahrain,"Manama Juffair, Bahrain",Manama,Downtown,MAJ
+Bahrain,"Manama Seef, Bahrain",Manama,Downtown,MAS
+Bahrain,"Riffa, Bahrain",Riffa,Downtown,RFF
+Bahrain,"Riffa Dwtn,Bahrain",Riffa,Downtown,RFD
+Bahrain,"Salmabad Dwtn, Bahrain",Salmabad,Downtown,SMD
+Bahrain,"Sanabis Dwtn, Bahrain",Manma,Downtown,SND
+Bahrain,"Sanad Dwtn, Bahrain",Sanad,Downtown,SDW
+Bahrain,"South Sehla Dwtn,Bahrain",Manama,Downtown,SSD
+Bahrain,"Wyndham Grand, Bahrain",Manama,Downtown,WGM
+Bahrain,"Zallaq Dwtn, Bahrain",Zallaq,Downtown,ZQD
+Bahrain,"Zallaq Sofitel, Bahrain",Zallaq,Downtown,ZSF
+"Bosnia And Herzegovina","Banja Luka","BANJA LUKA",City,BNXC01
+"Bosnia And Herzegovina","Mostar Airport",MOSTAR,Airport,OMOA01
+"Bosnia And Herzegovina","Mostar Otogar","Mostar Otogar",Downtown,341
+"Bosnia And Herzegovina","Sarajevo Airport",SARAJEVO,Airport,SJJA01
+"Bosnia And Herzegovina","Saraybosna Uluslararası Havalimanı (SJJ)","Saraybosna Uluslararası Havalimanı (SJJ)",Airport,SJJ
+"Bosnia And Herzegovina","Tuzla Airport","DUBRAVE GORNJE",Airport,TZLA01
+Bulgaria,"Sofia Airport",SOFIA,Airport,SOFA01
+Bulgaria,"Sofia Airport (SOF)","Sofia Airport (SOF)",Airport,SOF
+Bulgaria,"Sofia Downtown",Sofia,Office,SOFZ
+Bulgaria,"Sofia - Vasil Levski Airport (SOF)",Sofia,Airport,SOF
+Bulgaria,"Varna Airport (VAR)","Varna Airport (VAR)",Airport,VAR
+Canada,"Calgary Airport","Calgary Airport",Airport,
+Canada,"Calgary City","Calgary City",,
+Canada,"Montreal Airport","Montreal Airport",Airport,
+Canada,"Montreal City","Montreal City",,
+Canada,"Ottawa Airport","Ottawa Airport",Airport,
+Canada,"Ottawa City","Ottawa City",,
+Canada,"Toronto Airport",Toronto,Airport,YYZ
+Canada,"Toronto Airport","Toronto Airport",Airport,
+Canada,"Toronto City",Toronto,Office,YYZC
+Canada,"Toronto City","Toronto City",,
+Canada,"Toronto Office",TORONTO,Office,YYZC01
+Canada,"Toronto Pearson Airport",TORONTO,Airport,YYZA01
+Canada,"Vancouver Airport","Vancouver Airport",Airport,
+Canada,"Vancouver Airport",Vancouver,Airport,YVR
+Canada,"Vancouver City","Vancouver City",,
+Chile,"Concepcion Airport",Concepcion,Airport,CCP
+Chile,"La Serena Airport","La Serena",Airport,LSC
+Chile,"La Serena City","La Serena",Office,LSCZ
+Chile,"Puerto Montt Airport","Puerto Montt",Airport,PMC
+Chile,"Puerto Natales Airport","Puerto Natales",Airport,PNT
+Chile,"Puerto Natales City","Puerto Natales",Office,PNTZ
+Chile,"Punta Arenas Airport","Punta Arenas",Airport,PUQ
+Chile,"Santiago Airport",Santiago,Airport,SCL
+Chile,"Santiago City","Santiago de Chile",Office,SCLZ
+Chile,"Santiago City Pedro de Valdivia",Santiago,Office,SCLN
+Chile,"Temuco Airport",Temuco,Airport,ZCO
+Chile,"Viña del Mar City","Viña del Mar",Office,KNAZ
+Croatia,"Dubrovnik Airport",MOČIĆI,Airport,DBVA01
+Croatia,"DUBROVNIK APT",Ćilipi,Airport,DBV
+Croatia,"Pula Airport",Pula,Airport,PUY
+Croatia,"Pula Downtown",Pula,Office,PUYC
+Croatia,"Rijeka Airport",OMIŠALJ,Airport,RJKA01
+Croatia,"Rijeka Office",RIJEKA,Office,RJKC02
+Croatia,"Split Airport","KAŠTEL ŠTAFILIĆ",Airport,SPUA01
+Croatia,"SPLIT APT"," Kaštel Štafilić",Airport,STA
+Croatia,"Zadar Airport","ZEMUNIK DONJI",Airport,ZADA01
+Croatia,"Zadar City",ZADAR,City,ZADC01
+Croatia,"Zagreb Airport","SELNICA ŠĆITARJEVSKA",Airport,ZAGA01
+Croatia,"Zagreb Airport",Zagreb,Airport,ZAG
+Croatia,"ZAGREB AIRPORT","Velika Gorica",Airport,ZAG
+Croatia,"Zagreb Bus Station",ZAGREB,"Bus station",ZAGC01
+Croatia,"ZAGREB CITY",ZAGREB,Office,ZGD
+Croatia,"Zagreb Downtown",Zagreb,Office,ZAGC
+Curacao,"Willemstad Curacao International Airport (CUR)","Willemstad Curacao International Airport (CUR)",Airport,CUR
+Cyprus,"ANP City Limt, Cyprus","AYIA NAPA PROTARAS",Downtown,
+Cyprus,"ANP Hotels, Cyprus","AYIA NAPA PROTARAS",Hotel,
+Cyprus,"ANP Rental St,Cyprus","AYIA NAPA PROTARAS",Downtown,
+Cyprus,"Arch. Makariou III",Larnaca,Airport,LCA
+Cyprus,"Ercan Uluslararası Havalimanı (ECN)","Ercan Uluslararası Havalimanı (ECN)",Airport,ECN
+Cyprus,"Germasogeia, Cyprus",LIMASSOL,Downtown,
+Cyprus,"Kato Paphos, Cyprus",PAPHOS,Downtown,
+Cyprus,"Kıbrıs Ercan Havalimanı","Kıbrıs Ercan Havalimanı",Airport,93
+Cyprus,"Larnaca Airport",MENEOU,Airport,LCAA01
+Cyprus,"Larnaca Airport, Cyprus",LARNACA,Airport,
+Cyprus,"Larnaca Dromolaxia,Cyprus",LARNACA,Downtown,
+Cyprus,"Larnaca Hotel, Cyprus",LARNACA,Hotel,
+Cyprus,"Larnaca Marina, Cyprus",LARNACA,Downtown,
+Cyprus,"Larnaca Rentl Stn, Cyprus",LARNACA,Downtown,
+Cyprus,"Lemesos Downtown",LEMESOS,City,LCAC01
+Cyprus,"LimasAgiosTychonas,Cyprus",LIMASSOL,Downtown,
+Cyprus,"Limas City Limits, Cyprus",LARNACA,Downtown,
+Cyprus,"Limassol City Lmt, Cyprus",LIMASSOL,Downtown,
+Cyprus,"Limassol Hotels, Cyprus",LIMASSOL,Hotel,
+Cyprus,"LimassolKalogiroi, Cyprus",LIMASSOL,Downtown,
+Cyprus,"Limassol Moni, Cyprus",LIMASSOL,Downtown,
+Cyprus,"Limassol Port, Cyprus",LIMASSOL,Downtown,
+Cyprus,"Nicosia Aglantzia, Cyprus",NICOSIA,Downtown,
+Cyprus,"Nicosia City Lmt, Cyprus",NICOSIA,Downtown,
+Cyprus,"Nicosia Hotels, Cyprus",NICOSIA,Hotel,
+Cyprus,"Paphos Airport",AKHELIA,Airport,PFOA01
+Cyprus,"Paphos Airport, Cyprus",PAPHOS,Airport,
+Cyprus,"Paphos City Limits,Cyprus",PAPHOS,Downtown,
+Cyprus,"Paphos Hotels, Cyprus",PAPHOS,Hotel,
+Cyprus,"Paphos Rental St, Cyprus",PAPHOS,Downtown,
+Cyprus,"Paphos Timi, Cyprus",PAPHOS,Downtown,
+"Dominican Republic","Las Americas International Airport","SANTO DOMINGO",Airport,SDQA01
+"Dominican Republic","Santo Domingo Airport","Santo Domingo",Airport,SDQ
+Egypt,"CAIRO AIRPORT",Cairo,Airport,CAI
+Egypt,"Cairo International Airport",Cairo,Airport,CAI
+Egypt,"Cairo International Airport",Cairo,Airport,CAI
+Egypt,"HURGHADA AIRPORT",Hurgada,Airport,HRG
+Egypt,"Hurghada international Airport",Hurghada,Airport,HRG
+Estonia,"Tallinn Airport",TALLINN,Airport,TLLA01
+Fiji,"Nadi Airport",NADI,Airport,NANA01
+Fiji,"Nadi Airport (NAN)","Nadi Airport (NAN)",Airport,NAN
+Fiji,"Nadi Downtown",NADI,Office,"NANC01 "
+Fiji,"Sigatoka Downtown",SIGATOKA,Office,"NANC02 "
+Fiji,"Suva Airport",NASILAI,Airport,SUVA01
+Fiji,"Suva Downtown",SUVA,Office,"SUVC01 "
+Georgia,"Batumi Airport",BATUMI,Airport,BUS
+Georgia,"Batumi Hotel",BATUMI,Hotel,BUSH01
+Georgia,"Batumi International Airport",Batumi,Airport,BUS
+Georgia,"Batumi International Airport (BUS)","Batumi International Airport (BUS)",Airport,BUS
+Georgia,"Kutaisi Airport","ZEDA BASHI",Airport,KUT
+Georgia,"Kutaisi Hotel","ZEDA BASHI",Hotel,KUTH01
+Georgia,"Kutaisi International Airport",Kopitnari,Airport,KUT
+Georgia,"Kutaisi International Airport (KUT)","Kutaisi International Airport (KUT)",Airport,KUT
+Georgia,"Tbilisi Airport",T'BILISI,Airport,TBS
+Georgia,"Tbilisi Hotel",T'BILISI,Hotel,TBSH04
+Georgia,"Tbilisi International Airport",Tbilisi,Airport,TBS
+Georgia,"Tbilisi International Airport","Tbilisi International Airport",Airport,
+Georgia,"Tbilisi International Airport (TBS)","Tbilisi International Airport (TBS)",Airport,TBS
+Georgia,"Tbilisi Office",T'BILISI,Office,TBSC01
+Greece,"Aktio Airport",AKTIO,Airport,PVKA01
+Greece,"Alonissos Office",PATITIRI,Office,JSIC01
+Greece,"Alonissos Port",PATITIRI,Port,JSIP01
+Greece,"Astypalaia Airport",ANALIPSI,Airport,JTYA01
+Greece,"Astypalaia Port",ANALIPSI,Port,JTYP01
+Greece,"Athens Airport",KOROPI,Airport,ATHA01
+Greece,"Chania Airport",KOUNOUPIDIANA,Airport,CHQA01
+Greece,"Chania Airport",Chania,Airport,CHQ
+Greece,"Chios Airport",CHIOS,Airport,JKHA01
+Greece,"Chios Port",CHIOS,Port,JKHP01
+Greece,"Corfu Airport",KERKIRA,Airport,CFUA01
+Greece,"Corfu Office",CORFU,Office,CFUC01
+Greece,"Corfu Port",KERKIRA,Port,CFUP01
+Greece,"Heraklion Airport","NEA ALIKARNASSOS",Airport,HERA01
+Greece,"Heraklion Airport","Heraklion ",Airport,HER
+Greece,"Heraklion Hotel",IRAKLIO,Hotel,HERH01
+Greece,"Ioannina Airport",EXOCHI,Airport,IOAA01
+Greece,"Kalamata Airport",KALAMATA,Airport,KLXA01
+Greece,"Kalamata Bus Station",KALAMATA,"Bus station",KLXC01
+Greece,"Kalamata Downtown",KALAMATA,City,KLXC02
+Greece,"Kalamata Port",KALAMATA,Port,KLXP01
+Greece,"Kala Nera","KALA NERA",City,VOLC01
+Greece,"Kefalonia Apt","«ΆΝΝΑ ΠΟΛΛΆΤΟΥ»",Airport,EFLA01
+Greece,"Kos Airport",ANTIMACHIA,Airport,KGSA01
+Greece,"Kounoupas Office",MYKONOS,Office,JMKC01
+Greece,"Lefkada Office",KALLIGONI,Office,PVKC01
+Greece,"Lemnos Airport",LEMNOS,Airport,LXSA01
+Greece,"Lemnos Hotel",ATSIKI,Hotel,LXSH01
+Greece,"Lemnos Myrina Port",MIRINA,Port,LXSP01
+Greece,"Lemnos Office",ATSIKI,Office,LXSC01
+Greece,"Milos Airport",ADAMAS,Airport,MLOA01
+Greece,"Milos Port Office",ADAMAS,Office,MLOC01
+Greece,"Mykonos Airport",MYKONOS,Airport,JMKA01
+Greece,"Mykonos Hotel",MYKONOS,Hotel,JMKH03
+Greece,"Mykonos Office",Mikonos,Office,JMKC02
+Greece,"Mykonos Port",TOURLOS,Port,JMKP01
+Greece,"Nafplio Downtown",NAFPLIO,City,EXTC09
+Greece,"Nafplio Office",NAFPLIO,Office,EXTC10
+Greece,"Naxos Airport",NAXOS,Airport,JNXA01
+Greece,"Naxos Airport Apollon",Naxos,Airport,JNX
+Greece,"Naxos Hotel",NAXOS,Hotel,JNXH01
+Greece,"Naxos Office",NAXOS,Office,JNXC01
+Greece,"Naxos Port",NAXOS,Port,JNXP01
+Greece,"Naxos Port",Naxos,Port,JNXP
+Greece,"Paros Airport",PAROS,Airport,PASA01
+Greece,"Paros Office",PAROS,Office,PASC01
+Greece,"Paros Port",PAROS,Port,PASP02
+Greece,"Rafina Port",ARTEMIS,Port,ATHP02
+Greece,"Rethymno Hotel",RETHYMNO,Hotel,EXTH01
+Greece,"Rethymno Office",RETHYMNO,Office,EXTC02
+Greece,"Rhodes Airport",PARADISI,Airport,RHOA01
+Greece,"Rhodes Hotel",IALISOS,Hotel,RHOH01
+Greece,"Rhodes Office",IALISOS,Office,RHOC01
+Greece,"Rhodes Port",RHODES,Port,RHOP01
+Greece,"Samos Airport",PYTHAGOREIO,Airport,SMIA01
+Greece,"Santorini Airport",SANTORINI,Airport,JTRA01
+Greece,"Syros Airport",MANNA,Airport,JSYA01
+Greece,"Syros Hotel","MEGAS GIALOS",Hotel,JSYH01
+Greece,"Syros Office","MEGAS GIALOS",Office,JSYC01
+Greece,"Syros Port",ERMOUPOLI,Port,JSYP01
+Greece,"Thassos Golden Beach",THASOS,City,EXTC06
+Greece,"Thassos Office","LIMENAS THASSOS",Office,EXTC07
+Greece,"Thassos Prinos Port","LIMENAS THASSOS",Port,EXTP03
+Greece,"Thassos Town Port",THASSOS,Port,EXTP04
+Greece,"Thessaloniki Airport",THERMI,Airport,SKGA01
+Greece,"Volos Airport",VOLOS,Airport,VOLA01
+Greece,"Zakynthos Airport",ZAKYNTHOS,Airport,ZTHA01
+Guatemala,"Guatemala Airport","Guatemala City",Airport,GUA
+Guatemala,"Guatemala Downtown","Guatemala City",Office,GUAC
+Hungary,"Budapest Airport",VECSÉS,Airport,BUDA01
+Iceland,"Keflavik Airport",NJARDHVIKUR,Airport,KEFA01
+Iceland,"Keflavik International Airport","Keflavik International Airport",Airport,
+Indonesia,"Bali International Airport","Denpasar-Bali Island",Airport,DPS
+Indonesia,"Benoa Port",Benoa,Port,DPSB
+Indonesia,"Padangbai Port",Padangbai,Port,DPSP
+Indonesia,"Sanur Port",Sanur,Port,DPSS
+Italy,"Bari Airport",BARI,Airport,BRIA01
+Italy,"Bergamo Airport",BERGAMO,Airport,BGYA01
+Italy,"Bologna Airport","SAN VITALE GRANDE",Airport,BLQA01
+Italy,"Brindisi Airport",Brindisi,Airport,BDS
+Italy,"Cagliari airport",CAGLIARI,Airport,CAGA01
+Italy,Cassino,Cassino,Office,NAPCA
+Italy,"Catania airport",CATANIA,Airport,CTAA01
+Italy,"Firenze Airport",FIRENZE,Airport,FLRA01
+Italy,"Milano Malpensa","LONATE POZZOLO",Airport,MXPA01
+Italy,"Napoli Capodichino",Napoli,Airport,NAP
+Italy,"Napoli capodichino airport",NAPOLI,Airport,NAPA01
+Italy,"Napoli Stazione",Napoli,BusTerminal,NAPT
+Italy,"Office located Romanelli Auto",Alvito,Office,ROMVC
+Italy,"Olbia Airport",OLBIA,Airport,OLBA01
+Italy,"Palermo Airport (PMO)","Palermo Airport (PMO)",Airport,PMO
+Italy,Roma,Roma,Airport,FCO
+Italy,Trapani,Trapani,Port,TPSP
+Italy,"Venezia Airport",VENEZIA,Airport,VCEA01
+Jamaica,"Montego Bay Airport","Montego Bay",Airport,MBJ
+Japan,"Narita Airport",SHIBAYAMA,Airport,NRTA01
+Japan,"Okinawa Airport",TOMIGUSUKU,Airport,OKAA01
+Japan,"Okinawa Akamine Monorail station",NAHA,"Railway station",OKAX01
+Jordan,"Al Najmeh Complex, Airport Rd",Amman,Downtown,
+Jordan,"Amman Airport",Amman,Airport,AMM
+Jordan,"Amman Airport",AMMAN,Airport,AMM
+Jordan,"Amman Office",AMMAN,Office,AMMC01
+Jordan,"Amman - Sweifieh - Park Plaza",Amman,Downtown,
+Jordan,"Days inn Hotel",Amman,Hotel,
+Jordan,"King Abdullah Gardens",Amman,Downtown,
+Jordan,"King Abdullah Gardens",Amman,Downtown,
+Jordan,"King Hussein Bridge",Amman,Border,
+Jordan,"King Hussein International Airport",Amman,Airport,AQJ
+Jordan,"Queen Alia Airport (AMM)","Queen Alia Airport (AMM)",Airport,AMM
+Jordan,"Queen Alia International Airport",Amman,Airport,AMM
+Jordan,"Queen Alia International Airport","Queen Alia International Airport",Airport,AMM
+Jordan,"Queen Alia International Airport",Amman,Airport,AMM
+Jordan,"Queen Alia International Airport",Amman,Airport,AMM
+Jordan,"Queen Alia International Airport",Amman,Airport,AMM
+Jordan,"Queen Alia International Airport",Amman,Airport,AMM
+Jordan,"Queen Alia International Airport",Amman,Airport,AMM
+Jordan,"Queen Alia International Airport",Amman,Airport,AMM
+Kosovo,"Pristina Airport",PRISTINA,Airport,PRNA01
+Kosovo,"Priştine Havalimanı (PRN)","Priştine Havalimanı (PRN)",Airport,PRN
+Kuwait,"AL Rai","Al Farwaniyah",Downtown,
+Kuwait,"Ardiya Dwntwn,Kuwait",Ardiya,Downtown,
+Kuwait,"Hillton GrdnIn,Kuwait","Al Rai",Downtown,
+Kuwait,"Kuwait Dwntwn,Kuwait",Kuwait,Downtown,
+Kuwait,"Kuwait IntApt, Kuwait",Kuwait,Downtown,
+Kuwait,"Kuwait International Airport","Kuwait City",Airport,KWI
+Kuwait,"Kuwait International Airport","Al Farwaniyah",Airport,KWI
+Kuwait,"Kuwait International Airport","Al Farwaniyah",Airport,KWI
+Kuwait,"Kuwait International Airport","Al Farwaniyah",Airport,KWI
+Kuwait,"Shuwaikh Free Zone, Kuwait City, Kuwait","Ash Shuwaykh",Downtown,
+Latvia,"Riga Airport",RĪGA,Airport,RIXA01
+Liechtenstein,"Kaunas Airport",Kaunas,Airport,KUN
+Liechtenstein,"Kaunas City",Kaunas,Office,KUNC
+Liechtenstein,"Klaipeda City",Klaipeda,Office,PLQC
+Liechtenstein,"Klaipeda Palanga Airport",Klaipeda,Airport,PLQ
+Liechtenstein,"Siauliai City",Siauliai,Office,SQQ
+Liechtenstein,"Vilnius Airport",Vilnius,Airport,VNO
+Malawi,"Chileka International Airport (BLZ)","Chileka International Airport (BLZ)",Airport,BLZ
+Malawi,"Kamuzu International Airport (LLW)","Kamuzu International Airport (LLW)",Airport,LLW
+Malaysia,"Kuala Lumpur Airport (KUL)","Kuala Lumpur Airport (KUL)",Airport,KUL
+Malaysia,"Penang International Airport (PEN)","Penang International Airport (PEN)",Airport,PEN
+Malta,"Malta Airport","Malta Airport",Airport,
+Malta,"Malta international airport",LUQA,Airport,MLAA01
+Mauritius,"Flic en Flac","Flic en Flac",Office,MRUF
+Mauritius,"Grand Baie","Grand Baie",Office,MRUG
+Mauritius,"Grand Bay","Grand Bay",,
+Mauritius,"Mauritius Airport (MRU)","Mauritius Airport (MRU)",Airport,MRU
+Mauritius,"Plaine Maignen","Plaine Magnien",Airport,MRU
+Mauritius,"Sir Seewoosagur Ramgoolam International Airport","Sir Seewoosagur Ramgoolam International Airport",Airport,
+Mexico,"Bajio International Airport",Leon,Airport,BJX
+Mexico,"Cancun Airport",CANCÚN,Airport,CUNA01
+Mexico,"Cancun Airport",Cancun,Airport,CUN
+Mexico,"Guadalajara Airport","Guadalajara Airport",Airport,
+Mexico,"Leon City","Leon City",Office,BJXC
+Mexico,"Los Cabos Airport","Los Cabos Airport",Airport,
+Mexico,"Mexico City Airport","Mexico City",Airport,MEX
+Mexico,"Mexico City Patriotismo","Mexico City",Office,MEXP
+Mexico,"Puerto Vallarta Airport","Puerto Vallarta Airport",Airport,
+Montenegro,"Budva Hotel",BUDVA,Hotel,TIVH01
+Montenegro,"Herceg Novi Bus Station","HERCEG - NOVI","Bus station",HNOC01
+Montenegro,"Kotor Bus Station",SKALJARI,"Bus station",TIVC01
+Montenegro,"Kotor Merkez","Kotor Merkez",Downtown,337
+Montenegro,"Kotor Otogar","Kotor Otogar",Downtown,338
+Montenegro,"Podgorica Airport",MOJANOVIĆI,Airport,TGDA01
+Montenegro,"Podgorica Airport",Podgorica,Airport,TGD
+Montenegro,"Podgorica Havalimanı (TDG)","Podgorica Havalimanı (TDG)",Airport,TDG
+Montenegro,"Podgorica Hilton Hotel",PODGORICA,Hotel,TGDH02
+Montenegro,"Podgorica Office",PODGORICA,Office,TGDC01
+Montenegro,"Podgorica Otogar","Podgorica Otogar",Downtown,332
+Montenegro,"Port of Tivat Montenegro",TIVAT,Port,TIVP01
+Montenegro,"Tivat Airport",Tivat,Airport,TIV
+Montenegro,"Tivat Airport",MRČEVAC,Airport,TIVA01
+Montenegro,"Tivat Havalimanı (TIV)","Tivat Havalimanı (TIV)",Airport,TIV
+Montenegro,"Tivat Hotel",TIVAT,Hotel,TIVH02
+Montenegro,"Tivat Merkez","Tivat Merkez",Downtown,333
+Montenegro,"Tivat Otogar","Tivat Otogar",Downtown,334
+Morocco,"Agadir Airport","Agadir Airport",Airport,AGA
+Morocco,"Agadir Airport",Agadir,Airport,AGA
+Morocco,"Agadir Downtown","Agadir Downtown",Office,AGAC
+Morocco,"Casablanca Airport",NOUACEUR,Airport,CMN
+Morocco,"Casablanca Airport",Cas,Airport,CMN
+Morocco,"Casablanca Airport",Casablanca,Airport,CMN
+Morocco,"Casablanca Airport",Casablanca,Airport,CMN
+Morocco,"CASABLANCA AIRPORT",Casablanca,Airport,CMN
+Morocco,"Casablanca Airport (CMN)","Casablanca Airport (CMN)",Airport,CMN
+Morocco,"Casablanca Downtown",CASABLANCA,City,CMNC01
+Morocco,"Fes Airport (FEZ)","Fes Airport (FEZ)",Airport,FEZ
+Morocco,"Marrakech Airport",Marrakech,Airport,RAK
+Morocco,"Marrakech Airport",Marrakesh,Airport,RAK
+Morocco,"Marrakech Airport",Marrakesh,Airport,RAK
+Morocco,"Marrakech Airport (RAK)","Marrakech Airport (RAK)",Airport,RAK
+Morocco,"Marrakesh Airport",MARRAKECH,Airport,RAK
+Morocco,"Marrakesh Downtown",Marrakesh,Office,RAKC
+Morocco,"Marrakesh Downtown",MARRAKESH,City,RAKC01
+Morocco,"Morocco Casablanca Havalimanı","Morocco Casablanca Havalimanı",Airport,CMN
+Morocco,"Morocco Casablanca Havalimanı","Morocco Casablanca Havalimanı",Airport,CMN
+Morocco,"Rabat Airport",SALÉ,Airport,RBA
+Morocco,"Rabat Airport",Rabat,Airport,RBA
+Morocco,"Rabat Airport (RBA)","Rabat Airport (RBA)",Airport,RBA
+Morocco,"Tanger Airport",Tangier,Airport,TNG
+Nepal,"Kathmandu Airport",KATHMANDU,Airport,KTMA01
+Nepal,"Kathmandu Downtown",KATHMANDU,Office,KTMC01
+"New Zealand","Auckland Airport (AKL)","Auckland Airport (AKL)",Airport,AKL
+"North Macedonia","Ohrid Airport",Ohrid,Airport,
+"North Macedonia","Skopje Airport",Skopje,Airport,
+"North Macedonia","Tetovo Downtown",TET,City,
+"North Macedonia","Üsküp Uluslararası Havalimanı (SKP)","Üsküp Uluslararası Havalimanı (SKP)",Airport,SKP
+Oman,"Muscat Airport, Oman",Muscat,Airport,MCT
+Oman,"Muscat All Loc, Oman",Muscat,Downtown,
+Oman,"Muscat International Airport",Muscat,Airport,MCT
+Oman,"Muscat International Airport","Muscat Airport (MCT)",Airport,MCT
+Oman,"Muscat Khuwair, Oman",Muscat,Downtown,
+Oman,"Salalah Airport, Oman",Salalah,Airport,SLL
+Oman,"Salalah All Loc, Oman",Salalah,Downtown,
+Oman,"Salalah Al Saada, Oman",Salalah,Downtown,
+Oman,"Salalah Downtown, Oman",Salalah,Downtown,
+Oman,"Salalah Hotel Del, Oman",Salalah,Hotel,
+Oman,"Salalah International Airport","Salalah Airport (SLL)",Airport,SLL
+Oman,"Salalah International Airport",Salalah,Airport,SLL
+Oman,"Sohar Downtown, Oman",Sohar,Downtown,
+Oman,"Timisoara Airport,Romania",TIMISOARA,Airport,
+Oman,"Timisoara All loc,Romania",TIMISOARA,Downtown,
+Oman,"Timisoara CityHtl,Romania",TIMISOARA,Downtown,
+Oman,"Timisoara Dwntwn ,Romania",TIMISOARA,Downtown,
+Poland,"Gdansk Airport","Gdansk Airport",Airport,
+Poland,"Gdansk Rebiechowo Airport",GDAŃSK,Airport,GDNA01
+Poland,"Katowice Airport","Katowice Airport",Airport,
+Poland,"Katowice Pyrzowice Airport",PYRZOWICE,Airport,KTWA01
+Poland,"Krakow Airport","Krakow Airport",Airport,
+Poland,"Krakow Balice Airport",BALICE,Airport,KRKA01
+Poland,"Lublin airport","Lublin airport",Airport,
+Poland,"Poznan Airport","Poznan Airport",Airport,
+Poland,"Poznan Airport",POZNAŃ,Airport,POZA01
+Poland,"Rzeszow Airport","Rzeszow Airport",Airport,
+Poland,"Warsaw Chopin Airport","Warsaw Chopin Airport",Airport,
+Poland,"Warsaw Chopin Okecie Airport",WARSZAWA,Airport,WAWA01
+Poland,"Warsaw Modlin Airport","NOWY DWÓR MAZOWIECKI",Airport,WMIA01
+Poland,"Warszawa Modlin Airport","Warszawa Modlin Airport",Airport,
+Poland,"Wroclaw Strachowice Airport",WROCŁAW,Airport,WROA01
+Portugal,"Azores Airport",AZORES,Airport,PDLA01
+Portugal,"Faro Airport",FARO,Airport,FAOA01
+Portugal,"Faro Office",FARO,Office,FAOC01
+Portugal,"Funchal city",Funchal,Office,FNCZ
+Portugal,"Lisbon Airport",LISBOA,Airport,LISA01
+Portugal,"Lisbon Office",LISBOA,Office,LISC01
+Portugal,"Madeira Airport","SANTA CRUZ",Airport,FNCA01
+Portugal,"Madeira Airport",Funchal,Airport,FNC
+Portugal,"Madeira Port",Funchal,Port,FNCP
+Portugal,"Porto Airport",PERAFITA,Airport,OPOA01
+Portugal,"Porto Office",PERAFITA,Office,OPOC01
+Qatar,"Hamad International Airport",DOHA,Airport,DOH
+Qatar,"Hamad International Airport",Doha,Airport,DOH
+Romania,"Bucharest Baneasa Airport",BUCUREȘTI,Airport,BBUA01
+Romania,"Bucharest Herni Coanda Airport",OTOPENI,Airport,OTPA01
+Romania,"Cluj Airport",CLUJ-NAPOCA,Airport,CLJA01
+Romania,"Oradea Airport",Oradea,Airport,OMRA01
+Romania,"Targu Mures Airport",UNGHENI,Airport,TGMA01
+"Saint Martin","Saint Martin SFG Airport",GRAND-CASE,Airport,SFGA01
+Serbia,"Belgrade Airport",BEOGRAD,Airport,BEGA01
+Serbia,"Belgrade Airport",Belgrade,Airport,BEG
+Seychelles,"Seychelles Airport (SEZ)","Seychelles Airport (SEZ)",Airport,SEZ
+"Sint Maarten","Princess Juliana International Airport (SXM)","Princess Juliana International Airport (SXM)",Airport,SXM
+"Sint Maarten","Saint Martin SXM Airport Office","SIMPSON BAY",Airport,SXMA01
+Slovakia,"Bratislava Airport",BRATISLAVA,Airport,BTSA01
+Slovakia,"Bratislava Office",BRATISLAVA,Office,BTSC01
+Spain,"Aeropuerto Palma de Mallorca","Palma De Mallorca",Airport,PMI
+Spain,Alcúdia,"Palma De Mallorca",Office,PMIA
+Spain,"Cala d'Or","Palma De Mallorca",Port,PMID
+Spain,"Cala Millor","Palma De Mallorca",Port,PMIM
+Spain,"Cala Sóller","Palma De Mallorca",Port,PMIS
+Spain,"Gran Canaria Airport",MASPALOMAS,Airport,LPAA01
+Spain,"Gran Canaria Hotel",MASPALOMAS,Hotel,LPAH01
+Spain,"Gran Canaria Office",MASPALOMAS,City,LPAC01
+Spain,"Office Santiago del Teide","SANTIAGO DEL TEIDE",Office,TFSC01
+Spain,Paguera,"Palma De Mallorca",Port,PMIPA
+Spain,"Playa de Palma El Arenal","Palma De Mallorca",Port,PMIE
+Spain,"Puerto Portals","Palma De Mallorca",Port,PMIP
+Spain,"Tenerife Airport","AEROPUERTO REINA SOFIA",Airport,TFSA01
+Spain,"Tenerife North Hotel",ADEJE,Hotel,TFSH02
+Spain,"Tenerife Office Adeje","COSTA ADEJE",Office,TFSC02
+Spain,"Tenerife Office Guia de Isora","SANTIAGO DEL TEIDE",Office,TFSC03
+Spain,"Tenerife South Hotel",ARONA,Hotel,TFSH01
+Spain,"Terminal de cruceros de Palma","Palma De Mallorca",Port,PMIT
+"Sri Lanka","Colombo Bandaranaike Airport (CMB)","Colombo Bandaranaike Airport (CMB)",Airport,CMB
+"St. Lucia","Castries Airport (SLU)","Castries Airport (SLU)",Airport,SLU
+"St. Lucia","Vieux Fort Hewanorra Airport (UVF)","Vieux Fort Hewanorra Airport (UVF)",Airport,UVF
+Tanzania,"Zanzibar Airport",ZANZIBAR,Airport,ZNZA01
+Tanzania,"Zanzibar Airport (ZNZ)","Zanzibar Airport (ZNZ)",Airport,ZNZ
+Tanzania,"Zanzibar City",ZANZIBAR,City,ZNZC01
+Tanzania,"Zanzibar Port",ZANZIBAR,Port,ZNZP01
+"Trinidad And Tobago","Tobago Airport (TAB)","Tobago Airport (TAB)",Airport,TAB
+Tunisia,"Enfidha Airport (NBE)","Enfidha Airport (NBE)",Airport,NBE
+Tunisia,"Monastir Airport (MIR)","Monastir Airport (MIR)",Airport,MIR
+Tunisia,"Tunis Airport (TUN)","Tunis Airport (TUN)",Airport,TUN
+Turkey,"Adana Merkez","Adana Merkez",Downtown,34
+Turkey,"ADANA ŞEHİR OFİS","ADANA ŞEHİR OFİS",Downtown,99
+Turkey,"Adnan Menderes Airport",İzmir,Airport,ADB
+Turkey,"Adnan Menderes Airport",İzmir,Airport,ADB
+Turkey,"Adnan Menderes Airport",İzmir,1,ADB
+Turkey,Ankara,Ankara,,TR-ANK
+Turkey,"Ankara airport","Ankara airport",Airport,TR-ANK-ESB
+Turkey,"Ankara downtown","Ankara downtown",Downtown,TR-ANK-DT
+Turkey,"Ankara Esenboğa Airport",Ankara,Airport,ESB
+Turkey,"Ankara Merkez","Ankara Merkez",Downtown,118
+Turkey,Antalya,Antalya,,TR-ANL
+Turkey,"Antalya Address Delivery",Antalya,2,583
+Turkey,"Antalya airport","Antalya airport",Airport,AYT
+Turkey,"Antalya Airport",AKSU,Airport,AYT
+Turkey,"Antalya Airport",Antalya,Airport,AYT
+Turkey,"Antalya Airport",Antalya,Airport,AYT
+Turkey,"Antalya Airport",Antalya,Airport,AYT
+Turkey,"Antalya Airport",Antalya,Airport,AYT
+Turkey,"Antalya Airport (AYT)","Antalya Airport (AYT)",Airport,AYT
+Turkey,"Antalya Airport, Turkey",Antalya,Airport,AYT
+Turkey,"Antalya Alanya",Antalya,2,158
+Turkey,"Antalya All Locations",Antalya,2,303
+Turkey,"Antalya Beldibi",Antalya,2,162
+Turkey,"Antalya Belek",Antalya,2,155
+Turkey,"Antalya Downtown, Turkey",Antalya,Downtown,
+Turkey,"Antalya Havalimanı","Antalya Havalimanı",Airport,AYT
+Turkey,"Antalya Havalimanı (AYT)","Antalya Havalimanı (AYT)",Airport,AYT
+Turkey,"Antalya Hotels, Turkey",Antalya,Hotel,
+Turkey,"Antalya Kas",Antalya,2,410
+Turkey,"Antalya Konyaalti",Antalya,2,672
+Turkey,"Antalya Konyaaltı","Antalya Konyaaltı",Downtown,43
+Turkey,"Antalya Kundu","Antalya Kundu",Downtown,39
+Turkey,"Antalya Kundu",Antalya,2,417
+Turkey,"Antalya Lara","Antalya Lara",Downtown,41
+Turkey,"Antalya Main Bus Station",Antalya,2,154
+Turkey,"Antalya Manavgat",Antalya,2,157
+Turkey,"Antalya Merkez","Antalya Merkez",Downtown,119
+Turkey,"Antalya Muratpaşa","Antalya Muratpaşa",Downtown,42
+Turkey,"Antalya Otogar","Antalya Otogar",Downtown,40
+Turkey,"Antalya Side",Antalya,2,156
+Turkey,"Autofixrental Ankara",Ankara,City,
+Turkey,"Autofixrental Antalya",Antalya,City,
+Turkey,"Autofixrental Cappadocia",Nevşehir,City,
+Turkey,"Autofixrental Gaziantep",Gaziantep,City,
+Turkey,"Autofixrental  Kayseri",Kayseri,City,
+Turkey,"AYT Airport Antalya",ANTALYA,Airport,AYT
+Turkey,"Balıkesir Koca Seyit Havalimanı","Balıkesir Koca Seyit Havalimanı",Airport,124
+Turkey,"Batman Havalimanı","Batman Havalimanı",Airport,125
+Turkey,"Batman Merkez","Batman Merkez",Downtown,180
+Turkey,Bodrum,Bodrum,,TR-BOD
+Turkey,"Bodrum airport","Bodrum airport",Airport,TR-BOD-BJV
+Turkey,"Bursa Office",BURSA,Office,YEIC01
+Turkey,"ÇUKUROVA HAVALİMANI (COV)","ÇUKUROVA HAVALİMANI (COV)",Airport,COV
+Turkey,"Çukurova Uluslararası Havalimanı","Çukurova Uluslararası Havalimanı",Airport,234
+Turkey,"Çukurova Uluslararası Havalimanı (COV)","Çukurova Uluslararası Havalimanı (COV)",Airport,COV
+Turkey,Dalaman,Dalaman,,TR-DAL
+Turkey,"Dalaman airport","Dalaman airport",Airport,DLM
+Turkey,"Dalaman Airport",Muğla,Airport,DLM
+Turkey,"Dalaman Airport",Muğla,Airport,DLM
+Turkey,"Dalaman Airport (DLM)","Dalaman Airport (DLM)",Airport,DLM
+Turkey,"Dalaman Havalimanı","Dalaman Havalimanı",Airport,DLM
+Turkey,"Denizli Çardak Havalimanı","Denizli Çardak Havalimanı",Airport,87
+Turkey,"Denizli Çardak Havalimanı (DNZ)","Denizli Çardak Havalimanı (DNZ)",Airport,DNZ
+Turkey,"Denizli Merkez","Denizli Merkez",Downtown,215
+Turkey,"Denizli Şehir Merkezi","Denizli Şehir Merkezi",Downtown,230
+Turkey,"DENİZ RENT A CAR",GAZİPAŞA,City,
+Turkey,"Diyarbakır Havalimanı","Diyarbakır Havalimanı",Airport,128
+Turkey,"Elazığ Havalimanı","Elazığ Havalimanı",Airport,75
+Turkey,"Elazığ Havalimanı (EZS)","Elazığ Havalimanı (EZS)",Airport,EZS
+Turkey,"Elazığ Merkez","Elazığ Merkez",Downtown,77
+Turkey,"Erzurum Havalimanı","Erzurum Havalimanı",Airport,108
+Turkey,"Erzurum Havalimanı (ERZ)","Erzurum Havalimanı (ERZ)",Airport,ERZ
+Turkey,"Erzurum Merkez","Erzurum Merkez",Downtown,107
+Turkey,"Erzurum Palandöken Kayak Merkezi","Erzurum Palandöken Kayak Merkezi",Downtown,114
+Turkey,"Eskisehir Anadolu Airport (AOE)",Eskişehir,Airport,AOE
+Turkey,"Gaziantep Havalimanı","Gaziantep Havalimanı",Airport,74
+Turkey,Igdir,Igdir,,TR-IGD
+Turkey,"Igdir airport","Igdir airport",Airport,TR-IGD-IGD
+Turkey,"isparta Address Delivery",Isparta,2,608
+Turkey,Istanbul,Istanbul,,TR-IST
+Turkey,"Istanbul airport","Istanbul airport",Airport,IST
+Turkey,"Istanbul airport","Istanbul airport",Airport,IST
+Turkey,"İstanbul Airport (IST)","İstanbul Airport (IST)",Airport,IST
+Turkey,"Istanbul Airport, Turkey",Istanbul,Airport,IST
+Turkey,"Istanbul AllHotels,Turkey",Istanbul,Hotel,
+Turkey,"Istanbul All Locations",İstanbul,2,330
+Turkey,"Istanbul All Loc, Turkey",Istanbul,Downtown,
+Turkey,"Istanbul Arnavutköy",İstanbul,2,165
+Turkey,"İstanbul Ataşehir","İstanbul Ataşehir",Downtown,24
+Turkey,"Istanbul Atasehir Office",ISTANBUL,Office,ISTC03
+Turkey,"İstanbul Çekmeköy","İstanbul Çekmeköy",Downtown,224
+Turkey,"Istanbul Eyup Office",ISTANBUL,Office,ISTC05
+Turkey,"İstanbul Kağıthane","İstanbul Kağıthane",Downtown,211
+Turkey,"Istanbul New Airport",IŞIKLAR,Airport,IST
+Turkey,"İstanbul Pendik","İstanbul Pendik",Downtown,157
+Turkey,"Istanbul RenStn,Turkey",Istanbul,Downtown,
+Turkey,"Istanbul R StnApt, Turkey",Istanbul,Downtown,
+Turkey,"Istanbul SabihaApt,Turkey",Istanbul,Downtown,
+Turkey,"İstanbul Sabiha Gökçen Havalimanı","İstanbul Sabiha Gökçen Havalimanı",Airport,SAW
+Turkey,"İstanbul Sabiha Gökçen Havalimanı (SAV)","İstanbul Sabiha Gökçen Havalimanı (SAV)",Airport,SAW
+Turkey,"Istanbul SAW Airport",ISTANBUL,Airport,SAW
+Turkey,"Istanbul StnNewApt,Turkey",Istanbul,Downtown,
+Turkey,"İstanbul Yenibosna","İstanbul Yenibosna",Downtown,196
+Turkey,"İstanbul Yenibosna","İstanbul Yenibosna",Downtown,196
+Turkey,Izmir,Izmir,,TR-IZM
+Turkey,"İzmir Adnan Menderes Havalimanı","İzmir Adnan Menderes Havalimanı",Airport,ADB
+Turkey,"İzmir Adnan Menderes Havalimanı (ADB)","İzmir Adnan Menderes Havalimanı (ADB)",Airport,ADB
+Turkey,"Izmir airport","Izmir airport",Airport,TR-IZM-ADB
+Turkey,"Izmir Airport",IZMIR,Airport,ADB
+Turkey,"İzmir Bornova","İzmir Bornova",Downtown,61
+Turkey,"Izmir Cesme",İzmir,2,210
+Turkey,"Izmir downtown","Izmir downtown",Downtown,TR-IZM-DT
+Turkey,"Kahramanmaraş Havalimanı (KCM)","Kahramanmaraş Havalimanı (KCM)",Airport,KCM
+Turkey,"Kahramanmaraş Şehir Merkezi","Kahramanmaraş Şehir Merkezi",Downtown,200
+Turkey,"Kayseri Airport (ASR)",Kayseri,Airport,ASR
+Turkey,"Kayseri Airport (ASR)",Kayseri,Airport,ASR
+Turkey,"Kayseri Erkilet Uluslararası Havalimanı (ASR)","Kayseri Erkilet Uluslararası Havalimanı (ASR)",Airport,ASR
+Turkey,"Kayseri Havalimanı","Kayseri Havalimanı",Airport,22
+Turkey,"Kayseri Merkez","Kayseri Merkez",Downtown,23
+Turkey,"Kayseri Şehir Merkezi","Kayseri Şehir Merkezi",Downtown,23
+Turkey,"Konya Airport (KYA)",Konya,Airport,KYA
+Turkey,"Malatya Havalimanı","Malatya Havalimanı",Airport,60
+Turkey,"Mardin Prof. Dr. Aziz Sancar Havalimanı (MQM)","Mardin Prof. Dr. Aziz Sancar Havalimanı (MQM)",Airport,MQM
+Turkey,"Milas-Bodrum Airport",Muğla,Airport,BJV
+Turkey,"Milas-Bodrum Airport",Muğla,1,BJV
+Turkey,"Milas-Bodrum Airport",Muğla,Airport,BJV
+Turkey,"Milas Bodrum Havalimanı (BJV)","Milas Bodrum Havalimanı (BJV)",Airport,BJV
+Turkey,"Mugla Bodrum",Muğla,2,140
+Turkey,"Muğla Bodrum Merkez","Muğla Bodrum Merkez",Downtown,134
+Turkey,"Muğla Bodrum Ortakent","Muğla Bodrum Ortakent",Downtown,404
+Turkey,"Muğla Bodrum Torba","Muğla Bodrum Torba",Downtown,403
+Turkey,"Muğla Bodrum Turgutreis","Muğla Bodrum Turgutreis",Downtown,401
+Turkey,"Muğla Bodrum Türkbükü","Muğla Bodrum Türkbükü",Downtown,402
+Turkey,"Muğla Bodrum Yalıkavak","Muğla Bodrum Yalıkavak",Downtown,400
+Turkey,"Mugla Fethiye",Muğla,2,150
+Turkey,"Mugla Fethiye",Muğla,2,150
+Turkey,"Mugla Fethiye",Muğla,2,150
+Turkey,"Mugla Göcek",Muğla,2,145
+Turkey,"Mugla Marmaris",Muğla,2,139
+Turkey,"Nevşehir Avanos","Nevşehir Avanos",Downtown,16
+Turkey,"Nevşehir Avanos","Nevşehir Avanos",Downtown,16
+Turkey,"Nevşehir Göreme","Nevşehir Göreme",Downtown,15
+Turkey,"Nevşehir Göreme","Nevşehir Göreme",Downtown,15
+Turkey,"Nevşehir Gülşehir","Nevşehir Gülşehir",Downtown,20
+Turkey,"Nevşehir Kapadokya Airport",Nevşehir,Airport,NAV
+Turkey,"Nevşehir Kapadokya Airport",Nevşehir,Airport,NAV
+Turkey,"Nevşehir Kapadokya Havalimanı","Nevşehir Kapadokya Havalimanı",Airport,NAV
+Turkey,"Nevşehir Kapadokya Havalimanı (NAV)","Nevşehir Kapadokya Havalimanı (NAV)",Airport,NAV
+Turkey,"Nevşehir Merkez","Nevşehir Merkez",Downtown,9
+Turkey,"Nevşehir Uchisar","Nevşehir Uchisar",Downtown,17
+Turkey,"Nevşehir Üçhisar","Nevşehir Üçhisar",Downtown,17
+Turkey,"Nevşehir Ürgüp","Nevşehir Ürgüp",Downtown,6
+Turkey,"Sabiha Gökçen Airport (SAW)","Sabiha Gökçen Airport (SAW)",Airport,SAW
+Turkey,"Sakarya Merkez","Sakarya Merkez",Downtown,229
+Turkey,Samsun,Samsun,,TR-SAM
+Turkey,"Samsun airport","Samsun airport",Airport,TR-SAM-SZF
+Turkey,"Samsun Çarşamba Havalimanı","Samsun Çarşamba Havalimanı",Airport,140
+Turkey,"Samsun Merkez","Samsun Merkez",Downtown,178
+Turkey,Sanliurfa,Sanliurfa,,TR-SAN
+Turkey,"Sanliurfa downtown","Sanliurfa downtown",Downtown,TR-SAN-DT
+Turkey,"Şanlıurfa GAP Airport","Şanlıurfa GAP Airport",Airport,TR-SAN-GNY
+Turkey,"Sinop Airport (NOP)",Sinop,1,NOP
+Turkey,"Sivas Merkez","Sivas Merkez",Downtown,171
+Turkey,"Sivas Nuri Demirag Airport (VAS)",Sivas,Airport,VAS
+Turkey,"Sivas Nuri Demirağ Havalimanı","Sivas Nuri Demirağ Havalimanı",Airport,147
+Turkey,"Sivas Nuri Demirağ Havalimanı (VAS)","Sivas Nuri Demirağ Havalimanı (VAS)",Airport,VAS
+Turkey,"Sivas Şehir Merkezi","Sivas Şehir Merkezi",Downtown,171
+Turkey,"Sivas Tren Garı","Sivas Tren Garı",Downtown,233
+Turkey,"Sivas Tren Garı","Sivas Tren Garı",Downtown,350
+Turkey,"Tokat Airport (TJK)",Tokat,1,TJK
+Turkey,"Tokat All Locations",Tokat,2,354
+Turkey,"Tokat City Center",Tokat,2,112
+Turkey,"Trabzon Airport (TZX)","Trabzon Airport (TZX)",Airport,TZX
+Turkey,"Van Şehir Merkezi","Van Şehir Merkezi",Downtown,105
+Turkey,"Zonguldak Caycuma Airport (ONQ)",Zonguldak,1,ONQ
+Turkey,"Zonguldak Merkez","Zonguldak Merkez",Downtown,247
+Ukraine,"Kyiv Airport",HORA,Airport,KBPA01
+Ukraine,"Kyiv Central Railway Station",KYIV,"Railway station",IEVX01
+"United Arab Emirates","Abu dhabi","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi","Abu Dhabi",Airport,AUH
+"United Arab Emirates","Abu Dhabi Airport","ABU DHABI",Airport,AUH
+"United Arab Emirates","Abu dhabi- Airport Road","Abu Dhabi",Downtown,AUH
+"United Arab Emirates","Abu Dhabi Al Bateen","Abu Dhabi",Downtown,ADAB
+"United Arab Emirates","Abu Dhabi Al Bateen","Abu Dhabi",Downtown,
+"United Arab Emirates","AbuDhabi AlBateen ExecApt","Abu Dhabi",Downtown,
+"United Arab Emirates","AbuDhabi AlBateen ExecApt","Abu Dhabi",Downtown,AZI
+"United Arab Emirates","Abu Dhabi Al Danah","Abu Dhabi",Downtown,ADAD
+"United Arab Emirates","Abu Dhabi Al Danah","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Al Karamah","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Al Karamah","Abu Dhabi",Downtown,ADAK
+"United Arab Emirates","Abu Dhabi AlMaryah Island","Abu Dhabi",Downtown,ADAMI
+"United Arab Emirates","Abu Dhabi AlMaryah Island","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Al Raha Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Al Raha Mall","Abu Dhabi",Downtown,ADRAH
+"United Arab Emirates","Abu Dhabi Al Reem Island","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Al Reem Island","Abu Dhabi",Downtown,ADRI
+"United Arab Emirates","Abu Dhabi Al Reem Mall","Abu Dhabi",Downtown,ADRM
+"United Arab Emirates","Abu Dhabi Al Reem Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Al Wahda Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Al Wahda Mall","Abu Dhabi",Downtown,ADWM
+"United Arab Emirates","Abu Dhabi Downtown (City)","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Downtown (City)","Abu Dhabi",Downtown,ADD
+"United Arab Emirates","Abu Dhabi Etihad Plaza","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Etihad Plaza","Abu Dhabi",Downtown,ADEP
+"United Arab Emirates","Abu Dhabi hotels (wcl)","Abu Dhabi",Hotel,ADH
+"United Arab Emirates","Abu Dhabi hotels (wcl)","Abu Dhabi",Hotel,WCL
+"United Arab Emirates","Abu Dhabi Industrial City","Abu Dhabi",Downtown,ADIC
+"United Arab Emirates","Abu Dhabi Industrial City","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Int Apt (AUH)","Abu Dhabi",Airport,AUH
+"United Arab Emirates","Abu Dhabi Int Apt (AUH)","Abu Dhabi",Airport,AUH
+"United Arab Emirates","Abu Dhabi Khalidiyah Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Khalidiyah Mall","Abu Dhabi",Downtown,ADKM
+"United Arab Emirates","Abu Dhabi Khalifa City","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Khalifa City","Abu Dhabi",Downtown,ADKC
+"United Arab Emirates","Abu Dhabi Madinat AlRiyad","Abu Dhabi",Downtown,ADMAR
+"United Arab Emirates","Abu Dhabi Madinat AlRiyad","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Marina Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Marina Mall","Abu Dhabi",Downtown,ADMRM
+"United Arab Emirates","Abu Dhabi Masdar City","Abu Dhabi",Downtown,ADMC
+"United Arab Emirates","Abu Dhabi Masdar City","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Mazyad Mall","Abu Dhabi",Downtown,ADMM
+"United Arab Emirates","Abu Dhabi Mazyad Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi M. Bin Zayed Ct","Abu Dhabi",Downtown,ADMBZ
+"United Arab Emirates","Abu Dhabi M. Bin Zayed Ct","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Musaffa Sanaiya","Abu Dhabi",Downtown,ADMS
+"United Arab Emirates","Abu Dhabi Musaffa Sanaiya","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Mushrif Mall","Abu Dhabi",Downtown,ADMU
+"United Arab Emirates","Abu Dhabi Mushrif Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Rabdan Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Rabdan Mall","Abu Dhabi",Downtown,ADMR
+"United Arab Emirates","Abu Dhabi Sadiyat Island","Abu Dhabi",Downtown,ADSI
+"United Arab Emirates","Abu Dhabi Sadiyat Island","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Shahama","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Shahama","Abu Dhabi",Downtown,ADSH
+"United Arab Emirates","Abu Dhabi WTC(WTCAD) Mall","Abu Dhabi",Downtown,ADWTC
+"United Arab Emirates","Abu Dhabi WTC(WTCAD) Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Yas Island","Abu Dhabi",Downtown,
+"United Arab Emirates","Abu Dhabi Yas Island","Abu Dhabi",Downtown,ADYI
+"United Arab Emirates","Abu Dhabi Yas Mall","Abu Dhabi",Downtown,ADYM
+"United Arab Emirates","Abu Dhabi Yas Mall","Abu Dhabi",Downtown,
+"United Arab Emirates","AD Al Markaziyah West","Abu Dhabi",Downtown,ADMW
+"United Arab Emirates","AD Al Markaziyah West","Abu Dhabi",Downtown,
+"United Arab Emirates","AD Crowne PlazaYasIsland","Abu Dhabi",Downtown,
+"United Arab Emirates","AD Crowne PlazaYasIsland","Abu Dhabi",Downtown,ADCY
+"United Arab Emirates","AD Hotel Beach Rotana","Abu Dhabi",Hotel,
+"United Arab Emirates","AD Hotel Beach Rotana","Abu Dhabi",Hotel,ADHBR
+"United Arab Emirates","AD Novotel AlBustan Hotel","Abu Dhabi",Hotel,
+"United Arab Emirates","AD Novotel AlBustan Hotel","Abu Dhabi",Hotel,ADNB
+"United Arab Emirates","AD Zayed Sports City","Abu Dhabi",Downtown,ADZSC
+"United Arab Emirates","AD Zayed Sports City","Abu Dhabi",Downtown,
+"United Arab Emirates","Ajman Deliver W C Limits",Ajman,Downtown,AJHC
+"United Arab Emirates","Ajman Deliver W C Limits",Ajman,Downtown,
+"United Arab Emirates","Ajman Downtown",Ajman,Downtown,DOWS
+"United Arab Emirates","Ajman Downtown",Ajman,Downtown,
+"United Arab Emirates","Ajman Hotels City Limits",Ajman,Hotel,
+"United Arab Emirates","Ajman Hotels City Limits",Ajman,Hotel,AJH
+"United Arab Emirates","Attard All Locs, Malta",Attard,Downtown,
+"United Arab Emirates","Beau Vallon,Seychelles","Beau Vallon",Downtown,
+"United Arab Emirates","BratislavaAirport,Austria",Bratislava,Airport,
+"United Arab Emirates","BratislavaAllLoc,Austria",Bratislava,Downtown,
+"United Arab Emirates","Bugibba Downtown,Malta",Bugibba,Downtown,
+"United Arab Emirates","Corinthia PalaceHtl,Malta",Attard,Downtown,
+"United Arab Emirates","Dubai Airport",DUBAI,Airport,DXB
+"United Arab Emirates","Dubai Airport T 1 (DXB)",Dubai,Airport,DXB
+"United Arab Emirates","Dubai Airport T 1 (DXB)",Dubai,Airport,DXB
+"United Arab Emirates","Dubai Airport T 2 (DXB)",Dubai,Airport,DXB
+"United Arab Emirates","Dubai Airport T 2 (DXB)",Dubai,Airport,DXB
+"United Arab Emirates","Dubai Airport T 3 (DXB)",Dubai,Airport,DXB
+"United Arab Emirates","Dubai Airport T 3 (DXB)",Dubai,Airport,DXB
+"United Arab Emirates","Dubai Al Barsha",Dubai,Downtown,
+"United Arab Emirates","Dubai Al Barsha",Dubai,Downtown,ALB
+"United Arab Emirates","Dubai - Al Barsha Heights",Dubai,Downtown,ABH
+"United Arab Emirates","Dubai - Al Barsha Heights",Dubai,Downtown,
+"United Arab Emirates","Dubai Al Jaddaf",Dubai,Downtown,ALJ
+"United Arab Emirates","Dubai Al Jaddaf",Dubai,Downtown,
+"United Arab Emirates","Dubai Al Maktoum Airport",DUBAI,Airport,DWC
+"United Arab Emirates","Dubai Al Maktoum Airport",Dubai,Airport,DWC
+"United Arab Emirates","Dubai Al Maktoum Airport",Dubai,Airport,DWC
+"United Arab Emirates","Dubai  Al Quoz",Dubai,Downtown,
+"United Arab Emirates","Dubai Al Quoz",Dubai,Downtown,ALQ
+"United Arab Emirates","Dubai Al Quoz",Dubai,Downtown,
+"United Arab Emirates","Dubai Business Bay",Dubai,Downtown,BSB
+"United Arab Emirates","Dubai Business Bay",Dubai,Downtown,
+"United Arab Emirates","Dubai Damac Mall",Dubai,Downtown,
+"United Arab Emirates","Dubai Deira",Dubai,Downtown,
+"United Arab Emirates","Dubai Deira",Dubai,Downtown,DIR
+"United Arab Emirates","Dubai - Delivery Ct Limit",Dubai,Downtown,DXBC
+"United Arab Emirates","Dubai - Delivery Ct Limit",Dubai,Downtown,
+"United Arab Emirates","Dubai - Downtown (City)",Dubai,Downtown,DWT
+"United Arab Emirates","Dubai - Downtown (City)",Dubai,Downtown,
+"United Arab Emirates","Dubai Festival City Mall",Dubai,Downtown,DFC
+"United Arab Emirates","Dubai Festival City Mall",Dubai,Downtown,
+"United Arab Emirates","Dubai Hotels City Limits",Dubai,Hotel,DXB
+"United Arab Emirates","Dubai Hotels City Limits",Dubai,Hotel,
+"United Arab Emirates","Dubai International Airport",Dubai,Airport,DXB
+"United Arab Emirates","Dubai International Airport",Dubai,Airport,DXB
+"United Arab Emirates","Dubai International Airport","Dubai International Airport",Airport,DXB
+"United Arab Emirates","Dubai International Airport",Dubai,Airport,DXB
+"United Arab Emirates","Dubai International Airport",Dubai,Airport,DXB
+"United Arab Emirates","Dubai International Airport (DXB)","Dubai International Airport (DXB)",Airport,DXB
+"United Arab Emirates","Dubai Investment Park",Dubai,Downtown,
+"United Arab Emirates","Dubai Jumeirah Lake Tower",Dubai,Downtown,JLT
+"United Arab Emirates","Dubai Jumeirah Lake Tower",Dubai,Downtown,
+"United Arab Emirates","Dubai Le Méridien Hotel ",Dubai,Hotel,LMD
+"United Arab Emirates","Dubai Le Méridien Hotel ",Dubai,Hotel,
+"United Arab Emirates","Dubai Marina Downtown",Dubai,Downtown,DMT
+"United Arab Emirates","Dubai Marina Downtown",Dubai,Downtown,
+"United Arab Emirates","Dubai Millennium Hotel",Dubai,Hotel,
+"United Arab Emirates","Dubai Millennium Hotel",Dubai,Hotel,"MAH "
+"United Arab Emirates","Dubai Mirdif",Dubai,Downtown,BIR
+"United Arab Emirates","Dubai Mirdif",Dubai,Downtown,
+"United Arab Emirates","Dubai Oud Mehta",Dubai,Downtown,
+"United Arab Emirates","Dubai Palm Jumeirah",Dubai,Downtown,
+"United Arab Emirates","Dubai Palm Jumeirah",Dubai,Downtown,PLO
+"United Arab Emirates","Dubai Shangri-La Hotel ",Dubai,Hotel,
+"United Arab Emirates","Dubai Shangri-La Hotel ",Dubai,Hotel,"SHK "
+"United Arab Emirates","Dubai Silicon Oasis",Dubai,Downtown,SLO
+"United Arab Emirates","Dubai Silicon Oasis",Dubai,Downtown,
+"United Arab Emirates","Dubai Sports City",Dubai,Downtown,DSC
+"United Arab Emirates","Dubai Sports City",Dubai,Downtown,
+"United Arab Emirates","FLL Airport, Florida","Fort Lauderdale",Airport,
+"United Arab Emirates","GrazAirport,Austria",Graz,Airport,
+"United Arab Emirates","GrazAllLoc,Austria",Graz,Downtown,
+"United Arab Emirates","Innsbruck Airport,Austria",Innsbruck,Airport,
+"United Arab Emirates","InnsbruckAllLoc,Austria",Innsbruck,Downtown,
+"United Arab Emirates",Jumeirah,Dubai,Downtown,
+"United Arab Emirates",Jumeirah,Dubai,Downtown,JUM
+"United Arab Emirates","La Louise,Seychelles",Victoria,Downtown,
+"United Arab Emirates","London Airport Heathrow",London,Airport,
+"United Arab Emirates","London (all location)",London,Downtown,
+"United Arab Emirates","London City Airport",London,Airport,
+"United Arab Emirates","London Euston",London,Downtown,
+"United Arab Emirates","London Gatwick Airport",London,Airport,
+"United Arab Emirates","London Luton Airport",London,Airport,
+"United Arab Emirates","London Marylebone Station",London,Downtown,
+"United Arab Emirates","London Paddington Station",London,Downtown,
+"United Arab Emirates","London Stansted Airport",London,Airport,
+"United Arab Emirates","London St.Pancras Station",London,Downtown,
+"United Arab Emirates","London Victoria",London,Downtown,
+"United Arab Emirates","London Waterloo",London,Downtown,
+"United Arab Emirates","Luqa All Locations, Malta",Luqa,Downtown,
+"United Arab Emirates","Mahe All Loc, Seychelles",Mahe,Downtown,
+"United Arab Emirates","Mahe Downtown,Seychelles",Mahe,Downtown,
+"United Arab Emirates","Mahe EdenIslnd,Seychelles",Mahe,Downtown,
+"United Arab Emirates","Mahe Port, Seychelles",Mahe,Downtown,
+"United Arab Emirates","Malta Int Airport, Malta",Luqa,Airport,
+"United Arab Emirates","Miami Airport, Florida",Miami,Airport,
+"United Arab Emirates","MunichAirport,Austria",Munich,Airport,
+"United Arab Emirates","MunichAirport,Austria",Munich,Airport,MUC
+"United Arab Emirates","MunichAllLoc,Austria",Munich,Downtown,
+"United Arab Emirates","MunichAllLoc,Austria",Munich,Downtown,MUN
+"United Arab Emirates","Munich Downtown,Austria",Munich,Downtown,
+"United Arab Emirates","Munich Downtown,Austria",Munich,Downtown,MUD
+"United Arab Emirates","MunichTrainStn,Austria",Munich,Downtown,MCS
+"United Arab Emirates","MunichTrainStn,Austria",Munich,Downtown,
+"United Arab Emirates","Orlando Airport, Florida",Orlando,Airport,
+"United Arab Emirates","Plovdiv Airport, Bulgaria",Plovdiv,Airport,
+"United Arab Emirates","Plovdiv All Loc, Bulgaria",Plovdiv,Downtown,
+"United Arab Emirates","Plovdiv Dwntown, Bulgaria",Plovdiv,Downtown,
+"United Arab Emirates","Ras Al Khaimah","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras Al Khaimah Airport","Ras Al Khaimah",Airport,RKT
+"United Arab Emirates","Ras Al Khaimah Airport","Ras Al Khaimah",Airport,RKT
+"United Arab Emirates","Ras AlKhaimah AlHamra B R","Ras Al Khaimah",Downtown,HBR
+"United Arab Emirates","Ras AlKhaimah AlHamra B R","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras AlKhaimahAlHamra Mall","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras AlKhaimahAlHamra Mall","Ras Al Khaimah",Downtown,RAHM
+"United Arab Emirates","Ras Al Khaimah Downtown","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras Al Khaimah Downtown","Ras Al Khaimah",Downtown,RAKD
+"United Arab Emirates","Ras Al Khaimah Hilton BR","Ras Al Khaimah",Downtown,RHRS
+"United Arab Emirates","Ras Al Khaimah Hilton BR","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras Al Khaimah International Airport","Ras al-Khaimah",Airport,RKT
+"United Arab Emirates","Ras Al Khaimah Julphar","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras Al Khaimah Julphar","Ras Al Khaimah",Downtown,JUL
+"United Arab Emirates","Ras Al Khaimah Mamourah","Ras Al Khaimah",Downtown,RAKM
+"United Arab Emirates","Ras Al Khaimah Mamourah","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras Al Khaimah Manar Mall","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras Al Khaimah Manar Mall","Ras Al Khaimah",Downtown,RMM
+"United Arab Emirates","Ras Al Khaimah Rak Mall","Ras Al Khaimah",Downtown,
+"United Arab Emirates","Ras Al Khaimah Rak Mall","Ras Al Khaimah",Downtown,RRM
+"United Arab Emirates","Ras AlKhaimah RitzCarlton","Ras Al Khaimah",Downtown,RHF
+"United Arab Emirates","Ras AlKhaimah RitzCarlton","Ras Al Khaimah",Downtown,
+"United Arab Emirates","SalzburgAirport,Austria",Salzburg,Airport,
+"United Arab Emirates","SalzburgAllLoc,Austria",Salzburg,Downtown,
+"United Arab Emirates","SalzburgDwntwn,Austria",Salzburg,Downtown,
+"United Arab Emirates","Seychelles Apt, Seychelle",Victoria,Airport,
+"United Arab Emirates","Sharjah Airport",SHARJAH,Airport,SHJ
+"United Arab Emirates","Sharjah Airport (SHJ)",Sharjah,Airport,SHJ
+"United Arab Emirates","Sharjah Airport (SHJ)",Sharjah,Airport,SHJ
+"United Arab Emirates","Sharjah Al Majaz",Sharjah,Downtown,
+"United Arab Emirates","Sharjah Al Majaz",Sharjah,Downtown,"COP "
+"United Arab Emirates","Sharjah Deliver C Limits",Sharjah,Downtown,SHLC
+"United Arab Emirates","Sharjah Deliver C Limits",Sharjah,Downtown,
+"United Arab Emirates","Sharjah Downtown (City)",Sharjah,Downtown,
+"United Arab Emirates","Sharjah Downtown (City)",Sharjah,Downtown,SHJD
+"United Arab Emirates","Sharjah Hotels City Limit",Sharjah,Hotel,SHL
+"United Arab Emirates","Sharjah Hotels City Limit",Sharjah,Hotel,
+"United Arab Emirates","Sharjah Sahara Centre",Sharjah,Downtown,
+"United Arab Emirates","Sharjah Sahara Centre",Sharjah,Downtown,"SAH "
+"United Arab Emirates",Sharjha,Sharjah,Downtown,
+"United Arab Emirates","Sleima All locs, Malta",Sleima,Downtown,
+"United Arab Emirates","Sleima Hotel Dlv, Malta",Sleima,Hotel,
+"United Arab Emirates","Sofia Airport, Bulgaria",Sofia,Airport,
+"United Arab Emirates","Sofia All Loc, Bulgaria",Sofia,Downtown,
+"United Arab Emirates","Sofia Downtown, Bulgaria",Sofia,Downtown,
+"United Arab Emirates","Sofia Hotels, Bulgaria",Sofia,Hotel,
+"United Arab Emirates","St. Julians Dwtn, Malta","St. Julians",Downtown,
+"United Arab Emirates","St. Pauls Bay Dwtn, Malta","St. Pauls Bay",Downtown,
+"United Arab Emirates","Tampa Airport, Florida",Tampa,Airport,
+"United Arab Emirates","Valletta All Loc, Malta",Valetta,Downtown,
+"United Arab Emirates","Valletta Downtown, Malta",Valetta,Downtown,
+"United Arab Emirates","Valletta Port, Malta",Valetta,Downtown,
+"United Arab Emirates","Victoria Dwtwn,Seychelles",Victoria,Downtown,
+"United Arab Emirates","Victoria loc, Seychelles",Victoria,Downtown,
+"United Arab Emirates","Vienna Airport, Austria",Vienna,Airport,
+"United Arab Emirates","ViennaAllLoc,Austria",Vienna,Downtown,
+"United Arab Emirates","ViennaDwntwn,Austria",Vienna,Downtown,
+"United Arab Emirates","ViennaSpittelauer,Austria",Vienna,Downtown,
+"United Arab Emirates","Xemxija Downtown, Malta","St Pauls Bay",Downtown,
+"United Arab Emirates","Zayed International Airport","Abu Dhabi",Airport,AUH
+"United Arab Emirates","Zell am See,Austria",ZellAmSee,Downtown,
+"United Kingdom","Edinburgh Airport",BROXBURN,Airport,EDIA01
+"United Kingdom","Edinburgh Haymarket Railway Station",#5,"Railway station",EDIX02
+"United Kingdom","Edinburgh Waverley Railway Station","SCOTLAND, EDINBURGH","Railway station",EDIX01
+"United Kingdom","Manchester Airport",WYTHENSHAWE,Airport,MANA01
+"United States","Alajuela Airport","Alajuela Airport",Airport,
+"United States","Atlanta Airport","Atlanta Airport",Airport,
+"United States","Atlanta City","Atlanta City",,
+"United States","Austin-Bergstrom International Airport","Austin-Bergstrom International Airport",Airport,
+"United States","Bajio Airport","Bajio Airport",Airport,
+"United States","Chicago Airport","Chicago Airport",Airport,
+"United States","Chicago City","Chicago City",,
+"United States","Denver Airport","Denver Airport",Airport,
+"United States","Denver City","Denver City",,
+"United States","Fort Lauderdale Airport","Fort Lauderdale Airport",Airport,
+"United States","Houston Airport","Houston Airport",Airport,
+"United States","Liberia Airport","Liberia Airport",Airport,
+"United States","Los Angeles Airport","Los Angeles Airport",Airport,
+"United States","Miami Airport","Miami Airport",Airport,
+"United States","Miami Airport",MIAMI,Airport,MIAA01
+"United States","Miami International Airport (MIA)","Miami International Airport (MIA)",Airport,MIA
+"United States","Orlando Airport","Orlando Airport",Airport,
+"United States","Orlando City","Orlando City",,
+"United States","Orlando International Airport (MCO)","Orlando International Airport (MCO)",Airport,MCO
+"United States","Routes Miami Beach","Routes Miami Beach",,
+"United States","Tampa Airport","Tampa Airport",Airport,
+"U.s. Virgin Islands","Christiansted VI Downtown",CHRISTIANSTED,City,STXC01
+"U.s. Virgin Islands","Cyril E King Airport","Charlotte Amalie",Airport,STT
+"U.s. Virgin Islands","Edward Wilmoth Blyden IV Port","Charlotte Amalie",Port,STTE
+"U.s. Virgin Islands","Henry Rholsen Airport",CHRISTIANSTED,Airport,STXA01
+"U.s. Virgin Islands","Urman Victor Fredericks Port","Red Hook",Port,STTU
+Venezuela,Maiquetía,Caracas,Airport,CCS
+Venezuela,"Santiago Mariño Airport","Isla Margarita",Airport,PMV
+Zambia,"⁠Harry Mwaanga Nkumbula Airport (LVI)","⁠Harry Mwaanga Nkumbula Airport (LVI)",Airport,LVI
+Zambia,"Kenneth Kaunda International Airport (LUN)","Kenneth Kaunda International Airport (LUN)",Airport,LUN
+Zambia,"Simon Mwansa Kapwepwe Airport (NLA)","Simon Mwansa Kapwepwe Airport (NLA)",Airport,NLA
+Zambia,"Solwezi Airport (SLI)","Solwezi Airport (SLI)",Airport,SLI
