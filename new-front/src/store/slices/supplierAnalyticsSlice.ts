@@ -21,6 +21,7 @@ interface SupplierAnalyticsState {
     category: string;
     carType: string;
     searchQuery: string;
+    supplierStatus: string;
     page: number;
   };
   pagination: {
@@ -42,6 +43,7 @@ const initialState: SupplierAnalyticsState = {
     category: "All",
     carType: "All",
     searchQuery: "",
+    supplierStatus: "active",
     page: 1,
   },
   pagination: null,

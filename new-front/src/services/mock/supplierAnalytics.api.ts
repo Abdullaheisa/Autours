@@ -28,6 +28,7 @@ export interface SupplierIntelligenceFilters {
   category?: string;
   carType?: string;
   searchQuery?: string;
+  supplierStatus?: string;
   page?: number;
   per_page?: number;
 }
@@ -74,6 +75,14 @@ const mockFetchSupplierAnalytics = async (
       }
 
       let filteredCars = baseCars;
+
+      if (filters?.supplierStatus && filters.supplierStatus !== 'all') {
+        if (filters.supplierStatus === 'active') {
+          filteredCars = filteredCars.filter((car, idx) => idx % 4 !== 0);
+        } else if (filters.supplierStatus === 'inactive') {
+          filteredCars = filteredCars.filter((car, idx) => idx % 4 === 0);
+        }
+      }
 
       if (filters?.category && filters.category !== 'All') {
         filteredCars = filteredCars.filter(
@@ -187,6 +196,7 @@ const realFetchSupplierAnalytics = async (
   if (filters.category && filters.category !== 'All') params.set('category', filters.category);
   if (filters.carType && filters.carType !== 'All') params.set('carType', filters.carType);
   if (filters.searchQuery) params.set('search', filters.searchQuery);
+  if (filters.supplierStatus) params.set('supplier_status', filters.supplierStatus);
   params.set('page', String(filters.page ?? 1));
   params.set('per_page', String(filters.per_page ?? 20));
 

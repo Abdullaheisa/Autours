@@ -14,13 +14,24 @@ class SupplierIntelligenceController extends Controller
         $query = Vehicle::with(['supplierUser', 'vehicle_category', 'fuelPolicy', 'branches', 'vehiclePhoto']);
 
         // Filters
+        $supplierStatus = $request->get('supplier_status', 'active');
+        if ($supplierStatus === 'active') {
+            $query->whereHas('supplierUser', function($q) {
+                $q->where('role', 'active_supplier');
+            });
+        } elseif ($supplierStatus === 'inactive') {
+            $query->whereHas('supplierUser', function($q) {
+                $q->where('role', '!=', 'active_supplier');
+            });
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
                   ->orWhereHas('supplierUser', function($sq) use ($search) {
-                      $sq->where('first_name', 'ilike', "%{$search}%")
-                         ->orWhere('last_name', 'ilike', "%{$search}%");
+                      $sq->where('name', 'ilike', "%{$search}%")
+                         ->orWhere('company', 'ilike', "%{$search}%");
                   });
             });
         }
@@ -47,13 +58,19 @@ class SupplierIntelligenceController extends Controller
                 $q->whereHas('branch', function($bq) use ($countryNames) {
                     $bq->where(function($qq) use ($countryNames) {
                         foreach($countryNames as $cn) {
-                            $qq->orWhere('country', 'ilike', "%{$cn}%");
+                            $qq->orWhere('country', 'ilike', $cn);
                         }
                     });
                 })->orWhereHas('branches', function($bq) use ($countryNames) {
                     $bq->where(function($qq) use ($countryNames) {
                         foreach($countryNames as $cn) {
-                            $qq->orWhere('country', 'ilike', "%{$cn}%");
+                            $qq->orWhere('country', 'ilike', $cn);
+                        }
+                    });
+                })->orWhereHas('supplierUser', function($sq) use ($countryNames) {
+                    $sq->where(function($qq) use ($countryNames) {
+                        foreach($countryNames as $cn) {
+                            $qq->orWhere('country', 'ilike', $cn);
                         }
                     });
                 });
@@ -70,14 +87,19 @@ class SupplierIntelligenceController extends Controller
             });
         }
 
+        // Clone for stats before paginating
+        $statsQueryForAgg = clone $query;
+        $statsQueryForCheapest = clone $query;
+        $statsQueryForExpensive = clone $query;
+        $statsQueryForSuppliers = clone $query;
+
         $perPage = $request->get('per_page', 20);
         $vehicles = $query->paginate($perPage);
 
         // Calculate dynamic stats
-        $statsQuery = clone $query;
-        $statsQuery->setEagerLoads([]);
+        $statsQueryForAgg->setEagerLoads([]);
         
-        $aggregate = $statsQuery->selectRaw('
+        $aggregate = $statsQueryForAgg->selectRaw('
             MIN(price) as min_price, 
             MAX(price) as max_price, 
             AVG(price) as avg_price,
@@ -89,8 +111,8 @@ class SupplierIntelligenceController extends Controller
         $avgPrice = $aggregate->avg_price ?? 0;
         $totalCars = $aggregate->total_cars ?? 0;
 
-        $cheapestCar = (clone $query)->orderBy('price', 'asc')->first();
-        $expensiveCar = (clone $query)->orderBy('price', 'desc')->first();
+        $cheapestCar = $statsQueryForCheapest->orderBy('price', 'asc')->first();
+        $expensiveCar = $statsQueryForExpensive->orderBy('price', 'desc')->first();
 
         $getSupplierName = function($car) {
             if (!$car || !$car->supplierUser) return 'N/A';
@@ -101,9 +123,8 @@ class SupplierIntelligenceController extends Controller
         $expensiveSupplierName = $getSupplierName($expensiveCar);
         
         // Distinct supplier count for filtered vehicles
-        $totalSuppliers = clone $query;
-        $totalSuppliers->setEagerLoads([]);
-        $totalSuppliersCount = $totalSuppliers->distinct('supplier')->count('supplier');
+        $statsQueryForSuppliers->setEagerLoads([]);
+        $totalSuppliersCount = $statsQueryForSuppliers->distinct('supplier')->count('supplier');
 
         $stats = [
             'lowestPrice' => round($minPrice),

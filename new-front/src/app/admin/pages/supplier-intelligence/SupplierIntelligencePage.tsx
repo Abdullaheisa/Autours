@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import { loadSupplierAnalytics, setFilters, updateNegotiation } from "@/store/slices/supplierAnalyticsSlice";
 import { FilterBar } from "./components/FilterBar";
+import { referenceApi, profitApi } from "@/services/api";
 import { AnalyticsCards } from "./components/AnalyticsCards";
 import { SupplierTable } from "./components/SupplierTable";
 import { MarketCharts } from "./components/MarketCharts";
@@ -18,9 +19,132 @@ export default function SupplierIntelligencePage() {
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [countriesList, setCountriesList] = useState<any[]>([]);
+  const [suppliersList, setSuppliersList] = useState<any[]>([]);
+
+  // Fetch unique active supplier countries list on mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res: any = await referenceApi.getCountries();
+        const rawCountries = Array.isArray(res) ? res : (res?.data || []);
+        
+        const mapped = rawCountries.map((c: string) => {
+          const lowerName = c.toLowerCase().trim();
+          const knownCountries: Record<string, { code: string; image: string }> = {
+            'bahrain': { code: 'BH', image: 'https://flagcdn.com/w40/bh.png' },
+            'egypt': { code: 'EG', image: 'https://flagcdn.com/w40/eg.png' },
+            'jordan': { code: 'JO', image: 'https://flagcdn.com/w40/jo.png' },
+            'kuwait': { code: 'KW', image: 'https://flagcdn.com/w40/kw.png' },
+            'morocco': { code: 'MA', image: 'https://flagcdn.com/w40/ma.png' },
+            'oman': { code: 'OM', image: 'https://flagcdn.com/w40/om.png' },
+            'qatar': { code: 'QA', image: 'https://flagcdn.com/w40/qa.png' },
+            'saudi arabia': { code: 'SA', image: 'https://flagcdn.com/w40/sa.png' },
+            'saudi': { code: 'SA', image: 'https://flagcdn.com/w40/sa.png' },
+            'turkey': { code: 'TR', image: 'https://flagcdn.com/w40/tr.png' },
+            'türkiye': { code: 'TR', image: 'https://flagcdn.com/w40/tr.png' },
+            'united arab emirates': { code: 'AE', image: 'https://flagcdn.com/w40/ae.png' },
+            'uae': { code: 'AE', image: 'https://flagcdn.com/w40/ae.png' },
+            'romania': { code: 'RO', image: 'https://flagcdn.com/w40/ro.png' },
+            'canada': { code: 'CA', image: 'https://flagcdn.com/w40/ca.png' },
+            'indonesia': { code: 'ID', image: 'https://flagcdn.com/w40/id.png' },
+            'venezuela': { code: 'VE', image: 'https://flagcdn.com/w40/ve.png' },
+            'montenegro': { code: 'ME', image: 'https://flagcdn.com/w40/me.png' },
+            'dominican republic': { code: 'DO', image: 'https://flagcdn.com/w40/do.png' },
+            'bosnia and herzegovina': { code: 'BA', image: 'https://flagcdn.com/w40/ba.png' },
+            'portugal': { code: 'PT', image: 'https://flagcdn.com/w40/pt.png' },
+            'malta': { code: 'MT', image: 'https://flagcdn.com/w40/mt.png' },
+            'albania': { code: 'AL', image: 'https://flagcdn.com/w40/al.png' },
+            'grenada': { code: 'GD', image: 'https://flagcdn.com/w40/gd.png' },
+            'ukraine': { code: 'UA', image: 'https://flagcdn.com/w40/ua.png' },
+            'latvia': { code: 'LV', image: 'https://flagcdn.com/w40/lv.png' },
+            'slovakia': { code: 'SK', image: 'https://flagcdn.com/w40/sk.png' },
+            'iceland': { code: 'IS', image: 'https://flagcdn.com/w40/is.png' },
+            'cyprus': { code: 'CY', image: 'https://flagcdn.com/w40/cy.png' },
+            'armenia': { code: 'AM', image: 'https://flagcdn.com/w40/am.png' },
+            'australia': { code: 'AU', image: 'https://flagcdn.com/w40/au.png' },
+            'mauritius': { code: 'MU', image: 'https://flagcdn.com/w40/mu.png' },
+            'serbia': { code: 'RS', image: 'https://flagcdn.com/w40/rs.png' },
+            'spain': { code: 'ES', image: 'https://flagcdn.com/w40/es.png' },
+            'georgia': { code: 'GE', image: 'https://flagcdn.com/w40/ge.png' },
+            'antigua and barbuda': { code: 'AG', image: 'https://flagcdn.com/w40/ag.png' },
+            'italy': { code: 'IT', image: 'https://flagcdn.com/w40/it.png' },
+            'fiji': { code: 'FJ', image: 'https://flagcdn.com/w40/fj.png' },
+            'united kingdom': { code: 'GB', image: 'https://flagcdn.com/w40/gb.png' },
+            'uk': { code: 'GB', image: 'https://flagcdn.com/w40/gb.png' },
+            'argentina': { code: 'AR', image: 'https://flagcdn.com/w40/ar.png' },
+            'liechtenstein': { code: 'LI', image: 'https://flagcdn.com/w40/li.png' },
+            'azerbaijan': { code: 'AZ', image: 'https://flagcdn.com/w40/az.png' },
+            'greece': { code: 'GR', image: 'https://flagcdn.com/w40/gr.png' },
+            'puerto rico': { code: 'PR', image: 'https://flagcdn.com/w40/pr.png' },
+            'chile': { code: 'CL', image: 'https://flagcdn.com/w40/cl.png' },
+            'estonia': { code: 'EE', image: 'https://flagcdn.com/w40/ee.png' },
+            'japan': { code: 'JP', image: 'https://flagcdn.com/w40/jp.png' },
+            'kosovo': { code: 'XK', image: 'https://flagcdn.com/w40/xk.png' },
+            'jamaica': { code: 'JM', image: 'https://flagcdn.com/w40/jm.png' },
+            'new zealand': { code: 'NZ', image: 'https://flagcdn.com/w40/nz.png' },
+            'hungary': { code: 'HU', image: 'https://flagcdn.com/w40/hu.png' },
+            'guatemala': { code: 'GT', image: 'https://flagcdn.com/w40/gt.png' },
+            'panama': { code: 'PA', image: 'https://flagcdn.com/w40/pa.png' },
+            'bulgaria': { code: 'BG', image: 'https://flagcdn.com/w40/bg.png' },
+            'croatia': { code: 'HR', image: 'https://flagcdn.com/w40/hr.png' },
+            'north macedonia': { code: 'MK', image: 'https://flagcdn.com/w40/mk.png' },
+            'mexico': { code: 'MX', image: 'https://flagcdn.com/w40/mx.png' },
+            'nepal': { code: 'NP', image: 'https://flagcdn.com/w40/np.png' },
+            'poland': { code: 'PL', image: 'https://flagcdn.com/w40/pl.png' },
+            'saint martin': { code: 'MF', image: 'https://flagcdn.com/w40/mf.png' },
+          };
+          
+          let code = 'UN';
+          let image = 'https://flagcdn.com/w40/un.png';
+          
+          if (knownCountries[lowerName]) {
+            code = knownCountries[lowerName].code;
+            image = knownCountries[lowerName].image;
+          }
+          
+          return {
+            id: lowerName.replace(/\s+/g, '-'),
+            name: c,
+            image,
+            code
+          };
+        });
+        setCountriesList(mapped);
+      } catch (err) {
+        console.error("Failed to fetch countries:", err);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  // Fetch unique suppliers for the selected country
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const res: any = await profitApi.getSuppliers(filters.country !== "All" ? filters.country : undefined);
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        const mapped = list
+          .map((s: any) => ({
+            id: s.id,
+            name: s.company || s.name || `Supplier #${s.id}`
+          }))
+          .filter((s: any) => s.name && s.name.trim() !== "")
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setSuppliersList(mapped);
+      } catch (err) {
+        console.error("Failed to fetch suppliers:", err);
+      }
+    };
+    fetchSuppliers();
+  }, [filters.country]);
 
   const handleFilterChange = (key: string, value: string) => {
-    dispatch(setFilters({ [key]: value, page: 1 }));
+    if (key === "country") {
+      dispatch(setFilters({ country: value, searchQuery: "", page: 1 }));
+    } else {
+      dispatch(setFilters({ [key]: value, page: 1 }));
+    }
   };
 
   const handleSearch = () => {
@@ -28,11 +152,6 @@ export default function SupplierIntelligencePage() {
     dispatch(loadSupplierAnalytics(filters));
   };
 
-  /**
-   * Export currently displayed (filtered) results to a real .xlsx file using SheetJS.
-   * Includes all required columns: Supplier, Car, Country, Category, Car Type,
-   * Daily/Weekly/Monthly Price, Availability, Negotiation Status.
-   */
   const handleExportToExcel = () => {
     if (!data || data.length === 0) return;
 
@@ -51,7 +170,6 @@ export default function SupplierIntelligencePage() {
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
-    // Auto-size columns for readability
     const colWidths = Object.keys(exportData[0] || {}).map(key => ({
       wch: Math.max(key.length + 2, 18)
     }));
@@ -76,7 +194,6 @@ export default function SupplierIntelligencePage() {
     setIsModalOpen(false);
   };
 
-  // ── Loading skeleton ──────────────────────────────────────────────────────
   const renderLoadingSkeleton = () => (
     <div className="space-y-6 animate-pulse">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -108,7 +225,6 @@ export default function SupplierIntelligencePage() {
     </div>
   );
 
-  // ── Empty states ──────────────────────────────────────────────────────────
   const renderEmptyState = () => (
     <div className="bg-white rounded-[2rem] border border-gray-100 p-8 md:p-16 text-center max-w-3xl mx-auto shadow-sm my-8">
       <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 text-primary">
@@ -157,12 +273,14 @@ export default function SupplierIntelligencePage() {
         <p className="text-sm text-gray-500 mt-1">Analyze market rates, compare suppliers, and manage negotiations.</p>
       </div>
 
-      {/* Filter bar — no export button here */}
+      {/* Filter bar */}
       <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
         onSearch={handleSearch}
         loading={loading}
+        countriesList={countriesList}
+        suppliersList={suppliersList}
       />
 
       {/* Content */}
@@ -182,7 +300,7 @@ export default function SupplierIntelligencePage() {
             <MarketCharts data={data} />
           </div>
 
-          {/* Table card — export button lives in the header here */}
+          {/* Table card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <div>
@@ -190,7 +308,6 @@ export default function SupplierIntelligencePage() {
                 <p className="text-xs text-gray-400 mt-0.5">{data.length} result{data.length !== 1 ? "s" : ""} based on current filters</p>
               </div>
 
-              {/* ── Export button — compact icon + label ── */}
               <button
                 type="button"
                 onClick={handleExportToExcel}
