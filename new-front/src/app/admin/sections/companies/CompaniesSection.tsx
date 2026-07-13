@@ -70,7 +70,7 @@ export default function CompaniesSection() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("active");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -165,7 +165,7 @@ export default function CompaniesSection() {
 
   const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const clearFilters = () => { setSelectedCountry("All"); setSelectedStatus("All"); setSearchQuery(""); setCurrentPage(1); };
+  const clearFilters = () => { setSelectedCountry("All"); setSelectedStatus("active"); setSearchQuery(""); setCurrentPage(1); };
 
   if (selectedCompany) {
     return (
