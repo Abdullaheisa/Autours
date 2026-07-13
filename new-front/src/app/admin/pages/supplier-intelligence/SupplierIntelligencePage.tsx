@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import { loadSupplierAnalytics, setFilters, updateNegotiation } from "@/store/slices/supplierAnalyticsSlice";
 import { FilterBar } from "./components/FilterBar";
-import { referenceApi, profitApi } from "@/services/api";
+import { referenceApi, companyApi } from "@/services/api";
 import { AnalyticsCards } from "./components/AnalyticsCards";
 import { SupplierTable } from "./components/SupplierTable";
 import { MarketCharts } from "./components/MarketCharts";
@@ -19,7 +19,9 @@ export default function SupplierIntelligencePage() {
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  
   const [countriesList, setCountriesList] = useState<any[]>([]);
+  const [allCompanies, setAllCompanies] = useState<any[]>([]);
   const [suppliersList, setSuppliersList] = useState<any[]>([]);
 
   // Fetch unique active supplier countries list on mount
@@ -118,30 +120,61 @@ export default function SupplierIntelligencePage() {
     fetchCountries();
   }, []);
 
-  // Fetch unique suppliers for the selected country
+  // Fetch all companies from DB once on mount
   useEffect(() => {
-    const fetchSuppliers = async () => {
+    const fetchAllCompanies = async () => {
       try {
-        const res: any = await profitApi.getSuppliers(filters.country !== "All" ? filters.country : undefined);
-        const list = Array.isArray(res) ? res : (res?.data || []);
-        const mapped = list
-          .map((s: any) => ({
-            id: s.id,
-            name: s.company || s.name || `Supplier #${s.id}`
-          }))
-          .filter((s: any) => s.name && s.name.trim() !== "")
-          .sort((a: any, b: any) => a.name.localeCompare(b.name));
-        setSuppliersList(mapped);
+        const res: any = await companyApi.getAll();
+        const rawData = Array.isArray(res) ? res : (res?.data || []);
+        
+        const mapped = rawData.map((user: any) => {
+          const role = user.role || 'supplier';
+          let status = 'active';
+          if (role === 'under_review' || role === 'supplier') status = 'inactive';
+          else if (role === 'suspended' || role === 'suspended_supplier') status = 'inactive';
+          
+          const operatingCountries = Array.from(new Set(
+            [
+              user.country,
+              ...(user.branches || []).map((b: any) => b.country)
+            ]
+              .filter(Boolean)
+              .map(c => c.trim().toLowerCase())
+          ));
+
+          return {
+            id: user.id,
+            name: user.company || user.name || `Supplier #${user.id}`,
+            status,
+            operatingCountries
+          };
+        });
+        setAllCompanies(mapped);
       } catch (err) {
-        console.error("Failed to fetch suppliers:", err);
+        console.error("Failed to fetch all companies:", err);
       }
     };
-    fetchSuppliers();
-  }, [filters.country]);
+    fetchAllCompanies();
+  }, []);
+
+  // Dynamically filter matching suppliers list based on selected country and status
+  useEffect(() => {
+    const filtered = allCompanies.filter((company) => {
+      const matchesCountry = filters.country === "All" || 
+        company.operatingCountries.includes(filters.country.toLowerCase());
+      
+      const matchesStatus = filters.supplierStatus === "all" || 
+        company.status === filters.supplierStatus;
+
+      return matchesCountry && matchesStatus;
+    });
+
+    setSuppliersList(filtered.sort((a, b) => a.name.localeCompare(b.name)));
+  }, [allCompanies, filters.country, filters.supplierStatus]);
 
   const handleFilterChange = (key: string, value: string) => {
-    if (key === "country") {
-      dispatch(setFilters({ country: value, searchQuery: "", page: 1 }));
+    if (key === "country" || key === "supplierStatus") {
+      dispatch(setFilters({ [key]: value, searchQuery: "", page: 1 }));
     } else {
       dispatch(setFilters({ [key]: value, page: 1 }));
     }

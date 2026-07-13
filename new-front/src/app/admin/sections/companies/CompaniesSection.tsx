@@ -152,9 +152,15 @@ export default function CompaniesSection() {
 
   const filteredCompanies = useMemo(() => {
     return companiesData.filter((company) => {
-      const matchesSearch = company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const searchLower = searchQuery.toLowerCase().trim();
+      const searchNormalized = getNormalizedCountry(searchQuery).toLowerCase();
+
+      const matchesSearch = 
+        company.name.toLowerCase().includes(searchLower) ||
+        company.email.toLowerCase().includes(searchLower) ||
+        company.country.toLowerCase() === searchNormalized ||
+        company.operatingCountries.some((c: string) => c.toLowerCase() === searchNormalized);
+
       const matchesCountry = selectedCountry === "All" ||
         company.country === selectedCountry ||
         company.operatingCountries.includes(selectedCountry);
