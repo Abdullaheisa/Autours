@@ -17,9 +17,10 @@ class Branch extends Model
     {
         static::saving(function ($branch) {
             $nameLower = strtolower($branch->name ?? '');
+            $isRoad = strpos($nameLower, 'airport rd') !== false || strpos($nameLower, 'airport road') !== false;
 
             // 1. Detect location type
-            if (empty($branch->location_type) && (strpos($nameLower, 'airport') !== false || strpos($nameLower, ' apt') !== false)) {
+            if (empty($branch->location_type) && !$isRoad && (strpos($nameLower, 'airport') !== false || strpos($nameLower, ' apt') !== false || strpos($nameLower, 'havaliman') !== false)) {
                 $branch->location_type = 'Airport';
             }
 
@@ -33,27 +34,60 @@ class Branch extends Model
             // 3. Fallback: Identify well-known airports by name if still no abbreviation
             if (empty($branch->abriviation) || is_numeric($branch->abriviation)) {
                 $knownAirports = [
+                    // Oman
                     'muscat' => 'MCT',
                     'salalah' => 'SLL',
+                    // UAE
                     'dubai international' => 'DXB',
                     'al maktoum' => 'DWC',
                     'abu dhabi' => 'AUH',
                     'sharjah' => 'SHJ',
+                    // Jordan
                     'amman' => 'AMM',
                     'queen alia' => 'AMM',
                     'aqaba' => 'AQJ',
+                    // Egypt
                     'cairo' => 'CAI',
                     'hurghada' => 'HRG',
                     'sharm' => 'SSH',
                     'alexandria' => 'HBE',
                     'borg el arab' => 'HBE',
+                    // Kuwait, Bahrain, Qatar
                     'kuwait' => 'KWI',
                     'bahrain' => 'BAH',
                     'doha' => 'DOH',
-                    'hamad' => 'DOH'
+                    'hamad' => 'DOH',
+                    // Morocco
+                    'casablanca' => 'CMN',
+                    'mohammed v' => 'CMN',
+                    'marrakech' => 'RAK',
+                    'marrakesh' => 'RAK',
+                    'agadir' => 'AGA',
+                    'rabat' => 'RBA',
+                    'tangier' => 'TNG',
+                    'tanger' => 'TNG',
+                    'fes' => 'FEZ',
+                    // Turkey
+                    'istanbul' => 'IST',
+                    'sabiha' => 'SAW',
+                    'antalya' => 'AYT',
+                    'izmir' => 'ADB',
+                    'ankara' => 'ESB',
+                    'trabzon' => 'TZX',
+                    'dalaman' => 'DLM',
+                    'bodrum' => 'BJV',
+                    // Saudi Arabia
+                    'riyadh' => 'RUH',
+                    'king khalid' => 'RUH',
+                    'jeddah' => 'JED',
+                    'king abdulaziz' => 'JED',
+                    'dammam' => 'DMM',
+                    'king fahd' => 'DMM',
+                    'medina' => 'MED',
+                    'prince mohammad' => 'MED'
                 ];
 
-                if (strpos($nameLower, 'airport') !== false || strpos($nameLower, ' apt') !== false) {
+                if (!$isRoad && (strpos($nameLower, 'airport') !== false || strpos($nameLower, ' apt') !== false || strpos($nameLower, 'havaliman') !== false)) {
                     foreach ($knownAirports as $keyword => $code) {
                         if (strpos($nameLower, $keyword) !== false) {
                             $branch->abriviation = $code;

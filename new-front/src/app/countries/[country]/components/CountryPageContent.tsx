@@ -153,6 +153,11 @@ export default function CountryPageContent({ data }: Props) {
     .filter((loc) => {
       const typeLower = loc.location_type?.toLowerCase() || '';
       const nameLower = loc.name?.toLowerCase() || '';
+      // Strict filter: if type is explicitly defined and is NOT 'airport', exclude it.
+      // This prevents "Downtown" branches on "Airport Rd" from being matched as airports.
+      if (typeLower && typeLower !== 'airport') {
+        return false;
+      }
       return (
         typeLower === 'airport' ||
         (loc.airport_id != null && loc.airport_id !== 0) ||
