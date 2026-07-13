@@ -43,7 +43,7 @@ const getNormalizedCountry = (c: string | null | undefined): string => {
   if (!c) return '';
   const cleaned = c.trim().toLowerCase();
   if (countryMap[cleaned]) return countryMap[cleaned];
-  
+
   // Title case capitalization for other countries
   return c.trim()
     .split(/\s+/)
@@ -83,13 +83,13 @@ export default function CompaniesSection() {
       setLoading(true);
       const res: any = await companyApi.getAll();
       const rawData = Array.isArray(res) ? res : (res?.data || []);
-      
+
       const mapped = rawData.map((user: any) => {
         const role = user.role || 'supplier';
         let status = 'active';
         if (role === 'under_review' || role === 'supplier') status = 'pending';
         else if (role === 'suspended' || role === 'suspended_supplier') status = 'suspended';
-        
+
         const normalizedHomeCountry = getNormalizedCountry(user.country);
 
         const operatingCountries = Array.from(new Set(
@@ -122,7 +122,7 @@ export default function CompaniesSection() {
           description: user.description,
         };
       });
-      
+
       setCompaniesData(mapped);
     } catch (err: any) {
       console.error("Failed to fetch companies:", err);
@@ -152,12 +152,12 @@ export default function CompaniesSection() {
 
   const filteredCompanies = useMemo(() => {
     return companiesData.filter((company) => {
-      const matchesSearch = company.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           company.country.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           company.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCountry = selectedCountry === "All" || 
-                            company.country === selectedCountry ||
-                            company.operatingCountries.includes(selectedCountry);
+      const matchesSearch = company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        company.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        company.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCountry = selectedCountry === "All" ||
+        company.country === selectedCountry ||
+        company.operatingCountries.includes(selectedCountry);
       const matchesStatus = selectedStatus === "All" || company.status === selectedStatus;
       return matchesSearch && matchesCountry && matchesStatus;
     });
@@ -169,9 +169,9 @@ export default function CompaniesSection() {
 
   if (selectedCompany) {
     return (
-      <CompanyDetails 
-        company={selectedCompany} 
-        onBack={() => setSelectedCompany(null)} 
+      <CompanyDetails
+        company={selectedCompany}
+        onBack={() => setSelectedCompany(null)}
       />
     );
   }
@@ -212,10 +212,10 @@ export default function CompaniesSection() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-6">
             {paginatedCompanies.map((company) => (
-              <CompanyCard 
-                key={company.id} 
-                company={company} 
-                onView={setSelectedCompany} 
+              <CompanyCard
+                key={company.id}
+                company={company}
+                onView={setSelectedCompany}
                 statusColorMap={statusColorMap}
                 statusDotMap={statusDotMap}
               />
