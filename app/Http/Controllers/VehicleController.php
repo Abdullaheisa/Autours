@@ -1040,8 +1040,8 @@ class VehicleController extends Controller
                 $query->where('role', 'active_supplier');
             })
             ->where(function ($query) use ($searchCountry) {
-                $query->where('country', 'ilike', '%' . $searchCountry . '%')
-                      ->orWhere('country', 'ilike', '%' . str_replace('-', ' ', $searchCountry) . '%');
+                $query->where('country', 'ilike', $searchCountry)
+                      ->orWhere('country', 'ilike', str_replace('-', ' ', $searchCountry));
             })
             ->orderBy('name')
             ->get()
