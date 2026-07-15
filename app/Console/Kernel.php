@@ -67,6 +67,10 @@ class Kernel extends ConsoleKernel
        //  $schedule->command('movigo:sync-branches --real')->dailyAt('08:30');
          $schedule->command('movigo:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
 
+         // Sync Drive and Smile branches daily and vehicles every 2 hours
+       //  $schedule->command('driveandsmile:sync-branches --real')->dailyAt('09:00');
+         $schedule->command('driveandsmile:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
+
          // Sync exchange rates every 4 hours without overlapping
          $schedule->command('sync:exchange-rates')->everyFourHours()->withoutOverlapping();
      }   

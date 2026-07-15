@@ -260,6 +260,27 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
         }
 
         $progress->finish();
+        
+        $this->newLine();
+
+        if (!$this->option('dry-run') && !$pricesOnly) {
+            $branchesDeleted = 0;
+            $emptyBranches = Branch::where('company_id', $supplierUserId)
+                ->whereDoesntHave('vehicles', function ($q) {
+                    $q->whereNull('deleted_at');
+                })
+                ->get();
+
+            foreach ($emptyBranches as $emptyBranch) {
+                $emptyBranch->delete();
+                $branchesDeleted++;
+                $this->warn("Deleted empty branch: {$emptyBranch->name}");
+            }
+            if ($branchesDeleted > 0) {
+                $this->info("Deleted {$branchesDeleted} empty branches.");
+            }
+        }
+
         return self::SUCCESS;
     }
 
