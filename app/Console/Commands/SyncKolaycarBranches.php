@@ -134,7 +134,7 @@ class SyncKolaycarBranches extends Command
                     'currency' => $currency,
                     'lat' => $lat,
                     'lng' => $lng,
-                    'location_type' => str_contains(strtolower($locationName), 'airport') ? 1 : 2,
+                    'location_type' => str_contains(strtolower($locationName), 'airport') ? 'Airport' : 'Downtown',
                     'abriviation' => $locationId,
                 ]
             );
