@@ -63,6 +63,22 @@ const statusDotMap: Record<string, string> = {
   suspended: "bg-red-500",
 };
 
+const getContextualStatus = (company: any, country: string): string => {
+  if (company.status === "suspended") return "suspended";
+  if (country === "All") return company.status;
+  
+  const countryBranches = (company.branches || []).filter(
+    (b: any) => getNormalizedCountry(b.country) === country
+  );
+  
+  if (countryBranches.length > 0) {
+    const hasActiveBranch = countryBranches.some((b: any) => b.activation == 1 || b.activation === true);
+    return hasActiveBranch ? "active" : "pending";
+  }
+  
+  return company.status;
+};
+
 export default function CompaniesSection() {
   const [companiesData, setCompaniesData] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
@@ -73,6 +89,10 @@ export default function CompaniesSection() {
   const [selectedStatus, setSelectedStatus] = useState("active");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCountry, selectedStatus]);
 
   useEffect(() => {
     fetchData();
@@ -92,14 +112,14 @@ export default function CompaniesSection() {
 
         const normalizedHomeCountry = getNormalizedCountry(user.country);
 
-        const operatingCountries = Array.from(new Set(
-          [
-            user.country,
-            ...(user.branches || []).map((b: any) => b.country)
-          ]
-            .filter(Boolean)
-            .map(c => getNormalizedCountry(c))
-        ));
+        const branchCountries = (user.branches || [])
+          .map((b: any) => b.country)
+          .filter(Boolean)
+          .map((c: any) => getNormalizedCountry(c));
+
+        const operatingCountries = branchCountries.length > 0
+          ? Array.from(new Set(branchCountries))
+          : (user.country ? [getNormalizedCountry(user.country)] : []);
 
         return {
           id: user.id,
@@ -117,6 +137,7 @@ export default function CompaniesSection() {
           revenue: user.revenue ?? 0,
           rating: user.rating ?? 0,
           status,
+          branches: user.branches || [],
           since: user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A',
           image: getLogoUrl(user.logo),
           description: user.description,
@@ -135,9 +156,6 @@ export default function CompaniesSection() {
   const countries = useMemo(() => {
     const list = new Set<string>();
     companiesData.forEach((company) => {
-      if (company.country) {
-        list.add(company.country.trim());
-      }
       if (company.operatingCountries) {
         company.operatingCountries.forEach((c: string) => {
           list.add(c.trim());
@@ -150,21 +168,35 @@ export default function CompaniesSection() {
     return ["All", ...sorted];
   }, [companiesData]);
 
+  const { totalInCountry, activeInCountry, pendingInCountry, suspendedInCountry } = useMemo(() => {
+    const list = companiesData.filter(c => selectedCountry === "All" || c.operatingCountries.includes(selectedCountry));
+    const active = list.filter(c => getContextualStatus(c, selectedCountry) === "active").length;
+    const pending = list.filter(c => getContextualStatus(c, selectedCountry) === "pending").length;
+    const suspended = list.filter(c => getContextualStatus(c, selectedCountry) === "suspended").length;
+    return {
+      totalInCountry: list.length,
+      activeInCountry: active,
+      pendingInCountry: pending,
+      suspendedInCountry: suspended
+    };
+  }, [companiesData, selectedCountry]);
+
   const filteredCompanies = useMemo(() => {
     return companiesData.filter((company) => {
       const searchLower = searchQuery.toLowerCase().trim();
       const searchNormalized = getNormalizedCountry(searchQuery).toLowerCase();
 
-      const matchesSearch = 
+      const matchesSearch =
         company.name.toLowerCase().includes(searchLower) ||
         company.email.toLowerCase().includes(searchLower) ||
-        company.country.toLowerCase() === searchNormalized ||
         company.operatingCountries.some((c: string) => c.toLowerCase() === searchNormalized);
 
       const matchesCountry = selectedCountry === "All" ||
-        company.country === selectedCountry ||
         company.operatingCountries.includes(selectedCountry);
-      const matchesStatus = selectedStatus === "All" || company.status === selectedStatus;
+      
+      const contextualStatus = getContextualStatus(company, selectedCountry);
+      const matchesStatus = selectedStatus === "All" || contextualStatus === selectedStatus;
+      
       return matchesSearch && matchesCountry && matchesStatus;
     });
   }, [companiesData, searchQuery, selectedCountry, selectedStatus]);
@@ -187,10 +219,10 @@ export default function CompaniesSection() {
       <PageHeader title="My Companies" description="Manage all registered companies" actionLabel="Add Company" />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard label="Total Companies" value={companiesData.length} icon={<Building2 size={20} />} color="blue" />
-        <StatsCard label="Active" value={companiesData.filter(c => c.status === "active").length} icon={<ShieldCheck size={20} />} color="emerald" />
-        <StatsCard label="Pending" value={companiesData.filter(c => c.status === "pending").length} icon={<CalendarCheck size={20} />} color="amber" />
-        <StatsCard label="Suspended" value={companiesData.filter(c => c.status === "suspended").length} icon={<X size={20} />} color="red" />
+        <StatsCard label="Total Companies" value={totalInCountry} icon={<Building2 size={20} />} color="blue" />
+        <StatsCard label="Active" value={activeInCountry} icon={<ShieldCheck size={20} />} color="emerald" />
+        <StatsCard label="Pending" value={pendingInCountry} icon={<CalendarCheck size={20} />} color="amber" />
+        <StatsCard label="Suspended" value={suspendedInCountry} icon={<X size={20} />} color="red" />
       </div>
 
       <FilterBar
@@ -217,15 +249,21 @@ export default function CompaniesSection() {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-6">
-            {paginatedCompanies.map((company) => (
-              <CompanyCard
-                key={company.id}
-                company={company}
-                onView={setSelectedCompany}
-                statusColorMap={statusColorMap}
-                statusDotMap={statusDotMap}
-              />
-            ))}
+            {paginatedCompanies.map((company) => {
+              const contextualStatus = getContextualStatus(company, selectedCountry);
+              return (
+                <CompanyCard
+                  key={company.id}
+                  company={{
+                    ...company,
+                    status: contextualStatus
+                  }}
+                  onView={setSelectedCompany}
+                  statusColorMap={statusColorMap}
+                  statusDotMap={statusDotMap}
+                />
+              );
+            })}
           </div>
           <Pagination currentPage={currentPage} totalPages={Math.ceil(filteredCompanies.length / itemsPerPage)} onPageChange={setCurrentPage} />
         </>

@@ -69,7 +69,7 @@ export default function CompanyProfileSection() {
       toast.error("User Name is required.");
       return;
     }
-    
+
     setIsSaving(true);
     try {
       const form = new FormData();
@@ -82,7 +82,7 @@ export default function CompanyProfileSection() {
       form.append("address", formData.address);
       form.append("language", formData.language);
       form.append("description", formData.description);
-      
+
       if (logoFile) {
         form.append("logo", logoFile);
       }
@@ -113,7 +113,7 @@ export default function CompanyProfileSection() {
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
               <User className="text-primary-600" size={20} /> Manager Information
             </h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">User Name</label>
@@ -158,10 +158,10 @@ export default function CompanyProfileSection() {
 
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Company Logo</h3>
-            <ImageUploader 
+            <ImageUploader
               onChange={(url) => {
                 setLogo(url);
-              }} 
+              }}
               onFileChange={(file) => {
                 setLogoFile(file);
               }}
@@ -169,7 +169,9 @@ export default function CompanyProfileSection() {
             {logo && typeof logo === 'string' && !logo.startsWith('blob:') && (
               <div className="mt-4">
                 <p className="text-xs text-gray-500 mb-2">Current Logo:</p>
-                <img src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${getBackendBaseUrl()}/img/${logo}`} alt="Current Logo" className="w-20 h-20 object-contain bg-gray-50 border border-gray-100 rounded-xl" />
+                <div className="w-[150px] h-[45px] relative rounded-lg border border-gray-200 overflow-hidden bg-white">
+                  <img src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${getBackendBaseUrl()}/img/${logo}`} alt="Current Logo" className="w-full h-full object-cover" />
+                </div>
               </div>
             )}
             <p className="text-xs text-gray-400 mt-3 text-center">Click or drag to upload your company logo</p>
@@ -262,7 +264,7 @@ export default function CompanyProfileSection() {
             </div>
 
             <div className="mt-8">
-              <button 
+              <button
                 onClick={handleSave}
                 disabled={isSaving}
                 className="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-primary-200"

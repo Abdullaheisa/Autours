@@ -55,50 +55,34 @@ function SearchPageContent() {
     count,
   } = useSelector((state: RootState) => state.search);
 
-  const searchParamsRef = useRef(searchParams);
-  const filterParamsRef = useRef(filterParams);
-  const currencyCodeRef = useRef(currencyCode);
-  const currentPageRef = useRef(currentPage);
-  const perPageRef = useRef(perPage);
-
-  searchParamsRef.current = searchParams;
-  filterParamsRef.current = filterParams;
-  currencyCodeRef.current = currencyCode;
-  currentPageRef.current = currentPage;
-  perPageRef.current = perPage;
-
   const buildFilterPayload = useCallback((): FilterPayload | null => {
-    const sp = searchParamsRef.current;
-    const fp = filterParamsRef.current;
-    const cc = currencyCodeRef.current;
-
-    if (!sp.location || !sp.dateFrom || !sp.dateTo) return null;
+    if (!searchParams.location || !searchParams.dateFrom || !searchParams.dateTo) return null;
 
     const payload: FilterPayload = {
-      pickupLoc: sp.location,
-      date_from: sp.dateFrom,
-      date_to: sp.dateTo,
-      time_from: sp.startTime || '10:00',
-      time_to: sp.endTime || '10:00',
-      currency: ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD'].includes(cc) ? cc : 'AED',
-      page: currentPageRef.current,
-      per_page: perPageRef.current,
+      pickupLoc: searchParams.location,
+      date_from: searchParams.dateFrom,
+      date_to: searchParams.dateTo,
+      time_from: searchParams.startTime || '10:00',
+      time_to: searchParams.endTime || '10:00',
+      currency: ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD'].includes(currencyCode) ? currencyCode : 'AED',
+      page: currentPage,
+      per_page: perPage,
     };
 
-    if (fp.category.length > 0) {
-      payload.category = fp.category.map(Number).filter(id => !isNaN(id));
+    if (filterParams.category.length > 0) {
+      payload.category = filterParams.category.map(Number).filter(id => !isNaN(id));
     }
-    if (fp.supplier.length > 0) {
-      payload.supplier = fp.supplier.map(Number).filter(id => !isNaN(id));
+    if (filterParams.supplier.length > 0) {
+      payload.supplier = filterParams.supplier.map(Number).filter(id => !isNaN(id));
     }
     // 🚀 PAYMENT TYPE FIX: Map names ("Pay on Arrival") to integer IDs
-    if (fp.paymentType.length > 0) {
+    if (filterParams.paymentType.length > 0) {
       const PAYMENT_METHOD_MAP: Record<string, number> = {
         'Pay on Arrival': 1,
         'Pay in Full': 2,
         'Deposit Required': 3,
       };
-      const mappedPaymentIds = fp.paymentType
+      const mappedPaymentIds = filterParams.paymentType
         .map((name: string) => PAYMENT_METHOD_MAP[name] || parseInt(name, 10))
         .filter((id: number) => !isNaN(id) && id > 0);
 
@@ -108,14 +92,14 @@ function SearchPageContent() {
     }
 
     // 🚀 LOCATION TYPE FIX: Map names ("Terminal", "Airport") to integer IDs
-    if (fp.locationType.length > 0) {
+    if (filterParams.locationType.length > 0) {
       const LOCATION_TYPE_MAP: Record<string, number> = {
         'Terminal': 1,
         'Airport': 2,
         'Meet & Greet': 3,
       };
 
-      const mappedIds = fp.locationType
+      const mappedIds = filterParams.locationType
         .map((name: string) => LOCATION_TYPE_MAP[name] || parseInt(name, 10))
         .filter((id: number) => !isNaN(id) && id > 0);
 
@@ -124,32 +108,32 @@ function SearchPageContent() {
       }
     }
 
-    if (fp.priceRange) {
-      payload.priceRange = fp.priceRange[1];
+    if (filterParams.priceRange) {
+      payload.priceRange = filterParams.priceRange[1];
     }
 
     // 🚀 SPECIFICATIONS FIX: Strictly formatted array of objects, skipping empty arrays
     const specifications: { name: string; option: string[] }[] = [];
 
-    if (fp.seats && fp.seats.length > 0) specifications.push({ name: FILTER_SPEC_NAMES.seats, option: fp.seats });
-    if (fp.doors && fp.doors.length > 0) specifications.push({ name: FILTER_SPEC_NAMES.doors, option: fp.doors });
+    if (filterParams.seats && filterParams.seats.length > 0) specifications.push({ name: FILTER_SPEC_NAMES.seats, option: filterParams.seats });
+    if (filterParams.doors && filterParams.doors.length > 0) specifications.push({ name: FILTER_SPEC_NAMES.doors, option: filterParams.doors });
 
-    if (fp.transmission && fp.transmission.length > 0) {
-      specifications.push({ name: FILTER_SPEC_NAMES.transmission, option: fp.transmission });
+    if (filterParams.transmission && filterParams.transmission.length > 0) {
+      specifications.push({ name: FILTER_SPEC_NAMES.transmission, option: filterParams.transmission });
     }
 
-    if (fp.fuelType && fp.fuelType.length > 0) {
-      const mappedFuel = fp.fuelType.map(f => f === 'Hybrid' ? 'Hybrid Petrol & Gas' : f);
+    if (filterParams.fuelType && filterParams.fuelType.length > 0) {
+      const mappedFuel = filterParams.fuelType.map(f => f === 'Hybrid' ? 'Hybrid Petrol & Gas' : f);
       specifications.push({ name: FILTER_SPEC_NAMES.fuelType, option: mappedFuel });
     }
 
-    if (fp.suitcases && fp.suitcases.length > 0) {
-      const mappedSuitcases = fp.suitcases.map(s => s === 'Large' ? 'large' : s);
+    if (filterParams.suitcases && filterParams.suitcases.length > 0) {
+      const mappedSuitcases = filterParams.suitcases.map(s => s === 'Large' ? 'large' : s);
       specifications.push({ name: FILTER_SPEC_NAMES.suitcases, option: mappedSuitcases });
     }
 
     // Only send Air Conditioning if explicitly requested (ignore "No Air Conditioning" as it's not a DB feature)
-    if (fp.airConditioning === 'Air Conditioning') {
+    if (filterParams.airConditioning === 'Air Conditioning') {
       specifications.push({ name: FILTER_SPEC_NAMES.airConditioning, option: ['cool & Heat', 'Air Conditioning', 'Yes'] });
     }
 
@@ -157,17 +141,15 @@ function SearchPageContent() {
       payload.specifications = specifications;
     }
 
-    if (fp.rating !== null && fp.rating !== undefined) payload.rating = fp.rating;
-    if (fp.sortBy) payload.sortBy = fp.sortBy;
+    if (filterParams.rating !== null && filterParams.rating !== undefined) payload.rating = filterParams.rating;
+    if (filterParams.sortBy) payload.sortBy = filterParams.sortBy;
 
     return payload;
-  }, []);
+  }, [searchParams, filterParams, currencyCode, currentPage, perPage]);
 
   const doFetchVehicles = useCallback(() => {
     const payload = buildFilterPayload();
     if (payload) {
-
-
       dispatch(fetchVehicles(payload));
     }
   }, [buildFilterPayload, dispatch]);
@@ -187,42 +169,43 @@ function SearchPageContent() {
 
   const lastSearchQuery = useRef<string>('');
 
-  useEffect(() => {
-    if (searchParams.location && searchParams.dateFrom && searchParams.dateTo) {
-      const currentQuery = `${searchParams.location}|${searchParams.dateFrom}|${searchParams.dateTo}`;
-      if (lastSearchQuery.current !== currentQuery) {
-        // Reset all active filters on a new search query
-        dispatch(resetFilters());
-      }
-      lastSearchQuery.current = currentQuery;
-      doFetchVehicles();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.location, searchParams.dateFrom, searchParams.dateTo]);
-
   const backendFiltersStr = useMemo(() => {
-    // Include all filter params (including category) to trigger backend re-fetch on any change
     return JSON.stringify(filterParams);
   }, [filterParams]);
 
-  const isFirstFilterRender = useRef(true);
   useEffect(() => {
-    if (isFirstFilterRender.current) {
-      isFirstFilterRender.current = false;
-      return;
+    if (searchParams.location && searchParams.dateFrom && searchParams.dateTo) {
+      const currentQuery = `${searchParams.location}|${searchParams.dateFrom}|${searchParams.dateTo}|${searchParams.startTime}|${searchParams.endTime}`;
+      
+      if (lastSearchQuery.current && lastSearchQuery.current !== currentQuery) {
+        lastSearchQuery.current = currentQuery;
+        dispatch(resetFilters());
+        return; // The filter reset will trigger the next run
+      }
+      
+      lastSearchQuery.current = currentQuery;
+      doFetchVehicles();
     }
-    doFetchVehicles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backendFiltersStr, currentPage]);
+  }, [
+    searchParams.location,
+    searchParams.dateFrom,
+    searchParams.dateTo,
+    searchParams.startTime,
+    searchParams.endTime,
+    backendFiltersStr,
+    currencyCode,
+    currentPage,
+    doFetchVehicles,
+    dispatch
+  ]);
 
   const handleFilterChange = useCallback(() => {
-    doFetchVehicles();
-  }, [doFetchVehicles]);
+    // No-op because the unified useEffect already watches backendFiltersStr
+  }, []);
 
   const handleReSearch = useCallback(() => {
-    setTimeout(() => { doFetchVehicles(); }, 100);
     setIsSearchDrawerOpen(false);
-  }, [doFetchVehicles]);
+  }, []);
 
   const displayedVehicles = useMemo(() => {
     return vehicles;

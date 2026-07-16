@@ -7,6 +7,9 @@ import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
 import CarRentalCard from '@/components/car-rental-brands/CarRentalCard';
+import BrandBenefitsSection from '@/components/car-rental-brands/BrandBenefitsSection';
+import BrandFAQSection from '@/components/car-rental-brands/BrandFAQSection';
+import { getBrandExtras } from '@/data/brandExtras';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
 import { getCountryIso } from '@/utils/countryUtils';
 
@@ -55,6 +58,9 @@ export default async function BrandDetailPage({ params }: PageProps) {
   const descriptionParagraphs = brand.description
     .split('\n\n')
     .filter((p: string) => p.trim());
+
+  // ── Brand-specific extras (benefits + FAQs) — falls back to generic if not found
+  const brandExtras = getBrandExtras(brand.id);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -143,6 +149,12 @@ export default async function BrandDetailPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* ─── Booking Benefits ──────────────────────────────────────────────── */}
+        <BrandBenefitsSection
+          brandName={brand.name}
+          benefits={brandExtras.benefits}
+        />
+
         {/* ─── Countries Grid ───────────────────────────────────────────────── */}
         <section className="py-12 lg:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,6 +185,11 @@ export default async function BrandDetailPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* ─── FAQ ──────────────────────────────────────────────────────────── */}
+        <BrandFAQSection
+          brandName={brand.name}
+          faqs={brandExtras.faqs}
+        />
 
       </main>
 

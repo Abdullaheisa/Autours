@@ -30,7 +30,7 @@ export default function UserProfileInfo() {
   const [editCountry, setEditCountry] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
-  
+
   // Password States
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [oldPass, setOldPass] = useState("");
@@ -123,7 +123,7 @@ export default function UserProfileInfo() {
 
       if (res?.message === 1 || res?.status === true) {
         toast.success("Profile updated successfully! 🎉");
-        
+
         // Re-fetch profile and sync with Redux to update navbar
         const freshProfileRes: any = await authApi.getProfile();
         const freshData = freshProfileRes?.data || freshProfileRes;
@@ -139,7 +139,7 @@ export default function UserProfileInfo() {
             } as any)
           );
         }
-        
+
         setIsEditing(false);
       } else if (res?.message === 0) {
         toast.error("Incorrect current password. Please try again.");

@@ -19,7 +19,7 @@ export default function SupplierIntelligencePage() {
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  
+
   const [countriesList, setCountriesList] = useState<any[]>([]);
   const [allCompanies, setAllCompanies] = useState<any[]>([]);
   const [suppliersList, setSuppliersList] = useState<any[]>([]);
@@ -30,7 +30,7 @@ export default function SupplierIntelligencePage() {
       try {
         const res: any = await referenceApi.getCountries();
         const rawCountries = Array.isArray(res) ? res : (res?.data || []);
-        
+
         const mapped = rawCountries.map((c: string) => {
           const lowerName = c.toLowerCase().trim();
           const knownCountries: Record<string, { code: string; image: string }> = {
@@ -96,15 +96,15 @@ export default function SupplierIntelligencePage() {
             'poland': { code: 'PL', image: 'https://flagcdn.com/w40/pl.png' },
             'saint martin': { code: 'MF', image: 'https://flagcdn.com/w40/mf.png' },
           };
-          
+
           let code = 'UN';
           let image = 'https://flagcdn.com/w40/un.png';
-          
+
           if (knownCountries[lowerName]) {
             code = knownCountries[lowerName].code;
             image = knownCountries[lowerName].image;
           }
-          
+
           return {
             id: lowerName.replace(/\s+/g, '-'),
             name: c,
@@ -126,13 +126,13 @@ export default function SupplierIntelligencePage() {
       try {
         const res: any = await companyApi.getAll();
         const rawData = Array.isArray(res) ? res : (res?.data || []);
-        
+
         const mapped = rawData.map((user: any) => {
           const role = user.role || 'supplier';
           let status = 'active';
           if (role === 'under_review' || role === 'supplier') status = 'inactive';
           else if (role === 'suspended' || role === 'suspended_supplier') status = 'inactive';
-          
+
           const operatingCountries = Array.from(new Set(
             [
               user.country,
@@ -160,10 +160,10 @@ export default function SupplierIntelligencePage() {
   // Dynamically filter matching suppliers list based on selected country and status
   useEffect(() => {
     const filtered = allCompanies.filter((company) => {
-      const matchesCountry = filters.country === "All" || 
+      const matchesCountry = filters.country === "All" ||
         company.operatingCountries.includes(filters.country.toLowerCase());
-      
-      const matchesStatus = filters.supplierStatus === "all" || 
+
+      const matchesStatus = filters.supplierStatus === "all" ||
         company.status === filters.supplierStatus;
 
       return matchesCountry && matchesStatus;
@@ -189,16 +189,16 @@ export default function SupplierIntelligencePage() {
     if (!data || data.length === 0) return;
 
     const exportData = data.map((item: any) => ({
-      "Supplier Name":       item.name,
-      "Car Name":            item.carName,
-      "Country":             filters.country !== "All" ? filters.country : (item.branchLocations?.[0] || "—"),
-      "Category":            item.category,
-      "Car Type":            item.fuel || "—",
-      "Daily Price (AED)":   item.dailyPrice,
-      "Weekly Price (AED)":  item.weeklyPrice,
+      "Supplier Name": item.name,
+      "Car Name": item.carName,
+      "Country": filters.country !== "All" ? filters.country : (item.branchLocations?.[0] || "—"),
+      "Category": item.category,
+      "Car Type": item.fuel || "—",
+      "Daily Price (AED)": item.dailyPrice,
+      "Weekly Price (AED)": item.weeklyPrice,
       "Monthly Price (AED)": item.monthlyPrice,
-      "Availability":        item.availability,
-      "Negotiation Status":  item.negotiationStatus || "none",
+      "Availability": item.availability,
+      "Negotiation Status": item.negotiationStatus || "none",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -398,3 +398,4 @@ export default function SupplierIntelligencePage() {
     </div>
   );
 }
+

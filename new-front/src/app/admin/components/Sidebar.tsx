@@ -51,19 +51,19 @@ export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClo
         ${isCollapsed ? "lg:w-20 w-72" : "w-72"}
       `}>
         <div className="p-6 border-b border-gray-100">
-          <div className={`flex items-center gap-3 ${isCollapsed ? "lg:justify-center" : ""}`}>
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-primary/20 shrink-0">
+          <div className={`flex ${isCollapsed ? "lg:justify-center lg:items-center" : "flex-col items-center text-center"} gap-3`}>
+            <div className={`${isCollapsed ? "w-10 h-10" : "w-[150px] h-[45px]"} rounded-md overflow-hidden shadow-lg shadow-primary/20 shrink-0 relative bg-gray-50 flex items-center justify-center border border-gray-100 transition-all duration-300`}>
               {avatarUrl ? (
-                <Image src={avatarUrl} alt={user?.name || "User"} width={40} height={40} className="w-full h-full object-cover" />
+                <Image src={avatarUrl} alt={user?.name || "User"} width={isCollapsed ? 40 : 150} height={isCollapsed ? 40 : 45} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold text-sm">
+                <div className={`w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold ${isCollapsed ? "text-sm" : "text-base"}`}>
                   {initials}
                 </div>
               )}
             </div>
-            <div className={`${isCollapsed ? "lg:hidden" : "block"}`}>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">{user?.name || "Autours"}</h1>
-              <p className="text-xs text-gray-500">{user?.email || "admin@autours.net"}</p>
+            <div className={`${isCollapsed ? "lg:hidden" : "block"} mt-1`}>
+              <h1 className="text-base font-bold text-gray-900 tracking-tight leading-snug">{user?.name || "Autours"}</h1>
+              <p className="text-xs text-gray-500 mt-0.5">{user?.email || "admin@autours.net"}</p>
             </div>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClo
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
                       ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20" : isLogout ? "text-red-500 hover:bg-red-50" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
                   >
-                    {Icon && <Icon  className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
+                    {Icon && <Icon className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
                     <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>{item.label}</span>
                     {isCollapsed && (
                       <div className="hidden lg:block absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">

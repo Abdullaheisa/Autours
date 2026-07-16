@@ -47,6 +47,7 @@ axiosClient.interceptors.request.use(
       let token = null;
       if (sessionStorage.getItem('isImpersonated') === 'true') {
         token = sessionStorage.getItem('token');
+        config.withCredentials = false; // Prevents sending admin session cookies that override Bearer token
       }
       if (!token) {
         token = localStorage.getItem('token') || sessionStorage.getItem('token');

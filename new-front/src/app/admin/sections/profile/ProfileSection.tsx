@@ -25,7 +25,7 @@ export default function ProfileSection() {
     bio: "Super Administrator for Autours Platform",
     logo: "",
   });
-  
+
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -84,7 +84,7 @@ export default function ProfileSection() {
       }
 
       await uploadApi.uploadProfile(payload);
-      
+
       try {
         const res: any = await authApi.getUser();
         const userData = res?.data || res;
@@ -125,19 +125,19 @@ export default function ProfileSection() {
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="text-center">
-            <div className="relative w-24 h-24 mx-auto mb-4 group">
+            <div className="relative w-[150px] h-[45px] mx-auto mb-4 group border border-gray-150 rounded-lg overflow-visible bg-white">
               {formData.logo ? (
-                <img 
-                  src={formData.logo.startsWith("http") || formData.logo.startsWith("data:") ? formData.logo : `${getBackendBaseUrl()}/img/${formData.logo}`} 
-                  alt="Profile" 
-                  className="w-24 h-24 rounded-2xl object-cover shadow-lg shadow-primary-200 bg-white" 
+                <img
+                  src={formData.logo.startsWith("http") || formData.logo.startsWith("data:") ? formData.logo : `${getBackendBaseUrl()}/img/${formData.logo}`}
+                  alt="Profile"
+                  className="w-full h-full rounded-lg object-cover shadow-sm bg-white"
                 />
               ) : (
-                <div className="w-24 h-24 bg-primary-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary-200">
+                <div className="w-full h-full bg-primary-600 rounded-lg flex items-center justify-center text-white text-base font-bold shadow-sm">
                   {formData.name.charAt(0)}
                 </div>
               )}
-              <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary-600 text-white rounded-lg flex items-center justify-center shadow-md hover:bg-primary-700 transition-colors cursor-pointer">
+              <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary-600 text-white rounded-lg flex items-center justify-center shadow-md hover:bg-primary-700 transition-colors cursor-pointer z-10">
                 <Camera size={14} />
                 <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
               </label>
@@ -263,8 +263,8 @@ export default function ProfileSection() {
             </div>
           </div>
           <div className="mt-6 flex justify-end">
-            <button 
-              onClick={handleSave} 
+            <button
+              onClick={handleSave}
               disabled={isSaving}
               className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary-200"
             >

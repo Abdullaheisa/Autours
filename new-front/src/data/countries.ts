@@ -18,4 +18,6 @@ export const countries: Country[] = [
   { id: 'saudi', name: 'Saudi Arabia', image: assets.countries.saudi, code: 'SA' },
   { id: 'turkey', name: 'Turkey', image: assets.countries.turkey, code: 'TR' },
   { id: 'uae', name: 'United Arab Emirates', image: assets.countries.uae, code: 'AE' },
+  { id: 'georgia', name: 'Georgia', image: assets.countries.georgia, code: 'GE' },
 ];
+

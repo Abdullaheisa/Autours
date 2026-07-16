@@ -171,14 +171,15 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
-        if ($user && isset($user->language)) {
-            $user->language = explode(',', $user->language);
+        if ($user) {
+            if (isset($user->language)) {
+                $user->language = explode(',', $user->language);
+            }
+            $brand = \App\Models\CarRentalBrand::where('user_id', $user->id)->first();
+            $user->description = $brand ? $brand->description : null;
         }
         return $user;
 
@@ -198,7 +199,7 @@ class UserController extends Controller
             $query->where('parent_company_id', $user->id);
         }
 
-        $companies = $query->with(['parent', 'branches:id,company_id,country'])
+        $companies = $query->with(['parent', 'branches:id,company_id,country,activation'])
             ->withCount(['vehicles'])
             ->get();
 

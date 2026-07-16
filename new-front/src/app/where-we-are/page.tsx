@@ -89,8 +89,19 @@ export default function WhereWeArePage() {
       titleSuffix: 'Old & New',
       description: 'Kuwait is a vibrant nation with a rich history and a bright future. Start your journey at the iconic Kuwait Towers, where panoramic views of the city await. The Grand Mosque showcases the rich Islamic art and culture, while the Scientific Center offers a modern architectural and educational experience.',
       images: ['/img/whereWeAre/15.png', '/img/whereWeAre/14.png', '/img/whereWeAre/13.png']
+    },
+    {
+      countryName: 'Georgia',
+      titleSuffix: 'The Intersection of Europe and Asia',
+      description: 'Discover the stunning landscapes, majestic Caucasus mountains, and rich history of Georgia. Rent a car in Tbilisi, Batumi, or Kutaisi to explore historic monasteries, scenic wine valleys, and coastal Black Sea views at your own pace.',
+      images: [
+        'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1543731068-7e0f5beff43a?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?auto=format&fit=crop&w=600&q=80'
+      ]
     }
   ];
+
 
   return (
     <div className="flex flex-col min-h-screen bg-neutral-50 text-neutral-900 font-sans overflow-x-hidden">

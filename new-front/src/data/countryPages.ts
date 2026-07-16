@@ -956,5 +956,139 @@ export const countryPagesData: Record<string, CountryPageData> = {
     ctaDescription: "Compare airport car rental deals from trusted suppliers across Casablanca, Marrakech, Agadir, Fes, Tangier, Rabat, Chefchaouen, Essaouira, Ouarzazate, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation—so you can start discovering Morocco the moment you arrive.",
     ctaPrimaryText: "Search Cars Now",
     ctaSecondaryText: "Contact Support"
-  }
+  },
+
+  georgia: {
+    slug: 'georgia',
+    name: 'Georgia',
+    heroBadge: 'Autours Georgia Airport Car Rental',
+    heroTitle: 'Book Your Airport Rental',
+    heroHighlight: 'Across Georgia',
+    heroLead: 'Discover the beauty of Georgia with the freedom to travel wherever your journey takes you. Compare trusted airport car rental deals from leading local and international suppliers across Tbilisi, Batumi, Kutaisi, Kazbegi, and beyond.',
+    heroBottomTitle: 'Search by Georgia airport and start your adventure.',
+    airports: [
+      {
+        name: 'Tbilisi International Airport',
+        code: 'TBS',
+        location: 'Tbilisi',
+        description: 'The main international gateway to Georgia, located just 18 km from Tbilisi city centre. Serving millions of passengers annually with direct connections across Europe, the Middle East, and Central Asia.',
+        image: '/img/countries/georgia-tbilisi.webp',
+        minPrice: 18,
+      },
+      {
+        name: 'Kutaisi International Airport',
+        code: 'KUT',
+        location: 'Kutaisi',
+        description: 'Georgia\'s second-largest airport, ideal for exploring western Georgia including Kutaisi, Batumi, Borjomi, and the Imereti region. A popular choice for budget travellers.',
+      image: "countries/georgia.png",
+        minPrice: 15,
+      },
+      {
+        name: 'Batumi International Airport',
+        code: 'BUS',
+        location: 'Batumi',
+        description: 'Serving the Black Sea resort city of Batumi, this airport is perfect for summer holidays and beach getaways. Close to the Turkish border, it also connects visitors arriving from across the region.',
+        image: '/img/countries/georgia-batumi.webp',
+        minPrice: 16,
+      },
+    ],
+    travelInfo: {
+      title: 'Why Rent a Car in Georgia with Autours?',
+      subtitle: 'Discover the beauty of Georgia with the freedom to travel wherever your journey takes you. Whether you\'re arriving in Tbilisi, exploring the mountain landscapes of Kazbegi, relaxing in Batumi on the Black Sea coast, visiting the vineyards of Kakheti, or discovering Kutaisi, Gudauri, Borjomi, Mtskheta, Sighnaghi, or Mestia — Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
+      image: '/img/countries/georgia.webp',
+      benefits: [
+        {
+          title: 'Airport Pickup Across Georgia',
+          description: 'Collect your rental car from Tbilisi International Airport (TBS), Kutaisi International Airport (KUT), Batumi International Airport (BUS), and other convenient pickup locations across Georgia.',
+        },
+        {
+          title: 'Compare the Best Car Rental Deals',
+          description: 'Compare prices from trusted local and international suppliers to find the ideal vehicle for city driving, mountain adventures, business trips, or road trips across Georgia.',
+        },
+        {
+          title: 'Free Cancellation on Most Bookings',
+          description: 'Travel with confidence thanks to flexible cancellation policies available on most rentals.',
+        },
+        {
+          title: 'Instant Booking Confirmation',
+          description: 'Book your rental car online in minutes and receive instant confirmation before you arrive.',
+        },
+        {
+          title: 'Wide Vehicle Selection',
+          description: 'From compact economy cars for city driving to robust SUVs for mountain roads and ski resorts — find the right vehicle for every Georgia adventure.',
+        },
+      ],
+    },
+    steps: [
+      {
+        title: 'Search',
+        description: 'Enter your Georgia airport or city, dates, and times to see available cars from trusted suppliers.',
+      },
+      {
+        title: 'Compare',
+        description: 'Filter by price, vehicle type, transmission, and supplier ratings to find the best deal.',
+      },
+      {
+        title: 'Book & Drive',
+        description: 'Reserve online in minutes, pick up your car at the airport, and start exploring Georgia.',
+      },
+    ],
+    documents: {
+      items: [
+        'Valid driving licence',
+        'Passport',
+        'Credit card in the main driver\'s name',
+        'International Driving Permit (IDP), if required',
+        'Booking confirmation (digital or printed)',
+      ],
+    },
+    faqs: [
+      {
+        q: 'What is the minimum age to rent a car in Georgia?',
+        a: 'Most rental companies require drivers to be at least 21 years old. Some premium vehicles and SUVs may require drivers to be 25 years or older. The minimum age requirement for each vehicle is shown clearly before booking.',
+      },
+      {
+        q: 'Can tourists rent a car in Georgia?',
+        a: 'Yes. International visitors can rent a car using a valid driving licence. Some suppliers may also require an International Driving Permit (IDP), depending on your nationality. All requirements are displayed before you confirm your booking on Autours.',
+      },
+      {
+        q: 'What documents do I need to rent a car in Georgia?',
+        a: 'You\'ll usually need: a valid driving licence, passport, credit card in the main driver\'s name, and an International Driving Permit (IDP) if required by your nationality or the rental supplier.',
+      },
+      {
+        q: 'Which airports can I pick up my rental car from?',
+        a: 'Autours offers airport car rental at Tbilisi International Airport (TBS), Kutaisi International Airport (KUT), Batumi International Airport (BUS), and selected city locations across Georgia.',
+      },
+      {
+        q: 'Is driving in Georgia easy for tourists?',
+        a: 'Yes. Georgia has an expanding highway network connecting major cities and tourist destinations. Mountain roads are generally well maintained, although extra care is recommended during winter, especially in highland areas like Kazbegi and Gudauri.',
+      },
+      {
+        q: 'Can I drive from Tbilisi to Kazbegi or Batumi?',
+        a: 'Yes. Renting a car is one of the best ways to explore Georgia. Popular road trips include Tbilisi to Kazbegi (Stepantsminda), Gudauri, Batumi, Kutaisi, Borjomi, Mtskheta, Kakheti, Sighnaghi, and Mestia — all easily accessible by road.',
+      },
+      {
+        q: 'Do I need a 4x4 in Georgia?',
+        a: 'A standard car is suitable for most cities and highways. However, if you\'re visiting mountain regions such as Tusheti, Ushguli, or remote areas during winter, a 4WD vehicle is strongly recommended.',
+      },
+      {
+        q: 'Can I drive a rental car across the border?',
+        a: 'Cross-border travel is restricted by many suppliers or requires prior approval, additional insurance, and extra documentation. Always check the rental conditions before booking if you plan to travel beyond Georgia\'s borders.',
+      },
+      {
+        q: 'What type of rental car is best for Georgia?',
+        a: 'Economy cars are ideal for city driving and standard highways. SUVs are recommended for mountain roads, ski resorts, family holidays, and longer road trips across the Georgian countryside.',
+      },
+      {
+        q: 'When should I book my Georgia car rental for the best price?',
+        a: 'Booking 2–4 weeks in advance usually gives you the best prices and the widest choice of vehicles, especially during the summer season, ski season (December–March), and national holidays.',
+      },
+    ],
+    partnersDescription: 'Autours partners with leading car rental providers across Georgia. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Tbilisi, Batumi, Kutaisi, and all major airports.',
+    ctaTitle: 'Ready to Explore Georgia?',
+    ctaDescription: 'Compare airport car rental deals from trusted suppliers across Tbilisi, Batumi, Kutaisi, Kazbegi, Gudauri, Borjomi, Kakheti, Mtskheta, Sighnaghi, Mestia, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation — so you can start exploring Georgia from the moment you land.',
+    ctaPrimaryText: 'Search Cars Now',
+    ctaSecondaryText: 'Contact Support',
+  },
 };
+
