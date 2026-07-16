@@ -7,14 +7,6 @@ export interface CountryPageData {
   heroHighlight: string;
   heroLead: string;
   heroBottomTitle: string;
-  airports?: {
-    name: string;
-    code: string;
-    location: string;
-    description: string;
-    image: string;
-    minPrice: number;
-  }[];
   travelInfo: {
     title: string;
     subtitle: string;
@@ -966,36 +958,10 @@ export const countryPagesData: Record<string, CountryPageData> = {
     heroHighlight: 'Across Georgia',
     heroLead: 'Discover the beauty of Georgia with the freedom to travel wherever your journey takes you. Compare trusted airport car rental deals from leading local and international suppliers across Tbilisi, Batumi, Kutaisi, Kazbegi, and beyond.',
     heroBottomTitle: 'Search by Georgia airport and start your adventure.',
-    airports: [
-      {
-        name: 'Tbilisi International Airport',
-        code: 'TBS',
-        location: 'Tbilisi',
-        description: 'The main international gateway to Georgia, located just 18 km from Tbilisi city centre. Serving millions of passengers annually with direct connections across Europe, the Middle East, and Central Asia.',
-        image: '/img/countries/georgia-tbilisi.webp',
-        minPrice: 18,
-      },
-      {
-        name: 'Kutaisi International Airport',
-        code: 'KUT',
-        location: 'Kutaisi',
-        description: 'Georgia\'s second-largest airport, ideal for exploring western Georgia including Kutaisi, Batumi, Borjomi, and the Imereti region. A popular choice for budget travellers.',
-      image: "countries/georgia.png",
-        minPrice: 15,
-      },
-      {
-        name: 'Batumi International Airport',
-        code: 'BUS',
-        location: 'Batumi',
-        description: 'Serving the Black Sea resort city of Batumi, this airport is perfect for summer holidays and beach getaways. Close to the Turkish border, it also connects visitors arriving from across the region.',
-        image: '/img/countries/georgia-batumi.webp',
-        minPrice: 16,
-      },
-    ],
     travelInfo: {
       title: 'Why Rent a Car in Georgia with Autours?',
       subtitle: 'Discover the beauty of Georgia with the freedom to travel wherever your journey takes you. Whether you\'re arriving in Tbilisi, exploring the mountain landscapes of Kazbegi, relaxing in Batumi on the Black Sea coast, visiting the vineyards of Kakheti, or discovering Kutaisi, Gudauri, Borjomi, Mtskheta, Sighnaghi, or Mestia — Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
-      image: '/img/countries/georgia.webp',
+      image: "countries/georgia.png",
       benefits: [
         {
           title: 'Airport Pickup Across Georgia',

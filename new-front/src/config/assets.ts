@@ -32,9 +32,6 @@ export const assets = {
     turkey: '/img/countries/turkey.webp',
     uae: '/img/countries/uae.webp',
     georgia: '/img/countries/georgia.webp',
-    'georgia-tbilisi': '/img/countries/georgia-tbilisi.webp',
-    'georgia-kutaisi': '/img/countries/georgia-kutaisi.webp',
-    'georgia-batumi': '/img/countries/georgia-batumi.webp',
   },
   categories: {
     compactSUV: '/img/categories/Compact SUV.png__category.png',
