@@ -63,6 +63,10 @@ class Kernel extends ConsoleKernel
        //  $schedule->command('kolaycar:sync-branches --real')->dailyAt('08:00');
          $schedule->command('kolaycar:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
 
+         // Sync Famous branches daily and vehicles every 2 hours
+       //  $schedule->command('famous:sync-branches --real')->dailyAt('08:15');
+         $schedule->command('famous:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
+
          // Sync Movigo branches daily and vehicles every 2 hours
        //  $schedule->command('movigo:sync-branches --real')->dailyAt('08:30');
          $schedule->command('movigo:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
