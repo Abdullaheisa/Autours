@@ -249,7 +249,7 @@ class SurpriceApiService
         $response = Http::timeout(60)
             ->withHeaders($this->authHeaders())
             ->withOptions(['verify' => false])
-            ->post(self::BASE_URL . "/v1/reservation/{$orderId}/amend", $params);
+            ->put(self::BASE_URL . "/v1/reservation/{$orderId}/amend", $params);
 
         if (! $response->successful()) {
             Log::error('Surprice API: Failed to amend reservation', [
@@ -274,7 +274,7 @@ class SurpriceApiService
         $response = Http::timeout(60)
             ->withHeaders($this->authHeaders())
             ->withOptions(['verify' => false])
-            ->post(self::BASE_URL . "/v1/reservation/{$orderId}/cancel");
+            ->put(self::BASE_URL . "/v1/reservation/{$orderId}/cancel");
 
         if (! $response->successful()) {
             Log::error('Surprice API: Failed to cancel reservation', [
@@ -299,7 +299,7 @@ class SurpriceApiService
         $response = Http::timeout(60)
             ->withHeaders($this->authHeaders())
             ->withOptions(['verify' => false])
-            ->post(self::BASE_URL . "/v1/reservation/{$orderId}/commit");
+            ->put(self::BASE_URL . "/v1/reservation/{$orderId}/commit");
 
         if (! $response->successful()) {
             Log::error('Surprice API: Failed to commit reservation', [
@@ -324,7 +324,7 @@ class SurpriceApiService
         $response = Http::timeout(60)
             ->withHeaders($this->authHeaders())
             ->withOptions(['verify' => false])
-            ->post(self::BASE_URL . "/v1/reservation/{$orderId}/ignore");
+            ->put(self::BASE_URL . "/v1/reservation/{$orderId}/ignore");
 
         if (! $response->successful()) {
             Log::error('Surprice API: Failed to ignore reservation amendment', [
