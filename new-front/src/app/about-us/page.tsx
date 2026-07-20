@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import SectionDivider from '@/components/sections/SectionDivider';
 import { assets } from '@/config/assets';
 import { 
   Search, ArrowRight, Check, X, ChevronDown, Globe, 
@@ -745,7 +744,6 @@ export default function AboutUsPage() {
         )}
       </AnimatePresence>
 
-      <SectionDivider />
       <Footer />
     </div>
   );

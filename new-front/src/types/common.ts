@@ -1,6 +1,6 @@
 export type Status = "active" | "inactive" | "pending" | "suspended" | "published" | "draft" | "scheduled";
 
-export type Currency = 'USD' | 'EUR' | 'AED' | 'SAR' | 'EGP' | 'QAR' | 'KWD' | 'OMR' | 'BHD' | 'MAD' | 'JOD' | 'GBP';
+export type Currency = 'USD' | 'EUR' | 'AED' | 'SAR' | 'EGP' | 'QAR' | 'KWD' | 'OMR' | 'BHD' | 'MAD' | 'JOD' | 'GBP' | 'TRY' | 'GEL';
 
 
 

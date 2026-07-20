@@ -6,6 +6,9 @@ export const currencies = [
   { code: 'EUR', flag: '🇪🇺', name: 'Euro' },
   { code: 'QAR', flag: '🇶🇦', name: 'Qatari Riyal' },
   { code: 'KWD', flag: '🇰🇼', name: 'Kuwaiti Dinar' },
+  { code: 'MAD', flag: '🇲🇦', name: 'Moroccan Dirham' },
+  { code: 'TRY', flag: '🇹🇷', name: 'Turkish Lira' },
+  { code: 'GEL', flag: '🇬🇪', name: 'Georgian Lari' },
 ];
 
 export const countries = [

@@ -116,6 +116,9 @@ export default function CountryPageContent({ data }: Props) {
     if (country.includes('oman')) return 'OMR';
     if (country.includes('bahrain')) return 'BHD';
     if (country.includes('jordan')) return 'JOD';
+    if (country.includes('morocco')) return 'MAD';
+    if (country.includes('turkey') || country.includes('türkiye')) return 'TRY';
+    if (country.includes('georgia')) return 'GEL';
     return 'AED';
   };
 

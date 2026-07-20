@@ -7,8 +7,8 @@ import { assets } from '@/config/assets';
 import { SERVER_API_BASE } from '@/config/api';
 
 // Use the new Client Components
-import BlogContent from '@/components/blog/BlogContent';
-import BlogSearchForm from '@/components/blog/BlogSearchForm';
+import BlogContent from '@/app/blogs/components/BlogContent';
+import BlogSearchForm from '@/app/blogs/components/BlogSearchForm';
 
 // This function fetches the initial (default) blog posts at build time (or via ISR)
 async function getInitialBlogPosts() {

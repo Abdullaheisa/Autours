@@ -1,17 +1,14 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
-import CarRentalCard from '@/components/car-rental-brands/CarRentalCard';
-import BrandBenefitsSection from '@/components/car-rental-brands/BrandBenefitsSection';
-import BrandFAQSection from '@/components/car-rental-brands/BrandFAQSection';
+import CarRentalBrandsHero from '@/app/car-rental-brands/components/CarRentalBrandsHero';
+import BrandBenefitsSection from '@/app/car-rental-brands/[brand]/components/BrandBenefitsSection';
+import BrandFAQSection from '@/app/car-rental-brands/[brand]/components/BrandFAQSection';
+import WhyBookSection from '@/app/car-rental-brands/[brand]/components/WhyBookSection';
+import BrandCountriesGrid from '@/app/car-rental-brands/[brand]/components/BrandCountriesGrid';
 import { getBrandExtras } from '@/data/brandExtras';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
-import { getCountryIso } from '@/utils/countryUtils';
 
 interface PageProps {
   params: Promise<{ brand: string }>;
@@ -55,9 +52,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
     0
   );
 
-  const descriptionParagraphs = brand.description
-    .split('\n\n')
-    .filter((p: string) => p.trim());
+
 
   // ── Brand-specific extras (benefits + FAQs) — falls back to generic if not found
   const brandExtras = getBrandExtras(brand.id);
@@ -114,40 +109,11 @@ export default async function BrandDetailPage({ params }: PageProps) {
         />
 
 
-        {/* ─── Why Book Section ─────────────────────────────────────────────── */}
-        <section className="py-10 md:py-14 bg-white border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-6">
-              {/* Header: Title & Logo */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h3 className="text-2xl md:text-[28px] font-black text-gray-900 tracking-tight">
-                  Why book your car rental with {brand.name}?
-                </h3>
-                {/* Logo in styled box — matches hero */}
-                <div className="relative shrink-0 self-start md:self-center bg-white rounded-2xl border-2 border-[var(--primary)] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-3 w-[140px] h-[70px] flex items-center justify-center">
-                  <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-primary border-2 border-white z-10 shadow-sm" />
-                  <Image
-                    src={brand.logo}
-                    alt={`${brand.name} logo`}
-                    width={130}
-                    height={60}
-                    className="object-contain w-full h-full select-none"
-                    unoptimized
-                  />
-                </div>
-              </div>
-
-              {/* Description paragraphs */}
-              <div className="space-y-6">
-                {descriptionParagraphs.map((para: string, i: number) => (
-                  <p key={i} className="text-base md:text-[17px] text-gray-700 leading-[1.8] font-normal">
-                    {para}
-                  </p>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
+        <WhyBookSection
+          brandName={brand.name}
+          brandLogo={brand.logo}
+          description={brand.description}
+        />
 
         {/* ─── Booking Benefits ──────────────────────────────────────────────── */}
         <BrandBenefitsSection
@@ -156,34 +122,11 @@ export default async function BrandDetailPage({ params }: PageProps) {
         />
 
         {/* ─── Countries Grid ───────────────────────────────────────────────── */}
-        <section className="py-12 lg:py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            {/* Section title */}
-            <div className="mb-8">
-              <p className="text-[16px] md:text-[18px] font-bold text-gray-700 leading-relaxed">
-                Get instant access to all{' '}
-                <Link href={`/car-rental-brands/${brand.id}`} className="text-gray-700 hover:text-gray-900 transition-colors font-bold hover:underline underline-offset-2">
-                  {brand.name}
-                </Link>{' '}
-                car rental locations and find rates as Low as Possible for your{' '}
-                <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors font-bold hover:underline underline-offset-2">Car Rental</Link>
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-              {brand.countries.map((country: any) => (
-                <CarRentalCard
-                  key={country.countrySlug}
-                  href={`/car-rental-brands/${brand.id}/${country.countrySlug}`}
-                  title={`${brand.name} in ${country.countryName}`}
-                  countryCode={getCountryIso(country.countryName) || country.countryCode}
-                  id={`brand-country-${country.countrySlug}`}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
+        <BrandCountriesGrid
+          brandId={brand.id}
+          brandName={brand.name}
+          countries={brand.countries}
+        />
 
         {/* ─── FAQ ──────────────────────────────────────────────────────────── */}
         <BrandFAQSection

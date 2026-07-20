@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import { motion } from 'framer-motion';
-import SectionDivider from '@/components/sections/SectionDivider';
 
 export default function WhyAutoursPage() {
   // Ensure page starts at the top scroll position on load
@@ -177,7 +176,6 @@ export default function WhyAutoursPage() {
           </div>
         </section>
       </main>
-      <SectionDivider />
       <Footer />
     </div>
   );

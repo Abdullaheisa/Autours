@@ -20,6 +20,9 @@ export const currencies = [
   { code: 'BHD', symbol: 'BHD', name: 'Bahraini Dinar', flag: 'bh' },
   { code: 'EGP', symbol: 'EGP', name: 'Egyptian Pound', flag: 'eg' },
   { code: 'JOD', symbol: 'JOD', name: 'Jordanian Dinar', flag: 'jo' },
+  { code: 'MAD', symbol: 'MAD', name: 'Moroccan Dirham', flag: 'ma' },
+  { code: 'TRY', symbol: 'TRY', name: 'Turkish Lira', flag: 'tr' },
+  { code: 'GEL', symbol: 'GEL', name: 'Georgian Lari', flag: 'ge' },
 ];
 
 interface CurrencySelectorProps {

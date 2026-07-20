@@ -72,7 +72,11 @@ export default function Footer() {
     .filter(Boolean);
 
   return (
-    <footer className="bg-primary pt-10 pb-6 text-black border-t border-black/5">
+    <>
+      {/* Dark Slate Divider Bar */}
+      <div className="w-full h-[3px] sm:h-[6px] md:h-[10px] bg-[#0f172a]" />
+
+      <footer className="bg-primary pt-10 pb-6 text-black border-t border-black/5">
       <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
         
         <motion.div 
@@ -260,5 +264,6 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+    </>
   );
 }

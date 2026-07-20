@@ -51,8 +51,8 @@ export default function WhereWeAreSection() {
   // Custom ordering:
   // First 4: UAE, Turkey, Morocco, Jordan
   // Next: Oman, Egypt, Qatar
-  // Last (8th): Saudi Arabia
-  const orderIds = ['uae', 'turkey', 'morocco', 'jordan', 'oman', 'egypt', 'qatar', 'saudi'];
+  // Last (8th): Georgia
+  const orderIds = ['uae', 'turkey', 'morocco', 'jordan', 'oman', 'egypt', 'qatar', 'georgia'];
   const displayedCountries = orderIds
     .map(id => countries.find(c => c.id === id))
     .filter(Boolean) as Country[];

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
 import { motion, Variants } from 'framer-motion';
-import SectionDivider from '@/components/sections/SectionDivider';
 import { siteConfig } from '@/config/site';
 
 // ─── SVG Icons ───────────────────────────────────────────────
@@ -457,7 +456,6 @@ export default function ContactUsPage() {
         </section>
       </main>
 
-      <SectionDivider />
       <Footer />
     </div>
   );

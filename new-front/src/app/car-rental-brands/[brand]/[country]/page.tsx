@@ -5,8 +5,8 @@ import { notFound } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
-import LocationsAccordion from '@/components/car-rental-brands/LocationsAccordion';
+import CarRentalBrandsHero from '@/app/car-rental-brands/components/CarRentalBrandsHero';
+import LocationsAccordion from '@/app/car-rental-brands/[brand]/[country]/components/LocationsAccordion';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
 import { getCountryIso } from '@/utils/countryUtils';
 

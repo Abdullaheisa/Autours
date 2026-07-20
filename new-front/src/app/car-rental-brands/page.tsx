@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import CarRentalBrandsHero from '@/components/car-rental-brands/CarRentalBrandsHero';
-import CarRentalCard from '@/components/car-rental-brands/CarRentalCard';
+import CarRentalBrandsHero from '@/app/car-rental-brands/components/CarRentalBrandsHero';
+import CarRentalCard from '@/app/car-rental-brands/components/CarRentalCard';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
 export const metadata: Metadata = {
   title: 'All Car Rental Brands | Autours',

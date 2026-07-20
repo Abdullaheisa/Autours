@@ -27,6 +27,8 @@ export const currencySymbols: Record<Currency, string> = {
   BHD: 'BHD',
   MAD: 'MAD',
   JOD: 'JOD',
+  TRY: 'TRY',
+  GEL: 'GEL',
 };
 
 export const fallbackRates: Record<string, number> = {
@@ -42,6 +44,8 @@ export const fallbackRates: Record<string, number> = {
   BHD: 0.38,
   MAD: 10.0,
   JOD: 0.71,
+  TRY: 33.0,
+  GEL: 2.7,
 };
 
 const CACHE_KEY = 'currency_rates_cache';

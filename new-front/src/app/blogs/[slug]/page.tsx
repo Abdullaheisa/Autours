@@ -5,12 +5,12 @@ import { notFound } from 'next/navigation';
 import { Calendar, Clock, User, Eye, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import ShareButtons from '@/components/blog/ShareButtons';
+import ShareButtons from '@/app/blogs/components/ShareButtons';
 import { siteConfig } from '@/config/site';
 import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { SERVER_API_BASE } from '@/config/api';
-import BlogSearchSidebar from '@/components/blog/BlogSearchSidebar';
-import BlogCategories from '@/components/blog/BlogCategories';
+import BlogSearchSidebar from '@/app/blogs/components/BlogSearchSidebar';
+import BlogCategories from '@/app/blogs/components/BlogCategories';
 
 interface PageProps {
   params: Promise<{ slug: string }>;

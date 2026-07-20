@@ -64,7 +64,7 @@ function SearchPageContent() {
       date_to: searchParams.dateTo,
       time_from: searchParams.startTime || '10:00',
       time_to: searchParams.endTime || '10:00',
-      currency: ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD'].includes(currencyCode) ? currencyCode : 'AED',
+      currency: ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD', 'MAD', 'TRY', 'GEL'].includes(currencyCode) ? currencyCode : 'AED',
       page: currentPage,
       per_page: perPage,
     };

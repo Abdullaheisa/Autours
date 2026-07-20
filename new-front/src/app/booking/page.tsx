@@ -49,7 +49,7 @@ const COUNTRY_CODES = [
   { country: 'United States',        code: '1',   iso: 'US', flag: '🇺🇸' },
 ];
 
-const SUPPORTED_BACKEND_CURRENCIES = ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD'];
+const SUPPORTED_BACKEND_CURRENCIES = ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD', 'MAD', 'TRY', 'GEL'];
 
 const extractLaravelError = (errorResponse: any): string => {
   if (!errorResponse) return '';
