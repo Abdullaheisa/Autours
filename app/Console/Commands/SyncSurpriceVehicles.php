@@ -240,19 +240,15 @@ class SyncSurpriceVehicles extends Command
                         continue;
                     }
 
-                    $totalCharge = $offering['rentalDetails'][0]['totalCharge'] ?? [];
-                    $dayPrice = $totalCharge['estimatedTotalAmount'] ?? 0;
-                    $currency = $totalCharge['currencyCode'] ?? 'EUR';
-
-                    if ($dayPrice <= 0) {
-                        $charge = $this->findMainCharge($offering);
-                        $dayPrice = ($charge['unitCharge'] ?? 0) * ($charge['quantity'] ?? 1);
-                        $currency = $charge['currencyCode'] ?? $currency;
-                    }
+                    // Use the base rental charge (purpose=1) unitCharge — the actual per-day rate
+                    // NOT estimatedTotalAmount which includes taxes, fees and insurance
+                    $charge = $this->findMainCharge($offering);
+                    $dayPrice = (float) ($charge['unitCharge'] ?? 0);
+                    $currency = $charge['currencyCode'] ?? 'EUR';
 
                     if ($dayPrice > 0) {
                         $prices[$groupId] = [
-                            'day_price' => (float) $dayPrice,
+                            'day_price' => $dayPrice,
                             'currency' => $currency,
                             'vehicle' => $offering['vehicle'],
                             'insurance' => $offering['rentalDetails'][0]['rentalRate']['insurance'] ?? null,
@@ -266,17 +262,13 @@ class SyncSurpriceVehicles extends Command
                     if (empty($groupId) || !isset($prices[$groupId])) {
                         continue;
                     }
-                    
-                    $totalCharge = $offering['rentalDetails'][0]['totalCharge'] ?? [];
-                    $weekPrice = $totalCharge['estimatedTotalAmount'] ?? 0;
-                    
-                    if ($weekPrice <= 0) {
-                        $charge = $this->findMainCharge($offering);
-                        $weekPrice = ($charge['unitCharge'] ?? 0) * 7;
-                    }
 
-                    if ($weekPrice > 0) {
-                        $prices[$groupId]['week_price'] = round((float) $weekPrice / 7, 2);
+                    // unitCharge from the 7-day query is already the per-day rate for weekly rentals
+                    $charge = $this->findMainCharge($offering);
+                    $weekPerDay = (float) ($charge['unitCharge'] ?? 0);
+
+                    if ($weekPerDay > 0) {
+                        $prices[$groupId]['week_price'] = round($weekPerDay, 2);
                     }
                 }
 
@@ -285,17 +277,13 @@ class SyncSurpriceVehicles extends Command
                     if (empty($groupId) || !isset($prices[$groupId])) {
                         continue;
                     }
-                    
-                    $totalCharge = $offering['rentalDetails'][0]['totalCharge'] ?? [];
-                    $monthPrice = $totalCharge['estimatedTotalAmount'] ?? 0;
-                    
-                    if ($monthPrice <= 0) {
-                        $charge = $this->findMainCharge($offering);
-                        $monthPrice = ($charge['unitCharge'] ?? 0) * 30;
-                    }
 
-                    if ($monthPrice > 0) {
-                        $prices[$groupId]['month_price'] = round((float) $monthPrice / 30, 2);
+                    // unitCharge from the 30-day query is already the per-day rate for monthly rentals
+                    $charge = $this->findMainCharge($offering);
+                    $monthPerDay = (float) ($charge['unitCharge'] ?? 0);
+
+                    if ($monthPerDay > 0) {
+                        $prices[$groupId]['month_price'] = round($monthPerDay, 2);
                     }
                 }
 

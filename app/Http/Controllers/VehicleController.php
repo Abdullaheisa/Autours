@@ -1863,8 +1863,18 @@ class VehicleController extends Controller
 
                 foreach ($data['productOfferings'] ?? [] as $offering) {
                     $groupId = (string) ($offering['vehicle']['code'] ?? '');
-                    $charge = $offering['rentalDetails'][0]['rentalRate']['vehicleCharges'][0] ?? [];
-                    $unitCharge = $charge['calculationInfo']['unitCharge'] ?? 0;
+
+                    // Find the base rental charge (purpose === 1) for accurate per-day rate
+                    $unitCharge = 0;
+                    $chargeCurrency = 'EUR';
+                    $vehicleCharges = $offering['rentalDetails'][0]['rentalRate']['vehicleCharges'] ?? [];
+                    foreach ($vehicleCharges as $vc) {
+                        if (($vc['purpose'] ?? null) === 1) {
+                            $unitCharge = $vc['calculationInfo']['unitCharge'] ?? 0;
+                            $chargeCurrency = $vc['currencyCode'] ?? 'EUR';
+                            break;
+                        }
+                    }
 
                     if (empty($groupId) || $unitCharge <= 0) {
                         continue;
@@ -1882,15 +1892,27 @@ class VehicleController extends Controller
                     }
 
                     if ($vehicle) {
+                        // Convert from API currency to branch currency if they differ
+                        $storedPrice = $unitCharge;
+                        $branchCurrency = $branch->currency;
+                        if (!empty($chargeCurrency) && !empty($branchCurrency) && $chargeCurrency !== $branchCurrency) {
+                            $rate = CurrencyRate::where('currency_from', $chargeCurrency)
+                                ->where('currency_to', $branchCurrency)
+                                ->first();
+                            if ($rate) {
+                                $storedPrice = round($unitCharge * $rate->rate, 2);
+                            }
+                        }
+
                         $vehicle->update([
-                            'price' => $unitCharge,
+                            'price' => $storedPrice,
                         ]);
                         $updatedVehicles++;
                     }
 
                     $branchResults[$branch->id][$groupId] = [
                         'day_value' => $unitCharge,
-                        'currency' => $charge['currencyCode'] ?? 'EUR',
+                        'currency' => $chargeCurrency,
                     ];
                 }
             }
