@@ -26,6 +26,25 @@ const statusOptions: { value: BlogStatus; label: string; desc: string; color: st
   { value: "scheduled", label: "Scheduled", desc: "Publish at a specific date & time", color: "purple" },
 ];
 
+function dataURLtoFile(dataurl: string, filename: string): File | null {
+  try {
+    const arr = dataurl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch) return null;
+    const mime = mimeMatch[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  } catch (e) {
+    console.error("Error converting base64 to file:", e);
+    return null;
+  }
+}
+
 export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditBlogProps) {
   const { user } = useSelector((state: RootState) => state.auth);
   const isEditing = !!blog;
@@ -159,8 +178,14 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
       localStorage.setItem("autours_last_author", author);
       localStorage.setItem("autours_last_author_linkedin", authorLinkedin);
       if (previewAuthorImage) {
-        const filename = previewAuthorImage.split('/').pop() || "";
-        localStorage.setItem("autours_last_author_image", filename);
+        if (previewAuthorImage.startsWith("data:image/")) {
+          localStorage.setItem("autours_last_author_image", previewAuthorImage);
+        } else {
+          const filename = previewAuthorImage.startsWith("http")
+            ? previewAuthorImage
+            : previewAuthorImage.split('/').pop() || "";
+          localStorage.setItem("autours_last_author_image", filename);
+        }
       } else {
         localStorage.removeItem("autours_last_author_image");
       }
@@ -171,7 +196,15 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
     // Resolve the current author_image string value if no new file is uploaded
     let currentAuthorImage = undefined;
     if (!authorImageFile && previewAuthorImage) {
-      currentAuthorImage = previewAuthorImage.split('/').pop() || undefined;
+      if (!previewAuthorImage.startsWith("data:image/")) {
+        currentAuthorImage = previewAuthorImage.split('/').pop() || undefined;
+      }
+    }
+
+    // Convert base64 data URL from localStorage back to File if no new file is selected
+    let finalAuthorImageFile = authorImageFile;
+    if (!finalAuthorImageFile && previewAuthorImage && previewAuthorImage.startsWith("data:image/")) {
+      finalAuthorImageFile = dataURLtoFile(previewAuthorImage, "author_image.png");
     }
 
     await onSave({
@@ -184,7 +217,7 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
       image_alt_text: imageAltText,
       tags,
       author_linkedin: authorLinkedin,
-      authorImageFile: authorImageFile || undefined,
+      authorImageFile: finalAuthorImageFile || undefined,
       author_image: currentAuthorImage,
     });
     setLoading(false);

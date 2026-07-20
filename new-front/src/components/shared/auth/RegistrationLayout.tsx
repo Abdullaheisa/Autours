@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { User, Mail, Globe, Phone, Lock, ArrowRight, X, Loader2, Eye, EyeOff } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import SectionDivider from '@/components/sections/SectionDivider';
 import { worldCountries } from '@/data/worldCountries';
 import { AppDispatch, RootState } from '@/store';
 import { registerThunk } from '@/store/slices/authSlice';
@@ -292,7 +291,6 @@ export default function RegistrationLayout({
         )}
       </AnimatePresence>
 
-      <SectionDivider />
       <Footer />
     </div>
   );
