@@ -86,11 +86,11 @@ export const includedApi = {
 
 // Rental Terms API
 export const rentalTermsApi = {
-  getAll: () => apiClient.get("/api/supplier/get/rental-terms"),
-  create: (data: unknown) => apiClient.post("/post/rental-terms", data),
-  show: (id: number) => apiClient.post("/show/rental-terms", { id }),
-  update: (data: unknown) => apiClient.post("/edit/rental-terms", data),
-  delete: (id: number) => apiClient.post("/api/admin/delete/rental-terms", { id }),
+  getAll: () => apiClient.get("/api/supplier/get/rental-terms?my_terms=1"),
+  create: (data: unknown) => apiClient.post("/api/supplier/post/rental-terms", data),
+  show: (id: number) => apiClient.post("/api/supplier/show/rental-terms", { id }),
+  update: (data: unknown) => apiClient.post("/api/supplier/edit/rental-terms", data),
+  delete: (id: number) => apiClient.post("/api/supplier/delete/rental-terms", { id }),
   updateStatus: (data: unknown) => apiClient.post("/api/admin/update/rental-terms/status", data),
   selectForSupplier: (data: unknown) => apiClient.post("/api/supplier/select-rental-terms", data),
 };

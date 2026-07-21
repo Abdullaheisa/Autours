@@ -30,12 +30,16 @@ class RentalTermsController extends Controller
      */
 
 
-    public function index()
+    public function index(Request $request)
     {
         $terms = RentalTerms::query();
         // Resolve via sanctum guard first (Bearer token), then fall back to session user
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
              ?? \Illuminate\Support\Facades\Auth::user();
+
+        if ($request->has('my_terms') && $user) {
+            return $terms->where('created_by', $user->id)->get();
+        }
 
         if ($user && ($user->role == 'active_supplier' || $user->role == 'supplier' || $user->role == 'under_review')) {
             $terms = $terms->where('status', 'approved')->get();
@@ -59,7 +63,7 @@ class RentalTermsController extends Controller
             $rental = new RentalTerms();
             $rental->title = $request->title;
             $rental->description = $request->description;
-            $rental->status = $request->status ?? 'pending';
+            $rental->status = $request->status ?? 'approved';
             $rental->created_by = $user ? $user->id : 1;
             $rental->save();
 
@@ -82,16 +86,29 @@ class RentalTermsController extends Controller
 
     public function edit(Request $request)
     {
-        return RentalTerms::query()->find($request->id)->update($request->except('id'));
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        $term = RentalTerms::query()->find($request->id);
+        
+        if ($term && $user && $term->created_by == $user->id) {
+            $term->update($request->except('id'));
+            return response()->json(['status' => true, 'data' => $term]);
+        }
+        return response()->json(['status' => false, 'message' => 'Unauthorized or term not found'], 403);
     }
 
     public function destroy(Request $request)
     {
-        $status = RentalTerms::query()->find($request->id)->delete();
-        return response()->json([
-            'status' => $status,
-            'data' => []
-        ]);
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        $term = RentalTerms::query()->find($request->id);
+
+        if ($term && $user && $term->created_by == $user->id) {
+            $status = $term->delete();
+            return response()->json([
+                'status' => $status,
+                'data' => []
+            ]);
+        }
+        return response()->json(['status' => false, 'message' => 'Unauthorized or term not found'], 403);
     }
 
     public function assignRentalTerms(Request $request)

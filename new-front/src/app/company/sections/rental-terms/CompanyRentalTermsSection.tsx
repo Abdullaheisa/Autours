@@ -1,23 +1,30 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Search, FileText, CheckCircle, Clock, Trash2, Loader2, Check, X } from "lucide-react";
+import { Plus, Search, FileText, CheckCircle, Trash2, Loader2, Edit } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import StatsGrid from "@/app/company/components/StatsGrid";
 import Pagination from "@/components/ui/Pagination";
 import { rentalTermsApi } from "@/services/api";
 import toast from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
 import RichTextEditor from "@/components/shared/RichTextEditor";
+import Modal from "@/components/ui/Modal";
 
 export default function CompanyRentalTermsSection() {
   const [terms, setTerms] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [togglingTermId, setTogglingTermId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({ title: "", description: "" });
 
   useEffect(() => {
     setCurrentPage(1);
@@ -41,32 +48,66 @@ export default function CompanyRentalTermsSection() {
     fetchRentalTerms();
   }, []);
 
-  const handleToggleSelect = async (term: any) => {
-    setTogglingTermId(term.id);
+  const openAddModal = () => {
+    setFormData({ title: "", description: "" });
+    setIsEditing(false);
+    setEditId(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (term: any) => {
+    setFormData({ title: term.title || "", description: term.description || "" });
+    setIsEditing(true);
+    setEditId(term.id);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim() || !formData.description.trim() || formData.description === '<p><br></p>') {
+      toast.error("Please enter both title and description.");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      // Backend expects 'term_id' based on App\Http\Requests\AssignRentalTerm
-      const res: any = await rentalTermsApi.selectForSupplier({ term_id: term.id });
-      if (res?.status || res?.data) {
-        toast.success(
-          term.selected
-            ? "Rental term unassigned successfully."
-            : "Rental term assigned successfully!"
-        );
-        fetchRentalTerms();
+      if (isEditing && editId) {
+        await rentalTermsApi.update({ id: editId, ...formData });
+        toast.success("Rental term updated successfully.");
       } else {
-        toast.error("Failed to update rental term assignment.");
+        await rentalTermsApi.create(formData);
+        toast.success("Rental term created successfully.");
       }
+      closeModal();
+      fetchRentalTerms();
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to assign term.";
-      toast.error(msg);
+      toast.error(err.response?.data?.message || err.message || "Failed to save term.");
     } finally {
-      setTogglingTermId(null);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this rental term?")) return;
+    
+    setDeletingId(id);
+    try {
+      await rentalTermsApi.delete(id);
+      toast.success("Rental term deleted.");
+      fetchRentalTerms();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to delete term.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const stats = useMemo(() => [
-    { label: "Total Terms Available", value: terms.length, icon: <FileText size={20} />, color: "blue" as const },
-    { label: "Selected Policies", value: terms.filter(t => t.selected === 1 || t.selected === true).length, icon: <CheckCircle size={20} />, color: "emerald" as const },
+    { label: "Total Active Terms", value: terms.length, icon: <FileText size={20} />, color: "blue" as const },
   ], [terms]);
 
   const filteredTerms = useMemo(() => {
@@ -88,7 +129,9 @@ export default function CompanyRentalTermsSection() {
     <SectionLayout>
       <PageHeader
         title="Rental Terms"
-        description="Select and manage active terms and policies for your vehicles from the Administrator's approved list"
+        description="Manage the rental terms and policies for your vehicles."
+        actionLabel="Add Term"
+        onAction={openAddModal}
       />
 
       <div className="mt-4">
@@ -117,9 +160,16 @@ export default function CompanyRentalTermsSection() {
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-12 text-center">
           <FileText size={48} className="text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-gray-900 mb-2">No Rental Terms Found</h3>
-          <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            There are no custom terms matching your query in the administrator database.
+          <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">
+            You have not added any rental terms yet, or none match your search query.
           </p>
+          <button
+            onClick={openAddModal}
+            className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-800 transition-colors"
+          >
+            <Plus size={18} />
+            <span>Create First Term</span>
+          </button>
         </div>
       ) : (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
@@ -128,50 +178,47 @@ export default function CompanyRentalTermsSection() {
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr className="bg-gray-50/50 border-b border-gray-100">
-                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[80px]">Select</th>
                     <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[220px]">Title</th>
                     <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Description</th>
+                    <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[120px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {paginatedTerms.map((term) => {
-                    const isSelected = term.selected === 1 || term.selected === true;
-                    
-                    return (
-                      <tr key={term.id} className="hover:bg-gray-50/30 transition-colors group animate-in fade-in duration-300">
-                        <td className="px-6 py-4 text-center">
+                  {paginatedTerms.map((term) => (
+                    <tr key={term.id} className="hover:bg-gray-50/30 transition-colors group animate-in fade-in duration-300">
+                      <td className="px-6 py-4">
+                        <div 
+                          className="text-sm font-bold text-gray-900 leading-snug"
+                          dangerouslySetInnerHTML={{ __html: term.title || "" }}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div 
+                          className="text-xs text-gray-600 leading-relaxed max-w-xl line-clamp-3 prose prose-sm prose-p:my-0 prose-ul:my-0"
+                          dangerouslySetInnerHTML={{ __html: term.description || "" }}
+                        />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
-                            type="button"
-                            onClick={() => handleToggleSelect(term)}
-                            disabled={togglingTermId === term.id}
-                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                              isSelected
-                                ? "bg-primary border-primary text-black shadow-sm"
-                                : "bg-white border-gray-300 hover:border-primary"
-                            }`}
+                            onClick={() => openEditModal(term)}
+                            className="p-2 text-gray-400 hover:text-blue-500 bg-white border border-gray-200 rounded-lg shadow-sm transition-colors"
+                            title="Edit"
                           >
-                            {togglingTermId === term.id ? (
-                              <Loader2 size={12} className="animate-spin text-gray-600" />
-                            ) : isSelected ? (
-                              <Check size={14} strokeWidth={3} />
-                            ) : null}
+                            <Edit size={16} />
                           </button>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div 
-                            className="text-sm font-bold text-gray-900 leading-snug"
-                            dangerouslySetInnerHTML={{ __html: term.title || "" }}
-                          />
-                        </td>
-                        <td className="px-6 py-4">
-                          <div 
-                            className="text-xs text-gray-600 leading-relaxed max-w-xl line-clamp-3"
-                            dangerouslySetInnerHTML={{ __html: term.description || "" }}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          <button
+                            onClick={() => handleDelete(term.id)}
+                            disabled={deletingId === term.id}
+                            className="p-2 text-gray-400 hover:text-red-500 bg-white border border-gray-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                            title="Delete"
+                          >
+                            {deletingId === term.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -193,6 +240,61 @@ export default function CompanyRentalTermsSection() {
           )}
         </div>
       )}
+
+      {/* Add / Edit Modal */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title={isEditing ? "Edit Rental Term" : "Add Rental Term"}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="e.g. Driver's License Requirements"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
+              <RichTextEditor
+                value={formData.description}
+                onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+                placeholder="Detail the requirements..."
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={closeModal}
+              className="px-6 py-2.5 text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-black bg-primary hover:bg-primary-600 rounded-xl transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Term"
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </SectionLayout>
   );
 }

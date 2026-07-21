@@ -3,9 +3,9 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000
 
 const nextConfig = {
   reactStrictMode: true,
+  outputFileTracingRoot: require('path').join(__dirname, '../'),
   experimental: {
     optimizeCss: true, // 🚀 يمنع الـ Render-blocking للـ CSS
-    outputFileTracingRoot: require('path').join(__dirname, '../'),
   },
   images: {
     // 🚀 السطر السحري لضغط الصور وتقليل مساحتها لأقصى درجة

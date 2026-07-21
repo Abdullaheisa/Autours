@@ -344,7 +344,7 @@ class VehicleController extends Controller
                                             
                     $supplierRate = round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1);
                     $supplierReviewsCount = $rentals->count();
-                    $rentalTerms = SupplierRentalTerm::query()->where('supplier_id', $supplierId)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get()->toArray();
+                    $rentalTerms = \App\Models\RentalTerms::query()->where('created_by', $supplierId)->select(['title', 'description'])->get()->toArray();
                     
                     $supplierCache[$supplierId] = [
                         'questions_rate' => $questionsRate,
@@ -1210,7 +1210,7 @@ class VehicleController extends Controller
                 }
             }
             $selectedVehicle->final_price = round($selectedVehicle->final_price, 2);
-            $selectedVehicle->rental_terms = SupplierRentalTerm::query()->where('supplier_id', $selectedVehicle->supplierUser->id)->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')->select(['title', 'description'])->get();
+            $selectedVehicle->rental_terms = \App\Models\RentalTerms::query()->where('created_by', $selectedVehicle->supplierUser->id)->select(['title', 'description'])->get();
 
             $rentals = Rental::query()->where('supplier_id', $selectedVehicle->supplierUser->id)->whereNotNull('rate')->get();
             $selectedVehicle->supplier_rate = round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1);

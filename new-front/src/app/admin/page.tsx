@@ -16,7 +16,6 @@ import MembershipsSection from "@/app/admin/sections/memberships/MembershipsSect
 import CustomersSection from "@/app/admin/sections/customers/CustomersSection";
 import RentalsSection from "@/app/admin/sections/rentals/RentalsSection";
 import RentalReviewsSection from "@/app/admin/sections/rental-reviews/RentalReviewsSection";
-import RentalTermsSection from "@/app/admin/sections/rental-terms/RentalTermsSection";
 import WhatIsIncludedSection from "@/app/admin/sections/what-is-included/WhatIsIncludedSection";
 import BulkInclusionsSection from "@/app/admin/sections/bulk-inclusions/BulkInclusionsSection";
 import PromosSection from "@/app/admin/sections/promos/PromosSection";
@@ -43,7 +42,6 @@ const pageTitles: Record<string, string> = {
   customers: "Customers",
   rentals: "Rentals",
   reviews: "Rental Reviews",
-  terms: "Rental Terms",
   included: "What is included?",
   "bulk-inclusions": "Bulk Inclusions",
   promos: "Promos",
@@ -136,7 +134,6 @@ export default function AdminDashboard() {
       case "customers":   return <CustomersSection />;
       case "rentals":     return <RentalsSection />;
       case "reviews":     return <RentalReviewsSection />;
-      case "terms":       return <RentalTermsSection />;
       case "included":    return <WhatIsIncludedSection />;
       case "bulk-inclusions": return <BulkInclusionsSection />;
       case "promos":      return <PromosSection />;

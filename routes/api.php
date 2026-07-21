@@ -106,6 +106,10 @@ Route::prefix('supplier')->middleware(['auth:sanctum', 'active_supplier'])->grou
 
     // Rental Terms
     Route::get('get/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'index']);
+    Route::post('post/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'insert']);
+    Route::post('delete/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'destroy']);
+    Route::post('edit/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'edit']);
+    Route::post('show/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'show']);
     Route::post('select-rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'assignRentalTerms']);
 
     // Branches
@@ -309,12 +313,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('delete/promos/definitions', [\App\Http\Controllers\PromosController::class, 'deleteDefinition']);
 });
 
-// Rental Terms
+// Rental Terms - Admin updates (index/update status)
 Route::get('get/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'index']);
-Route::post('post/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'insert']);
-Route::post('delete/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'destroy']);
-Route::post('edit/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'edit']);
-Route::post('show/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'show']);
 Route::post('update/rental-terms/status', [\App\Http\Controllers\RentalTermsController::class, 'approveOrReject']);
 Route::post('select-rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'assignRentalTerms'])->middleware('auth:sanctum');
 

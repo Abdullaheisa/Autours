@@ -114,7 +114,6 @@ export const sidebarItems = [
   { id: "customers", label: "Customers", icon: "Users" },
   { id: "rentals", label: "Rentals", icon: "CalendarCheck" },
   { id: "reviews", label: "Rental Reviews", icon: "Star" },
-  { id: "terms", label: "Rental Terms", icon: "FileText" },
   { id: "included", label: "What is included?", icon: "CheckCircle2" },
   { id: "bulk-inclusions", label: "Bulk Inclusions", icon: "ListChecks" },
   { id: "promos", label: "Promos", icon: "Tag" },
