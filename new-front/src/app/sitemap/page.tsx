@@ -6,18 +6,35 @@ import Footer from '@/components/shared/layout/Footer';
 import { SERVER_API_BASE } from '@/config/api';
 import SitemapClient, { SitemapGroup, SitemapItem } from './components/SitemapClient';
 
+// Ensure the page is never cached so edits to sitemap.xml appear instantly
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: 'Site Map | Autours Car Rental',
   description: 'Autours Sitemap. Navigate easily through all car rental brands, destinations, airport locations, company resources, and support pages.',
   alternates: { canonical: '/sitemap' },
 };
 
-// Helper: Fetch or read the raw sitemap.xml content
+// Helper: Fetch or read raw sitemap.xml content (prioritize local file first)
 async function getSitemapXmlContent(): Promise<string> {
-  // 1. Try fetching from backend / API URL
+  // 1. Read local public/sitemap.xml directly for instant local edit reflection
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'sitemap.xml');
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      if (content && (content.includes('<urlset') || content.includes('<url>'))) {
+        return content;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not read local public/sitemap.xml:', e);
+  }
+
+  // 2. Fallback: Try fetching from backend / API URL
   try {
     const backendXmlUrl = `${SERVER_API_BASE.replace(/\/api\/?$/, '')}/sitemap.xml`;
-    const res = await fetch(backendXmlUrl, { next: { revalidate: 60 } });
+    const res = await fetch(backendXmlUrl, { cache: 'no-store' });
     if (res.ok) {
       const text = await res.text();
       if (text.includes('<urlset') || text.includes('<url>')) {
@@ -25,23 +42,13 @@ async function getSitemapXmlContent(): Promise<string> {
       }
     }
   } catch (e) {
-    console.warn('Could not fetch sitemap.xml from backend API, using local fallback...', e);
-  }
-
-  // 2. Local file fallback from public/sitemap.xml
-  try {
-    const filePath = path.join(process.cwd(), 'public', 'sitemap.xml');
-    if (fs.existsSync(filePath)) {
-      return fs.readFileSync(filePath, 'utf-8');
-    }
-  } catch (e) {
-    console.warn('Could not read public/sitemap.xml:', e);
+    console.warn('Could not fetch sitemap.xml from backend API:', e);
   }
 
   return '';
 }
 
-// Helper: Parse XML <url> tags and extract <loc> and <lastmod>
+// Helper: Parse XML <url> nodes
 function parseSitemapXml(xmlContent: string): { loc: string; lastmod?: string }[] {
   const urls: { loc: string; lastmod?: string }[] = [];
   const urlBlockRegex = /<url>([\s\S]*?)<\/url>/gi;
@@ -63,7 +70,7 @@ function parseSitemapXml(xmlContent: string): { loc: string; lastmod?: string }[
   return urls;
 }
 
-// Helper: Format URL into relative path and readable title
+// Helper: Convert URL into relative path and readable title
 function formatUrlItem(rawUrl: string, lastmod?: string): SitemapItem {
   try {
     const urlObj = new URL(rawUrl);
@@ -74,11 +81,25 @@ function formatUrlItem(rawUrl: string, lastmod?: string): SitemapItem {
     if (href === '/' || href === '') {
       title = 'Home Page';
     } else {
-      const parts = href.split('?')[0].split('/').filter(Boolean);
-      const slug = parts[parts.length - 1] || href;
-      title = slug
+      const [pathname, search] = href.split('?');
+      const parts = pathname.split('/').filter(Boolean);
+      const slug = parts[parts.length - 1] || pathname;
+      let cleanTitle = slug
         .replace(/[-_]/g, ' ')
         .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      // Format query parameters nicely (e.g. ?category=6 -> Blogs (Category 6))
+      if (search) {
+        const params = new URLSearchParams(search);
+        const searchPairs: string[] = [];
+        params.forEach((val, key) => {
+          searchPairs.push(`${key.replace(/[-_]/g, ' ')}: ${val}`);
+        });
+        if (searchPairs.length > 0) {
+          cleanTitle += ` (${searchPairs.join(', ')})`;
+        }
+      }
+      title = cleanTitle;
     }
 
     return { title, href, lastmod };
@@ -92,64 +113,72 @@ function formatUrlItem(rawUrl: string, lastmod?: string): SitemapItem {
   }
 }
 
-// Helper: Group items into logical sections
-function groupSitemapItems(items: SitemapItem[]): SitemapGroup[] {
-  const groupMap: Record<string, { title: string; items: SitemapItem[] }> = {
-    main: { title: 'Main Pages', items: [] },
-    blogs: { title: 'Blog Articles & News', items: [] },
-    destinations: { title: 'Our Destinations', items: [] },
-    brands: { title: 'Car Rental Brands', items: [] },
-    other: { title: 'Other Links & Portals', items: [] },
-  };
+// Helper: Dynamically group ALL URLs strictly from sitemap.xml
+function groupXmlUrls(items: SitemapItem[]): SitemapGroup[] {
+  const groupMap: Record<string, { title: string; items: SitemapItem[] }> = {};
 
   items.forEach((item) => {
-    const path = item.href.toLowerCase();
+    const rawPath = item.href.split('?')[0];
+    const segments = rawPath.split('/').filter(Boolean);
+    const firstSegment = segments[0] ? segments[0].toLowerCase() : 'main';
+
+    let groupKey = firstSegment;
+    let groupTitle = '';
+
     if (
-      path === '/' ||
-      path === '/about-us' ||
-      path === '/why_autours' ||
-      path === '/where-we-are' ||
-      path === '/contact-us' ||
-      path === '/v2'
+      groupKey === 'main' ||
+      rawPath === '/' ||
+      rawPath === '/v2' ||
+      rawPath === '/about-us' ||
+      rawPath === '/why_autours' ||
+      rawPath === '/where-we-are' ||
+      rawPath === '/contact-us'
     ) {
-      groupMap.main.items.push(item);
-    } else if (path.startsWith('/blogs')) {
-      groupMap.blogs.items.push(item);
-    } else if (path.startsWith('/countries')) {
-      groupMap.destinations.items.push(item);
-    } else if (path.startsWith('/car-rental-brands')) {
-      groupMap.brands.items.push(linkCleanName(item, 'brand'));
+      groupKey = 'main';
+      groupTitle = 'Main Pages';
+    } else if (groupKey === 'blogs') {
+      groupTitle = 'Blog Articles & Categories';
+    } else if (groupKey === 'countries') {
+      groupTitle = 'Our Destinations';
+    } else if (groupKey === 'car-rental-brands') {
+      groupTitle = 'Car Rental Brands';
     } else {
-      groupMap.other.items.push(item);
+      // Dynamic fallback for any new section added to sitemap.xml!
+      groupTitle =
+        firstSegment
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase()) + ' Pages';
+    }
+
+    if (!groupMap[groupKey]) {
+      groupMap[groupKey] = {
+        title: groupTitle,
+        items: [],
+      };
+    }
+
+    // Keep unique URLs
+    if (!groupMap[groupKey].items.some((i) => i.href === item.href)) {
+      groupMap[groupKey].items.push(item);
     }
   });
 
-  // Filter out empty groups
-  return Object.keys(groupMap)
-    .filter((key) => groupMap[key].items.length > 0)
-    .map((key) => ({
-      key,
-      title: groupMap[key].title,
-      items: groupMap[key].items,
-    }));
-}
-
-function linkCleanName(item: SitemapItem, type: string): SitemapItem {
-  if (type === 'brand' && item.href === '/car-rental-brands') {
-    return { ...item, title: 'All Rental Brands Index' };
-  }
-  return item;
+  return Object.keys(groupMap).map((key) => ({
+    key,
+    title: groupMap[key].title,
+    items: groupMap[key].items,
+  }));
 }
 
 export default async function SitemapPage() {
   const xmlContent = await getSitemapXmlContent();
   const rawUrls = parseSitemapXml(xmlContent);
 
-  // Convert raw URLs to formatted sitemap items
+  // Convert raw XML URLs to formatted sitemap items
   const items = rawUrls.map((u) => formatUrlItem(u.loc, u.lastmod));
-  
-  // Group items by category
-  const groups = groupSitemapItems(items);
+
+  // Dynamically group all items extracted from sitemap.xml
+  const groups = groupXmlUrls(items);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -162,7 +191,7 @@ export default async function SitemapPage() {
             Autours HTML Sitemap
           </h1>
           <p className="text-gray-600 text-sm font-medium">
-            Dynamic sitemap parsed from <code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs">sitemap.xml</code>. Total links indexed: <span className="font-bold text-gray-900">{items.length}</span>. Click on any section below to expand or collapse.
+            Dynamic sitemap generated 100% from <code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs font-mono">sitemap.xml</code>. Total URLs indexed: <span className="font-bold text-gray-900">{items.length}</span>.
           </p>
         </div>
 
