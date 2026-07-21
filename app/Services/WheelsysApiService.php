@@ -57,16 +57,7 @@ class WheelsysApiService
             'TRACING' => 'ON',
         ];
 
-        if ($country) {
-            $countryLower = strtolower($country);
-            if ($countryLower === 'egypt') {
-                $params['RATE_CODE'] = 'EGYRC';
-                $params['CDP'] = 'EGYPOA';
-            } elseif ($countryLower === 'morocco') {
-                $params['RATE_CODE'] = 'MORRC';
-                $params['CDP'] = 'MORPOA';
-            }
-        }
+
 
         $response = Http::timeout($this->requestTimeout)
             ->withOptions(['verify' => false])

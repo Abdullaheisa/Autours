@@ -121,6 +121,7 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
         $created = 0;
         $updated = 0;
         $skipped = 0;
+        $seenVehicleIds = [];
 
         // 6. Process each branch sequentially
         $progress = $this->output->createProgressBar($allBranches->count());
@@ -169,8 +170,10 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
                         'instant_confirmation' => 1,
+                        'activation' => 1,
                     ]);
                     $this->updatedCount++;
+                    $seenVehicleIds[] = $existingVehicle->id;
                     continue;
                 }
 
@@ -215,6 +218,7 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
 
                 // Mark as existing so we don't duplicate within same run if somehow repeated
                 $existingVehiclesByTag[$groupId][$branch->id] = $vehicle;
+                $seenVehicleIds[] = $vehicle->id;
                 $this->createdCount++;
             }
 
@@ -230,6 +234,15 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
                     $branch->delete();
                     $this->deactivatedCount++;
                 }
+            }
+        }
+
+        // 8. Deactivate vehicles that were not seen in this sync run (handles stop-sell)
+        $missingVehicles = $allExistingVehicles->whereNotIn('id', $seenVehicleIds);
+        foreach ($missingVehicles as $mv) {
+            if ($mv->activation) {
+                $mv->update(['activation' => 0, 'price' => 0, 'week_price' => 0, 'month_price' => 0]);
+                $this->deactivatedCount++;
             }
         }
 
