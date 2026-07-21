@@ -16,6 +16,7 @@ import { assets } from '@/config/assets';
 import { formatPrice } from '@/utils/currency';
 import { getVehicleDisplayPrice } from '@/utils/vehiclePrice';
 import type { Currency } from '@/types';
+import RentalTermsModal from './RentalTermsModal';
 
 interface CarCardProps {
   vehicle: Vehicle;
@@ -928,57 +929,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </div>
       </div>
 
-      <AnimatePresence>
-        {showTerms && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 md:p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowTerms(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden p-4 md:p-6 z-10 mx-2 max-h-[90vh] flex flex-col"
-            >
-              <button onClick={() => setShowTerms(false)} aria-label="Close rental terms" className="absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X size={18} />
-              </button>
-              <h4 className="text-lg md:text-xl font-black text-gray-900 mb-3 md:mb-4 flex items-center gap-2 pr-8">
-                <div className="bg-[var(--primary)]/20 p-2 rounded-xl shrink-0"><Info className="text-[var(--primary)]" size={20} /></div>
-                Rental Terms
-              </h4>
-              <div className="prose prose-sm overflow-y-auto no-scrollbar flex-1">
-                <div className="space-y-4 text-gray-600 font-black leading-relaxed text-xs md:text-sm">
-                  {Array.isArray(carData.supplier.rentalTerms) && carData.supplier.rentalTerms.length > 0 ? (
-                    carData.supplier.rentalTerms.map((term: any, idx: number) => (
-                      <div key={idx} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-                        <h5 className="font-bold text-gray-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: term.title || term.name || term.term_name || '' }} />
-                        <div className="text-xs text-gray-700 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: term.description || term.term_description || '' }} />
-                      </div>
-                    ))
-                  ) : rawTerms.length > 0 ? (
-                    rawTerms.map((term: any, idx: number) => (
-                      <div key={idx} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-                        <h5 className="font-bold text-gray-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: term.title || '' }} />
-                        <div className="text-xs text-gray-700 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: term.description || '' }} />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 text-sm">No rental terms assigned for this company.</p>
-                  )}
-                </div>
-              </div>
-              <button onClick={() => setShowTerms(false)} className="w-full mt-4 md:mt-6 py-2.5 md:py-3 bg-gray-900 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-black transition-colors">
-                I Understand
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <RentalTermsModal
+        isOpen={showTerms}
+        onClose={() => setShowTerms(false)}
+        supplierName={carData.supplier?.name}
+        rentalTerms={carData.supplier?.rentalTerms}
+        rawTerms={rawTerms}
+      />
     </motion.div>
   );
 }
