@@ -7,6 +7,7 @@ import BrandBenefitsSection from '@/app/car-rental-brands/[brand]/components/Bra
 import BrandFAQSection from '@/app/car-rental-brands/[brand]/components/BrandFAQSection';
 import WhyBookSection from '@/app/car-rental-brands/[brand]/components/WhyBookSection';
 import BrandCountriesGrid from '@/app/car-rental-brands/[brand]/components/BrandCountriesGrid';
+import BrandFleetSection from '@/app/car-rental-brands/[brand]/components/BrandFleetSection';
 import { getBrandExtras } from '@/data/brandExtras';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
 
@@ -51,8 +52,6 @@ export default async function BrandDetailPage({ params }: PageProps) {
     (acc: number, c: any) => acc + c.airportBranches.length + c.cityBranches.length,
     0
   );
-
-
 
   // ── Brand-specific extras (benefits + FAQs) — falls back to generic if not found
   const brandExtras = getBrandExtras(brand.id);
@@ -108,11 +107,16 @@ export default async function BrandDetailPage({ params }: PageProps) {
           }
         />
 
-
         <WhyBookSection
           brandName={brand.name}
           brandLogo={brand.logo}
           description={brand.description}
+        />
+
+        {/* ─── Fleet Categories & Explanatory Content ──────────────────────── */}
+        <BrandFleetSection
+          brandName={brand.name}
+          brandId={brand.id}
         />
 
         {/* ─── Booking Benefits ──────────────────────────────────────────────── */}

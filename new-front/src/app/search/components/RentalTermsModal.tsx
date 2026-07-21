@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Info, X, ChevronDown, ChevronUp, Check } from 'lucide-react';
 
@@ -14,40 +14,6 @@ function RentalTermAccordionItem({ term, defaultOpen = false }: RentalTermItemPr
 
   const title = term.title || term.name || term.term_name || 'Policy Details';
   const description = term.description || term.term_description || '';
-
-  const parseNormalizedItems = (raw: string) => {
-    if (!raw) return [];
-
-    let cleaned = raw;
-
-    // 1. Extract <li> tags if HTML list exists
-    if (/<li[^>]*>/i.test(cleaned)) {
-      const matches = cleaned.match(/<li[^>]*>([\s\S]*?)<\/li>/gi);
-      if (matches && matches.length > 0) {
-        return matches
-          .map((m) => m.replace(/<[^>]*>/g, '').trim())
-          .filter(Boolean);
-      }
-    }
-
-    // 2. Normalize break, paragraph, and heading tags
-    cleaned = cleaned
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/p>/gi, '\n')
-      .replace(/<p[^>]*>/gi, '')
-      .replace(/<\/div>/gi, '\n')
-      .replace(/<div[^>]*>/gi, '')
-      .replace(/<\/h[1-6]>/gi, '\n')
-      .replace(/<h[1-6][^>]*>/gi, '');
-
-    // 3. Split lines
-    return cleaned
-      .split('\n')
-      .map((line) => line.replace(/<[^>]*>/g, '').trim())
-      .filter((line) => line.length > 0);
-  };
-
-  const items = parseNormalizedItems(description);
 
   return (
     <div
@@ -85,38 +51,21 @@ function RentalTermAccordionItem({ term, defaultOpen = false }: RentalTermItemPr
             transition={{ duration: 0.2 }}
             className="overflow-hidden border-t border-gray-150 bg-white"
           >
-            <div className="p-4 md:p-5 space-y-2.5">
-              {items.length > 0 ? (
-                items.map((itemText, idx) => {
-                  const isNumbered = /^(\d+\.|\d+\)|\w\))\s*/.test(itemText);
-                  const cleanText = itemText
-                    .replace(/^[•\-\*\d+\)]\s*/, '')
-                    .replace(/^(\d+\.|\d+\)|\w\))\s*/, '');
-
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-3 bg-gray-50/70 p-3.5 rounded-xl border border-gray-150 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:border-gray-300 transition-all"
-                    >
-                      <div className="w-5.5 h-5.5 rounded-lg bg-primary/20 text-gray-900 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs border border-primary/30 shadow-2xs">
-                        {isNumbered ? (
-                          idx + 1
-                        ) : (
-                          <Check size={13} className="text-gray-950 stroke-[2.5]" />
-                        )}
-                      </div>
-                      <span className="text-xs md:text-sm font-bold text-gray-800 leading-relaxed">
-                        {cleanText}
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <div
-                  className="text-xs md:text-sm text-gray-800 font-bold leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-gray-800 [&_p]:mb-2 [&_strong]:font-black [&_strong]:text-gray-950"
-                  dangerouslySetInnerHTML={{ __html: description }}
-                />
-              )}
+            <div className="p-4 md:p-6">
+              <div
+                className="text-xs md:text-sm text-gray-800 font-medium leading-relaxed
+                  [&_p]:mb-3 [&_p:last-child]:mb-0
+                  [&_strong]:font-black [&_strong]:text-gray-950
+                  [&_h1]:text-base [&_h1]:font-black [&_h1]:text-gray-900 [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:uppercase
+                  [&_h2]:text-sm md:[&_h2]:text-base [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mt-4 [&_h2]:mb-2
+                  [&_h3]:text-sm [&_h3]:font-bold [&_h3]:text-gray-900 [&_h3]:mt-3 [&_h3]:mb-1.5
+                  [&_ul]:list-none [&_ul]:pl-0 [&_ul]:space-y-2 [&_ul]:my-3
+                  [&_li]:flex [&_li]:items-start [&_li]:gap-3 [&_li]:bg-gray-50/80 [&_li]:p-3.5 [&_li]:rounded-xl [&_li]:border [&_li]:border-gray-150 [&_li]:text-xs [&_li]:md:text-sm [&_li]:font-bold [&_li]:text-gray-800
+                  [&_li]:before:content-['✓'] [&_li]:before:w-5 [&_li]:before:h-5 [&_li]:before:rounded-md [&_li]:before:bg-primary/20 [&_li]:before:text-gray-950 [&_li]:before:flex [&_li]:before:items-center [&_li]:before:justify-center [&_li]:before:shrink-0 [&_li]:before:mt-0.5 [&_li]:before:font-black [&_li]:before:text-xs [&_li]:before:border [&_li]:before:border-primary/30
+                  [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1.5 [&_ol]:my-3 [&_ol_li]:list-item [&_ol_li]:before:content-none [&_ol_li]:bg-transparent [&_ol_li]:p-0 [&_ol_li]:border-none [&_ol_li]:shadow-none
+                "
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
             </div>
           </motion.div>
         )}
@@ -141,6 +90,17 @@ export default function RentalTermsModal({
   rawTerms = [],
 }: RentalTermsModalProps) {
   const termsList = Array.isArray(rentalTerms) && rentalTerms.length > 0 ? rentalTerms : rawTerms;
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   return (
     <AnimatePresence>

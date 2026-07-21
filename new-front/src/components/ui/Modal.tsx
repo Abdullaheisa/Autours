@@ -40,7 +40,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
       />
-      <div className={`relative bg-white w-full ${sizeClasses[size]} rounded-3xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden`}>
+      <div className={`relative bg-white w-full ${sizeClasses[size]} max-h-[90vh] rounded-3xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden`}>
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>

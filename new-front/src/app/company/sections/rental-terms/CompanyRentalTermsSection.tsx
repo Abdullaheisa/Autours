@@ -242,7 +242,7 @@ export default function CompanyRentalTermsSection() {
       )}
 
       {/* Add / Edit Modal */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title={isEditing ? "Edit Rental Term" : "Add Rental Term"}>
+      <Modal isOpen={isModalOpen} onClose={closeModal} title={isEditing ? "Edit Rental Term" : "Add Rental Term"} size="lg">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">

@@ -424,7 +424,7 @@ export default function RichTextEditor({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-gray-50 font-mono resize-y"
+          className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-gray-50 font-mono resize-y max-h-[300px] overflow-y-auto"
           style={{ minHeight }}
         />
       ) : (
@@ -440,7 +440,7 @@ export default function RichTextEditor({
           onMouseUp={checkActiveFormats}
           onBlur={syncContent}
           data-placeholder={placeholder}
-          className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-white"
+          className="rich-text-editor__body w-full px-4 py-3 text-sm text-gray-900 focus:outline-none bg-white max-h-[300px] overflow-y-auto"
           style={{ minHeight }}
         />
       )}
