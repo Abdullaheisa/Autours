@@ -160,6 +160,39 @@ XML;
 XML;
     }
 
+    public function getPolicy(string $locationCode): ?\SimpleXMLElement
+    {
+        $dateStr = now()->timezone('UTC')->format('mdY h:i A');
+        $xml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<TRNXML Version="1.0.0">
+    <Dategmtime TimeZone="UTC">{$dateStr}</Dategmtime>
+    <Sender>
+        <SenderID>{$this->senderId}</SenderID>
+    </Sender>
+    <Recipient>
+        <RecipientID>TRN</RecipientID>
+    </Recipient>
+    <TradingPartner>
+        <TradingPartnerCode>{$this->tradingPartnerCode}</TradingPartnerCode>
+    </TradingPartner>
+    <Customer>
+        <CustomerNumber>{$this->customerNumber}</CustomerNumber>
+        <Passcode>{$this->passcode}</Passcode>
+    </Customer>
+    <Message>
+        <MessageID>REQPOL</MessageID>
+        <MessageDesc>Request Policy</MessageDesc>
+    </Message>
+    <Payload>
+        <RentalLocationID>{$locationCode}</RentalLocationID>
+    </Payload>
+</TRNXML>
+XML;
+        
+        return $this->sendRequest($xml);
+    }
+
     private function parseLocations(\SimpleXMLElement $xml): array
     {
         $locations = [];
