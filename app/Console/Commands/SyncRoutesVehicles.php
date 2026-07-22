@@ -233,10 +233,10 @@ class SyncRoutesVehicles extends Command
                         'vehicle_id'       => $vehicle->id,
                         'supplier_id'      => $supplierUser->id,
                         'branch_id'        => $branchId,
-                        'per_day_profit'   => 0,
-                        'per_week_profit'  => 0,
-                        'per_month_profit' => 0,
-                        'weekend_profit'   => 0,
+                        'per_day_profit'   => 5,
+                        'per_week_profit'  => 5,
+                        'per_month_profit' => 5,
+                        'weekend_profit'   => 5,
                     ]);
 
                     $this->syncVehicleSpecifications($vehicle, $classCode, $model['seats']);

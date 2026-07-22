@@ -801,6 +801,16 @@ class VehicleController extends Controller
                 }
             }
 
+            \App\Models\Profit::create([
+                'vehicle_id' => $vehicle->id,
+                'supplier_id' => $user->id,
+                'branch_id' => $request->pickup_loc,
+                'per_day_profit' => 5,
+                'per_week_profit' => 5,
+                'per_month_profit' => 5,
+                'weekend_profit' => 5,
+            ]);
+
             DB::commit();
 
             try {

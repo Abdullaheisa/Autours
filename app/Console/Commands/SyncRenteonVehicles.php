@@ -207,10 +207,10 @@ class SyncRenteonVehicles extends AbstractVehicleSyncCommand
                     'vehicle_id' => $vehicle->id,
                     'supplier_id' => $supplierUser->id,
                     'branch_id' => $branch->id,
-                    'per_day_profit' => 10,
-                    'per_week_profit' => 10,
-                    'per_month_profit' => 10,
-                    'weekend_profit' => 10,
+                    'per_day_profit' => 5,
+                    'per_week_profit' => 5,
+                    'per_month_profit' => 5,
+                    'weekend_profit' => 5,
                 ]);
 
                 $this->syncVehicleSpecifications($vehicle, $data1);
