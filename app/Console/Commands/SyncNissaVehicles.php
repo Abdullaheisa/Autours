@@ -528,6 +528,20 @@ class SyncNissaVehicles extends Command
         // ------------------------------------------------------------------
         // 11. Summary
         // ------------------------------------------------------------------
+        if ($created > 0) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Automated Sync Alert: {$created} new vehicle(s) have been added from Nissa Supplier. Standard 5% profit margin assigned.",
+                    function ($message) use ($created) {
+                        $message->to(['admin@autours.net', 'contact@autours.net'])
+                                ->subject("Nissa Sync Notification: {$created} New Vehicle(s) Added");
+                    }
+                );
+            } catch (\Exception $e) {
+                Log::error("Failed to send Nissa new vehicle notification email: " . $e->getMessage());
+            }
+        }
+
         $this->newLine();
         $this->info('========== Nissa Vehicle Sync Complete ==========');
         $this->info("Created     : {$created}");

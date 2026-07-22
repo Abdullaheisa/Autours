@@ -281,6 +281,21 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
             }
         }
 
+        if ($this->createdCount > 0) {
+            $createdCount = $this->createdCount;
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Automated Sync Alert: {$createdCount} new vehicle(s) have been added from {$supplierName}.",
+                    function ($message) use ($supplierName, $createdCount) {
+                        $message->to(['admin@autours.net', 'contact@autours.net'])
+                                ->subject("{$supplierName} Sync Notification: {$createdCount} New Vehicle(s) Added");
+                    }
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send {$supplierName} new vehicle notification email: " . $e->getMessage());
+            }
+        }
+
         return self::SUCCESS;
     }
 

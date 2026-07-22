@@ -473,6 +473,20 @@ class SyncSurpriceVehicles extends Command
         // ------------------------------------------------------------------
         // 12. Summary
         // ------------------------------------------------------------------
+        if ($created > 0) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Automated Sync Alert: {$created} new vehicle(s) have been added from Surprice Supplier. Standard 5% profit margin assigned.",
+                    function ($message) use ($created) {
+                        $message->to(['admin@autours.net', 'contact@autours.net'])
+                                ->subject("Surprice Sync Notification: {$created} New Vehicle(s) Added");
+                    }
+                );
+            } catch (\Exception $e) {
+                Log::error("Failed to send Surprice new vehicle notification email: " . $e->getMessage());
+            }
+        }
+
         $this->newLine();
         $this->info('========== Surprice Vehicle Sync Complete ==========');
         $this->info("Created     : {$created}");

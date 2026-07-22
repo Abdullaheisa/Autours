@@ -330,6 +330,20 @@ class SyncRentlyVehicles extends Command
             $this->warn("Deleted empty branch: {$emptyBranch->name}");
         }
 
+        if ($created > 0) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Automated Sync Alert: {$created} new vehicle(s) have been added from Street Supplier (Rently Network). Standard 5% profit margin assigned.",
+                    function ($message) use ($created) {
+                        $message->to(['admin@autours.net', 'contact@autours.net'])
+                                ->subject("Rently Sync Notification: {$created} New Vehicle(s) Added");
+                    }
+                );
+            } catch (\Exception $e) {
+                Log::error("Failed to send Rently new vehicle notification email: " . $e->getMessage());
+            }
+        }
+
         $this->newLine();
         $this->info('========== Rently Vehicle Sync Complete ==========');
         $this->info("Created  : {$created}");

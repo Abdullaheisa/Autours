@@ -246,6 +246,21 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
             }
         }
 
+        if ($this->createdCount > 0) {
+            $created = $this->createdCount;
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Automated Sync Alert: {$created} new vehicle(s) have been added from Wheelsys Supplier. Standard 5% profit margin assigned.",
+                    function ($message) use ($created) {
+                        $message->to(['admin@autours.net', 'contact@autours.net'])
+                                ->subject("Wheelsys Sync Notification: {$created} New Vehicle(s) Added");
+                    }
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send Wheelsys new vehicle notification email: " . $e->getMessage());
+            }
+        }
+
         return self::SUCCESS;
     }
 
