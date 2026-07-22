@@ -88,18 +88,28 @@ class VehicleController extends Controller
                                 $q2->where('branches.id', $branch->id)
                                    ->orWhere('branches.location', $branch->location)
                                    ->orWhere('branches.city', $branch->city);
+                                if ($branch->airport_id) {
+                                    $q2->orWhere('branches.airport_id', $branch->airport_id);
+                                }
                             });
                         } else {
                             $q->where('branches.id', $location);
                         }
                     } else {
-                        // String location: search by location, name, city, adresse, or country (partial match)
+                        // String location: search by location, name, city, adresse, country, abbreviation, station_id or linked airport
                         $q->where(function ($q2) use ($location) {
                             $q2->where('branches.location', 'LIKE', "%{$location}%")
                                ->orWhere('branches.name', 'LIKE', "%{$location}%")
                                ->orWhere('branches.city', 'LIKE', "%{$location}%")
                                ->orWhere('branches.adresse', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.country', 'LIKE', "%{$location}%");
+                               ->orWhere('branches.country', 'LIKE', "%{$location}%")
+                               ->orWhere('branches.abriviation', 'LIKE', "%{$location}%")
+                               ->orWhere('branches.station_id', 'LIKE', "%{$location}%")
+                               ->orWhereHas('airport', function ($aq) use ($location) {
+                                   $aq->where('city', 'LIKE', "%{$location}%")
+                                      ->orWhere('airport_name', 'LIKE', "%{$location}%")
+                                      ->orWhere('iata_code', 'LIKE', "%{$location}%");
+                               });
                         });
                     }
                 });

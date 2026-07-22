@@ -79,6 +79,41 @@ class SeedGlobalAirports extends Command
             // Cleanup: use region as city. It's not perfect but it's much better than nothing.
             $cityName = trim(str_replace(' Airport', '', $regionName));
 
+            // Overrides for Arabic transliterations from IP2Location dataset
+            $cityOverrides = [
+                // UAE
+                'Dubayy' => 'Dubai',
+                'Abu Zaby' => 'Abu Dhabi',
+                'Al Fujayrah' => 'Fujairah',
+                'Ash Shariqah' => 'Sharjah',
+                "Ra's al Khaymah" => 'Ras Al Khaimah',
+                // Egypt
+                'Al Qahirah' => 'Cairo',
+                'Al Iskandariyah' => 'Alexandria',
+                'Al Uqsur' => 'Luxor',
+                'Al Bahr al Ahmar' => 'Hurghada',
+                "Janub Sina'" => 'Sharm El Sheikh',
+                'Al Jizah' => 'Giza',
+                // Saudi Arabia
+                'Ar Riyad' => 'Riyadh',
+                'Makkah al Mukarramah' => 'Jeddah',
+                'Al Madinah al Munawwarah' => 'Madinah',
+                'Ash Sharqiyah' => 'Dammam',
+                // Qatar
+                'Ad Dawhah' => 'Doha',
+                // Bahrain
+                'Al Muharraq' => 'Muharraq',
+                // Kuwait
+                'Al Farwaniyah' => 'Kuwait City',
+                // Jordan
+                "Al 'Aqabah" => 'Aqaba',
+                "Al 'Asimah" => 'Amman',
+                'Madaba' => 'Amman',
+            ];
+            if (isset($cityOverrides[$cityName])) {
+                $cityName = $cityOverrides[$cityName];
+            }
+
             Airport::updateOrCreate(
                 ['iata_code' => strtoupper(trim($iata))],
                 [

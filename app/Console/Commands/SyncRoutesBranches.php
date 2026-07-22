@@ -129,6 +129,17 @@ class SyncRoutesBranches extends Command
                 ]
             );
 
+            // Normalize branch name/location against canonical airports
+            $normalizer = new \App\Services\BranchNormalizationService();
+            $normData = $normalizer->normalize(
+                $branch->name,
+                $branch->city ?? '',
+                $branch->country ?? '',
+                $branch->station_id,
+                $branch->abriviation
+            );
+            $branch->update($normData);
+
             $syncedCount++;
         }
 
