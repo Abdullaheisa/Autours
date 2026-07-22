@@ -181,6 +181,7 @@ class SyncRentlyVehicles extends Command
 
                             if ($days === 3) {
                                 $stationPrices[$branchId][$modelId]['day_value'] = $dayPrice;
+                                $stationPrices[$branchId][$modelId]['currency'] = $item['currency'] ?? 'USD';
                                 $branchModels[$modelId] = $item['model'];
                             } elseif ($days === 7) {
                                 $stationPrices[$branchId][$modelId]['week_price'] = round($price / 7, 2);
@@ -215,13 +216,30 @@ class SyncRentlyVehicles extends Command
         $deleted = 0;
         $syncedVehicleIds = [];
 
+        $branchesKeyed = $allBranches->keyBy('id');
+
         foreach ($stationPrices as $branchId => $models) {
+            $branch = $branchesKeyed->get($branchId);
+            $branchCurrency = $branch?->currency;
+
             foreach ($models as $modelId => $priceData) {
                 $dayPrice = $priceData['day_value'] ?? 0;
                 if ($dayPrice <= 0) continue;
 
                 $weekPrice = $priceData['week_price'] ?? $dayPrice;
                 $monthPrice = $priceData['month_price'] ?? $dayPrice;
+                $apiCurrency = $priceData['currency'] ?? 'USD';
+
+                if (!empty($apiCurrency) && !empty($branchCurrency) && $apiCurrency !== $branchCurrency) {
+                    $rate = \App\Models\CurrencyRate::where('currency_from', $apiCurrency)
+                        ->where('currency_to', $branchCurrency)
+                        ->first();
+                    if ($rate && $rate->rate > 0) {
+                        $dayPrice = round($dayPrice * $rate->rate, 2);
+                        $weekPrice = round($weekPrice * $rate->rate, 2);
+                        $monthPrice = round($monthPrice * $rate->rate, 2);
+                    }
+                }
 
                 $model = $branchModels[$modelId];
                 $vehicleName = trim(($model['brand'] ?? '') . ' ' . ($model['name'] ?? ''));
