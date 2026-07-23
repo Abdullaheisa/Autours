@@ -43,9 +43,14 @@ class RentalTermsController extends Controller
 
         if ($user && ($user->role == 'active_supplier' || $user->role == 'supplier' || $user->role == 'under_review')) {
             $terms = $terms->where('status', 'approved')->get();
-            $selected = SupplierRentalTerm::query()
-                ->where('supplier_id', $user->id)
-                ->get()->pluck('rental_term_id')->toArray();
+            $selectedQuery = SupplierRentalTerm::query()
+                ->where('supplier_id', $user->id);
+            if ($request->has('country')) {
+                $selectedQuery->where('country', $request->country);
+            } else {
+                $selectedQuery->whereNull('country');
+            }
+            $selected = $selectedQuery->get()->pluck('rental_term_id')->toArray();
             foreach ($terms as $term) {
                 $term->selected = in_array($term->id, $selected) ? 1 : 0;
             }
@@ -123,11 +128,36 @@ class RentalTermsController extends Controller
             return response()->json(['message' => 'The term id is required.'], 422);
         }
 
-        $checkIfSelected = SupplierRentalTerm::query()->where('supplier_id', $user->id)->where('rental_term_id', $termId)->get();
-        if ($checkIfSelected->count()) {
-            $status = SupplierRentalTerm::query()->where('supplier_id', $user->id)->where('rental_term_id', $termId)->delete();
+        $checkQuery = SupplierRentalTerm::query()
+            ->where('supplier_id', $user->id)
+            ->where('rental_term_id', $termId);
+        
+        if ($request->has('country')) {
+            $checkQuery->where('country', $request->country);
         } else {
-            $status = SupplierRentalTerm::query()->insert(['supplier_id' => $user->id, 'rental_term_id' => $termId]);
+            $checkQuery->whereNull('country');
+        }
+
+        $checkIfSelected = $checkQuery->get();
+
+        if ($checkIfSelected->count()) {
+            $deleteQuery = SupplierRentalTerm::query()
+                ->where('supplier_id', $user->id)
+                ->where('rental_term_id', $termId);
+            
+            if ($request->has('country')) {
+                $deleteQuery->where('country', $request->country);
+            } else {
+                $deleteQuery->whereNull('country');
+            }
+            
+            $status = $deleteQuery->delete();
+        } else {
+            $status = SupplierRentalTerm::query()->insert([
+                'supplier_id' => $user->id, 
+                'rental_term_id' => $termId,
+                'country' => $request->input('country')
+            ]);
         }
         return response()->json([
             'status' => $status,

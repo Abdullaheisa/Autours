@@ -9,5 +9,5 @@ class SupplierRentalTerm extends Model
 {
     public $timestamps = true;
     protected $table = 'supplier_rental_terms';
-    protected $fillable = ['rental_term_id', 'supplier_id'];
+    protected $fillable = ['rental_term_id', 'supplier_id', 'country'];
 }

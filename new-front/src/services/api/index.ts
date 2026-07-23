@@ -86,7 +86,8 @@ export const includedApi = {
 
 // Rental Terms API
 export const rentalTermsApi = {
-  getAll: () => apiClient.get("/api/supplier/get/rental-terms?my_terms=1"),
+  getAll: (country?: string) => apiClient.get("/api/supplier/get/rental-terms", { params: { country } }),
+  getMyTerms: () => apiClient.get("/api/supplier/get/rental-terms?my_terms=1"),
   create: (data: unknown) => apiClient.post("/api/supplier/post/rental-terms", data),
   show: (id: number) => apiClient.post("/api/supplier/show/rental-terms", { id }),
   update: (data: unknown) => apiClient.post("/api/supplier/edit/rental-terms", data),
