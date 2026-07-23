@@ -28,19 +28,19 @@ export interface BrandExtra {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const defaultBrandExtra: Omit<BrandExtra, 'brandId'> = {
   benefits: [
-    { icon: 'ShieldCheck',  title: 'Verified & Trusted',      description: 'All rental companies on Autours are verified and reviewed for your peace of mind.' },
-    { icon: 'BadgePercent', title: 'Best Rate Guarantee',     description: 'We compare rates across all branches so you always get the lowest available price.' },
-    { icon: 'Clock',        title: 'Instant Confirmation',    description: 'Receive your booking confirmation in seconds â€” no waiting, no uncertainty.' },
-    { icon: 'CreditCard',   title: 'Flexible Payment',        description: 'Choose to pay online now or at the counter â€” whichever works best for you.' },
-    { icon: 'HeadphonesIcon', title: '24/7 Support',          description: 'Our customer support team is available around the clock to assist you.' },
-    { icon: 'MapPin',       title: 'Airport & City Pickups',  description: 'Pick up your car at the airport or any city branch at your convenience.' },
+    { icon: 'ShieldCheck',  title: 'تأمين شامل وخيارات مرنة',      description: 'نوفر خيارات تأمين متنوعة تشمل التأمين الشامل مع إمكانية إعفاء كامل من المسؤولية لراحة بالك.' },
+    { icon: 'Zap',          title: 'استلام سريع ورقمي',           description: 'إجراءات استلام مبسطة وسريعة عند المكتب لتبدأ رحلتك فوراً بدون انتظار طويل.' },
+    { icon: 'Sparkles',     title: 'أسطول سيارات حديث ومعقم',       description: 'جميع السيارات تخضع لفحص دقيق وتطهير كامل قبل التسليم، وهي من أحدث الموديلات السنوية.' },
+    { icon: 'MapPin',       title: 'مواقع استلام متعددة',          description: 'فروع مريحة في المطارات الحيوية ووسط المدن لتسهيل استلام وتسليم السيارة أينما كنت.' },
+    { icon: 'Headphones',   title: 'دعم فني ومساعدة على الطريق 24/7', description: 'فريق الدعم ومساعدة الطريق متواجد على مدار الساعة لخدمتك في حالات الطوارئ أو الأعطال.' },
+    { icon: 'Calendar',     title: 'حجز مرن وإلغاء سهل',          description: 'يمكنك تعديل تفاصيل حجزك أو إلغائه بكل سهولة ووفقاً لسياسات إلغاء مرنة وواضحة.' },
   ],
   faqs: [
-    { question: 'How do I book a car rental through Autours?',         answer: 'Simply enter your pickup location and dates on the search page, browse available vehicles, select the one you like, and complete the booking in a few easy steps. You\'ll receive instant email confirmation.' },
-    { question: 'What documents do I need to pick up my rental car?',  answer: 'You\'ll need a valid driving licence, a passport or national ID, and the credit card used to make the booking. Some countries may require an International Driving Permit (IDP).' },
-    { question: 'Can I modify or cancel my booking?',                  answer: 'Yes. Log into Manage Booking at the top of the page to modify dates, upgrade your vehicle, or cancel. Cancellation policies vary by company â€” please check the booking terms before confirming.' },
-    { question: 'Is insurance included in the rental price?',          answer: 'Basic Collision Damage Waiver (CDW) and Third-Party Liability are typically included. Full coverage options such as Super CDW and excess protection are available at checkout or at the counter.' },
-    { question: 'What is the fuel policy?',                            answer: 'Most rentals operate on a full-to-full basis â€” you pick up the car with a full tank and return it full. Some suppliers offer a full-to-empty prepaid option. The fuel policy is clearly stated at the time of booking.' },
+    { question: 'ما هي المستندات المطلوبة لاستلام السيارة؟',         answer: 'تحتاج إلى رخصة قيادة سارية المفعول (سعودية أو دولية للمغتربين)، الهوية الوطنية أو الإقامة (أو جواز السفر للزوار)، وبطاقة ائتمانية باسم السائق الرئيسي لدفع الوديعة.' },
+    { question: 'هل هناك حد أدنى لسن السائق للحجز؟',                answer: 'الحد الأدنى للسن هو 21 عاماً لغالبية الفئات. قد تفرض بعض الشركات رسوماً إضافية للسائقين الشباب (تحت 25 عاماً) أو تتطلب عمراً أكبر للفئات الفاخرة.' },
+    { question: 'كيف يتم التعامل مع المخالفات المرورية أثناء الإيجار؟', answer: 'يتم تسجيل أي مخالفات مرورية (مثل ساهر) على رخصة السائق مباشرة عبر الأنظمة الحكومية (مثل تم / أبشر)، ويتحمل المستأجر قيمتها بالإضافة إلى أي رسوم إدارية تطبقها الشركة.' },
+    { question: 'هل أحتاج لدفع وديعة تأمينية مستردة عند الاستلام؟',  answer: 'نعم، تتطلب جميع الشركات حجز مبلغ تأميني (تفويض مؤقت) على بطاقة الائتمان الخاصة بك عند الاستلام. يتم فك هذا الحجز تلقائياً خلال 10 إلى 15 يوم عمل من تاريخ إعادة السيارة سليمة وخلوها من المخالفات.' },
+    { question: 'ما هي سياسة الوقود المتبعة؟',                      answer: 'السياسة الأكثر شيوعاً هي (ممتلئ إلى ممتلئ)؛ حيث تستلم السيارة بخزان وقود ممتلئ ويتعين عليك إعادتها ممتلئة لتجنب دفع رسوم تعبئة إضافية من قِبل مكتب التأجير.' },
   ],
 };
 

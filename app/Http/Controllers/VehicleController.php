@@ -1156,7 +1156,7 @@ class VehicleController extends Controller
                 ])
                 ->orderBy('id');
         } else {
-            $query = $vehicles->with('category', 'supplierUser', 'branch', 'fuelPolicy')->orderBy('id');
+            $query = $vehicles->with('category', 'supplierUser', 'branch', 'fuelPolicy', 'specifications')->orderBy('id');
         }
 
         if ($request->has('paginate')) {

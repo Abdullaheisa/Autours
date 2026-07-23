@@ -10,6 +10,7 @@ import BrandCountriesGrid from '@/app/car-rental-brands/[brand]/components/Brand
 import BrandFleetSection from '@/app/car-rental-brands/[brand]/components/BrandFleetSection';
 import { getBrandExtras } from '@/data/brandExtras';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
+import { vehicleMapper } from '@/services/mappers/vehicleMapper';
 
 interface PageProps {
   params: Promise<{ brand: string }>;
@@ -52,6 +53,20 @@ export default async function BrandDetailPage({ params }: PageProps) {
     (acc: number, c: any) => acc + c.airportBranches.length + c.cityBranches.length,
     0
   );
+
+  // Fetch and filter vehicles for this supplier from database
+  let supplierVehicles: any[] = [];
+  try {
+    const supplierId = brand.user_id || brand.id;
+    const vehiclesRes = await fetch(`${SERVER_API_BASE}/get/vehicles?supplier=${supplierId}`, { next: { revalidate: 60 } });
+    if (vehiclesRes.ok) {
+      supplierVehicles = await vehiclesRes.json();
+    }
+  } catch (err) {
+    console.warn("Failed to fetch vehicles for brand page:", err);
+  }
+
+  const localVehicles = vehicleMapper.toLocalList(supplierVehicles);
 
   // ── Brand-specific extras (benefits + FAQs) — falls back to generic if not found
   const brandExtras = getBrandExtras(brand.id);
@@ -117,6 +132,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
         <BrandFleetSection
           brandName={brand.name}
           brandId={brand.id}
+          vehicles={localVehicles}
         />
 
         {/* ─── Booking Benefits ──────────────────────────────────────────────── */}

@@ -15,7 +15,7 @@ import CarCard from './components/CarCard';
 import CarCardSkeleton from './components/CarCardSkeleton';
 import CategoryFilterBar from './components/CategoryFilterBar';
 import { RootState, AppDispatch } from '@/store';
-import { setSearchParams, fetchVehicles, setPage, resetFilters } from '@/store/slices/searchSlice';
+import { setSearchParams, setFilterParams, fetchVehicles, setPage, resetFilters } from '@/store/slices/searchSlice';
 import type { FilterPayload } from '@/types';
 import { FILTER_SPEC_NAMES } from '@/constants/filterSpecNames';
 
@@ -159,11 +159,17 @@ function SearchPageContent() {
     const locationLabel = urlParams.get('locationLabel');
     const start = urlParams.get('start');
     const end = urlParams.get('end');
+    const supplierParam = urlParams.get('supplier');
+
     if (location && start && end) {
       dispatch(setSearchParams({
         location, locationLabel: locationLabel || location, dateFrom: start, dateTo: end,
         startTime: urlParams.get('st') || '10:00', endTime: urlParams.get('et') || '10:00',
       }));
+    }
+
+    if (supplierParam) {
+      dispatch(setFilterParams({ supplier: [supplierParam] }));
     }
   }, [urlParams, dispatch]);
 
