@@ -346,17 +346,6 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
                 </div>
               </div>
 
-              {/* Search CTA Button */}
-              <div className="pt-2">
-                <Link
-                  href={`/search?supplier=${brandId}`}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-yellow-400 text-gray-950 font-black text-xs md:text-sm uppercase tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all border border-black/5 group"
-                >
-                  <span>Browse All {brandName} Vehicles</span>
-                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-
             </div>
 
           </div>

@@ -83,7 +83,7 @@ export const assets = {
     ac: '/img/icons/air.png',
     seats: '/img/icons/chair.svg',
     doors: '/img/icons/doorpng.png',
-    bags: '/img/icons/suitcase.svg',
+    bags: '/img/icons/suitcase_v2.svg',
     fuel: '/img/icons/fuel.svg',
     transmission: '/img/icons/otomatc.png',
     instant: '/img/icons/instant_confirmation.png',
