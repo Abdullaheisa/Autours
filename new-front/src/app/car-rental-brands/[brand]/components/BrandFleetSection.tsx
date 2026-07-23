@@ -306,7 +306,7 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
                 </span>
                 <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
                   <img 
-                    src={assets.icons.bags + "?v=4"} 
+                    src={assets.icons.bags} 
                     alt="" 
                     className="w-[22px] h-[22px] object-contain shrink-0" 
                     style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }} 

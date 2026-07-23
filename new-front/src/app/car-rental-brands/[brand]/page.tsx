@@ -135,7 +135,9 @@ export default async function BrandDetailPage({ params }: PageProps) {
           vehicles={localVehicles}
         />
 
-                <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="w-full max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="border-t border-slate-200/60 w-full" />
+        </div>
 
         {/* ─── Booking Benefits ──────────────────────────────────────────────── */}
         <BrandBenefitsSection
@@ -143,7 +145,9 @@ export default async function BrandDetailPage({ params }: PageProps) {
           benefits={brandExtras.benefits}
         />
 
-                <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="w-full max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="border-t border-slate-200/60 w-full" />
+        </div>
 
         {/* ─── Countries Grid ───────────────────────────────────────────────── */}
         <BrandCountriesGrid
@@ -152,7 +156,9 @@ export default async function BrandDetailPage({ params }: PageProps) {
           countries={brand.countries}
         />
 
-                <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="w-full max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="border-t border-slate-200/60 w-full" />
+        </div>
 
         {/* ─── FAQ ──────────────────────────────────────────────────────────── */}
         <BrandFAQSection
