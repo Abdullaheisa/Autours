@@ -135,11 +135,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
           vehicles={localVehicles}
         />
 
-        <div className="flex items-center justify-center gap-3 py-2">
-          <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-          <div className="w-3 h-3 rounded-full bg-primary ring-4 ring-yellow-100"></div>
-          <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-        </div>
+                <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* ─── Booking Benefits ──────────────────────────────────────────────── */}
         <BrandBenefitsSection
@@ -147,11 +143,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
           benefits={brandExtras.benefits}
         />
 
-        <div className="flex items-center justify-center gap-3 py-2">
-          <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-          <div className="w-3 h-3 rounded-full bg-primary ring-4 ring-yellow-100"></div>
-          <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-        </div>
+                <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* ─── Countries Grid ───────────────────────────────────────────────── */}
         <BrandCountriesGrid
@@ -160,11 +152,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
           countries={brand.countries}
         />
 
-        <div className="flex items-center justify-center gap-3 py-2">
-          <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-          <div className="w-3 h-3 rounded-full bg-primary ring-4 ring-yellow-100"></div>
-          <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-        </div>
+                <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* ─── FAQ ──────────────────────────────────────────────────────────── */}
         <BrandFAQSection
