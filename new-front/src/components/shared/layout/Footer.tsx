@@ -43,7 +43,7 @@ const footerLinks = {
     { name: 'Be Supplier', href: '/be-supplier' },
     { name: 'Where we are?', href: '/where-we-are' },
     { name: 'Register', href: '/register' },
-    { name: 'Our Fleet', href: '#fleet' },
+    { name: 'Our Fleet', href: '/our-fleet' },
   ]
 };
 

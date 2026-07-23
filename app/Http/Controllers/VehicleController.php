@@ -1103,6 +1103,16 @@ class VehicleController extends Controller
         $vehicles = Vehicle::query();
 
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+
+        if (!$user || $user->role !== 'active_supplier') {
+            $vehicles->where('activation', 1)
+                ->whereHas('supplierUser', function ($q) {
+                    $q->where('role', 'active_supplier');
+                })
+                ->whereHas('branch', function ($q) {
+                    $q->where('activation', 1);
+                });
+        }
         $branchId = $request->get('branch_id');
         $supplierId = $request->get('supplier');
         $categoryId = $request->get('category_id');
@@ -1148,15 +1158,27 @@ class VehicleController extends Controller
             $vehicles->where('name', 'LIKE', '%' . $search . '%');
         }
 
+        if ($request->has('min_price')) {
+            $vehicles->where('price', '>=', (float)$request->get('min_price'));
+        }
+
+        $sortBy = $request->get('sort_by', 'id');
+        $sortOrder = $request->get('sort_order', 'asc');
+
         if ($request->get('compact') === 'true') {
             $query = $vehicles->select('id', 'name', 'supplier', 'pickup_loc')
                 ->with([
                     'supplierUser' => function($q) { $q->select('id', 'company', 'name'); },
                     'branch' => function($q) { $q->select('id', 'name'); }
-                ])
-                ->orderBy('id');
+                ]);
         } else {
-            $query = $vehicles->with('category', 'supplierUser', 'branch', 'fuelPolicy', 'specifications')->orderBy('id');
+            $query = $vehicles->with('category', 'supplierUser', 'branch', 'fuelPolicy', 'specifications', 'profit');
+        }
+
+        if ($sortBy === 'price') {
+            $query->orderByRaw('(CASE WHEN month_price > 0 THEN month_price ELSE price END) ' . $sortOrder);
+        } else {
+            $query->orderBy('id', $sortOrder);
         }
 
         if ($request->has('paginate')) {
