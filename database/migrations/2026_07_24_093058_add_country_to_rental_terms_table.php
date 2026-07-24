@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('supplier_rental_terms', 'country')) {
-            Schema::table('supplier_rental_terms', function (Blueprint $table) {
-                $table->string('country')->nullable()->after('supplier_id');
+        if (!Schema::hasColumn('rental_terms', 'country')) {
+            Schema::table('rental_terms', function (Blueprint $table) {
+                $table->string('country')->nullable()->after('created_by');
             });
         }
     }
@@ -23,8 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('supplier_rental_terms', 'country')) {
-            Schema::table('supplier_rental_terms', function (Blueprint $table) {
+        if (Schema::hasColumn('rental_terms', 'country')) {
+            Schema::table('rental_terms', function (Blueprint $table) {
                 $table->dropColumn('country');
             });
         }
