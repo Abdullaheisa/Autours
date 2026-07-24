@@ -22,6 +22,9 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use App\Exports\RentalTermsTemplateExport;
+use App\Imports\RentalTermsImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RentalTermsController extends Controller
 {
@@ -29,52 +32,95 @@ class RentalTermsController extends Controller
      * Display a listing of the resource.
      */
 
+    public function getActiveSupplierCountries(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        if (!$user) {
+            return response()->json([], 401);
+        }
+
+        // 1. Get countries where supplier has active branches (activation = 1)
+        $branchCountries = Branch::query()
+            ->where('company_id', $user->id)
+            ->where('activation', 1)
+            ->whereNotNull('country')
+            ->pluck('country')
+            ->map(function($c) { return trim($c); })
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // 2. Filter countries to those that also have active vehicles (activation = 1)
+        $activeVehicleCountries = Vehicle::query()
+            ->where('supplier', $user->id)
+            ->where('activation', 1)
+            ->whereHas('branch', function($q) use ($user) {
+                $q->where('activation', 1)->where('company_id', $user->id);
+            })
+            ->with('branch')
+            ->get()
+            ->map(function($v) {
+                return $v->branch && $v->branch->country ? trim($v->branch->country) : null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $validCountries = array_values(array_intersect($branchCountries, $activeVehicleCountries));
+
+        // Fallback: If vehicle check array is empty, return active branch countries
+        if (empty($validCountries) && !empty($branchCountries)) {
+            $validCountries = array_values($branchCountries);
+        }
+
+        return response()->json($validCountries);
+    }
 
     public function index(Request $request)
     {
-        $terms = RentalTerms::query();
-        // Resolve via sanctum guard first (Bearer token), then fall back to session user
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
              ?? \Illuminate\Support\Facades\Auth::user();
-
-        if ($request->has('my_terms') && $user) {
-            return $terms->where('created_by', $user->id)->get();
-        }
+        $country = $request->input('country');
 
         if ($user && ($user->role == 'active_supplier' || $user->role == 'supplier' || $user->role == 'under_review')) {
-            $terms = $terms->where('status', 'approved')->get();
-            $selectedQuery = SupplierRentalTerm::query()
-                ->where('supplier_id', $user->id);
-            if ($request->has('country')) {
-                $selectedQuery->where('country', $request->country);
-            } else {
-                $selectedQuery->whereNull('country');
+            // Strict Supplier & Country Isolation: Only terms created by this supplier for this country
+            $query = RentalTerms::query()->where('created_by', $user->id);
+            if ($country) {
+                $query->where('country', $country);
             }
-            $selected = $selectedQuery->get()->pluck('rental_term_id')->toArray();
-            foreach ($terms as $term) {
-                $term->selected = in_array($term->id, $selected) ? 1 : 0;
-            }
-        } else {
-            $terms = $terms->get();
+            $terms = $query->get();
+            return response()->json($terms);
         }
-        return $terms;
+
+        // For Admin / Public
+        $query = RentalTerms::query();
+        if ($country) {
+            $query->where('country', $country);
+        }
+        return response()->json($query->get());
     }
 
-
-    public function insert(CreateRentalTerms $request)
+    public function insert(Request $request)
     {
         try {
             $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
+            }
+
             $rental = new RentalTerms();
             $rental->title = $request->title;
             $rental->description = $request->description;
             $rental->status = $request->status ?? 'approved';
-            $rental->created_by = $user ? $user->id : 1;
+            $rental->country = $request->country;
+            $rental->created_by = $user->id;
             $rental->save();
 
             return response()->json([
                 'status' => true,
-                'data' => []
+                'data' => $rental
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -82,6 +128,70 @@ class RentalTermsController extends Controller
                 'message' => $e->getMessage()
             ], StatusCodes::SERVER_ERROR);
         }
+    }
+
+    public function bulkUpload(Request $request)
+    {
+        try {
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
+            }
+
+            $request->validate([
+                'file' => 'required|file|mimes:xlsx,xls,csv',
+                'country' => 'required|string',
+            ]);
+
+            $file = $request->file('file');
+            $country = trim($request->input('country'));
+            $extension = strtolower($file->getClientOriginalExtension());
+            $items = [];
+
+            if (in_array($extension, ['xlsx', 'xls', 'csv'])) {
+                // Use proper Maatwebsite Excel Import
+                $import = new RentalTermsImport();
+                Excel::import($import, $file);
+                $items = $import->items;
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unsupported file format. Please upload Excel (.xlsx, .xls, .csv) template.'
+                ], 400);
+            }
+
+            $created = [];
+            foreach ($items as $item) {
+                if (empty($item['title'])) continue;
+                $term = RentalTerms::create([
+                    'title' => $item['title'],
+                    'description' => $item['description'],
+                    'status' => 'approved',
+                    'country' => $country,
+                    'created_by' => $user->id,
+                ]);
+                $created[] = $term;
+            }
+
+            return response()->json([
+                'status' => true,
+                'count' => count($created),
+                'message' => count($created) . ' rental term(s) imported successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadTemplate(Request $request)
+    {
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\RentalTermsTemplateExport, 'rental_terms_template.xlsx');
     }
 
     public function show($id)

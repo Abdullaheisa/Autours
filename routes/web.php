@@ -271,6 +271,9 @@ Route::get('/invoice/booking/{id}', [BookingsController::class, 'bookingInvoice'
 
 Route::get('get/photos', [VehicleController::class, 'getPhotos']);
 Route::get('get/rental-terms', [RentalTermsController::class, 'index']);
+Route::get('get/supplier/active-countries', [RentalTermsController::class, 'getActiveSupplierCountries']);
+Route::post('post/rental-terms/bulk-upload', [RentalTermsController::class, 'bulkUpload']);
+Route::get('get/rental-terms/template', [RentalTermsController::class, 'downloadTemplate']);
 Route::get('get/currencies', [CurrencyController::class, 'index']);
 Route::get('get/fuel-policies', [FuelPolicyController::class, 'index']);
 Route::get('get/included', [IncludedController::class, 'index']);

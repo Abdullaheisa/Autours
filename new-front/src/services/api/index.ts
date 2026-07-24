@@ -87,12 +87,17 @@ export const includedApi = {
 // Rental Terms API
 export const rentalTermsApi = {
   getAll: (country?: string) => apiClient.get("/api/supplier/get/rental-terms", { params: { country } }),
+  getActiveCountries: () => apiClient.get("/api/supplier/get/active-countries"),
+  getByCountry: (country: string) => apiClient.get("/api/supplier/get/rental-terms", { params: { country } }),
   getMyTerms: () => apiClient.get("/api/supplier/get/rental-terms?my_terms=1"),
   create: (data: unknown) => apiClient.post("/api/supplier/post/rental-terms", data),
+  bulkUpload: (formData: FormData) => apiClient.post("/api/supplier/post/rental-terms/bulk-upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   show: (id: number) => apiClient.post("/api/supplier/show/rental-terms", { id }),
   update: (data: unknown) => apiClient.post("/api/supplier/edit/rental-terms", data),
   delete: (id: number) => apiClient.post("/api/supplier/delete/rental-terms", { id }),
-  updateStatus: (data: unknown) => apiClient.post("/api/admin/update/rental-terms/status", data),
+  updateStatus: (data: unknown) => apiClient.post("/api/supplier/update/rental-terms/status", data),
   selectForSupplier: (data: unknown) => apiClient.post("/api/supplier/select-rental-terms", data),
 };
 

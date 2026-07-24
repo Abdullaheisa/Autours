@@ -2,40 +2,33 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { Home, PhoneCall, AlertCircle, Compass } from 'lucide-react';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import { RootState } from '@/store';
 
 export default function NotFound() {
-  const { currentLanguage } = useSelector((state: RootState) => state.ui);
-  const isRTL = currentLanguage === 'ar';
-
   useEffect(() => {
-    document.title = isRTL ? 'الصفحة غير موجودة | Autours' : 'Page Not Found | Autours';
-  }, [isRTL]);
+    document.title = 'Page Not Found | Autours';
+  }, []);
 
   const content = {
-    title: isRTL ? 'عذراً، الصفحة غير موجودة' : 'Oops! Page Not Found',
-    subtitle: isRTL ? '404 - يبدو أنك سلكت طريقاً خاطئاً' : '404 - Road Not Found',
-    description: isRTL 
-      ? 'الطريق الذي تبحث عنه غير موجود، ربما تم نقله أو حذفه. دعنا نساعدك في العودة للمسار الصحيح لتستكمل رحلتك.'
-      : "The route you are trying to reach doesn't exist or has been relocated. Let's get you back on track to continue your journey.",
-    homeBtn: isRTL ? 'العودة للرئيسية' : 'Back to Home',
-    supportBtn: isRTL ? 'اتصل بالدعم' : 'Contact Support',
-    popularLinksTitle: isRTL ? 'قد تهمك هذه الروابط:' : 'Popular Destinations:',
+    title: 'Oops! Page Not Found',
+    subtitle: '404 - Road Not Found',
+    description: "The route you are trying to reach doesn't exist or has been relocated. Let's get you back on track to continue your journey.",
+    homeBtn: 'Back to Home',
+    supportBtn: 'Contact Support',
+    popularLinksTitle: 'Popular Destinations:',
     links: [
-      { label: isRTL ? 'أسطول السيارات' : 'Our Fleet', href: '#fleet' },
-      { label: isRTL ? 'من نحن' : 'About Us', href: '/about-us' },
-      { label: isRTL ? 'المدونة' : 'Our Blog', href: '/blogs' },
-      { label: isRTL ? 'أماكن تواجدنا' : 'Where We Are', href: '/where-we-are' }
+      { label: 'Our Fleet', href: '#fleet' },
+      { label: 'About Us', href: '/about-us' },
+      { label: 'Our Blog', href: '/blogs' },
+      { label: 'Where We Are', href: '/where-we-are' }
     ]
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 font-sans" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -57,7 +50,7 @@ export default function NotFound() {
               <span className="text-[120px] sm:text-[180px] font-black text-gray-900 leading-none select-none tracking-tighter block">
                 404
               </span>
-              <motion.div 
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 sm:w-36 sm:h-36 border-4 border-dashed border-primary rounded-full opacity-35"

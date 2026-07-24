@@ -7,11 +7,10 @@ import CurrencySelector from './layout/CurrencySelector';
 
 export default function LandingNavbar() {
   const dispatch = useDispatch();
-  const { currentLanguage, isMobileMenuOpen } = useSelector((state: RootState) => state.ui);
-  const isRTL = currentLanguage === 'ar';
+  const { isMobileMenuOpen } = useSelector((state: RootState) => state.ui);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100" dir={isRTL ? 'rtl' : 'ltr'}>
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
       <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex flex-col items-start gap-0">

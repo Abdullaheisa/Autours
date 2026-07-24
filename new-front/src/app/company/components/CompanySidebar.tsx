@@ -1,19 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
 import { authApi } from "@/services/api";
 import { normalizeAuthRole } from "@/utils/auth";
 import {
   LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
   Tag, Crown, CalendarCheck, FileText, Star, Ticket,
-  CreditCard, LogOut, ChevronLeft, ChevronRight, Calendar
+  CreditCard, LogOut, ChevronLeft, ChevronRight, Calendar, ChevronDown
 } from "lucide-react";
 
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import Image from "next/image";
 import { getUserImageUrl } from "@/utils/getImageUrl";
 
@@ -23,23 +21,54 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   CreditCard, LogOut, Calendar
 };
 
+type SidebarItem =
+  | { id: string; label: string; icon: string; children?: undefined }
+  | { id: string; label: string; icon: string; children: { id: string; label: string; icon: string }[] };
 
-const companySidebarItems = [
+// 15 Total Supplier Items grouped strictly by functional domain
+const companySidebarNav: SidebarItem[] = [
   { id: "profile", label: "My Profile", icon: "UserCircle" },
   { id: "dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-  { id: "calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
-  { id: "branches", label: "Branches", icon: "Building2" },
-  { id: "payment-methods", label: "Payment Methods", icon: "CreditCard" },
-  { id: "create-vehicle", label: "Create Vehicle", icon: "PlusCircle" },
-  { id: "price-list", label: "Price List", icon: "Tag" },
-  { id: "vehicles", label: "My Vehicles", icon: "Car" },
-  { id: "bulk-upload", label: "Bulk Upload", icon: "FileText" },
+
+  // 1. Branch & Company Settings Function Group
+  {
+    id: "company_settings_group",
+    label: "Branch & Payment Settings",
+    icon: "Building2",
+    children: [
+      { id: "branches", label: "Branches", icon: "Building2" },
+      { id: "payment-methods", label: "Payment Methods", icon: "CreditCard" },
+      { id: "promos", label: "Promos", icon: "Ticket" },
+    ]
+  },
+
+  // 2. Vehicles Function Group
+  {
+    id: "vehicles_group",
+    label: "Vehicles Management",
+    icon: "Car",
+    children: [
+      { id: "vehicles", label: "My Vehicles", icon: "Car" },
+      { id: "create-vehicle", label: "Create Vehicle", icon: "PlusCircle" },
+      { id: "bulk-upload", label: "Bulk Upload", icon: "FileText" },
+      { id: "price-list", label: "Price List", icon: "Tag" },
+    ]
+  },
+
+  // 3. Rentals Function Group
+  {
+    id: "rentals_group",
+    label: "Rentals & Bookings",
+    icon: "CalendarCheck",
+    children: [
+      { id: "rentals", label: "Rentals List", icon: "CalendarCheck" },
+      { id: "calendar", label: "Bookings Calendar", icon: "Calendar" },
+      { id: "rental-terms", label: "Rental Terms", icon: "FileText" },
+      { id: "rental-reviews", label: "Rental Reviews", icon: "Star" },
+    ]
+  },
+
   { id: "membership", label: "Membership", icon: "Crown" },
-  { id: "rentals", label: "Rentals", icon: "CalendarCheck" },
-  { id: "rental-terms", label: "Rental Terms", icon: "FileText" },
-  { id: "promos", label: "Promos", icon: "Ticket" },
-  { id: "rental-reviews", label: "Rental Reviews", icon: "Star" },
-  { id: "logout", label: "Sign Out", icon: "LogOut" },
 ];
 
 interface CompanySidebarProps {
@@ -53,6 +82,21 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
   const [isCollapsed, setIsCollapsed] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    companySidebarNav.forEach((item) => {
+      if (item.children) {
+        const hasActive = item.children.some((child) => child.id === activeItem);
+        initial[item.id] = hasActive;
+      }
+    });
+    return initial;
+  });
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
 
   useEffect(() => {
     if (user) {
@@ -111,50 +155,131 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
             )}
           </div>
         </div>
+        
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="hidden lg:flex absolute -right-3 top-24 w-6 h-6 bg-primary text-gray-900 rounded-full items-center justify-center shadow-md hover:bg-primary-600 transition-colors z-50"
         >
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
+
         <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-hide">
           <ul className="space-y-1">
-            {companySidebarItems.map((item) => {
-              const Icon = iconMap[item.icon];
-              const isActive = activeItem === item.id;
-              const isLogout = item.id === "logout";
+            {companySidebarNav.map((entry) => {
+              // Dropdown Group
+              if (entry.children) {
+                const GroupIcon = iconMap[entry.icon];
+                const isGroupOpen = !!openGroups[entry.id];
+                const hasActiveChild = entry.children.some((child) => child.id === activeItem);
+
+                return (
+                  <li key={entry.id} className="space-y-1 py-0.5">
+                    <button
+                      onClick={() => toggleGroup(entry.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 group
+                        ${hasActiveChild ? "bg-slate-100 text-slate-900 font-black" : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {GroupIcon && <GroupIcon className="w-[18px] h-[18px] text-slate-600" />}
+                        <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>
+                          {entry.label}
+                        </span>
+                      </div>
+                      {!isCollapsed && (
+                        <ChevronDown
+                          size={14}
+                          className={`text-slate-400 transition-transform duration-200 ${isGroupOpen ? "rotate-180 text-primary-600" : ""}`}
+                        />
+                      )}
+                    </button>
+
+                    {/* Sub-items list */}
+                    {(isGroupOpen || isCollapsed) && (
+                      <ul className={`space-y-1 ${isCollapsed ? "" : "pl-4 border-l-2 border-slate-100 my-1"}`}>
+                        {entry.children.map((child) => {
+                          const ChildIcon = iconMap[child.icon];
+                          const isChildActive = activeItem === child.id;
+
+                          return (
+                            <li key={child.id}>
+                              <button
+                                onClick={() => {
+                                  onItemClick(child.id);
+                                  onClose?.();
+                                }}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 group relative
+                                  ${isChildActive 
+                                    ? "bg-primary text-gray-950 shadow-md shadow-primary/20" 
+                                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
+                              >
+                                {ChildIcon && <ChildIcon className={`w-4 h-4 shrink-0 ${isChildActive ? "text-gray-950" : "text-slate-400"}`} />}
+                                <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>
+                                  {child.label}
+                                </span>
+                                {isCollapsed && (
+                                  <div className="hidden lg:block absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                    {child.label}
+                                  </div>
+                                )}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              }
+
+              // Direct Standalone Item
+              const Icon = iconMap[entry.icon];
+              const isActive = activeItem === entry.id;
+
               return (
-                <li key={item.id}>
+                <li key={entry.id}>
                   <button
-                    onClick={async () => {
-                      if (isLogout) {
-                        try {
-                          await authApi.logout();
-                        } catch (e) {
-                          console.error("Logout API failed:", e);
-                        } finally {
-                          dispatch(logout()); // Safe clear of state, token, user
-                          window.location.href = "/login";
-                        }
-                        return;
-                      }
-                      onItemClick(item.id);
+                    onClick={() => {
+                      onItemClick(entry.id);
                       onClose?.();
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                      ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20" : isLogout ? "text-red-500 hover:bg-red-50" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+                      ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20 font-bold" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
                   >
                     {Icon && <Icon className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
-                    <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>{item.label}</span>
+                    <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>
+                      {entry.label}
+                    </span>
                     {isCollapsed && (
                       <div className="hidden lg:block absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                        {item.label}
+                        {entry.label}
                       </div>
                     )}
                   </button>
                 </li>
               );
             })}
+
+            {/* Standalone Sign Out Button */}
+            <li className="pt-2 border-t border-slate-200/80">
+              <button
+                onClick={async () => {
+                  try {
+                    await authApi.logout();
+                  } catch (e) {
+                    console.error("Logout API failed:", e);
+                  } finally {
+                    dispatch(logout());
+                    window.location.href = "/login";
+                  }
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-200"
+              >
+                <LogOut className="w-[18px] h-[18px] shrink-0 text-red-500" />
+                <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>
+                  Sign Out
+                </span>
+              </button>
+            </li>
           </ul>
         </nav>
       </aside>

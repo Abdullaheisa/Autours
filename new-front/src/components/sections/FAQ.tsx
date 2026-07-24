@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { X, HelpCircle, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 
 interface FAQProps {
   data?: { q: string; a: string }[];
@@ -141,9 +139,6 @@ This coverage provides financial protection for medical expenses resulting from 
 
   const faqs = data || defaultFaqs;
 
-  const { currentLanguage } = useSelector((state: RootState) => state.ui);
-  const isRTL = currentLanguage === 'ar';
-
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -240,7 +235,7 @@ This coverage provides financial protection for medical expenses resulting from 
               onClick={() => setShowAll(!showAll)}
               className="px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-900 font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 border border-gray-100 flex items-center gap-2"
             >
-              {showAll ? (isRTL ? 'عرض أقل' : 'Show Less') : (isRTL ? 'عرض المزيد' : 'Show More')}
+              {showAll ? 'Show Less' : 'Show More'}
             </button>
           </div>
         )}

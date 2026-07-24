@@ -100,10 +100,23 @@ class Vehicle extends Model
         if (!$supplierId) {
             return [];
         }
-        return SupplierRentalTerm::query()
-            ->where('supplier_id', $supplierId)
-            ->join('rental_terms','rental_terms.id', '=','supplier_rental_terms.rental_term_id')
-            ->select(['title','description'])
+
+        // جلب الفرع والدولة المحددة للسيارة
+        $branch = $this->branch;
+        $country = $branch ? trim($branch->country) : null;
+
+        $query = SupplierRentalTerm::query()
+            ->where('supplier_rental_terms.supplier_id', $supplierId)
+            ->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id');
+
+        if ($country) {
+            $query->where(function($q) use ($country) {
+                $q->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)])
+                  ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)]);
+            });
+        }
+
+        return $query->select(['rental_terms.title', 'rental_terms.description'])
             ->get();
     }
     public function specifications()

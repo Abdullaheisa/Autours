@@ -2,8 +2,6 @@
 
 import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -14,7 +12,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-// الصور الجاهزة من assets
+// Available swiper images from assets
 const swiperImages = [
   { id: 'swiper1', src: assets.swiper.swiper1, alt: 'Swiper 1' },
   { id: 'swiper2', src: assets.swiper.swiper2, alt: 'Swiper 2' },
@@ -26,8 +24,6 @@ const swiperImages = [
 ];
 
 export default function Fleet() {
-  const { currentLanguage } = useSelector((state: RootState) => state.ui);
-  const isRTL = currentLanguage === 'ar';
   const swiperRef = useRef<any>(null);
   const [backgrounds, setBackgrounds] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -52,15 +48,14 @@ export default function Fleet() {
 
   return (
     <section id="fleet" className="relative overflow-hidden py-8">
-      {/* خلفية مش أبيض */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#f8f9fa] via-[#f0f1f3] to-[#f8f9fa]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f8f9fa] via-[#f0f1f3] to-[#f8f9fa]" />
 
       <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-5xl md:text-6xl font-black text-black tracking-tighter uppercase">
-            {isRTL ? 'أسطولنا' : 'OUR FLEET'}
+            OUR FLEET
           </h2>
         </div>
 
@@ -113,14 +108,14 @@ export default function Fleet() {
             onClick={() => swiperRef.current?.slidePrev()}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-black transition-all duration-300 shadow-lg"
           >
-            <ChevronLeft size={22} className={isRTL ? 'rotate-180' : ''} />
+            <ChevronLeft size={22} />
           </button>
 
           <button 
             onClick={() => swiperRef.current?.slideNext()}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-black transition-all duration-300 shadow-lg"
           >
-            <ChevronRight size={22} className={isRTL ? 'rotate-180' : ''} />
+            <ChevronRight size={22} />
           </button>
         </div>
       </div>

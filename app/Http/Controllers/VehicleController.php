@@ -343,7 +343,16 @@ class VehicleController extends Controller
                 $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicleId]);
                 $vehicleArr['promos'] = array_map(function($p) { return $p->promotion; }, $promos);
 
-                if (!isset($supplierCache[$supplierId])) {
+                $pickupLocId = $vehicleArr['pickup_loc'] ?? null;
+                $country = null;
+                if ($pickupLocId) {
+                    $branch = Branch::find($pickupLocId);
+                    $country = $branch ? trim($branch->country) : null;
+                }
+
+                $cacheKey = $supplierId . '_' . ($country ? strtolower($country) : 'default');
+
+                if (!isset($supplierCache[$cacheKey])) {
                     $rentals = Rental::query()->where('supplier_id', $supplierId)->with('rentalRates.question')->whereNotNull('rate')->get();
                     
                     $questionsRate = DB::select('SELECT objective, sum(rental_rates.rate)/count(rental_rates.id)  as total_rate FROM rentals
@@ -354,9 +363,25 @@ class VehicleController extends Controller
                                             
                     $supplierRate = round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1);
                     $supplierReviewsCount = $rentals->count();
-                    $rentalTerms = \App\Models\RentalTerms::query()->where('created_by', $supplierId)->select(['title', 'description'])->get()->toArray();
+
+                    $termsQuery = \App\Models\RentalTerms::query()
+                        ->where('rental_terms.created_by', $supplierId);
+
+                    if ($country) {
+                        $termsQuery->where(function($q) use ($country) {
+                            $q->whereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
+                              ->orWhereExists(function ($subQuery) use ($country) {
+                                  $subQuery->select(DB::raw(1))
+                                      ->from('supplier_rental_terms')
+                                      ->whereColumn('supplier_rental_terms.rental_term_id', 'rental_terms.id')
+                                      ->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)]);
+                              });
+                        });
+                    }
+
+                    $rentalTerms = $termsQuery->select(['rental_terms.title', 'rental_terms.description'])->get()->toArray();
                     
-                    $supplierCache[$supplierId] = [
+                    $supplierCache[$cacheKey] = [
                         'questions_rate' => $questionsRate,
                         'supplier_rate' => $supplierRate,
                         'supplier_number_of_reviews' => $supplierReviewsCount,
@@ -364,10 +389,10 @@ class VehicleController extends Controller
                     ];
                 }
 
-                $vehicleArr['questions_rate'] = $supplierCache[$supplierId]['questions_rate'];
-                $vehicleArr['supplier_rate'] = $supplierCache[$supplierId]['supplier_rate'];
-                $vehicleArr['supplier_number_of_reviews'] = $supplierCache[$supplierId]['supplier_number_of_reviews'];
-                $vehicleArr['rental_terms'] = $supplierCache[$supplierId]['rental_terms'];
+                $vehicleArr['questions_rate'] = $supplierCache[$cacheKey]['questions_rate'];
+                $vehicleArr['supplier_rate'] = $supplierCache[$cacheKey]['supplier_rate'];
+                $vehicleArr['supplier_number_of_reviews'] = $supplierCache[$cacheKey]['supplier_number_of_reviews'];
+                $vehicleArr['rental_terms'] = $supplierCache[$cacheKey]['rental_terms'];
             }
             unset($vehicleArr);
 
@@ -1252,7 +1277,23 @@ class VehicleController extends Controller
                 }
             }
             $selectedVehicle->final_price = round($selectedVehicle->final_price, 2);
-            $selectedVehicle->rental_terms = \App\Models\RentalTerms::query()->where('created_by', $selectedVehicle->supplierUser->id)->select(['title', 'description'])->get();
+            $country = $selectedVehicle->branch ? trim($selectedVehicle->branch->country) : null;
+            $termsQuery = \App\Models\RentalTerms::query()
+                ->where('rental_terms.created_by', $selectedVehicle->supplierUser->id);
+
+            if ($country) {
+                $termsQuery->where(function($q) use ($country) {
+                    $q->whereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
+                      ->orWhereExists(function ($subQuery) use ($country) {
+                          $subQuery->select(DB::raw(1))
+                              ->from('supplier_rental_terms')
+                              ->whereColumn('supplier_rental_terms.rental_term_id', 'rental_terms.id')
+                              ->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)]);
+                      });
+                });
+            }
+
+            $selectedVehicle->rental_terms = $termsQuery->select(['rental_terms.title', 'rental_terms.description'])->get();
 
             $rentals = Rental::query()->where('supplier_id', $selectedVehicle->supplierUser->id)->whereNotNull('rate')->get();
             $selectedVehicle->supplier_rate = round($rentals->sum('rate') / ($rentals->count() <= 0 ? 1 : $rentals->count()), 1);
