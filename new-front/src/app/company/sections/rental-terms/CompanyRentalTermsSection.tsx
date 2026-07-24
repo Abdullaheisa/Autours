@@ -205,11 +205,12 @@ export default function CompanyRentalTermsSection() {
       toast.loading("Generating template file...", { id: "download" });
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      
-      const response = await fetch(`${backendUrl}/api/supplier/get/rental-terms/template?format=excel`, {
+      // Use the Next.js proxy rewrite path so it forwards to Laravel correctly
+      const response = await fetch(`/api/backend/api/supplier/get/rental-terms/template?format=excel`, {
         headers: {
           "Authorization": `Bearer ${token}`,
-          "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "X-Requested-With": "XMLHttpRequest"
         }
       });
       
