@@ -327,7 +327,7 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
             slidesPerView={1}
             spaceBetween={30}
             autoplay={{
-              delay: 2500,
+              delay: 4500,
               disableOnInteraction: false,
               pauseOnMouseEnter: true,
             }}
