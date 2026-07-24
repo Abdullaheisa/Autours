@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { 
-  Search, MapPin, Calendar, Clock, CheckCircle2, 
+import {
+  Search, MapPin, Calendar, Clock, CheckCircle2,
   Plane, Building, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +27,7 @@ function resolveImageUrl(path: string | undefined, fallback: string): string {
   return `${BACKEND_URL}${path}`;
 }
 
-const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) => 
+const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) =>
   `${i.toString().padStart(2, '0')}:00`
 );
 
@@ -79,7 +79,7 @@ export default function HeroSearch({
           setHeroBg(resolveImageUrl(data['banner'], assets.hero.background));
         }
       })
-      .catch(() => {/* fallback to static */});
+      .catch(() => {/* fallback to static */ });
   }, []);
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function HeroSearch({
       const pickupParam = params.get('pickup') || params.get('pickup_loc') || params.get('location') || params.get('search');
       if (pickupParam) {
         const decoded = decodeURIComponent(pickupParam).toLowerCase().trim();
-        
+
         // Try to find matching location
         const matched = locations.find((loc) => {
           return (
@@ -242,12 +242,12 @@ export default function HeroSearch({
         <div className="bg-white/35 backdrop-blur-sm pt-6 pb-5 px-4 sm:pt-8 sm:pb-7 sm:px-4 md:pt-10 md:pb-8 md:px-5 lg:py-16 lg:px-6 rounded-none sm:rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border-y border-white/20 sm:border border-white/20 w-full max-w-full sm:max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
           <form onSubmit={handleSearch} className="space-y-4 md:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 md:gap-2 lg:gap-3 items-start">
-              
+
               {/* Location Input */}
               <div className="sm:col-span-1 md:col-span-5 relative" ref={locationsRef}>
                 <div className="relative group">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={location}
                     onChange={(e) => {
                       setLocation(e.target.value);
@@ -256,9 +256,8 @@ export default function HeroSearch({
                     }}
                     onFocus={() => location.length > 0 && setShowLocations(true)}
                     placeholder="Enter your Location"
-                    className={`w-full h-12 md:h-14 lg:h-16 pl-5 md:pl-5 lg:pl-6 pr-12 bg-white/95 border rounded-xl md:rounded-[1.25rem] text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${
-                      errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
-                    }`}
+                    className={`w-full h-12 md:h-14 lg:h-16 pl-5 md:pl-5 lg:pl-6 pr-12 bg-white/95 border rounded-xl md:rounded-[1.25rem] text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
+                      }`}
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                     <Search size={18} aria-hidden="true" />
@@ -268,47 +267,47 @@ export default function HeroSearch({
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[280px] overflow-y-auto z-[60]">
                       {filteredLocations.length > 0 ? (
                         filteredLocations.map((loc) => (
-<button
-  key={loc.id}
-  type="button"
-  onClick={() => {
-    const display = getLocationDisplayLabel(loc);
-    const pickup = getLocationPickupValue(loc);
-    setLocation(display);
-    dispatch(setSearchParams({
-      location: pickup,
-      locationLabel: display,
-    }));
-    setShowLocations(false);
-    if (errors.location) setErrors(prev => ({ ...prev, location: undefined }));
-  }}
-  
-  className="w-full px-5 py-3.5 text-left hover:bg-primary/5 transition-all flex items-center gap-4 border-b border-gray-200 last:border-b-0"
->
-  {/* مربع الأيقونة - ضفنا shrink-0 علشان الأيقونة متتصغرش لو النص طويل */}
-  <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 shrink-0">
-    {loc.location_type?.toLowerCase().includes('airport') ? <Plane size={18} /> : <Building size={18} />}
-  </div>
-  
-  {/* النصوص */}
-  <div className="flex flex-col min-w-0 text-left">
-    <div className="flex items-center flex-wrap gap-1.5">
-      <span className="text-xs font-medium text-gray-900 line-clamp-2 leading-relaxed">
-        {getLocationDisplayLabel(loc).replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`), '')}
-      </span>
-      {loc.abriviation && (
-        <span className="text-[9px] font-black text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
-          {loc.abriviation}
-        </span>
-      )}
-    </div>
-    {loc.country && (
-      <span className="text-[10px] font-medium text-gray-500 mt-0.5">
-        {loc.country}
-      </span>
-    )}
-  </div>
-</button>
+                          <button
+                            key={loc.id}
+                            type="button"
+                            onClick={() => {
+                              const display = getLocationDisplayLabel(loc);
+                              const pickup = getLocationPickupValue(loc);
+                              setLocation(display);
+                              dispatch(setSearchParams({
+                                location: pickup,
+                                locationLabel: display,
+                              }));
+                              setShowLocations(false);
+                              if (errors.location) setErrors(prev => ({ ...prev, location: undefined }));
+                            }}
+
+                            className="w-full px-5 py-3.5 text-left hover:bg-primary/5 transition-all flex items-center gap-4 border-b border-gray-200 last:border-b-0"
+                          >
+                            {/* مربع الأيقونة - ضفنا shrink-0 علشان الأيقونة متتصغرش لو النص طويل */}
+                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 shrink-0">
+                              {loc.location_type?.toLowerCase().includes('airport') ? <Plane size={18} /> : <Building size={18} />}
+                            </div>
+
+                            {/* النصوص */}
+                            <div className="flex flex-col min-w-0 text-left">
+                              <div className="flex items-center flex-wrap gap-1.5">
+                                <span className="text-xs font-medium text-gray-900 line-clamp-2 leading-relaxed">
+                                  {getLocationDisplayLabel(loc).replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`), '')}
+                                </span>
+                                {loc.abriviation && (
+                                  <span className="text-[9px] font-black text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+                                    {loc.abriviation}
+                                  </span>
+                                )}
+                              </div>
+                              {loc.country && (
+                                <span className="text-[10px] font-medium text-gray-500 mt-0.5">
+                                  {loc.country}
+                                </span>
+                              )}
+                            </div>
+                          </button>
                         ))
                       ) : (
                         <div className="px-5 py-8 text-center">
@@ -339,10 +338,9 @@ export default function HeroSearch({
 
               {/* Date Range Picker */}
               <div className="sm:col-span-1 md:col-span-4 relative" ref={calendarRef}>
-                <div className={`flex items-center h-12 md:h-14 lg:h-16 bg-white/95 border rounded-xl md:rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${
-                  errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
-                }`}>
-                  <button 
+                <div className={`flex items-center h-12 md:h-14 lg:h-16 bg-white/95 border rounded-xl md:rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
+                  }`}>
+                  <button
                     type="button"
                     onClick={() => {
                       setShowCalendar(!showCalendar);
@@ -357,7 +355,7 @@ export default function HeroSearch({
                     </div>
                   </button>
 
-                  <button 
+                  <button
                     type="button"
                     onClick={() => {
                       setShowCalendar(!showCalendar);
@@ -388,20 +386,20 @@ export default function HeroSearch({
 
                 {showCalendar && (
                   <>
-                    <div 
+                    <div
                       className="fixed inset-0 bg-black/40 z-[55] lg:hidden"
                       onClick={() => setShowCalendar(false)}
                     />
                     <div className="fixed lg:absolute top-[5%] lg:top-full left-1/2 -translate-x-1/2 mt-3 z-[60] w-[95vw] lg:w-fit flex justify-center">
                       <div className="scale-[0.78] sm:scale-90 md:scale-95 origin-top">
-                        <CalendarRangePicker 
-                          startDate={startDate} 
-                          endDate={endDate} 
+                        <CalendarRangePicker
+                          startDate={startDate}
+                          endDate={endDate}
                           onSelect={(s, e) => {
                             setStartDate(s);
                             setEndDate(e);
                             if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
-                          }} 
+                          }}
                           onClose={() => setShowCalendar(false)}
                         />
                       </div>
@@ -413,7 +411,7 @@ export default function HeroSearch({
               {/* Time Pickers */}
               <div className="grid grid-cols-2 gap-2 md:gap-1.5 lg:gap-3 sm:col-span-2 md:col-span-3">
                 <div className="relative" ref={startRef}>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowStartTime(!showStartTime)}
                     className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-6 lg:pl-4 lg:pr-6 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
@@ -434,7 +432,7 @@ export default function HeroSearch({
                 </div>
 
                 <div className="relative" ref={endRef}>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowEndTime(!showEndTime)}
                     className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-6 lg:pl-4 lg:pr-6 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"

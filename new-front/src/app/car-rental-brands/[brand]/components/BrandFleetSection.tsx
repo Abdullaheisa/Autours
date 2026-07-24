@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getVehicleImageUrl } from '@/utils/getImageUrl';
 import { Vehicle } from '@/types';
 import { Car, ChevronRight, Sparkles, ShieldCheck } from 'lucide-react';
 import { assets } from '@/config/assets';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
+const WORLD_CATEGORY_ORDER = ['mini', 'small', 'standard', 'economy', 'full size', 'compact suv', 'suv', 'van', 'family', 'luxury'];
 
 interface BrandFleetSectionProps {
   brandName: string;
@@ -145,6 +153,10 @@ function getEstimatedSpecs(categoryName: string, dbSeats?: any, dbDoors?: any, d
 }
 
 export default function BrandFleetSection({ brandName, brandId, vehicles = [] }: BrandFleetSectionProps) {
+  const swiperRef = useRef<any>(null);
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+
   // 1. Group the supplier's vehicles by category
   const groupedByCategory: Record<string, Vehicle[]> = {};
   vehicles.forEach((vehicle) => {
@@ -189,16 +201,48 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
       description: details.description,
       highlights: details.highlights,
     };
+  }).sort((a, b) => {
+    const indexA = WORLD_CATEGORY_ORDER.indexOf((a.name || '').toLowerCase().trim());
+    const indexB = WORLD_CATEGORY_ORDER.indexOf((b.name || '').toLowerCase().trim());
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return (a.name || '').localeCompare(b.name || '');
   });
 
   // Initialize active tab with the first category's ID
   const [activeTab, setActiveTab] = useState<string>('');
+  const [showDetails, setShowDetails] = useState<Record<string, boolean>>({});
+
+  const toggleDetails = (catId: string) => {
+    setShowDetails((prev) => ({
+      ...prev,
+      [catId]: !prev[catId],
+    }));
+  };
 
   useEffect(() => {
     if (fleetCategories.length > 0) {
       setActiveTab(fleetCategories[0].id);
     }
   }, [vehicles, fleetCategories.length]);
+
+  useEffect(() => {
+    if (activeTab && tabRefs.current[activeTab] && tabsContainerRef.current) {
+      const container = tabsContainerRef.current;
+      const activeTabElement = tabRefs.current[activeTab];
+      if (activeTabElement) {
+        const containerWidth = container.clientWidth;
+        const elementLeft = activeTabElement.offsetLeft;
+        const elementWidth = activeTabElement.clientWidth;
+        const targetScrollLeft = elementLeft - (containerWidth / 2) + (elementWidth / 2);
+        container.scrollTo({
+          left: targetScrollLeft,
+          behavior: 'smooth',
+        });
+      }
+    }
+  }, [activeTab]);
 
   // If the brand has no cars in database, hide this section or display a clean info box
   if (fleetCategories.length === 0) {
@@ -216,34 +260,50 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
     );
   }
 
-  const selectedCategory = fleetCategories.find((c) => c.id === activeTab) || fleetCategories[0];
+  const handleTabClick = (catId: string, index: number) => {
+    setActiveTab(catId);
+    if (swiperRef.current) {
+      swiperRef.current.slideTo(index);
+    }
+  };
+
+  const handleSlideChange = (swiper: any) => {
+    const index = swiper.activeIndex;
+    if (fleetCategories[index]) {
+      setActiveTab(fleetCategories[index].id);
+    }
+  };
 
   return (
     <section className="py-16 md:py-24 bg-[#f8fafc] border-y border-slate-150">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="text-center max-w-3xl mx-auto mb-6 md:mb-12">
           <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/20 text-gray-950 text-xs font-black uppercase tracking-wider mb-4 border border-primary/30">
             <Sparkles size={14} className="text-gray-900" />
             Diverse Vehicle Options
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-title uppercase italic mb-4">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-title uppercase italic mb-3">
             {brandName} Fleet Categories
           </h2>
-          <p className="text-slate-600 text-sm md:text-base font-medium leading-relaxed">
+          <p className="text-slate-600 text-xs md:text-base font-medium leading-relaxed">
             Autours connects you directly with {brandName}&apos;s extensive fleet across all major categories. From compact city cars to luxury SUVs, find the exact vehicle type tailored to your trip.
           </p>
         </div>
 
         {/* Category Navigation Tabs */}
-        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-10 no-scrollbar">
-          {fleetCategories.map((cat) => {
+        <div 
+          ref={tabsContainerRef}
+          className="flex items-center justify-start md:justify-center gap-2 overflow-x-auto pb-3 mb-6 md:mb-10 no-scrollbar w-full px-4 md:px-0"
+        >
+          {fleetCategories.map((cat, index) => {
             const isActive = cat.id === activeTab;
             return (
               <button
                 key={cat.id}
-                onClick={() => setActiveTab(cat.id)}
+                ref={(el) => { tabRefs.current[cat.id] = el; }}
+                onClick={() => handleTabClick(cat.id, index)}
                 className={`px-5 py-3 rounded-2xl text-xs md:text-sm font-black whitespace-nowrap transition-all duration-200 focus:outline-none flex items-center gap-2 ${
                   isActive
                     ? 'bg-slate-900 text-white shadow-lg scale-105'
@@ -257,99 +317,132 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
           })}
         </div>
 
-        {/* Active Category Display Box */}
-        {selectedCategory && (
-          <div className="bg-white rounded-3xl p-6 md:p-10 border border-slate-200 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
-            {/* Left Column: Car Representation Image & Specs */}
-            <div className="lg:col-span-5 bg-slate-50 rounded-2xl p-6 border border-slate-150 text-center relative flex flex-col items-center justify-center min-h-[300px]">
-              <span className="absolute top-4 left-4 bg-primary text-gray-950 text-[11px] font-black uppercase px-3 py-1 rounded-full shadow-xs">
-                {selectedCategory.badge}
-              </span>
+        {/* Active Category Display Box using Swiper */}
+        <div className="w-full max-w-full overflow-hidden">
+          <Swiper
+            onSwiper={(swiper) => { swiperRef.current = swiper; }}
+            onSlideChange={handleSlideChange}
+            modules={[Autoplay, Pagination, Navigation]}
+            grabCursor={true}
+            slidesPerView={1}
+            spaceBetween={30}
+            autoplay={{
+              delay: 2500,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            pagination={{
+              clickable: true,
+              dynamicBullets: true,
+            }}
+            loop={false}
+            className="w-full !pb-12"
+          >
+            {fleetCategories.map((category) => (
+              <SwiperSlide key={category.id} className="px-1">
+                <div className="bg-white rounded-3xl p-6 md:p-10 border border-slate-200 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                  
+                  {/* Left Column: Car Representation Image & Specs */}
+                  <div className="lg:col-span-5 bg-slate-50 rounded-2xl p-5 md:p-6 border border-slate-150 text-center relative flex flex-col items-center justify-center min-h-[260px]">
+                    <span className="absolute top-4 left-4 bg-primary text-gray-950 text-[10px] md:text-[11px] font-black uppercase px-2.5 py-1 rounded-full shadow-xs">
+                      {category.badge}
+                    </span>
 
-              <div className="relative w-full h-44 md:h-52 my-4">
-                <Image
-                  src={selectedCategory.image}
-                  alt={`${brandName} ${selectedCategory.name} car rental`}
-                  fill
-                  className="object-contain hover:scale-105 transition-transform duration-300"
-                  sizes="(max-width: 768px) 100vw, 400px"
-                />
-              </div>
-
-              <h3 className="text-lg md:text-xl font-black text-slate-900 mb-1 leading-snug">
-                {selectedCategory.exampleModel}
-              </h3>
-              <p className="text-xs font-bold text-slate-500 mb-4">
-                Representative {selectedCategory.name} vehicle from {brandName}
-              </p>
-
-              {/* Spec Pills */}
-              <div className="flex flex-wrap items-center justify-center gap-3 w-full border-t border-slate-200/80 pt-4 text-xs font-bold text-slate-700">
-                <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                  <img 
-                    src={assets.icons.seats} 
-                    alt="" 
-                    className="w-5 h-5 object-contain shrink-0" 
-                    style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }} 
-                  />
-                  {selectedCategory.seats}
-                </span>
-                <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                  <img 
-                    src={assets.icons.doors} 
-                    alt="" 
-                    className="w-5 h-5 object-contain shrink-0" 
-                    style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }} 
-                  />
-                  {selectedCategory.doors}
-                </span>
-                <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                  <img 
-                    src={assets.icons.bags} 
-                    alt="" 
-                    className="w-[22px] h-[22px] object-contain shrink-0" 
-                    style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }} 
-                  />
-                  {selectedCategory.luggage}
-                </span>
-              </div>
-            </div>
-
-            {/* Right Column: Explanatory Content & Highlights */}
-            <div className="lg:col-span-7 space-y-6">
-              <div>
-                <span className="text-xs font-extrabold text-primary-700 uppercase tracking-wider mb-1 block">
-                  Category Overview
-                </span>
-                <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-                  {selectedCategory.name} Car Rental by {brandName}
-                </h3>
-              </div>
-
-              <p className="text-slate-700 text-sm md:text-base font-medium leading-relaxed bg-slate-50/80 p-5 rounded-2xl border border-slate-150">
-                {selectedCategory.description}
-              </p>
-
-              {/* Highlights List */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                  Why Choose {selectedCategory.name}?
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {selectedCategory.highlights.map((h, idx) => (
-                    <div key={idx} className="flex items-center gap-2.5 bg-white p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800">
-                      <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-                      <span>{h}</span>
+                    <div className="relative w-full h-32 md:h-52 my-3">
+                      <Image
+                        src={category.image}
+                        alt={`${brandName} ${category.name} car rental`}
+                        fill
+                        className="object-contain hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                      />
                     </div>
-                  ))}
+
+                    <h3 className="text-base md:text-xl font-black text-slate-900 mb-1 leading-snug">
+                      {category.exampleModel}
+                    </h3>
+                    <p className="text-[10px] md:text-xs font-bold text-slate-500 mb-3">
+                      Representative {category.name} vehicle from {brandName}
+                    </p>
+
+                    {/* Spec Pills */}
+                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 w-full border-t border-slate-200/80 pt-3 text-[10px] md:text-xs font-bold text-slate-700">
+                      <span className="flex items-center gap-1 bg-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                        <img 
+                          src={assets.icons.seats} 
+                          alt="" 
+                          className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0" 
+                          style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }} 
+                        />
+                        {category.seats}
+                      </span>
+                      <span className="flex items-center gap-1 bg-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                        <img 
+                          src={assets.icons.doors} 
+                          alt="" 
+                          className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0" 
+                          style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }} 
+                        />
+                        {category.doors}
+                      </span>
+                      <span className="flex items-center gap-1 bg-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                        <img 
+                          src={assets.icons.bags} 
+                          alt="" 
+                          className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0" 
+                          style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }} 
+                        />
+                        {category.luggage}
+                      </span>
+                    </div>
+
+                    {/* View Details Toggle Button (Mobile Only) */}
+                    <button
+                      onClick={() => toggleDetails(category.id)}
+                      className="lg:hidden mt-3 text-[11px] font-black text-primary uppercase tracking-wider hover:underline focus:outline-none flex items-center justify-center gap-1 w-full"
+                    >
+                      {showDetails[category.id] ? 'Hide Description' : 'View Description & Features'}
+                      <ChevronRight size={12} className={`transform transition-transform ${showDetails[category.id] ? 'rotate-90' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* Right Column: Explanatory Content & Highlights */}
+                  <div className={`lg:col-span-7 space-y-6 ${showDetails[category.id] ? 'block' : 'hidden lg:block'}`}>
+                    <div>
+                      <span className="text-[10px] md:text-xs font-extrabold text-primary-700 uppercase tracking-wider mb-1 block">
+                        Category Overview
+                      </span>
+                      <h3 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">
+                        {category.name} Car Rental by {brandName}
+                      </h3>
+                    </div>
+
+                    <p className="text-slate-700 text-xs md:text-base font-medium leading-relaxed bg-slate-50/80 p-4 md:p-5 rounded-2xl border border-slate-150">
+                      {category.description}
+                    </p>
+
+                    {/* Highlights List */}
+                    <div className="space-y-2 md:space-y-3">
+                      <h4 className="text-[10px] md:text-xs font-black uppercase tracking-wider text-slate-900">
+                        Why Choose {category.name}?
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+                        {category.highlights.map((h, idx) => (
+                          <div key={idx} className="flex items-center gap-2 bg-white p-2.5 md:p-3 rounded-xl border border-slate-200 text-[10px] md:text-xs font-bold text-slate-800">
+                            <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
+                            <span>{h}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+
                 </div>
-              </div>
-
-            </div>
-
-          </div>
-        )}
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
 
       </div>
     </section>

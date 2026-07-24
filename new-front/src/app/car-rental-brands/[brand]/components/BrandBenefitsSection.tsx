@@ -44,10 +44,19 @@ export default function BrandBenefitsSection({ brandName, benefits }: BrandBenef
           </p>
         </div>
 
-        {/* ─── Benefits Grid ─── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* ─── Benefits Grid (Tablet & Desktop) ─── */}
+        <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-5">
           {benefits.map((benefit, index) => (
             <BenefitCard key={index} benefit={benefit} index={index} />
+          ))}
+        </div>
+
+        {/* Mobile Horizontal scroll list */}
+        <div className="flex sm:hidden overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory px-4 -mx-4">
+          {benefits.map((benefit, index) => (
+            <div key={index} className="w-[85vw] shrink-0 snap-center">
+              <BenefitCard benefit={benefit} index={index} />
+            </div>
           ))}
         </div>
       </div>

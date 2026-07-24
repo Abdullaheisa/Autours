@@ -91,14 +91,14 @@ export default function CarRentalBrandsHero({
         />
 
         {/* Content layout */}
-        <div className="relative z-10 flex flex-col justify-end md:justify-center h-full min-h-[420px] md:min-h-[400px] lg:min-h-[420px] p-5 sm:p-6 md:p-8 lg:p-10">
+        <div className="relative z-10 flex flex-col justify-end md:justify-center h-full min-h-[420px] md:min-h-[400px] lg:min-h-[420px] p-3 sm:p-6 md:p-8 lg:p-10">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             {/* White content card */}
             <div className="relative bg-white rounded-[1.5rem] md:rounded-[1.75rem] rounded-tr-[2.5rem] md:rounded-tr-[3.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] max-w-full md:max-w-[500px] lg:max-w-[540px] overflow-hidden">
               {/* Yellow accent bar */}
               <div className="h-1.5 bg-primary" />
 
-              <div className="px-6 py-7 sm:px-8 sm:py-8 md:px-9 md:py-9">
+              <div className="px-4 py-5 sm:px-8 sm:py-8 md:px-9 md:py-9">
                 {(badge || brandLogo) && (
                   <div className="flex items-center justify-between gap-4 mb-5">
                     {badge ? (
@@ -123,7 +123,7 @@ export default function CarRentalBrandsHero({
                   </div>
                 )}
 
-                <h1 className="text-[1.65rem] sm:text-[1.85rem] md:text-[2rem] lg:text-[2.25rem] font-black tracking-tight text-gray-900 leading-[1.12] mb-4">
+                <h1 className="text-[1.5rem] sm:text-[1.85rem] md:text-[2rem] lg:text-[2.25rem] font-black tracking-tight text-gray-900 leading-[1.12] mb-4">
                   {title}
                 </h1>
 
