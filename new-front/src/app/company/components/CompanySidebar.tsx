@@ -177,7 +177,7 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
                     <button
                       onClick={() => toggleGroup(entry.id)}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 group
-                        ${hasActiveChild ? "bg-slate-100 text-slate-900 font-black" : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"}`}
+                        ${hasActiveChild ? "bg-slate-100 text-slate-900 font-black" : "bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900"}`}
                     >
                       <div className="flex items-center gap-3">
                         {GroupIcon && <GroupIcon className="w-[18px] h-[18px] text-slate-600" />}
@@ -210,7 +210,7 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
                                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 group relative
                                   ${isChildActive 
                                     ? "bg-primary text-gray-950 shadow-md shadow-primary/20" 
-                                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
+                                    : "bg-slate-50/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
                               >
                                 {ChildIcon && <ChildIcon className={`w-4 h-4 shrink-0 ${isChildActive ? "text-gray-950" : "text-slate-400"}`} />}
                                 <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>
@@ -243,7 +243,7 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
                       onClose?.();
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                      ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20 font-bold" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+                      ${isActive ? "bg-primary text-gray-900 shadow-lg shadow-primary/20 font-bold" : "bg-slate-50 text-gray-600 hover:bg-slate-100 hover:text-gray-900"}`}
                   >
                     {Icon && <Icon className={`w-[18px] h-[18px] ${isActive ? "text-gray-900" : ""}`} />}
                     <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>
@@ -272,7 +272,7 @@ export default function CompanySidebar({ activeItem, onItemClick, isOpen = false
                     window.location.href = "/login";
                   }
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-200"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 bg-red-50/30 hover:bg-red-50 transition-all duration-200"
               >
                 <LogOut className="w-[18px] h-[18px] shrink-0 text-red-500" />
                 <span className={`${isCollapsed ? "lg:hidden" : "block"} truncate`}>
