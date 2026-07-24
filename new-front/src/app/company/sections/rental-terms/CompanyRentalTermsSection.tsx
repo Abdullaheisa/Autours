@@ -443,11 +443,11 @@ export default function CompanyRentalTermsSection() {
             <button
               type="button"
               onClick={() => setModalTab("bulk")}
-              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all inline-flex items-center justify-center gap-1.5 ${
                 modalTab === "bulk" ? "bg-primary text-gray-950 shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              <Upload size={14} />
+              <Upload size={13} className="shrink-0" />
               <span>Bulk Upload (Excel)</span>
             </button>
           </div>
