@@ -45,7 +45,7 @@ class RentalTermsController extends Controller
             ->where('activation', 1)
             ->whereNotNull('country')
             ->pluck('country')
-            ->map(function($c) { return trim($c); })
+            ->map(function($c) { return \App\Services\CountryCurrencyResolver::normalizeCountryName($c); })
             ->filter()
             ->unique()
             ->values()
@@ -61,7 +61,7 @@ class RentalTermsController extends Controller
             ->with('branch')
             ->get()
             ->map(function($v) {
-                return $v->branch && $v->branch->country ? trim($v->branch->country) : null;
+                return $v->branch && $v->branch->country ? \App\Services\CountryCurrencyResolver::normalizeCountryName($v->branch->country) : null;
             })
             ->filter()
             ->unique()
@@ -82,7 +82,7 @@ class RentalTermsController extends Controller
     {
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
              ?? \Illuminate\Support\Facades\Auth::user();
-        $country = $request->input('country');
+        $country = \App\Services\CountryCurrencyResolver::normalizeCountryName($request->input('country'));
 
         if ($user && ($user->role == 'active_supplier' || $user->role == 'supplier' || $user->role == 'under_review')) {
             // Strict Supplier & Country Isolation: Only terms created by this supplier for this country
@@ -114,7 +114,7 @@ class RentalTermsController extends Controller
             $rental->title = $request->title;
             $rental->description = $request->description;
             $rental->status = $request->status ?? 'approved';
-            $rental->country = $request->country;
+            $rental->country = \App\Services\CountryCurrencyResolver::normalizeCountryName($request->country);
             $rental->created_by = $user->id;
             $rental->save();
 
@@ -144,7 +144,7 @@ class RentalTermsController extends Controller
             ]);
 
             $file = $request->file('file');
-            $country = trim($request->input('country'));
+            $country = \App\Services\CountryCurrencyResolver::normalizeCountryName($request->input('country'));
             $extension = strtolower($file->getClientOriginalExtension());
             $items = [];
 
@@ -205,7 +205,11 @@ class RentalTermsController extends Controller
         $term = RentalTerms::query()->find($request->id);
         
         if ($term && $user && $term->created_by == $user->id) {
-            $term->update($request->except('id'));
+            $data = $request->except('id');
+            if (isset($data['country'])) {
+                $data['country'] = \App\Services\CountryCurrencyResolver::normalizeCountryName($data['country']);
+            }
+            $term->update($data);
             return response()->json(['status' => true, 'data' => $term]);
         }
         return response()->json(['status' => false, 'message' => 'Unauthorized or term not found'], 403);
@@ -238,12 +242,14 @@ class RentalTermsController extends Controller
             return response()->json(['message' => 'The term id is required.'], 422);
         }
 
+        $country = $request->has('country') ? \App\Services\CountryCurrencyResolver::normalizeCountryName($request->input('country')) : null;
+
         $checkQuery = SupplierRentalTerm::query()
             ->where('supplier_id', $user->id)
             ->where('rental_term_id', $termId);
         
-        if ($request->has('country')) {
-            $checkQuery->where('country', $request->country);
+        if ($country) {
+            $checkQuery->where('country', $country);
         } else {
             $checkQuery->whereNull('country');
         }
@@ -255,8 +261,8 @@ class RentalTermsController extends Controller
                 ->where('supplier_id', $user->id)
                 ->where('rental_term_id', $termId);
             
-            if ($request->has('country')) {
-                $deleteQuery->where('country', $request->country);
+            if ($country) {
+                $deleteQuery->where('country', $country);
             } else {
                 $deleteQuery->whereNull('country');
             }
@@ -266,7 +272,7 @@ class RentalTermsController extends Controller
             $status = SupplierRentalTerm::query()->insert([
                 'supplier_id' => $user->id, 
                 'rental_term_id' => $termId,
-                'country' => $request->input('country')
+                'country' => $country
             ]);
         }
         return response()->json([

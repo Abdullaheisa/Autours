@@ -110,9 +110,12 @@ class Vehicle extends Model
             ->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id');
 
         if ($country) {
-            $query->where(function($q) use ($country) {
+            $normalizedCountry = \App\Services\CountryCurrencyResolver::normalizeCountryName($country);
+            $query->where(function($q) use ($country, $normalizedCountry) {
                 $q->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)])
-                  ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)]);
+                  ->orWhereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($normalizedCountry)])
+                  ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
+                  ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($normalizedCountry)]);
             });
         }
 

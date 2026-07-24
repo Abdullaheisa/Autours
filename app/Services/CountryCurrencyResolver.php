@@ -354,4 +354,55 @@ class CountryCurrencyResolver
             default => '',
         };
     }
+
+    /**
+     * Standardize and normalize country names to canonical English versions.
+     *
+     * @param string|null $country
+     * @return string|null
+     */
+    public static function normalizeCountryName(?string $country): ?string
+    {
+        if (!$country) {
+            return null;
+        }
+        $code = self::resolveCountryCode($country);
+        if ($code) {
+            $canonicalNames = [
+                'AE' => 'United Arab Emirates',
+                'EG' => 'Egypt',
+                'MA' => 'Morocco',
+                'TR' => 'Turkey',
+                'SA' => 'Saudi Arabia',
+                'JO' => 'Jordan',
+                'KW' => 'Kuwait',
+                'OM' => 'Oman',
+                'QA' => 'Qatar',
+                'BH' => 'Bahrain',
+                'CA' => 'Canada',
+                'US' => 'United States',
+                'GB' => 'United Kingdom',
+                'GR' => 'Greece',
+                'ES' => 'Spain',
+                'IT' => 'Italy',
+                'CY' => 'Cyprus',
+                'HR' => 'Croatia',
+                'PL' => 'Poland',
+                'ME' => 'Montenegro',
+                'AL' => 'Albania',
+                'GE' => 'Georgia',
+                'IS' => 'Iceland',
+                'NZ' => 'New Zealand',
+                'RO' => 'Romania',
+                'PT' => 'Portugal',
+                'MX' => 'Mexico',
+                'AU' => 'Australia',
+            ];
+            if (isset($canonicalNames[$code])) {
+                return $canonicalNames[$code];
+            }
+        }
+        return ucwords(strtolower(trim($country)));
+    }
 }
+

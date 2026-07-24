@@ -343,12 +343,19 @@ class VehicleController extends Controller
                 $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicleId]);
                 $vehicleArr['promos'] = array_map(function($p) { return $p->promotion; }, $promos);
 
-                $pickupLocId = $vehicleArr['pickup_loc'] ?? null;
                 $country = null;
-                if ($pickupLocId) {
-                    $branch = Branch::find($pickupLocId);
-                    $country = $branch ? trim($branch->country) : null;
+                if (isset($vehicleArr['branch']) && is_array($vehicleArr['branch'])) {
+                    $country = $vehicleArr['branch']['country'] ?? null;
                 }
+                if (!$country && isset($vehicleArr['available_branches']) && is_array($vehicleArr['available_branches']) && count($vehicleArr['available_branches']) > 0) {
+                    $country = $vehicleArr['available_branches'][0]['country'] ?? null;
+                }
+                $pickupLocId = $vehicleArr['pickup_loc'] ?? null;
+                if (!$country && $pickupLocId) {
+                    $branch = Branch::find($pickupLocId);
+                    $country = $branch ? $branch->country : null;
+                }
+                $country = \App\Services\CountryCurrencyResolver::normalizeCountryName($country);
 
                 $cacheKey = $supplierId . '_' . ($country ? strtolower($country) : 'default');
 
@@ -368,16 +375,21 @@ class VehicleController extends Controller
                         ->where('rental_terms.created_by', $supplierId);
 
                     if ($country) {
-                        $termsQuery->where(function($q) use ($country) {
-                            // Strictly: only terms for this country
-                            $q->whereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
-                              // OR terms linked via supplier_rental_terms for this country
-                              ->orWhereExists(function ($subQuery) use ($country) {
-                                  $subQuery->select(DB::raw(1))
-                                      ->from('supplier_rental_terms')
-                                      ->whereColumn('supplier_rental_terms.rental_term_id', 'rental_terms.id')
-                                      ->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)]);
-                              });
+                        $normalizedSearchCountry = \App\Services\CountryCurrencyResolver::normalizeCountryName($country);
+                        $termsQuery->where(function($q) use ($country, $normalizedSearchCountry) {
+                            $q->where(function($q2) use ($country, $normalizedSearchCountry) {
+                                $q2->whereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
+                                   ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($normalizedSearchCountry)]);
+                            })
+                            ->orWhereExists(function ($subQuery) use ($country, $normalizedSearchCountry) {
+                                $subQuery->select(DB::raw(1))
+                                    ->from('supplier_rental_terms')
+                                    ->whereColumn('supplier_rental_terms.rental_term_id', 'rental_terms.id')
+                                    ->where(function($q3) use ($country, $normalizedSearchCountry) {
+                                        $q3->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)])
+                                           ->orWhereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($normalizedSearchCountry)]);
+                                    });
+                            });
                         });
                     } else {
                         // No country found for vehicle's branch — show nothing to avoid leaking cross-country terms
@@ -1282,21 +1294,26 @@ class VehicleController extends Controller
                 }
             }
             $selectedVehicle->final_price = round($selectedVehicle->final_price, 2);
-            $country = $selectedVehicle->branch ? trim($selectedVehicle->branch->country) : null;
+            $country = $selectedVehicle->branch ? \App\Services\CountryCurrencyResolver::normalizeCountryName($selectedVehicle->branch->country) : null;
             $termsQuery = \App\Models\RentalTerms::query()
                 ->where('rental_terms.created_by', $selectedVehicle->supplierUser->id);
 
             if ($country) {
-                $termsQuery->where(function($q) use ($country) {
-                    // Strictly: only terms for this country
-                    $q->whereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
-                      // OR terms linked via supplier_rental_terms for this country
-                      ->orWhereExists(function ($subQuery) use ($country) {
-                          $subQuery->select(DB::raw(1))
-                              ->from('supplier_rental_terms')
-                              ->whereColumn('supplier_rental_terms.rental_term_id', 'rental_terms.id')
-                              ->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)]);
-                      });
+                $normalizedSearchCountry = \App\Services\CountryCurrencyResolver::normalizeCountryName($country);
+                $termsQuery->where(function($q) use ($country, $normalizedSearchCountry) {
+                    $q->where(function($q2) use ($country, $normalizedSearchCountry) {
+                        $q2->whereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
+                           ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($normalizedSearchCountry)]);
+                    })
+                    ->orWhereExists(function ($subQuery) use ($country, $normalizedSearchCountry) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('supplier_rental_terms')
+                            ->whereColumn('supplier_rental_terms.rental_term_id', 'rental_terms.id')
+                            ->where(function($q3) use ($country, $normalizedSearchCountry) {
+                                $q3->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)])
+                                   ->orWhereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($normalizedSearchCountry)]);
+                            });
+                    });
                 });
             } else {
                 // No country found for vehicle's branch — return no terms
