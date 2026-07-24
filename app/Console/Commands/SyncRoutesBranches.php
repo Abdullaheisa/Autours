@@ -145,49 +145,63 @@ class SyncRoutesBranches extends Command
 
         $this->info("Successfully synced {$syncedCount} branches.");
 
-        // 4. Fetch and save policies for the first location as global supplier terms
+        // 4. Fetch and save policies per country
         if (!empty($locations)) {
-            $firstLoc = $locations[0]['LocationCode'];
-            $this->info("Fetching policies using location code {$firstLoc}...");
-            $policyXml = $service->getPolicy($firstLoc);
-
-            if ($policyXml) {
-                // Clear existing terms for this supplier to avoid duplicates
-                $existingTermIds = \App\Models\SupplierRentalTerm::where('supplier_id', $supplierUser->id)->pluck('rental_term_id');
-                \App\Models\SupplierRentalTerm::where('supplier_id', $supplierUser->id)->delete();
-                \App\Models\RentalTerms::whereIn('id', $existingTermIds)->delete();
-
-                $policiesAdded = 0;
-                // Parse policies
-                // Structure: <PolicyType> and <PolicyText> are siblings or inside <Policy> elements
-                // Looking at TestRoutesApi output, it's <PolicyType> then <PolicyText> sequentially or grouped
-                // SimpleXMLElement parsing:
-                $types = $policyXml->xpath('//PolicyType');
-                $texts = $policyXml->xpath('//PolicyText');
-
-                if ($types !== false && $texts !== false) {
-                    for ($i = 0; $i < count($types); $i++) {
-                        $type = (string)$types[$i];
-                        $text = (string)$texts[$i];
-
-                        $term = \App\Models\RentalTerms::create([
-                            'title' => $type,
-                            'description' => $text,
-                            'status' => 'approved',
-                            'created_by' => $supplierUser->id
-                        ]);
-
-                        \App\Models\SupplierRentalTerm::create([
-                            'rental_term_id' => $term->id,
-                            'supplier_id' => $supplierUser->id
-                        ]);
-                        
-                        $policiesAdded++;
-                    }
+            // Group locations by country
+            $locationsByCountry = [];
+            foreach ($locations as $loc) {
+                // Find the branch we just upserted to get the normalized country
+                $branch = Branch::where('company_id', $supplierUser->id)
+                                ->where('station_id', $loc['LocationCode'])
+                                ->first();
+                $country = $branch && $branch->country ? $branch->country : 'Canada';
+                if (!isset($locationsByCountry[$country])) {
+                    $locationsByCountry[$country] = [];
                 }
-                $this->info("Successfully saved {$policiesAdded} policies for the supplier.");
-            } else {
-                $this->warn("Failed to fetch policies for {$firstLoc}.");
+                $locationsByCountry[$country][] = $loc['LocationCode'];
+            }
+
+            // Clear existing terms for this supplier to avoid duplicates
+            $existingTermIds = \App\Models\SupplierRentalTerm::where('supplier_id', $supplierUser->id)->pluck('rental_term_id');
+            \App\Models\SupplierRentalTerm::where('supplier_id', $supplierUser->id)->delete();
+            \App\Models\RentalTerms::whereIn('id', $existingTermIds)->delete();
+
+            foreach ($locationsByCountry as $country => $countryLocations) {
+                $firstLoc = $countryLocations[0];
+                $this->info("Fetching policies for {$country} using location code {$firstLoc}...");
+                $policyXml = $service->getPolicy($firstLoc);
+
+                if ($policyXml) {
+                    $policiesAdded = 0;
+                    $types = $policyXml->xpath('//PolicyType');
+                    $texts = $policyXml->xpath('//PolicyText');
+
+                    if ($types !== false && $texts !== false) {
+                        for ($i = 0; $i < count($types); $i++) {
+                            $type = (string)$types[$i];
+                            $text = (string)$texts[$i];
+
+                            $term = \App\Models\RentalTerms::create([
+                                'title' => $type,
+                                'description' => $text,
+                                'status' => 'approved',
+                                'created_by' => $supplierUser->id,
+                                'country' => $country,
+                            ]);
+
+                            \App\Models\SupplierRentalTerm::create([
+                                'rental_term_id' => $term->id,
+                                'supplier_id' => $supplierUser->id,
+                                'country' => $country,
+                            ]);
+                            
+                            $policiesAdded++;
+                        }
+                    }
+                    $this->info("Successfully saved {$policiesAdded} policies for {$country}.");
+                } else {
+                    $this->warn("Failed to fetch policies for {$country} (Location: {$firstLoc}).");
+                }
             }
         }
 

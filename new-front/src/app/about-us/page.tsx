@@ -141,7 +141,7 @@ export default function AboutUsPage() {
                   <Globe size={20} className="text-primary" />
                   <div>
                     <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider leading-none">Operating Areas</p>
-                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">GCC, Egypt, Morocco, Turkey</p>
+                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">50+ Countries</p>
                   </div>
                 </div>
 
@@ -149,7 +149,7 @@ export default function AboutUsPage() {
                   <Award size={20} className="text-primary" />
                   <div>
                     <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider leading-none">Trusted Network</p>
-                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">30+ Premium Partners</p>
+                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">30+ Suppliers</p>
                   </div>
                 </div>
               </motion.div>

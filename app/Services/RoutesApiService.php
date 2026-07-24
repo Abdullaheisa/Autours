@@ -227,6 +227,8 @@ XML;
                     'RateAmount' => (string)$rate->RateAmount,
                     'CurrencyCode' => (string)$rate->CurrencyCode,
                     'TotalCharge' => isset($rate->TotalPricing->TotalCharges) ? (string)$rate->TotalPricing->TotalCharges : null,
+                    'FreeMiles' => isset($rate->FreeMiles) ? (string)$rate->FreeMiles : null,
+                    'MileageUnit' => isset($rate->MileageUnit) ? (string)$rate->MileageUnit : 'KM',
                 ];
             }
         }

@@ -107,12 +107,7 @@ class SyncRoutesVehicles extends Command
         $concurrency = (int) $this->option('concurrency');
         $pricesOnly  = $this->option('prices-only');
 
-        // Inclusions
-        $inclusions = [];
-        $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Unlimited mileage']);
-        $inclusions[] = $mileageIncluded->id;
-        $taxesIncluded = Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
-        $inclusions[] = $taxesIncluded->id;
+        // Global inclusions have been removed to handle them dynamically per vehicle.
 
         // Collect per-branch, per-classCode merged prices
         $stationPrices = [];
@@ -147,6 +142,8 @@ class SyncRoutesVehicles extends Command
                                 'classDesc'  => $rate['ClassDesc'] ?? '',
                                 'classImage' => $rate['ClassImage'] ?? null,
                                 'seats'      => $rate['Seats'] ?? null,
+                                'FreeMiles'  => $rate['FreeMiles'] ?? null,
+                                'MileageUnit'=> $rate['MileageUnit'] ?? 'KM',
                             ];
                         } elseif ($days === 7) {
                             $stationPrices[$branch->id][$classCode]['week_price'] = $dayPrice;
@@ -202,6 +199,19 @@ class SyncRoutesVehicles extends Command
                     ->where('name', $normalizedModel)
                     ->first();
 
+                // Calculate per-vehicle inclusions
+                $vehicleInclusions = [];
+                $taxesIncluded = Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
+                $vehicleInclusions[] = $taxesIncluded->id;
+                
+                if (!empty($model['FreeMiles']) && is_numeric($model['FreeMiles'])) {
+                    $limit = $model['FreeMiles'] . ' ' . ($model['MileageUnit'] ?? 'KM');
+                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => "Limited mileage : $limit"]);
+                } else {
+                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Unlimited mileage']);
+                }
+                $vehicleInclusions[] = $mileageIncluded->id;
+
                 if ($existingVehicle) {
                     $existingVehicle->update([
                         'category'             => $categoryId,
@@ -211,6 +221,9 @@ class SyncRoutesVehicles extends Command
                         'activation'           => true,
                         'instant_confirmation' => 1,
                     ]);
+                    // Update Inclusions for existing vehicle
+                    $existingVehicle->included()->sync($vehicleInclusions);
+
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
                 } elseif (!$pricesOnly) {
@@ -242,7 +255,7 @@ class SyncRoutesVehicles extends Command
                     $this->syncVehicleSpecifications($vehicle, $classCode, $model['seats']);
 
                     // Sync Inclusions
-                    $vehicle->included()->sync($inclusions);
+                    $vehicle->included()->sync($vehicleInclusions);
 
                     $syncedVehicleIds[] = $vehicle->id;
                     $created++;
