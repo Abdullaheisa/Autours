@@ -215,106 +215,104 @@ export default function OurFleetPage() {
                   return (
                     <div
                       key={cat.id}
-                      className="bg-white rounded-3xl border border-slate-200/80 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+                      className="bg-white rounded-3xl border border-slate-200/60 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden"
                     >
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 md:p-10 items-center">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                         
                         {/* Car Image Column */}
-                        <div className={`lg:col-span-5 bg-slate-50/50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center justify-center min-h-[260px] relative ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
-                          <span className="absolute top-4 left-4 bg-primary text-gray-950 text-[10px] md:text-[11px] font-black uppercase px-2.5 py-1 rounded-full shadow-xs">
+                        <div className={`p-8 md:p-12 flex flex-col items-center justify-center bg-slate-50/50 border-b lg:border-b-0 ${isEven ? 'lg:border-r lg:order-1' : 'lg:border-l lg:order-2'} border-slate-100 relative min-h-[300px]`}>
+                          <span className="absolute top-6 left-6 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-sm">
                             {cat.name}
                           </span>
                           
-                          <div className="relative w-full h-32 md:h-52 my-3 flex items-center justify-center">
+                          <div className="relative w-full h-44 md:h-64 my-4 flex items-center justify-center">
                             <Image
                               src={getVehicleImageUrl(cat.vehicle.photo)}
                               alt={cat.name}
                               fill
-                              className="object-contain hover:scale-105 transition-transform duration-300"
-                              sizes="(max-width: 768px) 100vw, 400px"
+                              className="object-contain hover:scale-105 transition-transform duration-500"
+                              sizes="(max-width: 768px) 100vw, 500px"
                             />
                           </div>
 
-                          <h4 className="text-base md:text-lg font-black text-slate-900 mb-1 leading-snug">
-                            {cat.vehicle.name}
-                          </h4>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100/60 px-2.5 py-0.5 rounded-full border border-slate-200/30">
-                            Cheapest by: {cat.vehicle.supplier.company}
-                          </span>
+                          <div className="text-center mt-2">
+                            <h4 className="text-lg font-bold text-slate-800 tracking-tight leading-snug">
+                              {cat.vehicle.name}
+                            </h4>
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">
+                              Cheapest by: <span className="text-slate-600">{cat.vehicle.supplier.company}</span>
+                            </span>
+                          </div>
                         </div>
 
                         {/* Information / Description Column */}
-                        <div className={`lg:col-span-7 space-y-6 ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
-                          <div className="space-y-1">
-                            <span className="text-[10px] md:text-xs font-extrabold text-primary-700 uppercase tracking-wider block">
-                              {badge}
-                            </span>
-                            <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">
-                              {cat.name} Category
-                            </h3>
+                        <div className={`p-8 md:p-12 flex flex-col justify-between space-y-6 ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+                          <div className="space-y-4">
+                            <div className="space-y-1">
+                              <span className="text-[10px] md:text-xs font-black text-amber-600 uppercase tracking-widest block">
+                                {badge}
+                              </span>
+                              <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight uppercase italic font-title">
+                                {cat.name} Category
+                              </h3>
+                            </div>
+
+                            {/* Dynamic description rendered from rich text editor */}
+                            {cat.description ? (
+                              <div 
+                                className="prose prose-slate max-w-none text-slate-600 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/30 p-5 rounded-2xl border border-slate-100"
+                                dangerouslySetInnerHTML={{ __html: cat.description }}
+                              />
+                            ) : (
+                              <p className="text-slate-500 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/30 p-5 rounded-2xl border border-slate-100">
+                                Browse our premium {cat.name} vehicle category. Autours offers the best rental rates, instant confirmation, and direct pickup options.
+                              </p>
+                            )}
                           </div>
 
-                          {/* Dynamic description rendered from rich text editor */}
-                          {cat.description ? (
-                            <div 
-                              className="prose prose-slate max-w-none text-slate-700 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/50 p-5 rounded-2xl border border-slate-150/70"
-                              dangerouslySetInnerHTML={{ __html: cat.description }}
-                            />
-                          ) : (
-                            <p className="text-slate-600 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/50 p-5 rounded-2xl border border-slate-150/70">
-                              Browse our premium {cat.name} vehicle category. Autours offers the best rental rates, instant confirmation, and direct pickup options.
-                            </p>
-                          )}
-
                           {/* Price & Specs Container */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
                             
                             {/* Specs Pills */}
-                            <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-700">
-                              <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                              <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200/60">
                                 <img
                                   src={assets.icons.seats}
-                                  alt=""
-                                  className="w-4 h-4 object-contain shrink-0"
-                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                  alt="Seats"
+                                  className="object-contain shrink-0"
+                                  style={{ width: '16px', height: '16px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
                                 />
                                 {specs.seats}
                               </span>
-                              <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                              <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200/60">
                                 <img
                                   src={assets.icons.doors}
-                                  alt=""
-                                  className="w-4 h-4 object-contain shrink-0"
-                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                  alt="Doors"
+                                  className="object-contain shrink-0"
+                                  style={{ width: '16px', height: '16px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
                                 />
                                 {specs.doors}
                               </span>
-                              <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                              <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200/60">
                                 <img
                                   src={assets.icons.bags}
-                                  alt=""
-                                  className="w-4.5 h-4.5 object-contain shrink-0"
-                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                  alt="Luggage"
+                                  className="object-contain shrink-0"
+                                  style={{ width: '16px', height: '16px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
                                 />
                                 {specs.luggage}
                               </span>
                             </div>
 
-                            {/* Price Line & Book Button */}
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Starting from</p>
-                                <p className="text-lg md:text-xl font-black text-slate-900 leading-none mt-0.5">
+                            {/* Price Line (NO Button) */}
+                            <div className="flex items-center gap-1">
+                              <div className="text-left sm:text-right">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Starting from</p>
+                                <p className="text-xl md:text-2xl font-black text-slate-900 leading-none mt-1">
                                   {priceDetails}
-                                  <span className="text-xs font-bold text-slate-500">/day</span>
+                                  <span className="text-xs font-bold text-slate-500"> / day</span>
                                 </p>
                               </div>
-                              <Link
-                                href={`/search?category=${cat.id}`}
-                                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-gray-950 text-xs font-black uppercase tracking-wider rounded-xl hover:bg-primary-600 transition-colors shadow-sm"
-                              >
-                                Rent now
-                              </Link>
                             </div>
 
                           </div>
