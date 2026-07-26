@@ -24,7 +24,7 @@ class CreateCategoryRequest extends FormRequest
         return [
             'name' => 'required|string|unique:categories,name',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:2500',
         ];
     }
 }

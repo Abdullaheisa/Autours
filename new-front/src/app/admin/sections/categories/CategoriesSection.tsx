@@ -42,6 +42,11 @@ export default function CategoriesSection() {
 
 
 
+  const getDescriptionTextLength = (html: string) => {
+    if (!html) return 0;
+    return html.replace(/<[^>]*>/g, '').trim().length;
+  };
+
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
@@ -97,6 +102,11 @@ export default function CategoriesSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (getDescriptionTextLength(currentCategory.description) > 1000) {
+      toast.error("Description is too long! (Max 1000 characters)");
+      return;
+    }
+
     const payloadData = {
       name: currentCategory.name,
       description: currentCategory.description,
@@ -171,18 +181,27 @@ export default function CategoriesSection() {
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Description</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Description</label>
+                <span className={`text-xs font-bold ${getDescriptionTextLength(currentCategory.description) > 1000 ? 'text-red-500 font-extrabold' : 'text-gray-400'}`}>
+                  {getDescriptionTextLength(currentCategory.description)} / 1000 chars
+                </span>
+              </div>
               <RichTextEditor 
                 value={currentCategory.description}
                 onChange={(html) => setCurrentCategory(prev => ({ ...prev, description: html }))}
                 placeholder="Write your article content here..."
                 minHeight={150}
               />
+              {getDescriptionTextLength(currentCategory.description) > 1000 && (
+                <p className="text-xs text-red-500 font-bold mt-1.5">Description cannot exceed 1000 characters.</p>
+              )}
             </div>
             <div className="flex gap-2 pt-2">
               <button 
                 type="submit"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-100"
+                disabled={getDescriptionTextLength(currentCategory.description) > 1000}
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-100"
               >
                 <Save size={18} />
                 {isEditing ? "Update" : "Save"}
