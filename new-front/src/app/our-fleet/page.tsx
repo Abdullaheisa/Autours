@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Car, Loader2 } from 'lucide-react';
 import Image from 'next/image';
@@ -82,6 +83,7 @@ export default function OurFleetPage() {
 
   const [fleetCategories, setFleetCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDesc, setSelectedDesc] = useState<{ name: string; text: string } | null>(null);
 
   const cleanHtml = (html: string) => {
     if (!html) return '';
@@ -224,38 +226,47 @@ export default function OurFleetPage() {
                       key={cat.id}
                       className="bg-white rounded-3xl border border-slate-200/60 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden"
                     >
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 md:p-8 items-stretch">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-5 md:p-8 items-stretch">
                         
                         {/* Left Column: Details, Description, Specs & Price (lg:col-span-8) */}
-                        <div className="lg:col-span-8 flex flex-col justify-between space-y-4">
+                        <div className="lg:col-span-8 flex flex-col justify-between space-y-4 order-2 lg:order-1">
                           
                           {/* Title & Badge */}
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             <span className="text-[10px] md:text-xs font-black text-amber-600 uppercase tracking-widest block">
                               {badge}
                             </span>
-                            <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight uppercase italic font-title">
+                            <h3 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight uppercase italic font-title">
                               {cat.name} Category
                             </h3>
                           </div>
 
-                          {/* Description Box (On Top) */}
+                          {/* Description Box — 4 line clamp + Read More */}
                           <div className="flex-grow">
-                            {cat.description ? (
-                              <p className="text-slate-650 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/50 p-5 rounded-2xl border border-slate-100/60 whitespace-pre-line">
-                                {cat.description}
-                              </p>
-                            ) : (
-                              <p className="text-slate-550 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/50 p-5 rounded-2xl border border-slate-100/60">
-                                Browse our premium {cat.name} vehicle category. Autours offers the best rental rates, instant confirmation, and direct pickup options.
-                              </p>
-                            )}
+                            <div className="relative">
+                              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-amber-400 rounded-full" />
+                              <div className="pl-4 pr-3 py-3 bg-slate-50 rounded-r-2xl rounded-l-none border border-l-0 border-slate-100">
+                                <p className="text-slate-600 text-xs md:text-sm font-medium leading-relaxed whitespace-pre-line line-clamp-4">
+                                  {cat.description
+                                    ? cat.description
+                                    : `Browse our premium ${cat.name} vehicle category. Autours offers the best rental rates, instant confirmation, and direct pickup options.`}
+                                </p>
+                                {cat.description && cat.description.length > 200 && (
+                                  <button
+                                    onClick={() => setSelectedDesc({ name: cat.name, text: cat.description })}
+                                    className="mt-2 text-[10px] font-black text-amber-700 hover:text-amber-900 uppercase tracking-widest flex items-center gap-1 transition-colors"
+                                  >
+                                    Read More →
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
 
                           {/* Footer Row: Specs & Price */}
-                          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
                             
-                            {/* Specs Pills (Horizontal) */}
+                            {/* Specs Pills */}
                             <div className="flex flex-wrap items-center gap-2 text-[10px] md:text-[11px] font-bold text-slate-650">
                               <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/50">
                                 <img
@@ -286,7 +297,7 @@ export default function OurFleetPage() {
                               </span>
                             </div>
 
-                            {/* Starting Price (No Button) */}
+                            {/* Starting Price */}
                             <div className="text-left sm:text-right shrink-0">
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Starting from</span>
                               <p className="text-lg md:text-xl font-black text-slate-900 leading-none mt-1">
@@ -299,13 +310,13 @@ export default function OurFleetPage() {
 
                         </div>
 
-                        {/* Right Column: Representative Car Card (lg:col-span-4) */}
-                        <div className="lg:col-span-4 bg-slate-50/30 border border-slate-100 rounded-3xl p-5 flex flex-col justify-between items-center text-center relative min-h-[220px]">
-                          <span className="absolute top-4 left-4 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm z-10">
+                        {/* Right Column: Representative Car Card — appears FIRST on mobile */}
+                        <div className="lg:col-span-4 order-1 lg:order-2 bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between items-center text-center relative min-h-[200px]">
+                          <span className="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm z-10">
                             {cat.name}
                           </span>
                           
-                          <div className="relative w-full h-32 md:h-40 flex items-center justify-center my-3">
+                          <div className="relative w-full h-36 md:h-44 flex items-center justify-center mt-2">
                             <Image
                               src={getVehicleImageUrl(cat.vehicle.photo)}
                               alt={cat.name}
@@ -315,12 +326,12 @@ export default function OurFleetPage() {
                             />
                           </div>
 
-                          <div className="space-y-1">
-                            <h4 className="text-base font-extrabold text-slate-800 tracking-tight leading-snug">
+                          <div className="space-y-0.5 mt-2">
+                            <h4 className="text-sm md:text-base font-extrabold text-slate-800 tracking-tight leading-snug">
                               {cat.vehicle.name}
                             </h4>
-                            <span className="inline-flex items-center gap-1.5 text-[9.5px] font-black text-slate-500 bg-slate-100/60 px-2.5 py-0.5 rounded-full border border-slate-200/30">
-                              Cheapest by: <span className="text-slate-850 font-bold">{cat.vehicle.supplier.company}</span>
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-slate-500 bg-white px-2.5 py-0.5 rounded-full border border-slate-200/60">
+                              Cheapest by: <span className="text-slate-800 font-bold">{cat.vehicle.supplier.company}</span>
                             </span>
                           </div>
                         </div>
@@ -336,6 +347,57 @@ export default function OurFleetPage() {
       </main>
 
       <Footer />
+
+      {/* Description Full-Text Popup Modal */}
+      {selectedDesc && (
+        <div
+          className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setSelectedDesc(null)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+
+          {/* Modal Card */}
+          <div
+            className="relative w-full sm:max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 shrink-0">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest block">Category Overview</span>
+                <h3 className="text-lg font-black text-slate-900 uppercase italic tracking-tight">{selectedDesc.name} Category</h3>
+              </div>
+              <button
+                onClick={() => setSelectedDesc(null)}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto px-6 py-5 flex-grow">
+              <div className="relative">
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-amber-400 rounded-full" />
+                <p className="pl-5 text-slate-600 text-sm font-medium leading-7 whitespace-pre-line">
+                  {selectedDesc.text}
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-100 shrink-0">
+              <button
+                onClick={() => setSelectedDesc(null)}
+                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
