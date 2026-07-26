@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Car, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
 import Navbar from '@/components/shared/layout/Navbar';
@@ -169,8 +170,8 @@ export default function OurFleetPage() {
           </div>
         </section>
 
-        {/* Fleet Categories 3-Column Grid */}
-        <section className="py-8 md:py-12 bg-[#f8fafc]">
+        {/* Fleet Categories Stacked List */}
+        <section className="py-12 md:py-20 bg-[#f8fafc]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-24 text-slate-400 gap-3">
@@ -183,8 +184,9 @@ export default function OurFleetPage() {
                 <h3 className="text-lg font-black text-slate-800 mb-2">No Categories Available</h3>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                {fleetCategories.map((cat) => {
+              <div className="space-y-12">
+                {fleetCategories.map((cat, index) => {
+                  const isEven = index % 2 === 0;
                   const badge = getCategoryBadge(cat.name);
                   const specs = getEstimatedSpecs(cat.name, cat.vehicle?.seats, cat.vehicle?.doors, cat.vehicle?.suitcases);
 
@@ -213,88 +215,112 @@ export default function OurFleetPage() {
                   return (
                     <div
                       key={cat.id}
-                      className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                      className="bg-white rounded-3xl border border-slate-200/80 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
                     >
-                      {/* 1. Header Badges */}
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="bg-primary text-gray-950 text-[11px] font-black uppercase px-3 py-1 rounded-full shadow-2xs">
-                          {cat.name}
-                        </span>
-                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                          {badge}
-                        </span>
-                      </div>
-
-                      {/* 2. Car Image */}
-                      <div className="relative w-full h-40 my-3 flex items-center justify-center">
-                        <Image
-                          src={getVehicleImageUrl(cat.vehicle.photo)}
-                          alt={cat.name}
-                          fill
-                          className="object-contain group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 768px) 100vw, 350px"
-                        />
-                      </div>
-
-                      {/* 3. Model Name & Supplier */}
-                      <div className="text-center mb-4">
-                        <h3 className="text-base font-black text-slate-900 leading-snug mb-1.5">
-                          {cat.vehicle.name}
-                        </h3>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100/80 px-2.5 py-0.5 rounded-full border border-slate-200/50">
-                          Cheapest by: {cat.vehicle.supplier.company}
-                        </span>
-                      </div>
-
-                      {/* 4. Bottom Footer: Price & Specs Container */}
-                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-150/70 flex flex-col gap-2.5">
-
-                        {/* Price Line */}
-                        <div className="flex items-center justify-between px-1">
-                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                            Starting from
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 md:p-10 items-center">
+                        
+                        {/* Car Image Column */}
+                        <div className={`lg:col-span-5 bg-slate-50/50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center justify-center min-h-[260px] relative ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
+                          <span className="absolute top-4 left-4 bg-primary text-gray-950 text-[10px] md:text-[11px] font-black uppercase px-2.5 py-1 rounded-full shadow-xs">
+                            {cat.name}
                           </span>
-                          <span className="text-base font-black text-slate-900">
-                            {priceDetails}
-                            <span className="text-[11px] font-bold text-slate-500"> / day</span>
+                          
+                          <div className="relative w-full h-32 md:h-52 my-3 flex items-center justify-center">
+                            <Image
+                              src={getVehicleImageUrl(cat.vehicle.photo)}
+                              alt={cat.name}
+                              fill
+                              className="object-contain hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 768px) 100vw, 400px"
+                            />
+                          </div>
+
+                          <h4 className="text-base md:text-lg font-black text-slate-900 mb-1 leading-snug">
+                            {cat.vehicle.name}
+                          </h4>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100/60 px-2.5 py-0.5 rounded-full border border-slate-200/30">
+                            Cheapest by: {cat.vehicle.supplier.company}
                           </span>
                         </div>
 
-                        {/* Specs Line */}
-                        <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200/60 text-[11px] font-bold text-slate-700 shadow-2xs">
-                          <span className="flex items-center gap-1.5">
-                            <img
-                              src={assets.icons.seats}
-                              alt=""
-                              className="object-contain shrink-0"
-                              style={{ width: '16px', height: '16px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                        {/* Information / Description Column */}
+                        <div className={`lg:col-span-7 space-y-6 ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+                          <div className="space-y-1">
+                            <span className="text-[10px] md:text-xs font-extrabold text-primary-700 uppercase tracking-wider block">
+                              {badge}
+                            </span>
+                            <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">
+                              {cat.name} Category
+                            </h3>
+                          </div>
+
+                          {/* Dynamic description rendered from rich text editor */}
+                          {cat.description ? (
+                            <div 
+                              className="prose prose-slate max-w-none text-slate-700 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/50 p-5 rounded-2xl border border-slate-150/70"
+                              dangerouslySetInnerHTML={{ __html: cat.description }}
                             />
-                            {specs.seats}
-                          </span>
-                          <span className="w-px h-3.5 bg-slate-200 shrink-0" />
-                          <span className="flex items-center gap-1.5">
-                            <img
-                              src={assets.icons.doors}
-                              alt=""
-                              className="object-contain shrink-0"
-                              style={{ width: '16px', height: '16px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
-                            />
-                            {specs.doors}
-                          </span>
-                          <span className="w-px h-3.5 bg-slate-200 shrink-0" />
-                          <span className="flex items-center gap-1.5">
-                            <img
-                              src={assets.icons.bags}
-                              alt=""
-                              className="object-contain shrink-0"
-                              style={{ width: '18px', height: '18px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
-                            />
-                            {specs.luggage}
-                          </span>
+                          ) : (
+                            <p className="text-slate-600 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/50 p-5 rounded-2xl border border-slate-150/70">
+                              Browse our premium {cat.name} vehicle category. Autours offers the best rental rates, instant confirmation, and direct pickup options.
+                            </p>
+                          )}
+
+                          {/* Price & Specs Container */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                            
+                            {/* Specs Pills */}
+                            <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-700">
+                              <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                                <img
+                                  src={assets.icons.seats}
+                                  alt=""
+                                  className="w-4 h-4 object-contain shrink-0"
+                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                />
+                                {specs.seats}
+                              </span>
+                              <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                                <img
+                                  src={assets.icons.doors}
+                                  alt=""
+                                  className="w-4 h-4 object-contain shrink-0"
+                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                />
+                                {specs.doors}
+                              </span>
+                              <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                                <img
+                                  src={assets.icons.bags}
+                                  alt=""
+                                  className="w-4.5 h-4.5 object-contain shrink-0"
+                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                />
+                                {specs.luggage}
+                              </span>
+                            </div>
+
+                            {/* Price Line & Book Button */}
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Starting from</p>
+                                <p className="text-lg md:text-xl font-black text-slate-900 leading-none mt-0.5">
+                                  {priceDetails}
+                                  <span className="text-xs font-bold text-slate-500">/day</span>
+                                </p>
+                              </div>
+                              <Link
+                                href={`/search?category=${cat.id}`}
+                                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-gray-950 text-xs font-black uppercase tracking-wider rounded-xl hover:bg-primary-600 transition-colors shadow-sm"
+                              >
+                                Rent now
+                              </Link>
+                            </div>
+
+                          </div>
                         </div>
 
                       </div>
-
                     </div>
                   );
                 })}
