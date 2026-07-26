@@ -83,6 +83,14 @@ export default function OurFleetPage() {
   const [fleetCategories, setFleetCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const cleanHtml = (html: string) => {
+    if (!html) return '';
+    // Remove class and style attributes which might be pasted from other pages
+    return html
+      .replace(/\s*class="[^"]*"/gi, '')
+      .replace(/\s*style="[^"]*"/gi, '');
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
 
@@ -186,7 +194,6 @@ export default function OurFleetPage() {
             ) : (
               <div className="space-y-12">
                 {fleetCategories.map((cat, index) => {
-                  const isEven = index % 2 === 0;
                   const badge = getCategoryBadge(cat.name);
                   const specs = getEstimatedSpecs(cat.name, cat.vehicle?.seats, cat.vehicle?.doors, cat.vehicle?.suitcases);
 
@@ -218,26 +225,26 @@ export default function OurFleetPage() {
                       className="bg-white rounded-3xl border border-slate-200/60 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden p-6 md:p-8 space-y-6"
                     >
                       {/* Top Header: Car Image, Category Title, Specs & Price */}
-                      <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center border-b border-slate-100 pb-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center border-b border-slate-100 pb-6">
                         
                         {/* Car Image (Left) */}
-                        <div className="w-full md:w-1/3 flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl p-4 border border-slate-100/80 relative min-h-[180px] shrink-0">
-                          <span className="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
+                        <div className="lg:col-span-4 w-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl p-4 border border-slate-100/80 relative min-h-[180px]">
+                          <span className="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm z-10">
                             {cat.name}
                           </span>
-                          <div className="relative w-full h-28 md:h-36 flex items-center justify-center my-2">
+                          <div className="relative w-full h-32 md:h-40 flex items-center justify-center my-2">
                             <Image
                               src={getVehicleImageUrl(cat.vehicle.photo)}
                               alt={cat.name}
                               fill
                               className="object-contain hover:scale-105 transition-transform duration-500"
-                              sizes="(max-width: 768px) 100vw, 300px"
+                              sizes="(max-width: 768px) 100vw, 350px"
                             />
                           </div>
                         </div>
 
                         {/* Title, Specs & Price (Right) */}
-                        <div className="flex-1 w-full space-y-4">
+                        <div className="lg:col-span-8 w-full space-y-4">
                           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                             <div className="space-y-1">
                               <span className="text-[10px] md:text-xs font-black text-amber-600 uppercase tracking-widest block">
@@ -258,7 +265,7 @@ export default function OurFleetPage() {
 
                           {/* Highlighted Car Model & Supplier (Extra Prominent) */}
                           <div className="bg-amber-50/40 border border-amber-200/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                            <div>
+                            <div className="space-y-0.5">
                               <p className="text-[9px] font-black text-amber-800 uppercase tracking-widest">Cheapest Representative Model</p>
                               <h4 className="text-lg font-black text-slate-900 mt-1">{cat.vehicle.name}</h4>
                             </div>
@@ -303,15 +310,15 @@ export default function OurFleetPage() {
                       </div>
 
                       {/* Bottom Body: Description (Full Width) */}
-                      <div className="space-y-3">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Category Overview & Features</span>
+                      <div className="space-y-3 pt-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Category Overview & Features</span>
                         {cat.description ? (
                           <div 
-                            className="prose prose-slate max-w-none text-slate-700 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/20 p-5 rounded-2xl border border-slate-100"
-                            dangerouslySetInnerHTML={{ __html: cat.description }}
+                            className="prose prose-slate max-w-none text-slate-700 text-xs md:text-sm font-medium leading-relaxed border-l-2 border-primary/60 pl-4"
+                            dangerouslySetInnerHTML={{ __html: cleanHtml(cat.description) }}
                           />
                         ) : (
-                          <p className="text-slate-500 text-xs md:text-sm font-medium leading-relaxed bg-slate-50/20 p-5 rounded-2xl border border-slate-100">
+                          <p className="text-slate-500 text-xs md:text-sm font-medium leading-relaxed border-l-2 border-primary/60 pl-4">
                             Browse our premium {cat.name} vehicle category. Autours offers the best rental rates, instant confirmation, and direct pickup options.
                           </p>
                         )}
