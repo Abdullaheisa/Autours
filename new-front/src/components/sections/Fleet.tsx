@@ -2,6 +2,9 @@
 
 import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -24,6 +27,8 @@ const swiperImages = [
 ];
 
 export default function Fleet() {
+  const { currentLanguage } = useSelector((state: RootState) => state.ui);
+  const isRTL = currentLanguage === 'ar';
   const swiperRef = useRef<any>(null);
   const [backgrounds, setBackgrounds] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -55,7 +60,7 @@ export default function Fleet() {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-5xl md:text-6xl font-black text-black tracking-tighter uppercase">
-            OUR FLEET
+            {isRTL ? 'أور فليت' : 'OUR FLEET'}
           </h2>
         </div>
 
@@ -87,18 +92,20 @@ export default function Fleet() {
           >
             {swiperImages.map((img) => (
               <SwiperSlide key={img.id}>
-                <div className="group relative rounded-[1.5rem] overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-500">
-                  {/* الصورة الجاهزة — تظهر كاملة بحجمها الأصلي */}
-                  <Image
-                    src={img.src}
-                    alt={img.alt}
-                    width={800}
-                    height={600}
-                    className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    loading="lazy"
-                  />
-                </div>
+                <Link href="/our-fleet" className="block">
+                  <div className="group relative rounded-[1.5rem] overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-500 cursor-pointer">
+                    {/* الصورة الجاهزة — تظهر كاملة بحجمها الأصلي */}
+                    <Image
+                      src={img.src}
+                      alt={img.alt}
+                      width={800}
+                      height={600}
+                      className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      loading="lazy"
+                    />
+                  </div>
+                </Link>
               </SwiperSlide>
             ))}
           </Swiper>
