@@ -27,11 +27,13 @@ export default function CategoriesSection() {
   const [currentCategory, setCurrentCategory] = useState<{
     id?: number;
     name: string;
+    description: string;
     active: boolean;
     existingPhotoUrl: string; 
     photoFile: File | null;   
   }>({ 
     name: "", 
+    description: "",
     active: true, 
     existingPhotoUrl: "", 
     photoFile: null 
@@ -57,6 +59,7 @@ export default function CategoriesSection() {
     setCurrentCategory({ 
       id: category.id, 
       name: category.name,
+      description: category.description || "",
       active: category.active !== undefined ? category.active : true,
       existingPhotoUrl: fullPhotoUrl,
       photoFile: null 
@@ -95,6 +98,7 @@ export default function CategoriesSection() {
     
     const payloadData = {
       name: currentCategory.name,
+      description: currentCategory.description,
       photoFile: currentCategory.photoFile 
     };
 
@@ -118,7 +122,7 @@ export default function CategoriesSection() {
   };
 
   const resetForm = () => {
-    setCurrentCategory({ name: "", active: true, existingPhotoUrl: "", photoFile: null });
+    setCurrentCategory({ name: "", description: "", active: true, existingPhotoUrl: "", photoFile: null });
     setIsEditing(false);
   };
 
@@ -139,8 +143,8 @@ export default function CategoriesSection() {
           {isEditing ? <Pencil size={20} className="text-amber-500" /> : <Upload size={20} className="text-primary-600" />}
           {isEditing ? "Edit Category" : "Add New Category"}
         </h3>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-<div className="md:col-span-1">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          <div className="md:col-span-1">
             <ImageUploader 
               // 🔥 السطر السحري: لما بتدوس كنسل، الكي بيتغير فبيمسح الصورة من الذاكرة تماماً 🔥
               key={isEditing ? `edit-${currentCategory.id}` : 'new-category'} 
@@ -153,34 +157,45 @@ export default function CategoriesSection() {
               onFileChange={(file) => setCurrentCategory(prev => ({ ...prev, photoFile: file }))}
             />
           </div>
-          <div className="md:col-span-1">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Category Name</label>
-            <input 
-              type="text" 
-              value={currentCategory.name}
-              onChange={(e) => setCurrentCategory({ ...currentCategory, name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-              placeholder="e.g. Sedan, SUV, etc."
-              required
-            />
-          </div>
-          <div className="flex gap-2">
-            <button 
-              type="submit"
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-100"
-            >
-              <Save size={18} />
-              {isEditing ? "Update" : "Save"}
-            </button>
-            {isEditing && (
+          <div className="md:col-span-2 space-y-4">
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Category Name</label>
+              <input 
+                type="text" 
+                value={currentCategory.name}
+                onChange={(e) => setCurrentCategory({ ...currentCategory, name: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                placeholder="e.g. Sedan, SUV, etc."
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Description</label>
+              <textarea 
+                value={currentCategory.description}
+                onChange={(e) => setCurrentCategory({ ...currentCategory, description: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all min-h-[80px] resize-y"
+                placeholder="Write a description for this category..."
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
               <button 
-                type="button"
-                onClick={resetForm}
-                className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-3 rounded-xl font-bold text-sm transition-all"
+                type="submit"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-100"
               >
-                Cancel
+                <Save size={18} />
+                {isEditing ? "Update" : "Save"}
               </button>
-            )}
+              {isEditing && (
+                <button 
+                  type="button"
+                  onClick={resetForm}
+                  className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-3 rounded-xl font-bold text-sm transition-all"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
         </form>
       </div>

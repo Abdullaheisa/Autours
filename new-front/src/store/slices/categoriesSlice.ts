@@ -7,6 +7,7 @@ export interface Category {
   image: string;
   vehicles: number;
   active: boolean;
+  description?: string;
 }
 
 interface CategoriesState {
@@ -27,6 +28,7 @@ const mapApiCategory = (raw: any): Category => ({
   image: raw.photo || raw.image || "",
   vehicles: raw.vehicles_count ?? 0,
   active: raw.active ?? true,
+  description: raw.description || "",
 });
 
 export const fetchCategories = createAsyncThunk("categories/fetchAll", async (_, { rejectWithValue }) => {
@@ -43,6 +45,7 @@ export const createCategory = createAsyncThunk(
     try {
       const payload = new FormData();
       if (data.name) payload.append('name', data.name);
+      if (data.description) payload.append('description', data.description);
       // الدوكيومنتيشن بيقول اسمها photo
       if (data.photoFile) payload.append('photo', data.photoFile); 
       
@@ -64,6 +67,7 @@ export const updateCategory = createAsyncThunk(
       payload.append('id', id.toString()); 
       
       if (data.name) payload.append('name', data.name);
+      if (data.description !== undefined) payload.append('description', data.description);
       if (data.photoFile) payload.append('photo', data.photoFile);
       
       // هنبعتها بدون الـ id في اللينك لأن الـ API بتاعك متظبط كده في ملف api.ts

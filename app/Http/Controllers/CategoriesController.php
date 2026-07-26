@@ -52,6 +52,10 @@ class CategoriesController extends Controller
             $item->name = $request->name;
         }
 
+        if ($request->has('description')) {
+            $item->description = $request->description;
+        }
+
         $item->save();
 
         return response()->json(['message' => 'Added successfully']);
@@ -69,6 +73,10 @@ class CategoriesController extends Controller
 
         if ($request->has('name')) {
             $item->name = $request->name;
+        }
+
+        if ($request->has('description')) {
+            $item->description = $request->description;
         }
 
         $item->save();
