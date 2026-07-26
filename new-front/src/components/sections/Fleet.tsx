@@ -60,7 +60,7 @@ export default function Fleet() {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-5xl md:text-6xl font-black text-black tracking-tighter uppercase">
-            {isRTL ? 'أور فليت' : 'OUR FLEET'}
+            {isRTL ? 'أور فلييت' : 'OUR FLEET'}
           </h2>
         </div>
 
