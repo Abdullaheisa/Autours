@@ -32,15 +32,19 @@ export default function ContestPopup() {
   
   const [isVisible, setIsVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    dispatch(fetchContestSettings());
+    dispatch(fetchContestSettings()).finally(() => {
+      setSettingsLoaded(true);
+    });
   }, [dispatch]);
 
   useEffect(() => {
-    if (!mounted) return;
+    // Wait until mounted AND the backend settings have loaded
+    if (!mounted || !settingsLoaded) return;
 
     // 1. If explicitly disabled in state, it MUST NEVER show
     if (!enabled) {
@@ -61,7 +65,7 @@ export default function ContestPopup() {
     } else {
       setIsVisible(false);
     }
-  }, [mounted, enabled, campaignVersion, pathname]);
+  }, [mounted, settingsLoaded, enabled, campaignVersion, pathname]);
 
   // Lock scroll while the gate is visible
   useEffect(() => {
