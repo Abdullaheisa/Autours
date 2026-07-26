@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import StatsCard from "@/components/ui/StatsCard";
 import ImageUploader from "@/components/ui/ImageUploader";
+import RichTextEditor from "@/components/shared/RichTextEditor";
 import CategoryCard from "./CategoryCard";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
@@ -171,11 +172,11 @@ export default function CategoriesSection() {
             </div>
             <div>
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Description</label>
-              <textarea 
+              <RichTextEditor 
                 value={currentCategory.description}
-                onChange={(e) => setCurrentCategory({ ...currentCategory, description: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all min-h-[80px] resize-y"
-                placeholder="Write a description for this category..."
+                onChange={(html) => setCurrentCategory(prev => ({ ...prev, description: html }))}
+                placeholder="Write your article content here..."
+                minHeight={150}
               />
             </div>
             <div className="flex gap-2 pt-2">
