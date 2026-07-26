@@ -3,8 +3,6 @@
 import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -27,8 +25,6 @@ const swiperImages = [
 ];
 
 export default function Fleet() {
-  const { currentLanguage } = useSelector((state: RootState) => state.ui);
-  const isRTL = currentLanguage === 'ar';
   const swiperRef = useRef<any>(null);
   const [backgrounds, setBackgrounds] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -55,12 +51,12 @@ export default function Fleet() {
     <section id="fleet" className="relative overflow-hidden py-8">
         <div className="absolute inset-0 bg-gradient-to-b from-[#f8f9fa] via-[#f0f1f3] to-[#f8f9fa]" />
 
-      <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-5xl md:text-6xl font-black text-black tracking-tighter uppercase">
-            {isRTL ? 'أور فلييت' : 'OUR FLEET'}
+            OUR FLEET
           </h2>
         </div>
 
