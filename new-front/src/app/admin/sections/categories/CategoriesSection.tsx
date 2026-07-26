@@ -6,7 +6,6 @@ import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import StatsCard from "@/components/ui/StatsCard";
 import ImageUploader from "@/components/ui/ImageUploader";
-import RichTextEditor from "@/components/shared/RichTextEditor";
 import CategoryCard from "./CategoryCard";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
@@ -40,20 +39,13 @@ export default function CategoriesSection() {
     photoFile: null 
   });
 
-
-
-  const getDescriptionTextLength = (html: string) => {
-    if (!html) return 0;
-    return html.replace(/<[^>]*>/g, '').trim().length;
-  };
-
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
   const totalCategories = categories.length;
   const activeCategories = categories.filter(c => c.active).length;
-  const totalVehicles = categories.reduce((sum, c) => sum + c.vehicles, 0);
+  const totalVehicles = categories.reduce((sum, c) => sum + (c.vehicles || 0), 0);
 
   const handleEdit = (category: any) => {
     const rawPhotoPath = category.photo || category.image || category.image_path || "";
@@ -98,11 +90,10 @@ export default function CategoriesSection() {
     ), { duration: 6000 });
   };
 
-  // خلينا نسخة واحدة بس نظيفة من الـ handleSubmit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (getDescriptionTextLength(currentCategory.description) > 1000) {
+    if (currentCategory.description.length > 1000) {
       toast.error("Description is too long! (Max 1000 characters)");
       return;
     }
@@ -148,7 +139,6 @@ export default function CategoriesSection() {
         <StatsCard label="Total Vehicles" value={totalVehicles} icon={<Car size={20} />} color="purple" />
       </div>
 
-      {/* Category Form */}
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 mb-8">
         <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
           {isEditing ? <Pencil size={20} className="text-amber-500" /> : <Upload size={20} className="text-primary-600" />}
@@ -157,9 +147,7 @@ export default function CategoriesSection() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           <div className="md:col-span-1">
             <ImageUploader 
-              // 🔥 السطر السحري: لما بتدوس كنسل، الكي بيتغير فبيمسح الصورة من الذاكرة تماماً 🔥
               key={isEditing ? `edit-${currentCategory.id}` : 'new-category'} 
-              
               label="Category Image"
               value={currentCategory.existingPhotoUrl || null}
               onChange={(val) => {
@@ -183,24 +171,24 @@ export default function CategoriesSection() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Description</label>
-                <span className={`text-xs font-bold ${getDescriptionTextLength(currentCategory.description) > 1000 ? 'text-red-500 font-extrabold' : 'text-gray-400'}`}>
-                  {getDescriptionTextLength(currentCategory.description)} / 1000 chars
+                <span className={`text-xs font-bold ${currentCategory.description.length > 1000 ? 'text-red-500 font-extrabold' : 'text-gray-400'}`}>
+                  {currentCategory.description.length} / 1000 chars
                 </span>
               </div>
-              <RichTextEditor 
+              <textarea 
                 value={currentCategory.description}
-                onChange={(html) => setCurrentCategory(prev => ({ ...prev, description: html }))}
-                placeholder="Write your article content here..."
-                minHeight={150}
+                onChange={(e) => setCurrentCategory(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all min-h-[120px] resize-y"
+                placeholder="Write a description for this category..."
               />
-              {getDescriptionTextLength(currentCategory.description) > 1000 && (
+              {currentCategory.description.length > 1000 && (
                 <p className="text-xs text-red-500 font-bold mt-1.5">Description cannot exceed 1000 characters.</p>
               )}
             </div>
             <div className="flex gap-2 pt-2">
               <button 
                 type="submit"
-                disabled={getDescriptionTextLength(currentCategory.description) > 1000}
+                disabled={currentCategory.description.length > 1000}
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-100"
               >
                 <Save size={18} />
