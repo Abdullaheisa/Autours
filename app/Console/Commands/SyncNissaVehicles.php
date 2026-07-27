@@ -417,9 +417,9 @@ class SyncNissaVehicles extends Command
                             $updateData['photo'] = $photoFilename;
                         }
                         $vehicle->update($updateData);
-
-
-
+                        if (!$pricesOnly) {
+                            $this->syncInclusions($vehicle, $priceData);
+                        }
                         $updated++;
                     } else {
                         if ($pricesOnly) {
@@ -453,6 +453,7 @@ class SyncNissaVehicles extends Command
                         ]);
 
                         $this->syncVehicleSpecifications($vehicle, $group);
+                        $this->syncInclusions($vehicle, $priceData);
                         $created++;
                     }
 
@@ -601,6 +602,32 @@ class SyncNissaVehicles extends Command
                 'icon' => $spec->icon,
                 'options' => $spec->options ?? [],
             ];
+        }
+    }
+
+    /**
+     * Sync inclusions based on API price data.
+     */
+    private function syncInclusions(Vehicle $vehicle, array $priceData): void
+    {
+        $includedIds = [];
+
+        // Check if there is a mileage limit
+        if (!empty($priceData['km_limit']) && is_numeric($priceData['km_limit'])) {
+            $limit = (int) $priceData['km_limit'];
+            if ($limit > 0) {
+                $incText = "Mileage Limit: {$limit} km";
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
+                $includedIds[] = $inc->id;
+            } else {
+                $incText = "Unlimited Mileage";
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
+                $includedIds[] = $inc->id;
+            }
+        }
+
+        if (!empty($includedIds)) {
+            $vehicle->included()->syncWithoutDetaching($includedIds);
         }
     }
 
