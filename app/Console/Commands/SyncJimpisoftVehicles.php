@@ -387,7 +387,7 @@ class SyncJimpisoftVehicles extends Command
                                 $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
                                 $includedIds[] = $inc->id;
                             }
-                            $vehicle->included()->sync($includedIds);
+                            $vehicle->included()->syncWithoutDetaching($includedIds);
                         }
 
                         $created++;

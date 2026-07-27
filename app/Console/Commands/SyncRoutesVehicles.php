@@ -222,7 +222,7 @@ class SyncRoutesVehicles extends Command
                         'instant_confirmation' => 1,
                     ]);
                     // Update Inclusions for existing vehicle
-                    $existingVehicle->included()->sync($vehicleInclusions);
+                    $existingVehicle->included()->syncWithoutDetaching($vehicleInclusions);
 
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
@@ -255,7 +255,7 @@ class SyncRoutesVehicles extends Command
                     $this->syncVehicleSpecifications($vehicle, $classCode, $model['seats']);
 
                     // Sync Inclusions
-                    $vehicle->included()->sync($vehicleInclusions);
+                    $vehicle->included()->syncWithoutDetaching($vehicleInclusions);
 
                     $syncedVehicleIds[] = $vehicle->id;
                     $created++;
