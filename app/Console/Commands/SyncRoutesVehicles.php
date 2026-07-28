@@ -204,11 +204,21 @@ class SyncRoutesVehicles extends Command
                 $taxesIncluded = Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
                 $vehicleInclusions[] = $taxesIncluded->id;
                 
-                if (!empty($model['FreeMiles']) && is_numeric($model['FreeMiles'])) {
-                    $limit = $model['FreeMiles'] . ' ' . ($model['MileageUnit'] ?? 'KM');
-                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => "Limited mileage : $limit"]);
+                if (isset($model['FreeMiles']) && $model['FreeMiles'] !== '' && strtolower((string)$model['FreeMiles']) !== 'unlimited') {
+                    // Extract numeric part if it contains text
+                    preg_match('/(\d+)/', (string)$model['FreeMiles'], $matches);
+                    $numericLimit = $matches[1] ?? $model['FreeMiles'];
+                    
+                    if (is_numeric($numericLimit)) {
+                        $unit = strtoupper($model['MileageUnit'] ?? 'KM');
+                        if (str_starts_with($unit, 'MI')) {
+                            $numericLimit = (int) round((float)$numericLimit * 1.60934);
+                        }
+                    }
+
+                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => "Mileage Limit: {$numericLimit} km"]);
                 } else {
-                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Unlimited mileage']);
+                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
                 }
                 $vehicleInclusions[] = $mileageIncluded->id;
 
@@ -222,7 +232,7 @@ class SyncRoutesVehicles extends Command
                         'instant_confirmation' => 1,
                     ]);
                     // Update Inclusions for existing vehicle
-                    $existingVehicle->included()->sync($vehicleInclusions);
+                    $existingVehicle->included()->syncWithoutDetaching($vehicleInclusions);
 
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
@@ -255,7 +265,7 @@ class SyncRoutesVehicles extends Command
                     $this->syncVehicleSpecifications($vehicle, $classCode, $model['seats']);
 
                     // Sync Inclusions
-                    $vehicle->included()->sync($vehicleInclusions);
+                    $vehicle->included()->syncWithoutDetaching($vehicleInclusions);
 
                     $syncedVehicleIds[] = $vehicle->id;
                     $created++;

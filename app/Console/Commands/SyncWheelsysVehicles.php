@@ -273,7 +273,7 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
             $includedIds[] = $inc->id;
         }
         if (!empty($includedIds)) {
-            $vehicle->included()->sync($includedIds);
+            $vehicle->included()->syncWithoutDetaching($includedIds);
         }
     }
 

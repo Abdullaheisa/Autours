@@ -47,6 +47,32 @@ class SyncRentlyVehicles extends Command
     protected $description = 'Sync vehicles from Rently Network API into Autours using AvailabilityByPlace.';
 
     /**
+     * Sync inclusions based on API price data.
+     */
+    private function syncInclusions(Vehicle $vehicle, array $priceData): void
+    {
+        $includedIds = [];
+
+        // Check if there is a mileage limit
+        if (!empty($priceData['km_limit']) && is_numeric($priceData['km_limit'])) {
+            $limit = (int) $priceData['km_limit'];
+            if ($limit > 0) {
+                $incText = "Mileage Limit: {$limit} km";
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
+                $includedIds[] = $inc->id;
+            } else {
+                $incText = "Unlimited Mileage";
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
+                $includedIds[] = $inc->id;
+            }
+        }
+
+        if (!empty($includedIds)) {
+            $vehicle->included()->syncWithoutDetaching($includedIds);
+        }
+    }
+
+    /**
      * Cache of Specification definitions keyed by name.
      *
      * @var array<string, array>|null
@@ -269,6 +295,9 @@ class SyncRentlyVehicles extends Command
                         'instant_confirmation' => 1,
                     ]);
                     $syncedVehicleIds[] = $existingVehicle->id;
+                    if (!$pricesOnly) {
+                        $this->syncInclusions($existingVehicle, $priceData);
+                    }
                     $updated++;
                 } elseif (!$pricesOnly) {
                     $photoFilename = $this->resolveLocalPhoto($vehicleName);
@@ -298,6 +327,7 @@ class SyncRentlyVehicles extends Command
                     ]);
 
                     $this->syncVehicleSpecifications($vehicle, $model);
+                    $this->syncInclusions($vehicle, $priceData);
                     $syncedVehicleIds[] = $vehicle->id;
                     $created++;
                 }
