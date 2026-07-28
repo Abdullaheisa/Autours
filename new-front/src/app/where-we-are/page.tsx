@@ -7,6 +7,7 @@ import Footer from '@/components/shared/layout/Footer';
 import CountrySection from './components/CountrySection';
 import { Globe, ChevronDown } from 'lucide-react';
 import { countriesData } from '@/data/whereWeAreData';
+import { getImageUrl } from '@/utils/getImageUrl';
 
 export default function WhereWeArePage() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -36,7 +37,7 @@ export default function WhereWeArePage() {
           className="absolute inset-0"
         >
           <img
-            src="/img/whereWeAre/banner.png"
+            src={getImageUrl("/img/whereWeAre/banner.png")}
             alt="Where We Are"
             className="w-full h-full object-cover"
           />
@@ -128,7 +129,7 @@ export default function WhereWeArePage() {
           >
             <div className="flex justify-center mb-6">
               <img
-                src="/img/whereWeAre/conc.png"
+                src={getImageUrl("/img/whereWeAre/conc.png")}
                 alt="Conclusion"
                 className="h-12 sm:h-14 md:h-16 w-auto object-contain select-none pointer-events-none"
               />

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { getImageUrl } from '@/utils/getImageUrl';
 
 interface CountrySectionProps {
   countryName: string;
@@ -87,7 +88,7 @@ export default function CountrySection({
           >
             <Link href={`/countries/${countrySlug}`}>
               <img
-                src={images[0]}
+                src={getImageUrl(images[0])}
                 alt={`${countryName} main`}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
               />
@@ -104,7 +105,7 @@ export default function CountrySection({
             >
               <Link href={`/countries/${countrySlug}`}>
                 <img
-                  src={imgUrl}
+                  src={getImageUrl(imgUrl)}
                   alt={`${countryName} ${imgIdx + 2}`}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                 />

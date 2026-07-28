@@ -106,8 +106,14 @@ export const getImageUrl = (path: string | null | undefined): string => {
     return trimmedPath;
   }
 
+  if (trimmedPath.startsWith('/img/')) {
+    return `${BACKEND_BASE}${trimmedPath}`;
+  }
+  if (trimmedPath.startsWith('img/')) {
+    return `${BACKEND_BASE}/${trimmedPath}`;
+  }
+
   if (
-    trimmedPath.startsWith('/img/') ||
     trimmedPath.startsWith('/assets/') ||
     trimmedPath.startsWith('/public/')
   ) {
