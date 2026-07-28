@@ -65,7 +65,7 @@ export default function HomePage() {
         
         <DynamicBanners />
         
-        <FAQ />
+        <FAQ limit={9} />
         <SectionDivider />
         
         <Contact />

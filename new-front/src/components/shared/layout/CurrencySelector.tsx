@@ -126,7 +126,7 @@ export default function CurrencySelector({
             height={15}
             className="w-5 h-auto rounded-sm"
           />
-          <span className="font-black text-gray-900 tracking-tight">{currentCurrency.code}</span>
+          <span className="font-bold text-gray-900 tracking-tight">{currentCurrency.code}</span>
         </div>
         <ChevronDown 
           className={`text-gray-400 transition-transform duration-300 w-3.5 h-3.5 xl:w-4 xl:h-4 ${isOpen ? 'rotate-180' : ''}`} 

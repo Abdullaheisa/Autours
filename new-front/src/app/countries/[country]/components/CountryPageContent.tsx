@@ -13,6 +13,7 @@ import { Sparkles, Info } from 'lucide-react';
 import { assets } from '@/config/assets';
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
+import { toSlug } from '@/utils/format';
 
 import { CountryPageData } from '@/data/countryPages';
 import Navbar from '@/components/shared/layout/Navbar';
@@ -301,15 +302,23 @@ export default function CountryPageContent({ data }: Props) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-3">
                   {rows.map((row, rowIdx) => (
                     <div key={rowIdx} className="flex items-center justify-center gap-2 sm:gap-3">
-                      {row.map((company) => (
-                        <div
-                          key={company.id}
-                          className="bg-white border border-gray-100 hover:border-primary rounded-xl p-1.5 flex items-center justify-center w-[80px] h-[40px] sm:w-[120px] sm:h-[60px] flex-shrink-0 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-                          title={company.name}
-                        >
-                          <PartnerLogo company={company} />
-                        </div>
-                      ))}
+                      {row.map((company) => {
+                        const brandName = (company as any).company || company.name;
+                        const brandSlug = toSlug(brandName);
+                        return (
+                          <Link
+                            key={company.id}
+                            href={`/car-rental-brands/${brandSlug}`}
+                            title={company.name}
+                          >
+                            <div
+                              className="bg-white border border-gray-100 hover:border-primary rounded-xl p-1.5 flex items-center justify-center w-[80px] h-[40px] sm:w-[120px] sm:h-[60px] flex-shrink-0 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                            >
+                              <PartnerLogo company={company} />
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   ))}
                 </div>

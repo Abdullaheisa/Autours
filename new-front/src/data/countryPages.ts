@@ -1056,5 +1056,380 @@ export const countryPagesData: Record<string, CountryPageData> = {
     ctaPrimaryText: 'Search Cars Now',
     ctaSecondaryText: 'Contact Support',
   },
+
+  greece: {
+    slug: 'greece',
+    name: 'Greece',
+    heroBadge: 'Autours Greece Airport Car Rental',
+    heroTitle: 'Book Your Airport Rental',
+    heroHighlight: 'Across Greece',
+    heroLead: 'Search pickup availability from Athens, Thessaloniki, Heraklion, Santorini, Mykonos, Rhodes, and Corfu airports — then choose the right car for your trip before you land.',
+    heroBottomTitle: 'Search by Greece airport and land ready to drive.',
+    travelInfo: {
+      title: 'Why Rent a Car in Greece with Autours?',
+      subtitle: 'Discover Greece with the freedom to explore ancient landmarks, picturesque islands, and breathtaking coastlines at your own pace. Whether you\'re arriving in Athens, watching the sunset in Santorini, relaxing on the beaches of Crete, exploring Mykonos, or visiting Thessaloniki, Rhodes, Corfu, Nafplio, Meteora, or Delphi, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
+      image: "countries/Greece.png",
+      benefits: [
+        {
+          title: 'Airport Pickup Across Greece',
+          description: 'Collect your rental car from major airports, including Athens International Airport, Thessaloniki Airport, Heraklion Airport (Crete), Chania Airport, Santorini Airport, Mykonos Airport, Rhodes International Airport, Corfu International Airport, and other convenient locations across Greece.',
+        },
+        {
+          title: 'Compare the Best Car Rental Deals',
+          description: 'Compare offers from trusted local and international rental companies to find the perfect vehicle for city breaks, island adventures, family holidays, or business travel.',
+        },
+        {
+          title: 'Free Cancellation on Most Bookings',
+          description: 'Book with confidence thanks to flexible cancellation policies available on most rentals.',
+        },
+        {
+          title: 'Instant Booking Confirmation',
+          description: 'Reserve your rental car online in minutes and receive instant confirmation before your arrival.',
+        },
+      ],
+    },
+    steps: [
+      { title: 'Search', description: 'Enter your airport, dates, and times.' },
+      { title: 'Compare', description: 'Filter by price and car type.' },
+      { title: 'Book & Drive', description: 'Reserve online and hit the road.' },
+    ],
+    documents: {
+      items: [
+        'Valid driving licence',
+        'Passport',
+        'Credit card in the main driver\'s name',
+        'International Driving Permit (if required)',
+      ],
+    },
+   
+    faqs: [
+      {
+        q: 'What is the minimum age to rent a car in Greece?',
+        a: 'Most rental companies require drivers to be at least 21 years old. Premium vehicles and luxury cars may require drivers to be 25 years or older.',
+      },
+      {
+        q: 'Can tourists rent a car in Greece?',
+        a: 'Yes. International visitors can rent a car with a valid driving licence. Depending on your nationality, an International Driving Permit (IDP) may also be required.',
+      },
+      {
+        q: 'What documents do I need to rent a car in Greece?',
+        a: 'You\'ll usually need: a valid driving licence, passport, credit card in the main driver\'s name, and an International Driving Permit (if required).',
+      },
+      {
+        q: 'Which airports can I pick up my rental car from?',
+        a: 'Autours offers airport car rentals at major Greek airports, including Athens, Thessaloniki, Heraklion, Chania, Santorini, Mykonos, Rhodes, and Corfu.',
+      },
+      {
+        q: 'Is driving in Greece easy for tourists?',
+        a: 'Yes. Greece has a modern road network connecting major cities, coastal towns, and many popular attractions. Driving is one of the best ways to explore the mainland and larger islands.',
+      },
+      {
+        q: 'Can I drive between Athens and popular destinations?',
+        a: 'Yes. Renting a car makes it easy to visit destinations such as Delphi, Meteora, Nafplio, Peloponnese, Olympia, and other historic sites from Athens.',
+      },
+      {
+        q: 'Can I take my rental car on a ferry to the Greek islands?',
+        a: 'Some suppliers allow ferry travel, while others require prior approval or additional insurance. Always check the rental terms before booking if you plan to travel between islands.',
+      },
+      {
+        q: 'What type of rental car is best for Greece?',
+        a: 'Economy cars are ideal for city driving and narrow island streets, while SUVs are recommended for mountain villages, countryside routes, and family holidays.',
+      },
+      {
+        q: 'Are unlimited mileage rentals available?',
+        a: 'Many suppliers offer unlimited mileage, while others apply mileage limits. The mileage policy is clearly displayed before you confirm your booking.',
+      },
+      {
+        q: 'When should I book my Greece car rental for the best price?',
+        a: 'Booking 2–4 weeks in advance usually provides the best prices and the widest selection of vehicles, especially during the summer season, Easter, and public holidays.',
+      },
+    ],
+    partnersDescription: 'Autours partners with leading car rental providers across Greece. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Athens, Santorini, Mykonos, Crete, Thessaloniki, Rhodes, and Corfu.',
+    ctaTitle: 'Ready to Explore Greece?',
+    ctaDescription: 'Compare airport car rental deals from trusted suppliers across Athens, Santorini, Mykonos, Crete, Thessaloniki, Rhodes, Corfu, Delphi, Meteora, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation — so you can start discovering Greece from the moment you land.',
+    ctaPrimaryText: 'Search Cars Now',
+    ctaSecondaryText: 'Contact Support',
+  },
+
+  bosnia: {
+    slug: 'bosnia',
+    name: 'Bosnia and Herzegovina',
+    heroBadge: 'Autours Bosnia & Herzegovina Airport Car Rental',
+    heroTitle: 'Book Your Airport Rental',
+    heroHighlight: 'Across Bosnia and Herzegovina',
+    heroLead: 'Search pickup availability from Sarajevo, Mostar, Banja Luka, and Tuzla airports — then choose the right car for your trip before you land.',
+    heroBottomTitle: 'Search by Bosnia airport and land ready to drive.',
+    travelInfo: {
+      title: 'Why Rent a Car in Bosnia and Herzegovina with Autours?',
+      subtitle: 'Experience the natural beauty and rich history of Bosnia and Herzegovina with the freedom of your own rental car. Whether you\'re arriving in Sarajevo, exploring the iconic Mostar Bridge, relaxing in Neum on the Adriatic coast, discovering Banja Luka, or visiting Jajce, Travnik, Bihać, Tuzla, Međugorje, or Blagaj, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
+      image: "countries/Bosnia.png",
+      benefits: [
+        {
+          title: 'Airport Pickup Across Bosnia and Herzegovina',
+          description: 'Collect your rental car from major airports, including Sarajevo International Airport, Mostar International Airport, Banja Luka International Airport, Tuzla International Airport, and other convenient pickup locations across the country.',
+        },
+        {
+          title: 'Compare the Best Car Rental Deals',
+          description: 'Compare offers from trusted local and international suppliers to find the perfect vehicle for city breaks, mountain adventures, business travel, or family holidays.',
+        },
+        {
+          title: 'Free Cancellation on Most Bookings',
+          description: 'Travel with confidence thanks to flexible cancellation policies available on most reservations.',
+        },
+        {
+          title: 'Instant Booking Confirmation',
+          description: 'Book your rental car online in minutes and receive instant confirmation before your arrival.',
+        },
+      ],
+    },
+    steps: [
+      { title: 'Search', description: 'Enter your airport, dates, and times.' },
+      { title: 'Compare', description: 'Filter by price and car type.' },
+      { title: 'Book & Drive', description: 'Reserve online and hit the road.' },
+    ],
+    documents: {
+      items: [
+        'Valid driving licence',
+        'Passport',
+        'Credit card in the main driver\'s name',
+        'International Driving Permit (if required)',
+      ],
+    },
+    faqs: [
+      {
+        q: 'What is the minimum age to rent a car in Bosnia and Herzegovina?',
+        a: 'Most rental companies require drivers to be at least 21 years old. Luxury vehicles and premium SUVs may require drivers to be 25 years or older.',
+      },
+      {
+        q: 'Can tourists rent a car in Bosnia and Herzegovina?',
+        a: 'Yes. International visitors can rent a car with a valid driving licence. Depending on your nationality, an International Driving Permit (IDP) may also be required.',
+      },
+      {
+        q: 'What documents do I need to rent a car?',
+        a: 'You\'ll usually need: a valid driving licence, passport, credit card in the main driver\'s name, and an International Driving Permit (if required).',
+      },
+      {
+        q: 'Which airports can I pick up my rental car from?',
+        a: 'Autours offers airport car rentals at Sarajevo International Airport, Mostar International Airport, Banja Luka International Airport, Tuzla International Airport, and selected city locations.',
+      },
+      {
+        q: 'Is driving in Bosnia and Herzegovina easy for tourists?',
+        a: 'Yes. The country has a well-connected road network linking major cities and tourist destinations. Mountain roads offer spectacular scenery, but extra caution is recommended during winter.',
+      },
+      {
+        q: 'Can I drive from Sarajevo to Mostar?',
+        a: 'Yes. The drive between Sarajevo and Mostar is one of the country\'s most popular road trips, passing beautiful mountains, rivers, and traditional villages.',
+      },
+      {
+        q: 'Can I cross the border with a rental car?',
+        a: 'Many suppliers allow cross-border travel to neighboring countries such as Croatia, Montenegro, or Serbia, but prior approval, additional insurance, and documentation are usually required.',
+      },
+      {
+        q: 'What type of rental car is best for Bosnia and Herzegovina?',
+        a: 'Economy cars are perfect for cities and highways, while SUVs provide extra comfort for mountain roads, rural areas, and winter travel.',
+      },
+      {
+        q: 'Are unlimited mileage rentals available?',
+        a: 'Many suppliers offer unlimited mileage, while others apply mileage limits. The mileage policy is always displayed before you confirm your reservation.',
+      },
+      {
+        q: 'When should I book my Bosnia and Herzegovina car rental for the best price?',
+        a: 'Booking 2–4 weeks in advance usually provides the best prices and the widest choice of vehicles, especially during the summer season, Christmas, and public holidays.',
+      },
+    ],
+    partnersDescription: 'Autours partners with leading car rental providers across Bosnia and Herzegovina. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Sarajevo, Mostar, Banja Luka, and Tuzla.',
+    ctaTitle: 'Ready to Explore Bosnia and Herzegovina?',
+    ctaDescription: 'Compare airport car rental deals from trusted suppliers across Sarajevo, Mostar, Banja Luka, Tuzla, Neum, Jajce, Travnik, Bihać, Blagaj, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation — so you can start exploring Bosnia and Herzegovina from the moment you arrive.',
+    ctaPrimaryText: 'Search Cars Now',
+    ctaSecondaryText: 'Contact Support',
+  },
+
+  azerbaijan: {
+    slug: 'azerbaijan',
+    name: 'Azerbaijan',
+    heroBadge: 'Autours Azerbaijan Airport Car Rental',
+    heroTitle: 'Book Your Airport Rental',
+    heroHighlight: 'Across Azerbaijan',
+    heroLead: 'Search pickup availability from Baku, Gabala, Ganja, Lankaran, and Nakhchivan airports — then choose the right car for your trip before you land.',
+    heroBottomTitle: 'Search by Azerbaijan airport and land ready to drive.',
+    travelInfo: {
+      title: 'Why Rent a Car in Azerbaijan with Autours?',
+      subtitle: 'Discover Azerbaijan with the freedom to explore its modern cities, ancient landmarks, mountain villages, and breathtaking landscapes at your own pace. Whether you\'re arriving in Baku, exploring the UNESCO-listed Old City (Icherisheher), driving to Gabala, relaxing in Ganja, visiting Sheki, Shamakhi, Quba, Khinalug, Naftalan, or enjoying the shores of the Caspian Sea, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
+      image: "countries/Azerbaijan.png",
+      benefits: [
+        {
+          title: 'Airport Pickup Across Azerbaijan',
+          description: 'Collect your rental car from major airports, including Heydar Aliyev International Airport (Baku), Gabala International Airport, Ganja International Airport, Lankaran International Airport, Nakhchivan International Airport, and other convenient pickup locations.',
+        },
+        {
+          title: 'Compare the Best Car Rental Deals',
+          description: 'Compare offers from trusted local and international rental companies to find the ideal vehicle for city driving, mountain adventures, family holidays, or business travel.',
+        },
+        {
+          title: 'Free Cancellation on Most Bookings',
+          description: 'Book with confidence thanks to flexible cancellation policies available on most rentals.',
+        },
+        {
+          title: 'Instant Booking Confirmation',
+          description: 'Reserve your rental car online in minutes and receive instant confirmation before your arrival.',
+        },
+      ],
+    },
+    steps: [
+      { title: 'Search', description: 'Enter your airport, dates, and times.' },
+      { title: 'Compare', description: 'Filter by price and car type.' },
+      { title: 'Book & Drive', description: 'Reserve online and hit the road.' },
+    ],
+    documents: {
+      items: [
+        'Valid driving licence',
+        'Passport',
+        'Credit card in the main driver\'s name',
+        'International Driving Permit (if required)',
+      ],
+    },
+   
+    faqs: [
+      {
+        q: 'What is the minimum age to rent a car in Azerbaijan?',
+        a: 'Most rental companies require drivers to be at least 21 years old, while luxury vehicles and premium SUVs may require drivers to be 25 years or older.',
+      },
+      {
+        q: 'Can tourists rent a car in Azerbaijan?',
+        a: 'Yes. International visitors can rent a car with a valid driving licence. Depending on your nationality and the rental supplier, an International Driving Permit (IDP) may also be required.',
+      },
+      {
+        q: 'What documents do I need to rent a car in Azerbaijan?',
+        a: 'You\'ll usually need: a valid driving licence, passport, credit card in the main driver\'s name, and an International Driving Permit (if required).',
+      },
+      {
+        q: 'Which airports can I pick up my rental car from?',
+        a: 'Autours offers airport car rentals at Heydar Aliyev International Airport (Baku), Gabala International Airport, Ganja International Airport, Lankaran International Airport, and other selected locations.',
+      },
+      {
+        q: 'Is driving in Azerbaijan easy for tourists?',
+        a: 'Yes. Azerbaijan has modern highways connecting major cities and tourist destinations. Driving around Baku and between popular attractions is generally straightforward, while mountain roads require extra care during winter.',
+      },
+      {
+        q: 'Can I drive from Baku to Gabala or Sheki?',
+        a: 'Yes. Renting a car is one of the best ways to explore Azerbaijan. Popular road trips include Baku, Gabala, Sheki, Shamakhi, Quba, Khinalug, Ganja, and the Caspian Sea coastline.',
+      },
+      {
+        q: 'Do I need an SUV to explore Azerbaijan?',
+        a: 'A standard car is suitable for cities and highways, but an SUV is recommended for mountain regions, rural villages, and winter travel.',
+      },
+      {
+        q: 'Can I drive a rental car across international borders?',
+        a: 'Cross-border travel is restricted by many suppliers or requires prior approval, additional insurance, and documentation. Always check the rental conditions before booking.',
+      },
+      {
+        q: 'Are unlimited mileage rentals available?',
+        a: 'Many suppliers offer unlimited mileage, while others apply mileage limits. The mileage policy is clearly displayed before you confirm your booking.',
+      },
+      {
+        q: 'When should I book my Azerbaijan car rental for the best price?',
+        a: 'Booking 2–4 weeks in advance usually provides the best prices and the widest choice of vehicles, especially during the spring, summer, ski season, and major public holidays.',
+      },
+    ],
+    partnersDescription: 'Autours partners with leading car rental providers across Azerbaijan. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Baku, Gabala, Ganja, and all major airports.',
+    ctaTitle: 'Ready to Explore Azerbaijan?',
+    ctaDescription: 'Compare airport car rental deals from trusted suppliers across Baku, Gabala, Sheki, Ganja, Quba, Shamakhi, Khinalug, Lankaran, Nakhchivan, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation — so you can start exploring Azerbaijan the moment you arrive.',
+    ctaPrimaryText: 'Search Cars Now',
+    ctaSecondaryText: 'Contact Support',
+  },
+
+  cyprus: {
+    slug: 'cyprus',
+    name: 'Cyprus',
+    heroBadge: 'Autours Cyprus Airport Car Rental',
+    heroTitle: 'Book Your Airport Rental',
+    heroHighlight: 'Across Cyprus',
+    heroLead: 'Search pickup availability from Larnaca and Paphos airports — then choose the right car for your trip before you land.',
+    heroBottomTitle: 'Search by Cyprus airport and land ready to drive.',
+    travelInfo: {
+      title: 'Why Rent a Car in Cyprus with Autours?',
+      subtitle: 'Discover Cyprus with the freedom to explore golden beaches, ancient ruins, and charming mountain villages at your own pace. Whether you\'re arriving in Larnaca, exploring the vibrant streets of Nicosia, relaxing on the beaches of Ayia Napa, enjoying the harbor of Limassol, or visiting Paphos, Protaras, Troodos Mountains, Coral Bay, Polis, or Kyrenia, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
+      image: "countries/Cyprus.png",
+      benefits: [
+        {
+          title: 'Airport Pickup Across Cyprus',
+          description: 'Collect your rental car from major airports, including Larnaca International Airport, Paphos International Airport, and other convenient pickup locations across Cyprus.',
+        },
+        {
+          title: 'Compare the Best Car Rental Deals',
+          description: 'Compare offers from trusted local and international rental companies to find the ideal vehicle for city breaks, beach holidays, business trips, or island adventures.',
+        },
+        {
+          title: 'Free Cancellation on Most Bookings',
+          description: 'Book with confidence thanks to flexible cancellation policies available on most rentals.',
+        },
+        {
+          title: 'Instant Booking Confirmation',
+          description: 'Reserve your rental car online in minutes and receive instant confirmation before your arrival.',
+        },
+      ],
+    },
+    steps: [
+      { title: 'Search', description: 'Enter your airport, dates, and times.' },
+      { title: 'Compare', description: 'Filter by price and car type.' },
+      { title: 'Book & Drive', description: 'Reserve online and hit the road.' },
+    ],
+    documents: {
+      items: [
+        'Valid driving licence',
+        'Passport',
+        'Credit card in the main driver\'s name',
+        'International Driving Permit (if required)',
+      ],
+    },
+   
+    faqs: [
+      {
+        q: 'What is the minimum age to rent a car in Cyprus?',
+        a: 'Most rental companies require drivers to be at least 21 years old. Luxury vehicles and premium SUVs may require drivers to be 25 years or older.',
+      },
+      {
+        q: 'Can tourists rent a car in Cyprus?',
+        a: 'Yes. International visitors can rent a car with a valid driving licence. Depending on your nationality, an International Driving Permit (IDP) may also be required.',
+      },
+      {
+        q: 'What documents do I need to rent a car in Cyprus?',
+        a: 'You\'ll usually need: a valid driving licence, passport, credit card in the main driver\'s name, and an International Driving Permit (if required).',
+      },
+      {
+        q: 'Which airports can I pick up my rental car from?',
+        a: 'Autours offers airport car rentals at Larnaca International Airport, Paphos International Airport, and selected city locations across Cyprus.',
+      },
+      {
+        q: 'Is driving in Cyprus easy for tourists?',
+        a: 'Yes. Cyprus has a modern road network with well-maintained highways connecting major cities and tourist destinations. Keep in mind that traffic drives on the left-hand side of the road.',
+      },
+      {
+        q: 'Can I drive from Larnaca to Ayia Napa, Limassol, or Paphos?',
+        a: 'Yes. Renting a car is one of the best ways to explore Cyprus. Popular road trips include Larnaca, Ayia Napa, Protaras, Limassol, Paphos, Troodos Mountains, and Nicosia.',
+      },
+      {
+        q: 'Can I drive a rental car between the Republic of Cyprus and Northern Cyprus?',
+        a: 'Some rental companies allow travel across the border, while others have restrictions or require additional insurance. Always check the rental terms before booking.',
+      },
+      {
+        q: 'What type of rental car is best for Cyprus?',
+        a: 'Economy cars are ideal for cities and coastal towns, while SUVs are recommended for exploring the Troodos Mountains, rural villages, and scenic countryside routes.',
+      },
+      {
+        q: 'Are unlimited mileage rentals available?',
+        a: 'Many suppliers offer unlimited mileage, while others apply mileage limits. The mileage policy is clearly displayed before you complete your booking.',
+      },
+      {
+        q: 'When should I book my Cyprus car rental for the best price?',
+        a: 'Booking 2–4 weeks in advance usually provides the best prices and the widest choice of vehicles, especially during the summer season, Easter, and public holidays.',
+      },
+    ],
+    partnersDescription: 'Autours partners with leading car rental providers across Cyprus. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Larnaca, Paphos, Nicosia, Limassol, and Ayia Napa.',
+    ctaTitle: 'Ready to Explore Cyprus?',
+    ctaDescription: 'Compare airport car rental deals from trusted suppliers across Larnaca, Paphos, Nicosia, Limassol, Ayia Napa, Protaras, Troodos Mountains, Coral Bay, Polis, and more. Book in minutes with competitive prices, free cancellation on most rentals, and instant confirmation — so you can start exploring Cyprus the moment you arrive.',
+    ctaPrimaryText: 'Search Cars Now',
+    ctaSecondaryText: 'Contact Support',
+  },
 };
 

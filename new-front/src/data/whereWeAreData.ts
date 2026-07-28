@@ -83,5 +83,41 @@ export const countriesData: WhereWeAreCountry[] = [
       'https://images.unsplash.com/photo-1543731068-7e0f5beff43a?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?auto=format&fit=crop&w=600&q=80'
     ]
+  },
+  {
+    countryName: 'Greece',
+    titleSuffix: 'Where Myths Come to Life',
+    description: 'Discover Greece with the freedom to explore ancient landmarks, picturesque islands, and breathtaking coastlines at your own pace. Whether you\'re arriving in Athens, watching the sunset in Santorini, relaxing on the beaches of Crete, exploring Mykonos, or visiting Thessaloniki, Rhodes, Corfu, Nafplio, Meteora, or Delphi, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
+    images: ['/img/whereWeAre/Greece1.jpg', '/img/whereWeAre/Greece2.jpg', '/img/whereWeAre/Greece3.jpg']
+  },
+  {
+    countryName: 'Bosnia and Herzegovina',
+    titleSuffix: 'Hidden Gem of the Balkans',
+    description: 'Experience the natural beauty and rich history of Bosnia and Herzegovina with the freedom of your own rental car. Whether you\'re arriving in Sarajevo, exploring the iconic Mostar Bridge, relaxing in Neum on the Adriatic coast, discovering Banja Luka, or visiting Jajce, Travnik, Bihać, Tuzla, Međugorje, or Blagaj, Autours helps you compare trusted airport car rental deals from leading local and international suppliers.',
+    images: [
+      '/img/whereWeAre/Bosnia1.jpg',
+      '/img/whereWeAre/Bosnia2.jpg',
+      '/img/whereWeAre/Bosnia3.jpg'
+    ]
+  },
+  {
+    countryName: 'Azerbaijan',
+    titleSuffix: 'Land of Fire',
+    description: 'Discover Azerbaijan with the freedom to explore its modern cities, ancient landmarks, mountain villages, and breathtaking landscapes at your own pace. Whether you\'re arriving in Baku, exploring the UNESCO-listed Old City (Icherisheher), driving to Gabala, relaxing in Ganja, or visiting Sheki, Shamakhi, Quba, Khinalug, or enjoying the shores of the Caspian Sea, Autours helps you compare trusted airport car rental deals.',
+    images: [
+      '/img/whereWeAre/Azerbaijan1.jpg',
+      '/img/whereWeAre/Azerbaijan2.jpg',
+      '/img/whereWeAre/Azerbaijan3.jpg'
+    ]
+  },
+  {
+    countryName: 'Cyprus',
+    titleSuffix: 'Island of Aphrodite',
+    description: 'Discover Cyprus with the freedom to explore golden beaches, ancient ruins, and charming mountain villages at your own pace. Whether you\'re arriving in Larnaca, exploring the vibrant streets of Nicosia, relaxing on the beaches of Ayia Napa, enjoying the harbor of Limassol, or visiting Paphos, Protaras, Troodos Mountains, Coral Bay, or Kyrenia, Autours helps you compare trusted airport car rental deals.',
+    images: [
+      '/img/whereWeAre/Cyprus1.jpg',
+      '/img/whereWeAre/Cyprus2.jpg',
+      '/img/whereWeAre/Cyprus3.jpg'
+    ]
   }
 ];

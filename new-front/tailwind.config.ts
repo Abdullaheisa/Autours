@@ -29,10 +29,9 @@ const config: Config = {
         '3xl': '1400px',
       },
       fontFamily: {
-        // 🔢 TajawalNumbers للأرقام (unicode-range) | HubotSans لكل النصوص | Tajawal fallback للعربي
-        sans: ["HubotSans","TajawalNumbers", "var(--font-tajawal)", "system-ui", "sans-serif"],
-        title: ["HubotSans","TajawalNumbers", "var(--font-tajawal)", "system-ui", "sans-serif"],
-        body: ["HubotSans","TajawalNumbers", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        sans: ["TajawalNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
+        title: ["TajawalNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
+        body: ["TajawalNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
         arabic: ["var(--font-tajawal)", "system-ui", "sans-serif"],
       },
     },

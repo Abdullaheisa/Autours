@@ -29,7 +29,12 @@ export default function CountrySection({
     'Oman': 'oman',
     'Jordan': 'jordan',
     'Turkey': 'turkey',
-    'Morocco': 'morocco'
+    'Morocco': 'morocco',
+    'Greece': 'greece',
+    'Bosnia and Herzegovina': 'bosnia',
+    'Azerbaijan': 'azerbaijan',
+    'Cyprus': 'cyprus',
+    'Georgia': 'georgia',
   };
   const countrySlug = slugMap[countryName] || countryName.toLowerCase();
 

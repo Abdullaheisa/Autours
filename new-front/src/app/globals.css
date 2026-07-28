@@ -3,53 +3,8 @@
 @tailwind utilities;
 
 /* ============================================================ */
-/* 🔤 Hubot Sans  → كل النصوص (عربي + إنجليزي)                  */
-/* 🔢 Tajawal     → الأرقام فقط (0-9 و ٠-٩) عبر unicode-range  */
+/* 🔢 TajawalNumbers → الأرقام فقط (0-9 و ٠-٩) عبر unicode-range  */
 /* ============================================================ */
-
-/* ✅ Hubot Sans - تحميل مباشر بدون CSS variable */
-@font-face {
-  font-family: 'HubotSans';
-  src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsC57ZdgA.ttf) format('truetype');
-  font-weight: 400;
-  font-display: swap;
-unicode-range: U+0000-002F, U+003A-FFFD;
-}
-@font-face {
-  font-family: 'HubotSans';
-  src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsC1bZdgA.ttf) format('truetype');
-  font-weight: 500;
-  font-display: swap;
-unicode-range: U+0000-002F, U+003A-FFFD;
-}
-@font-face {
-  font-family: 'HubotSans';
-  src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCObFdgA.ttf) format('truetype');
-  font-weight: 600;
-  font-display: swap;
-unicode-range: U+0000-002F, U+003A-FFFD;
-}
-@font-face {
-  font-family: 'HubotSans';
-  src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCALFdgA.ttf) format('truetype');
-  font-weight: 700;
-  font-display: swap;
-unicode-range: U+0000-002F, U+003A-FFFD;
-}
-@font-face {
-  font-family: 'HubotSans';
-  src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCZ7FdgA.ttf) format('truetype');
-  font-weight: 800;
-  font-display: swap;
-unicode-range: U+0000-002F, U+003A-FFFD;
-}
-@font-face {
-  font-family: 'HubotSans';
-  src: url(https://fonts.gstatic.com/s/hubotsans/v5/pe0BMIiULYxOvxVLbVwhONyy6zb7yFM9V5G3iZ3X0avsIiCxjLsCTrFdgA.ttf) format('truetype');
-  font-weight: 900;
-  font-display: swap;
-unicode-range: U+0000-002F, U+003A-FFFD;
-}
 
 /* 🔢 Tajawal - للأرقام فقط عبر unicode-range */
 @font-face {
@@ -90,11 +45,10 @@ unicode-range: U+0000-002F, U+003A-FFFD;
 
 /* ✅ Stack النهائي:
    1. TajawalNumbers → أرقام فقط (unicode-range U+0030-0039, U+0660-0669)
-   2. HubotSans      → كل الحروف (إنجليزي + عربي fallback)
-   3. var(--font-tajawal) → عربي (Next.js fallback)
-   4. system-ui      → fallback نهائي */
+   2. System Fonts   → نظام تشغيل آبل، ويندوز، أندرويد لسرعة فائقة وخطوط أنيقة
+   3. var(--font-tajawal) → عربي (Next.js fallback) */
 body, html, button, input, select, textarea, .default-font {
-  font-family: 'TajawalNumbers', 'HubotSans', var(--font-tajawal), system-ui, sans-serif;
+  font-family: 'TajawalNumbers', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, var(--font-tajawal), sans-serif;
 }
 
 

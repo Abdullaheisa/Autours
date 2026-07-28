@@ -33,7 +33,7 @@ const footerLinks = {
   ],
   Support: [
     { name: 'Manage Booking', href: '/login' },
-    { name: 'FAQ', href: '#faq' },
+    { name: 'FAQ', href: '/faq' },
     { name: 'Subscribe', href: '/subscribe' },
     { name: 'Why Autours?', href: '/why_autours' },
     { name: 'Our Blogs', href: '/blogs' },

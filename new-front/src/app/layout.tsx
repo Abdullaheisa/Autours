@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
-import { Hubot_Sans, Tajawal } from "next/font/google";
+import { Tajawal } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import "./globals.css";
 import StoreProvider from "@/components/shared/StoreProvider";
 import RootLayoutContent from "@/components/shared/layout/RootLayoutContent";
 import { siteConfig } from "@/config/site";
-
-// 🚀 تجهيز خط Hubot Sans من جوجل مباشرة
-const hubotSans = Hubot_Sans({
-  subsets: ["latin"],
-  variable: "--font-hubot",
-  display: "swap",
-});
 
 // 🔢 خط Tajawal للأرقام فقط - يتطبق تلقائياً على كل الأرقام في المشروع
 const tajawal = Tajawal({
@@ -73,7 +66,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${hubotSans.variable} ${tajawal.variable} antialiased font-sans`}>
+      <body className={`${tajawal.variable} antialiased font-sans`}>
         <StoreProvider>
           <RootLayoutContent>{children}</RootLayoutContent>
         </StoreProvider>
