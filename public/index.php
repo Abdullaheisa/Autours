@@ -22,6 +22,52 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
     require $maintenance;
 }
 
+// ------------------------------------------------------------------
+// BYPASS ROUTER FOR MANUAL SYNC (Guaranteed to work even if routes are cached)
+// ------------------------------------------------------------------
+if (strpos($_SERVER['REQUEST_URI'] ?? '', '/manual-sync') !== false) {
+    require __DIR__.'/../vendor/autoload.php';
+    $app = require_once __DIR__.'/../bootstrap/app.php';
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    $kernel->bootstrap();
+
+    $key = $_GET['key'] ?? '';
+    
+    // Extract supplier and action from URL (e.g. /api/manual-sync/autofix/branches)
+    $path = explode('?', $_SERVER['REQUEST_URI'])[0];
+    $parts = array_values(array_filter(explode('/', $path)));
+    $syncIdx = array_search('manual-sync', $parts);
+    
+    $supplier = $parts[$syncIdx + 1] ?? $_GET['supplier'] ?? '';
+    $action = $parts[$syncIdx + 2] ?? $_GET['action'] ?? '';
+
+    if ($key !== 'sync2026') {
+        http_response_code(401);
+        die("Unauthorized. Please provide ?key=sync2026");
+    }
+
+    if (!in_array($action, ['branches', 'vehicles', 'prices'])) {
+        http_response_code(400);
+        die("Invalid action. Found: {$action}. Use 'branches', 'vehicles', or 'prices'.");
+    }
+
+    $command = "{$supplier}:sync-" . ($action === 'prices' ? 'vehicles' : $action);
+    $params = ['--real' => true];
+    if ($action === 'prices') {
+        $params['--prices-only'] = true;
+    }
+
+    try {
+        $exitCode = \Illuminate\Support\Facades\Artisan::call($command, $params);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        echo "<pre>Command: {$command} " . ($action === 'prices' ? '--prices-only' : '') . "\nExit Code: {$exitCode}\n\nOutput:\n{$output}</pre>";
+    } catch (\Exception $e) {
+        http_response_code(500);
+        echo "Error: " . $e->getMessage();
+    }
+    exit;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Register The Auto Loader
