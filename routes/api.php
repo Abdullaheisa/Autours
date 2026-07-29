@@ -222,6 +222,34 @@ Route::get('/db-debug', function() {
     ]);
 });
 
+Route::get('/manual-sync/{supplier}/{action}', function (Illuminate\Http\Request $request, $supplier, $action) {
+    if ($request->query('key') !== 'sync2026') {
+        return response("Unauthorized. Please provide ?key=sync2026 in the URL.", 401);
+    }
+
+    if (!in_array($action, ['branches', 'vehicles', 'prices'])) {
+        return response("Invalid action. Use 'branches', 'vehicles', or 'prices'.", 400);
+    }
+
+    $command = "{$supplier}:sync-" . ($action === 'prices' ? 'vehicles' : $action);
+    $params = ['--real' => true];
+    
+    if ($action === 'prices') {
+        $params['--prices-only'] = true;
+    }
+
+    try {
+        $exitCode = \Illuminate\Support\Facades\Artisan::call($command, $params);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+
+        // Returning HTML so it's readable in the browser
+        return response("<pre>Command: {$command} " . ($action === 'prices' ? '--prices-only' : '') . "\nExit Code: {$exitCode}\n\nOutput:\n{$output}</pre>")
+               ->header('Content-Type', 'text/html');
+    } catch (\Exception $e) {
+        return response("Error executing command: " . $e->getMessage(), 500);
+    }
+});
+
 /*
 |--------------------------------------------------------------------------
 | Blog Routes

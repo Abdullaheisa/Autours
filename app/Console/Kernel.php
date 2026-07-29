@@ -90,6 +90,11 @@ class Kernel extends ConsoleKernel
          $schedule->command('driveandsmile:sync-vehicles --real')->dailyAt('09:15')->withoutOverlapping();
          $schedule->command('driveandsmile:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
 
+         // Sync Autofix branches and full vehicles daily, prices every 2 hours
+         $schedule->command('autofix:sync-branches --real')->dailyAt('09:30');
+         $schedule->command('autofix:sync-vehicles --real')->dailyAt('09:45')->withoutOverlapping();
+         $schedule->command('autofix:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
+
          // Sync exchange rates every 4 hours without overlapping
          $schedule->command('sync:exchange-rates')->everyFourHours()->withoutOverlapping();
      }   

@@ -530,7 +530,7 @@ class VehicleController extends Controller
 
             if ($request->has('description')) {
                 $newDescription = (string) $request->description;
-                if ($existingVehicle->description && preg_match('/(\[(?:SURPRICE-GROUP-ID|JIMPI-GROUP-ID|EMR-GROUP-ID|RENTLY-MODEL-ID|Kolaycar-ID|Badger-ID|Allmeet-ID|DriveAndSmile-ID):[^\]]+\])/', $existingVehicle->description, $matches)) {
+                if ($existingVehicle->description && preg_match('/(\[(?:SURPRICE-GROUP-ID|JIMPI-GROUP-ID|EMR-GROUP-ID|RENTLY-MODEL-ID|Kolaycar-ID|Badger-ID|Allmeet-ID|DriveAndSmile-ID|Autofix-ID):[^\]]+\])/', $existingVehicle->description, $matches)) {
                     $tag = $matches[1];
                     if (!str_contains($newDescription, $tag)) {
                         $newDescription = $tag . ' ' . ltrim($newDescription);
