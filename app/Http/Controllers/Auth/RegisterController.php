@@ -76,7 +76,7 @@ class RegisterController extends Controller
     {
 
         try {
-            if ($request->supplier === 1) {
+            if ($request->supplier == 1 || $request->role === 'supplier' || $request->role === 'under_review') {
                 $role = 'under_review';
             } else {
                 $role = 'customer';
@@ -97,7 +97,7 @@ class RegisterController extends Controller
             if (Auth::guard('web')->attempt($credentials) && $request->hasSession()) {
                 $request->session()->regenerate();
             }
-            if ($request->supplier === 1) {
+            if ($role === 'under_review') {
                 event(new NewSupplier($request->email));
             }
 
