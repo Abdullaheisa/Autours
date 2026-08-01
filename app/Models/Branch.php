@@ -16,6 +16,21 @@ class Branch extends Model
 
     protected static function booted()
     {
+        $blockNonAirports = function ($branch) {
+            if (app()->runningInConsole()) {
+                $command = $_SERVER['argv'][1] ?? '';
+                if (strpos($command, ':sync-branches') !== false) {
+                    // Check if it's not an Airport (case-insensitive)
+                    if (strtolower($branch->location_type) !== 'airport') {
+                        return false;
+                    }
+                }
+            }
+        };
+
+        static::creating($blockNonAirports);
+        static::updating($blockNonAirports);
+
         static::saving(function ($branch) {
             $nameLower = strtolower($branch->name ?? '');
             $isRoad = strpos($nameLower, 'airport rd') !== false || strpos($nameLower, 'airport road') !== false;
