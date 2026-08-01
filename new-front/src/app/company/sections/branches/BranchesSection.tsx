@@ -58,6 +58,8 @@ const defaultForm: BranchFormData = {
   airport_id: null,
 };
 
+const CURRENCIES = ["USD", "AED", "SAR", "EGP", "QAR", "KWD", "BHD", "OMR", "JOD"];
+
 // ─── Searchable Dropdown ──────────────────────────────────────────────
 function SearchableDropdown({
   placeholder,
@@ -450,13 +452,23 @@ function AddBranchModal({
               </div>
             </div>
 
-            <div className="space-y-1.5 mt-4">
+            <div className="space-y-1.5 mt-4 relative">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
                 Currency <span className="text-red-400">*</span>
               </label>
-              <input type="text" value={formData.currency} onChange={(e) => set("currency", e.target.value)}
-                placeholder="e.g. USD, AED"
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" />
+              <div className="relative">
+                <select 
+                  value={formData.currency} 
+                  onChange={(e) => set("currency", e.target.value)}
+                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer appearance-none"
+                >
+                  <option value="" disabled>Select Currency</option>
+                  {CURRENCIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* Activation toggle */}
