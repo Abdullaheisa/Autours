@@ -7,7 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Branch;
 use App\Models\User;
 use App\Services\CountryCurrencyResolver;
-use App\Services\KolaycarApiService;
+use App\Services\AutofixRestApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use App\Services\BranchNormalizationService;
@@ -44,7 +44,7 @@ class SyncAutofixBranches extends Command
             return self::FAILURE;
         }
 
-        $service = new KolaycarApiService('eff6LWe8plkb2ewqpRMkLQ==', '2962AA3');
+        $service = new AutofixRestApiService('eff6LWe8plkb2ewqpRMkLQ==', '2962AA3');
 
         // ------------------------------------------------------------------
         // 1. Resolve or create the Autofix supplier user
@@ -65,12 +65,10 @@ class SyncAutofixBranches extends Command
         // 2. Fetch all locations from Kolaycar API
         // ------------------------------------------------------------------
         $this->info('Fetching locations from Autofix...');
-        $response = $service->getLocations();
-
-        $locations = $response['LOCATIONS'] ?? [];
+        $locations = $service->getLocations();
 
         if (empty($locations)) {
-            $this->error('No locations returned from Kolaycar API.');
+            $this->error('No locations returned from Autofix API.');
             return self::FAILURE;
         }
 
@@ -83,21 +81,14 @@ class SyncAutofixBranches extends Command
         $updated = 0;
 
         foreach ($locations as $location) {
-            $locationId = (string) ($location['LOCATIONID'] ?? '');
-            $locationName = (string) ($location['LOCATIONNAME'] ?? '');
-            $city = (string) ($location['CITYNAME'] ?? '');
-            $country = (string) ($location['COUNTRYNAME'] ?? '');
+            $locationId = (string) ($location['locationId'] ?? '');
+            $locationName = (string) ($location['locationName'] ?? '');
+            $city = $locationName;
+            $country = (string) ($location['countryName'] ?? '');
+            $address = (string) ($location['address'] ?? $city);
             
-            // Vendors inside the location
-            $vendors = $location['VENDORS'] ?? [];
-            if (empty($vendors)) {
-                continue;
-            }
-
-            // We pick the first vendor to get address and geo
-            $firstVendor = $vendors[0] ?? [];
-            $address = (string) ($firstVendor['VENDORLOCATIONADDRESS'] ?? $city);
-            $geo = (string) ($firstVendor['VENDORLOCATIONGEO'] ?? '');
+            $lat = $location['coordinate']['latitude'] ?? null;
+            $lng = $location['coordinate']['longitude'] ?? null;
 
             if (empty($locationId) || empty($locationName)) {
                 continue;
@@ -106,15 +97,6 @@ class SyncAutofixBranches extends Command
             if ($this->option('dry-run')) {
                 $this->line("[DRY RUN] Would sync location ID {$locationId} -> '{$locationName}'");
                 continue;
-            }
-
-            // Parse lat/lng from Maps_Point if format is "lat, lng"
-            $lat = null;
-            $lng = null;
-            if (str_contains($geo, ',')) {
-                $parts = array_map('trim', explode(',', $geo, 2));
-                $lat = $parts[0] ?? null;
-                $lng = $parts[1] ?? null;
             }
 
             $countryName = CountryCurrencyResolver::resolveCountryName($country ?: 'TR');

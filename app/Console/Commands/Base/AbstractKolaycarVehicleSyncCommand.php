@@ -25,7 +25,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
      *
      * @var array<string, array>|null
      */
-    private ?array $specDefinitions = null;
+    protected ?array $specDefinitions = null;
 
     abstract protected function getSupplierEmail(): string;
     abstract protected function getSupplierName(): string;
@@ -299,7 +299,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
         return self::SUCCESS;
     }
 
-    private function syncSpecifications(int $vehicleId, string $transmission, string $fuel, int $seats, int $doors, bool $ac, int $baggage): void
+    protected function syncSpecifications(int $vehicleId, string $transmission, string $fuel, int $seats, int $doors, bool $ac, int $baggage): void
     {
         \App\Models\VehicleSpecification::where('vehicle_id', $vehicleId)->delete();
 
@@ -394,7 +394,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
         }
     }
 
-    private function syncInclusions(\App\Models\Vehicle $vehicle, array $inclusions): void
+    protected function syncInclusions(\App\Models\Vehicle $vehicle, array $inclusions): void
     {
         $includedIds = [];
         foreach ($inclusions as $incText) {
@@ -404,7 +404,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
         $vehicle->included()->syncWithoutDetaching($includedIds);
     }
 
-    private function resolveCategoryFromSipp(string $sipp, string $kolaycarCategory = ''): int
+    protected function resolveCategoryFromSipp(string $sipp, string $kolaycarCategory = ''): int
     {
         if (!empty($kolaycarCategory)) {
             $normalizedKolaycar = match (strtolower($kolaycarCategory)) {
@@ -432,7 +432,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
         return $fallback ? $fallback->id : (\App\Models\Category::first()?->id ?? 1);
     }
 
-    private function normalizeTransmission(string $value): string
+    protected function normalizeTransmission(string $value): string
     {
         $lower = strtolower($value);
         if (str_contains($lower, 'auto') || str_contains($lower, 'automtic')) {
@@ -441,7 +441,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
         return 'Manual';
     }
 
-    private function fetchVehiclesForDuration(KolaycarApiService $service, Branch $branch, ?int $days, bool $hasCustomDates): array
+    protected function fetchVehiclesForDuration($service, Branch $branch, ?int $days, bool $hasCustomDates): array
     {
         if ($hasCustomDates) {
             $pickupStr = $this->option('pickup-date') ?? Carbon::tomorrow()->format('Y-m-d 10:00');
