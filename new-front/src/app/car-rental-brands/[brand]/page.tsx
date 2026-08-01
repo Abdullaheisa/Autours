@@ -17,10 +17,8 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands`);
-  const data = res.ok ? await res.json() : { brands: [] };
-  const brands = data.brands || [];
-  return brands.map((brand: any) => ({ brand: brand.id }));
+  // Return empty array to build on demand (ISR) and prevent build timeouts
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -58,9 +56,10 @@ export default async function BrandDetailPage({ params }: PageProps) {
   let supplierVehicles: any[] = [];
   try {
     const supplierId = brand.user_id || brand.id;
-    const vehiclesRes = await fetch(`${SERVER_API_BASE}/get/vehicles?supplier=${supplierId}`, { next: { revalidate: 60 } });
+    const vehiclesRes = await fetch(`${SERVER_API_BASE}/get/vehicles?supplier=${supplierId}&paginate=true&per_page=100`, { next: { revalidate: 60 } });
     if (vehiclesRes.ok) {
-      supplierVehicles = await vehiclesRes.json();
+      const response = await vehiclesRes.json();
+      supplierVehicles = response.data || response;
     }
   } catch (err) {
     console.warn("Failed to fetch vehicles for brand page:", err);

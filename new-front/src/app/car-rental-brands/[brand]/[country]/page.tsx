@@ -15,21 +15,8 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands`);
-  const data = res.ok ? await res.json() : { brands: [] };
-  const brands = data.brands || [];
-  const paths = [];
-  
-  for (const brand of brands) {
-    const brandRes = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brand.id}`);
-    if (brandRes.ok) {
-      const brandData = await brandRes.json();
-      for (const country of brandData.countries) {
-        paths.push({ brand: brand.id, country: country.countrySlug });
-      }
-    }
-  }
-  return paths;
+  // Return empty array to build on demand (ISR) and prevent build timeouts
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

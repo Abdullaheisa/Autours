@@ -262,6 +262,7 @@ Route::post('filter/vehicles', [VehicleController::class, 'filter']);
 Route::get('get/vehicles', [VehicleController::class, 'show']);
 Route::post('/search/vehicles', [VehicleController::class, 'search']);
 
+Route::get('/get/airports', [VehicleController::class, 'getGlobalAirports']);
 Route::get('/get/locations', [VehicleController::class, 'getLocations']);
 Route::get('/get/locations/country/{country}', [VehicleController::class, 'getLocationsByCountry']);
 Route::get('/get/cheapest-vehicle', [VehicleController::class, 'getCheapestByCountry']);

@@ -300,6 +300,28 @@ export const vehicleApi = {
     };
   },
 
+  getGlobalAirports: async (): Promise<LocationBranch[]> => {
+    try {
+      const data = await apiClient.get<any[]>('/get/airports');
+      const mapped = (data || []).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name || '',
+        location: loc.location || '',
+        country: loc.country || '',
+        city: loc.city || '',
+        adresse: loc.adresse || loc.location_address || '',
+        location_address: loc.location_address || loc.adresse || '',
+        location_type: loc.location_type || '',
+        abriviation: loc.abriviation || loc.abbreviation || '',
+        airport_id: loc.airport_id || null,
+      }));
+      return mapped;
+    } catch (err) {
+      console.error('[AIRPORTS ERROR]', err);
+      return [];
+    }
+  },
+
   getLocations: async (): Promise<LocationBranch[]> => {
     try {
       if (memoryLocationsCache) {

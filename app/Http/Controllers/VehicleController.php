@@ -1077,6 +1077,24 @@ class VehicleController extends Controller
         return response()->json($locations);
     }
 
+    public function getGlobalAirports()
+    {
+        $airports = \App\Models\Airport::orderBy('airport_name')->get()->map(function ($airport) {
+            return [
+                'id' => $airport->id,
+                'airport_id' => $airport->id,
+                'name' => $airport->airport_name,
+                'location' => $airport->city,
+                'city' => $airport->city,
+                'country' => $airport->country,
+                'abriviation' => $airport->iata_code,
+                'location_type' => 'Airport',
+                'adresse' => $airport->airport_name . ', ' . $airport->city . ', ' . $airport->country
+            ];
+        });
+        return response()->json($airports);
+    }
+
     public function getLocationsByCountry($country)
     {
         $countryMap = [

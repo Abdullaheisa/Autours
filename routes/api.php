@@ -318,6 +318,7 @@ Route::get('get/priceTax', [\App\Http\Controllers\UserController::class, 'priceT
 Route::post('filter/vehicles', [\App\Http\Controllers\VehicleController::class, 'filter']);
 Route::get('get/vehicles', [\App\Http\Controllers\VehicleController::class, 'show']);
 Route::post('/search/vehicles', [\App\Http\Controllers\VehicleController::class, 'search']);
+Route::get('/get/airports', [\App\Http\Controllers\VehicleController::class, 'getGlobalAirports']);
 Route::get('/get/locations', [\App\Http\Controllers\VehicleController::class, 'getLocations']);
 Route::get('/get/locations/country/{country}', [\App\Http\Controllers\VehicleController::class, 'getLocationsByCountry']);
 Route::get('/get/rentals', [\App\Http\Controllers\BookingsController::class, 'getRentals'])->middleware('auth:sanctum');
