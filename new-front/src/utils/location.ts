@@ -86,5 +86,5 @@ export function getLocationDisplayLabel(loc: LocationBranch): string {
 
 /** Value sent to /filter/vehicles as pickupLoc. */
 export function getLocationPickupValue(loc: LocationBranch): string {
-  return loc.location?.trim() || loc.name?.trim() || getLocationDisplayLabel(loc);
+  return loc.name?.trim() || loc.location?.trim() || getLocationDisplayLabel(loc);
 }

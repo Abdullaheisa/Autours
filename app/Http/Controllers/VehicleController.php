@@ -442,13 +442,29 @@ class VehicleController extends Controller
 
     public function search(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info("SEARCH PARAMS", $request->all());
         $location = $request->pickupLoc;
         $date = $request->date;
 
         $vehicles = Vehicle::query();
 
         if ($location) {
-            $vehicles->whereRelation('branch', 'location', $location);
+            $fuzzyLocation = str_replace(' ', '%', $location);
+            $airport = \App\Models\Airport::where('airport_name', 'LIKE', '%' . $fuzzyLocation . '%')->first();
+            
+            $vehicles->whereHas('branch', function ($q) use ($location, $fuzzyLocation, $airport) {
+                $q->where(function ($sub) use ($location, $fuzzyLocation, $airport) {
+                    if (is_numeric($location)) {
+                        $sub->where('id', $location)
+                            ->orWhere('airport_id', $location);
+                    }
+                    if ($airport) {
+                        $sub->orWhere('airport_id', $airport->id);
+                    }
+                    $sub->orWhere('name', 'LIKE', '%' . $fuzzyLocation . '%')
+                        ->orWhere('location', 'LIKE', '%' . $location . '%');
+                });
+            });
         }
 
 //         if ($date && $date !== null) {
@@ -1062,9 +1078,13 @@ class VehicleController extends Controller
             ->whereHas('company', function ($query) {
                 $query->where('role', 'active_supplier');
             })
+            ->has('vehicles')
             ->orderBy('name')
             ->get()
             ->map(function ($branch) {
+                if ($branch->airport) {
+                    $branch->name = $branch->airport->airport_name;
+                }
                 if (empty($branch->abriviation) && $branch->airport) {
                     $branch->abriviation = $branch->airport->iata_code;
                 }

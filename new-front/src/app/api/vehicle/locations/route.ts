@@ -5,6 +5,7 @@ import { BACKEND_URL } from '@/config/api';
 export async function GET() {
   try {
     const response = await fetch(`${BACKEND_URL}/get/locations`, {
+      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
