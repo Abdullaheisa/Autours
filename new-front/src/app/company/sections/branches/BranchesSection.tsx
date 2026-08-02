@@ -226,11 +226,12 @@ interface AddBranchModalProps {
   isSubmitting: boolean;
   errorMsg: string;
   airports: LocationBranch[];
+  isEdit?: boolean;
 }
 
 function AddBranchModal({
   formData, onChange, onSubmit, onClose,
-  isSubmitting, errorMsg, airports
+  isSubmitting, errorMsg, airports, isEdit = false
 }: AddBranchModalProps) {
   const set = (field: keyof BranchFormData, value: any) =>
     onChange({ ...formData, [field]: value });
@@ -299,7 +300,7 @@ function AddBranchModal({
             <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center">
               <Plane size={20} className="text-primary-600" />
             </div>
-            <h2 className="text-lg font-black text-gray-900">Add New Branch</h2>
+            <h2 className="text-lg font-black text-gray-900">{isEdit ? "Edit Branch" : "Add New Branch"}</h2>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
             <X size={16} className="text-gray-500" />
@@ -509,7 +510,7 @@ function AddBranchModal({
                 Saving…
               </>
             ) : (
-              "Save Branch"
+              isEdit ? "Save Changes" : "Save Branch"
             )}
           </button>
         </div>
@@ -543,6 +544,7 @@ export default function BranchesSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addForm, setAddForm] = useState<BranchFormData>(defaultForm);
   const [modalError, setModalError] = useState("");
+  const [editingBranchId, setEditingBranchId] = useState<number | null>(null);
 
   // Fetch branches and airports
   const fetchBranches = useCallback(() => {
@@ -665,12 +667,12 @@ export default function BranchesSection() {
     return filteredBranches.slice(start, start + itemsPerPage);
   }, [filteredBranches, currentPage]);
 
-  // Add submit
+  // Add or Edit submit
   const handleAddSubmit = async () => {
     setModalError("");
     setIsSubmitting(true);
     try {
-      await branchApi.create({
+      const payload = {
         name: addForm.name,
         adresse: addForm.adresse,
         location: addForm.location,
@@ -683,17 +685,46 @@ export default function BranchesSection() {
         location_type: addForm.location_type || 'Airport',
         abriviation: addForm.abriviation || '',
         airport_id: addForm.airport_id || null,
-      });
-      toast.success("Branch added successfully!");
+      };
+
+      if (editingBranchId) {
+        await branchApi.update({ ...payload, id: editingBranchId });
+        toast.success("Branch updated successfully!");
+      } else {
+        await branchApi.create(payload);
+        toast.success("Branch added successfully!");
+      }
+      
       setIsAddModalOpen(false);
       setAddForm(defaultForm);
+      setEditingBranchId(null);
       fetchBranches();
     } catch (err: any) {
-      setModalError(err.message || "Failed to create branch. Please try again.");
-      toast.error("Failed to create branch.");
+      setModalError(err.message || (editingBranchId ? "Failed to update branch." : "Failed to create branch."));
+      toast.error(editingBranchId ? "Failed to update branch." : "Failed to create branch.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditClick = (branch: Branch) => {
+    setEditingBranchId(branch.id);
+    setAddForm({
+      name: branch.name,
+      country: branch.country,
+      city: branch.city || "",
+      adresse: branch.address,
+      location: branch.location,
+      phone: branch.phone || "",
+      email: branch.email || "",
+      currency: branch.currency || "USD",
+      activation: branch.status === "active",
+      location_type: "Airport", // default
+      abriviation: "",
+      airport_id: null,
+    });
+    setModalError("");
+    setIsAddModalOpen(true);
   };
 
   // Toggle Activation
@@ -756,16 +787,17 @@ export default function BranchesSection() {
 
   return (
     <SectionLayout>
-      {/* ── Add Branch Modal ── */}
+      {/* ── Add/Edit Branch Modal ── */}
       {isAddModalOpen && (
         <AddBranchModal
           formData={addForm}
           onChange={setAddForm}
           onSubmit={handleAddSubmit}
-          onClose={() => { setIsAddModalOpen(false); setAddForm(defaultForm); setModalError(""); }}
+          onClose={() => { setIsAddModalOpen(false); setAddForm(defaultForm); setModalError(""); setEditingBranchId(null); }}
           isSubmitting={isSubmitting}
           errorMsg={modalError}
           airports={allAirports}
+          isEdit={!!editingBranchId}
         />
       )}
 
@@ -776,6 +808,7 @@ export default function BranchesSection() {
         actionIcon={<Plus size={18} />}
         onAction={() => {
           setAddForm(defaultForm);
+          setEditingBranchId(null);
           setModalError("");
           setIsAddModalOpen(true);
         }}
@@ -933,6 +966,7 @@ export default function BranchesSection() {
                       <td className="px-8 py-5">
                         <div className="flex justify-end scale-90 group-hover:scale-100 transition-transform duration-200 origin-right">
                           <ActionButtons
+                            onEdit={() => handleEditClick(branch)}
                             onDelete={() => handleDelete(branch.id)}
                           />
                         </div>
