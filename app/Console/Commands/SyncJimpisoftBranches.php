@@ -72,7 +72,20 @@ class SyncJimpisoftBranches extends Command
 
         foreach ($stations as $station) {
             $stationId = (string) ($station['StationID'] ?? $station['stationID'] ?? '');
+            
+            // Consolidate Dubai Airport terminals into one branch (DXB1)
+            // Also skip Jimpisoft's original 'DXB' (Dubai Htl City Limit) to prevent clash
+            if (in_array($stationId, ['DXB2', 'DXB3', 'DXB'])) {
+                continue; // Skip these completely
+            }
+            
             $stationName = (string) ($station['Station'] ?? $station['station'] ?? '');
+            
+            if ($stationId === 'DXB1') {
+                $stationId = 'DXB'; // Map it to DXB like other suppliers
+                $stationName = 'Dubai International Airport (DXB), UAE';
+            }
+            
             $city = (string) ($station['City'] ?? $station['city'] ?? '');
             $latitude = (string) ($station['Latitude'] ?? $station['latitude'] ?? '');
             $longitude = (string) ($station['Longitude'] ?? $station['longitude'] ?? '');
@@ -121,10 +134,20 @@ class SyncJimpisoftBranches extends Command
         }
 
         // ------------------------------------------------------------------
-        // 4. Delete branches no longer returned by Jimpisoft
+        // 4. Delete branches no longer returned by Jimpisoft (and excluded ones)
         // ------------------------------------------------------------------
         $activeStationIds = array_filter(array_map(
-            fn ($s) => (string) ($s['StationID'] ?? $s['stationID'] ?? ''),
+            function ($s) {
+                $id = (string) ($s['StationID'] ?? $s['stationID'] ?? '');
+                // Treat DXB2, DXB3, and original DXB as inactive 
+                if (in_array($id, ['DXB2', 'DXB3', 'DXB'])) {
+                    return '';
+                }
+                if ($id === 'DXB1') {
+                    return 'DXB'; // We saved it as DXB in the database
+                }
+                return $id;
+            },
             $stations
         ));
 
@@ -170,17 +193,45 @@ class SyncJimpisoftBranches extends Command
      */
     private function detectCountry(string $stationName, string $city): string
     {
+        // 1. Try to extract from comma-separated suffix (e.g., "Vienna Airport, Austria")
+        if (strpos($stationName, ',') !== false) {
+            $parts = explode(',', $stationName);
+            $possibleCountry = trim(end($parts));
+            if (!empty($possibleCountry) && strlen($possibleCountry) > 2) {
+                if (strtolower($possibleCountry) === 'uae') {
+                    return 'United Arab Emirates';
+                }
+                if (strtolower($possibleCountry) === 'uk') {
+                    return 'United Kingdom';
+                }
+                if (strtolower($possibleCountry) === 'us' || strtolower($possibleCountry) === 'usa') {
+                    return 'United States';
+                }
+                return ucwords(strtolower($possibleCountry));
+            }
+        }
+
+        // 2. Fallback to keyword matching
         $haystack = strtolower($stationName . ' ' . $city);
 
         $countryKeywords = [
             'Turkey' => ['turkey', 'antalya', 'istanbul', 'izmir', 'bodrum', 'dalaman', 'mugla'],
             'Cyprus' => ['cyprus', 'larnaca', 'limassol', 'paphos', 'nicosia', 'ayia napa', 'protaras'],
             'Greece' => ['greece', 'athens', 'thessaloniki', 'crete', 'heraklion', 'rhodes'],
-            'Oman' => ['oman', 'muscat', 'salalah'],
-            'Bahrain' => ['bahrain', 'manama'],
+            'Oman' => ['oman', 'muscat', 'salalah', 'sohar'],
+            'Bahrain' => ['bahrain', 'manama', 'sanad', 'sanabis', 'riffa', 'salmabad'],
             'Saudi Arabia' => ['saudi', 'riyadh', 'jeddah', 'dammam'],
             'Qatar' => ['qatar', 'doha'],
             'Kuwait' => ['kuwait'],
+            'Morocco' => ['morocco', 'marrakesh', 'marrakech', 'tangier', 'rabat', 'casablanca'],
+            'Malta' => ['malta', 'valletta', 'xemxija', 'sleima'],
+            'Albania' => ['albania', 'vlora', 'tirana', 'shkodra', 'durres'],
+            'Austria' => ['austria', 'vienna', 'salzburg', 'bratislavaairport'],
+            'Seychelles' => ['seychelles', 'victoria', 'mahe', 'la louise'],
+            'Bulgaria' => ['bulgaria', 'sofia', 'plovdiv'],
+            'United Kingdom' => ['london', 'gatwick', 'stansted', 'heathrow', 'luton'],
+            'United States' => ['florida', 'orlando', 'miami', 'tampa', 'fll'],
+            'New Zealand' => ['newze', 'queenstown', 'new zealand'],
         ];
 
         foreach ($countryKeywords as $country => $keywords) {
@@ -193,5 +244,4 @@ class SyncJimpisoftBranches extends Command
 
         return 'United Arab Emirates';
     }
-
 }

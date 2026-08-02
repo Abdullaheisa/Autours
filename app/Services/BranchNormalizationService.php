@@ -100,17 +100,28 @@ class BranchNormalizationService
         ?string $stationId,
         ?string $abriviation
     ): ?Airport {
-        // Strategy 1: Direct IATA match from station_id
-        if ($stationId && isset($this->airportsByIata[strtoupper($stationId)])) {
-            return $this->airportsByIata[strtoupper($stationId)];
+        // Strategy 1: Direct exact match on known IATA code
+        // We assume abbreviation is an IATA if it's exactly 3 letters
+        if ($abriviation && preg_match('/^[A-Z]{3}$/i', $abriviation)) {
+            $iata = strtoupper($abriviation);
+            if (isset($this->airportsByIata[$iata])) {
+                $airport = $this->airportsByIata[$iata];
+                if ($this->validateIataMatch($airport, $name, $country)) {
+                    return $airport;
+                }
+            }
         }
 
-        // Strategy 2: Direct IATA match from abriviation
-        if ($abriviation && isset($this->airportsByIata[strtoupper($abriviation)])) {
-            return $this->airportsByIata[strtoupper($abriviation)];
-        }
-
-        // Strategy 3: Extract IATA code from branch name — patterns like (DXB), (SAW), (ADB)
+        // Strategy 2: Direct match using stationId
+        if ($stationId && preg_match('/^[A-Z]{3}$/i', $stationId)) {
+            $iata = strtoupper($stationId);
+            if (isset($this->airportsByIata[$iata])) {
+                $airport = $this->airportsByIata[$iata];
+                if ($this->validateIataMatch($airport, $name, $country)) {
+                    return $airport;
+                }
+            }
+        } // Strategy 3: Extract IATA code from branch name — patterns like (DXB), (SAW), (ADB)
         $iataFromName = $this->extractIataFromName($name);
         if ($iataFromName && isset($this->airportsByIata[$iataFromName])) {
             return $this->airportsByIata[$iataFromName];
@@ -138,6 +149,25 @@ class BranchNormalizationService
         }
 
         return null;
+    }
+
+    /**
+     * Validate if an IATA code match makes sense to prevent false positives from 3-letter station IDs.
+     */
+    private function validateIataMatch(Airport $airport, string $branchName, string $branchCountry): bool
+    {
+        if ($this->isAirportBranch($branchName)) {
+            return true; // Clearly an airport branch
+        }
+        
+        $cleanAirportCountry = $this->cleanString($airport->country);
+        $cleanBranchCountry = $this->cleanString($branchCountry);
+        
+        if (!empty($cleanBranchCountry) && $cleanAirportCountry === $cleanBranchCountry) {
+            return true; // Same country, so the 3-letter code is likely legit
+        }
+
+        return false;
     }
 
     /**

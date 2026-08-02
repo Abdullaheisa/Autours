@@ -125,7 +125,14 @@ class SyncJimpisoftVehicles extends Command
         // Build station_id => branch_id map
         $stationToBranchMap = [];
         foreach ($allBranches as $branch) {
-            $stationToBranchMap[$branch->station_id] = $branch->id;
+            $apiStationId = $branch->station_id;
+            
+            // Map the internal 'DXB' back to Jimpisoft's 'DXB1' for API requests
+            if ($apiStationId === 'DXB') {
+                $apiStationId = 'DXB1';
+            }
+            
+            $stationToBranchMap[$apiStationId] = $branch->id;
         }
 
         $this->info('Fetching 1-day prices for ' . count($stationToBranchMap) . ' station(s) concurrently...');
