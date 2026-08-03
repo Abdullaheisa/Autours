@@ -505,17 +505,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Riyadh",
           "description": "Saudi Arabia's modern capital blends rich heritage with futuristic architecture, luxury shopping, and world-class cultural attractions.",
-          "image": "countries/saudi.webp",
-          "tags": [
-            "Capital",
-            "Culture",
-            "Modern"
-          ],
+          "image": "https://images.pexels.com/photos/5625713/pexels-photo-5625713.jpeg?auto=compress&cs=tinysrgb&w=800",
           "attractions": [
             {
               "name": "Kingdom Centre Tower",
               "description": "One of Riyadh's most iconic skyscrapers, offering spectacular panoramic views of the city from its famous Sky Bridge.",
-              "image": "https://images.pexels.com/photos/17261869/pexels-photo-17261869.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/15839821/pexels-photo-15839821.jpeg?auto=compress&cs=tinysrgb&w=800"
             },
             {
               "name": "Masmak Fortress",
@@ -525,46 +520,36 @@ export const countryPagesData: Record<string, CountryPageData> = {
           ]
         },
         {
-          "name": "Jeddah",
-          "description": "Located on the Red Sea coast, Jeddah is famous for its historic districts, beautiful waterfront, luxury shopping, and vibrant cultural scene.",
-          "image": "https://images.pexels.com/photos/37909605/pexels-photo-37909605.jpeg?auto=compress&cs=tinysrgb&w=800",
-          "tags": [
-            "Heritage",
-            "Beaches",
-            "UNESCO"
-          ],
+          "name": "Makkah",
+          "description": "Makkah is the holiest city in Islam, welcoming millions of Muslims every year to perform Hajj and Umrah at the Grand Mosque.",
+          "image": "https://images.pexels.com/photos/26436662/pexels-photo-26436662.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "attractions": [
             {
-              "name": "Jeddah Corniche",
-              "description": "A scenic waterfront promenade offering beaches, cafés, parks, and stunning views of the Red Sea.",
-              "image": "https://images.pexels.com/photos/17261869/pexels-photo-17261869.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "name": "Masjid al-Haram",
+              "description": "The largest mosque in the world, surrounding the Holy Kaaba, serving as the spiritual center for Muslims worldwide.",
+              "image": "https://images.pexels.com/photos/36573970/pexels-photo-36573970.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
-              "name": "King Fahd Fountain",
-              "description": "The tallest fountain in the world, shooting seawater hundreds of meters into the sky and creating an unforgettable city landmark.",
-              "image": "https://images.pexels.com/photos/951962/pexels-photo-951962.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "name": "Abraj Al Bait (Clock Tower)",
+              "description": "A landmark skyscraper complex overlooking the Grand Mosque, featuring one of the largest clock faces in the world.",
+              "image": "https://images.pexels.com/photos/27291499/pexels-photo-27291499.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
-          "name": "AlUla",
-          "description": "AlUla is one of the Middle East's most extraordinary destinations, combining ancient civilizations, dramatic rock formations, and breathtaking desert landscapes.",
-          "image": "https://images.pexels.com/photos/17261869/pexels-photo-17261869.jpeg?auto=compress&cs=tinysrgb&w=800",
-          "tags": [
-            "UNESCO",
-            "Ancient",
-            "Desert"
-          ],
+          "name": "Madinah",
+          "description": "Madinah is the second holiest city in Islam, renowned for its serene atmosphere, rich Islamic history, and beautiful sacred sites.",
+          "image": "https://images.pexels.com/photos/33169789/pexels-photo-33169789.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "attractions": [
             {
-              "name": "Hegra (Madain Saleh)",
-              "description": "Saudi Arabia's first UNESCO World Heritage Site, featuring magnificent Nabataean tombs carved into sandstone cliffs.",
-              "image": "https://images.pexels.com/photos/17261869/pexels-photo-17261869.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "name": "Al-Masjid an-Nabawi",
+              "description": "The Prophet's Mosque, established by Prophet Muhammad, famous for its iconic Green Dome and expansive marble courtyards.",
+              "image": "https://images.pexels.com/photos/20277839/pexels-photo-20277839.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
-              "name": "Elephant Rock",
-              "description": "A spectacular natural sandstone formation shaped like an elephant, especially beautiful at sunset.",
-              "image": "https://images.pexels.com/photos/17186683/pexels-photo-17186683.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "name": "Quba Mosque",
+              "description": "The first mosque built in Islamic history, holding immense spiritual and historical significance for visitors from around the world.",
+              "image": "https://images.pexels.com/photos/15856480/pexels-photo-15856480.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
@@ -674,7 +659,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Manama",
           "description": "The vibrant capital of Bahrain combines modern skyscrapers, historic forts, luxury shopping, and a rich Arabian heritage.",
-          "image": "countries/bahrain.webp",
+          "image": "https://images.pexels.com/photos/6188071/pexels-photo-6188071.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Capital",
             "Culture",
@@ -684,19 +669,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Al Fateh Grand Mosque",
               "description": "One of the largest mosques in the world, admired for its impressive dome, elegant Islamic architecture, and welcoming atmosphere.",
-              "image": "https://images.pexels.com/photos/1438830/pexels-photo-1438830.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/35322576/pexels-photo-35322576.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Bahrain Fort (Qal'at al-Bahrain)",
               "description": "A UNESCO World Heritage Site that preserves the remains of the ancient Dilmun civilization and offers stunning views of the coastline.",
-              "image": "https://images.pexels.com/photos/1438830/pexels-photo-1438830.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/37387066/pexels-photo-37387066.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Muharraq",
           "description": "Muharraq is Bahrain's historic capital, celebrated for its pearl-diving heritage, traditional architecture, and cultural landmarks.",
-          "image": "https://images.pexels.com/photos/1438830/pexels-photo-1438830.jpeg?auto=compress&cs=tinysrgb&w=800",
+          "image": "https://images.pexels.com/photos/37387066/pexels-photo-37387066.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "UNESCO",
             "Heritage",
@@ -706,19 +691,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Pearling Path",
               "description": "A UNESCO World Heritage Site telling the story of Bahrain's famous pearl-diving industry through historic buildings and restored houses.",
-              "image": "https://images.pexels.com/photos/32975168/pexels-photo-32975168.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/14722289/pexels-photo-14722289.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Sheikh Isa Bin Ali House",
               "description": "One of Bahrain's finest examples of traditional Gulf architecture, featuring beautiful courtyards and intricate wooden details.",
-              "image": "https://images.pexels.com/photos/1438830/pexels-photo-1438830.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/8484847/pexels-photo-8484847.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Hawar Islands",
           "description": "A peaceful island paradise famous for crystal-clear waters, wildlife, and beautiful sandy beaches.",
-          "image": "https://images.pexels.com/photos/1438830/pexels-photo-1438830.jpeg?auto=compress&cs=tinysrgb&w=800",
+          "image": "https://images.pexels.com/photos/37943870/pexels-photo-37943870.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Islands",
             "Nature",
@@ -728,12 +713,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Hawar Beaches",
               "description": "Relax on untouched beaches surrounded by turquoise waters and peaceful natural scenery.",
-              "image": "https://images.pexels.com/photos/1438830/pexels-photo-1438830.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/11435608/pexels-photo-11435608.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Marine Wildlife",
               "description": "The islands are home to dolphins, rare birds, and diverse marine life, making them a paradise for nature lovers.",
-              "image": "https://images.pexels.com/photos/1438830/pexels-photo-1438830.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/4621386/pexels-photo-4621386.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
@@ -848,7 +833,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Petra",
           "description": "Petra, the legendary Rose City, is one of the New Seven Wonders of the World and Jordan's most iconic destination.",
-          "image": "countries/jordan.webp",
+          "image": "https://images.pexels.com/photos/31831562/pexels-photo-31831562.jpeg?auto=compress&cs=tinysrgb&w=800",
           "tags": [
             "UNESCO",
             "Wonder",
@@ -858,34 +843,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "The Treasury (Al-Khazneh)",
               "description": "Petra's most famous landmark, carved directly into pink sandstone cliffs, is one of the world's greatest archaeological masterpieces.",
-              "image": "https://images.pexels.com/photos/27828119/pexels-photo-27828119.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/18717341/pexels-photo-18717341.jpeg?auto=compress&cs=tinysrgb&w=800"
             },
             {
               "name": "The Siq",
               "description": "A dramatic narrow canyon that serves as the breathtaking entrance to the ancient city of Petra.",
-              "image": "https://images.pexels.com/photos/27828119/pexels-photo-27828119.jpeg?auto=compress&cs=tinysrgb&w=800"
-            }
-          ]
-        },
-        {
-          "name": "Wadi Rum",
-          "description": "Known as the Valley of the Moon, Wadi Rum is a breathtaking desert landscape of towering sandstone mountains, red dunes, and unforgettable adventure experiences.",
-          "image": "https://images.pexels.com/photos/27828119/pexels-photo-27828119.jpeg?auto=compress&cs=tinysrgb&w=800",
-          "tags": [
-            "Desert",
-            "Adventure",
-            "Stargazing"
-          ],
-          "attractions": [
-            {
-              "name": "Wadi Rum Desert",
-              "description": "One of the world's most spectacular deserts, famous for its red sand, dramatic rock formations, and stunning panoramic scenery.",
-              "image": "https://images.pexels.com/photos/13806469/pexels-photo-13806469.jpeg?auto=compress&cs=tinysrgb&w=800"
-            },
-            {
-              "name": "Jebel Umm ad Dami",
-              "description": "Jordan's highest mountain offers breathtaking desert views and is a favorite destination for hikers and adventure seekers.",
-              "image": "https://images.pexels.com/photos/27828119/pexels-photo-27828119.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/5484876/pexels-photo-5484876.jpeg?auto=compress&cs=tinysrgb&w=800"
             }
           ]
         },
@@ -902,12 +865,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Amman Citadel",
               "description": "A historic hilltop site featuring ancient temples, palaces, and panoramic views overlooking the city.",
-              "image": "https://images.pexels.com/photos/32549230/pexels-photo-32549230.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/18717593/pexels-photo-18717593.jpeg?auto=compress&cs=tinysrgb&w=800"
             },
             {
               "name": "Roman Theatre",
               "description": "A beautifully preserved Roman amphitheater that remains one of Jordan's most important historical landmarks.",
-              "image": "https://images.pexels.com/photos/27828119/pexels-photo-27828119.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/37340519/pexels-photo-37340519.jpeg?auto=compress&cs=tinysrgb&w=800"
             }
           ]
         }
@@ -992,23 +955,52 @@ export const countryPagesData: Record<string, CountryPageData> = {
       "places": [
         {
           "name": "Kuwait City",
-          "description": "Kuwait City blends modern architecture, rich heritage, and beautiful waterfront attractions along the Arabian Gulf.",
-          "image": "countries/kuwait.webp",
-          "tags": [
-            "Capital",
-            "Modern",
-            "Culture"
-          ],
+          "description": "Kuwait City blends modern architecture, rich Arabian heritage, and beautiful waterfront attractions along the Arabian Gulf.",
+          "image": "https://images.pexels.com/photos/17348004/pexels-photo-17348004.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "attractions": [
             {
               "name": "Kuwait Towers",
-              "description": "The country's most iconic landmark, offering panoramic views of Kuwait City and the Arabian Gulf.",
-              "image": "https://images.pexels.com/photos/37745766/pexels-photo-37745766.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "description": "The country's most famous landmark, featuring panoramic viewing spheres overlooking Kuwait City and the Gulf.",
+              "image": "https://images.pexels.com/photos/38707730/pexels-photo-38707730.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Grand Mosque",
-              "description": "The largest mosque in Kuwait, admired for its magnificent Islamic architecture and elegant interior.",
-              "image": "https://images.pexels.com/photos/38283476/pexels-photo-38283476.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "description": "The largest mosque in Kuwait, renowned for its magnificent Islamic architecture, grand prayer hall, and detailed craftsmanship.",
+              "image": "https://images.pexels.com/photos/36225674/pexels-photo-36225674.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            }
+          ]
+        },
+        {
+          "name": "Salmiya",
+          "description": "A major commercial and cultural hub famous for vibrant shopping districts, seaside promenades, and family attractions.",
+          "image": "https://images.pexels.com/photos/6720242/pexels-photo-6720242.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "attractions": [
+            {
+              "name": "The Scientific Center",
+              "description": "A world-class educational facility featuring one of the largest aquariums in the Middle East, IMAX theater, and dhow harbor.",
+              "image": "https://images.pexels.com/photos/26902990/pexels-photo-26902990.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            },
+            {
+              "name": "Marina Mall & Beach",
+              "description": "A premier shopping and entertainment destination with a picturesque marina, seaside dining, and sandy beach promenade.",
+              "image": "https://images.pexels.com/photos/11062557/pexels-photo-11062557.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            }
+          ]
+        },
+        {
+          "name": "Al Ahmadi",
+          "description": "Located in southern Kuwait, Al Ahmadi is known for its beautiful parks, modern coastal developments, and tranquil beach resorts.",
+          "image": "https://images.pexels.com/photos/1154498/pexels-photo-1154498.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "attractions": [
+            {
+              "name": "Al Kout Mall & Waterfront",
+              "description": "Kuwait's largest waterfront retail and leisure destination, featuring dancing fountains, traditional souks, and marina views.",
+              "image": "https://images.pexels.com/photos/34456311/pexels-photo-34456311.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            },
+            {
+              "name": "Al Khiran Resort",
+              "description": "A popular coastal getaway offering luxury chalets, water sports, pristine beaches, and family relaxation along the Gulf.",
+              "image": "https://images.pexels.com/photos/32277097/pexels-photo-32277097.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
@@ -1122,7 +1114,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Muscat",
           "description": "Muscat blends traditional Arabian charm with stunning coastal scenery, historic forts, elegant mosques, and vibrant local markets.",
-          "image": "countries/oman.webp",
+          "image": "https://images.pexels.com/photos/27222917/pexels-photo-27222917.jpeg?auto=compress&cs=tinysrgb&w=800",
           "tags": [
             "Capital",
             "Culture",
@@ -1132,12 +1124,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Sultan Qaboos Grand Mosque",
               "description": "One of the most beautiful mosques in the Middle East, featuring magnificent Islamic architecture, a massive prayer hall, and one of the world's largest handmade carpets.",
-              "image": "https://images.pexels.com/photos/27222917/pexels-photo-27222917.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/37417544/pexels-photo-37417544.jpeg?auto=compress&cs=tinysrgb&w=800"
             },
             {
               "name": "Al Jalali Fort",
               "description": "Overlooking Muscat Harbor, Al Jalali Fort is a historic Portuguese fortress offering spectacular coastal views and a glimpse into Oman's rich history.",
-              "image": "https://images.pexels.com/photos/38036757/pexels-photo-38036757.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/10602398/pexels-photo-10602398.jpeg?auto=compress&cs=tinysrgb&w=800"
             }
           ]
         },
@@ -1154,19 +1146,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Nizwa Fort",
               "description": "One of Oman's most famous landmarks, Nizwa Fort features a massive circular tower and offers panoramic views of the surrounding oasis.",
-              "image": "https://images.pexels.com/photos/38036757/pexels-photo-38036757.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/38036752/pexels-photo-38036752.jpeg?auto=compress&cs=tinysrgb&w=800"
             },
             {
               "name": "Nizwa Souq",
               "description": "A lively traditional market where visitors can shop for silver jewelry, pottery, dates, spices, and handcrafted souvenirs.",
-              "image": "https://images.pexels.com/photos/38036757/pexels-photo-38036757.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/34404318/pexels-photo-34404318.jpeg?auto=compress&cs=tinysrgb&w=800"
             }
           ]
         },
         {
           "name": "Salalah",
           "description": "Salalah is famous for its tropical landscapes, beautiful beaches, waterfalls, and lush greenery during the annual Khareef season.",
-          "image": "https://images.pexels.com/photos/38036757/pexels-photo-38036757.jpeg?auto=compress&cs=tinysrgb&w=800",
+          "image": "https://images.pexels.com/photos/33113407/pexels-photo-33113407.jpeg?auto=compress&cs=tinysrgb&w=800",
           "tags": [
             "Nature",
             "Beaches",
@@ -1176,12 +1168,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Al Mughsail Beach",
               "description": "A stunning white-sand beach known for dramatic cliffs, crystal-clear waters, and natural blowholes.",
-              "image": "https://images.pexels.com/photos/38036757/pexels-photo-38036757.jpeg?auto=compress&cs=tinysrgb&w=800"
-            },
-            {
-              "name": "Wadi Darbat",
-              "description": "A beautiful valley filled with waterfalls, lakes, and green landscapes, especially during the Khareef season.",
-              "image": "https://images.pexels.com/photos/38036757/pexels-photo-38036757.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/27860738/pexels-photo-27860738.jpeg?auto=compress&cs=tinysrgb&w=800"
             }
           ]
         }
@@ -1294,7 +1281,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Doha",
           "description": "Doha is a modern waterfront city where futuristic skyscrapers meet traditional Arabian heritage, world-class museums, and luxury shopping.",
-          "image": "countries/qatar.webp",
+          "image": "https://images.pexels.com/photos/19748320/pexels-photo-19748320.jpeg?auto=compress&cs=tinysrgb&w=800",
           "tags": [
             "Capital",
             "Modern",
@@ -1309,7 +1296,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Doha Corniche",
               "description": "A scenic waterfront promenade offering spectacular views of Doha's skyline and the Arabian Gulf.",
-              "image": "https://images.pexels.com/photos/19748320/pexels-photo-19748320.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/35158205/pexels-photo-35158205.jpeg?auto=compress&cs=tinysrgb&w=800"
             }
           ]
         }
@@ -1629,9 +1616,9 @@ export const countryPagesData: Record<string, CountryPageData> = {
               "name": "Hassan II Mosque",
               "description": "One of the largest and most beautiful mosques in the world, dramatically located on the Atlantic coastline.",
               "image": "https://images.pexels.com/photos/20580486/pexels-photo-20580486.jpeg?auto=compress&cs=tinysrgb&w=800"
-            },
+            }
           ]
-        },
+        }
       ]
     },
     "partnersDescription": "Autours partners with leading car rental providers across Morocco. Compare offers from trusted suppliers, enjoy competitive prices, and choose from a wide range of vehicles with convenient pickup locations across Casablanca, Marrakech, Agadir, Tangier, and major airports.",
@@ -1747,7 +1734,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Tbilisi",
           "description": "Georgia's charming capital combines ancient history, colorful streets, hilltop fortresses, and modern culture, making it one of the Caucasus' most fascinating cities.",
-          "image": "countries/georgia.webp",
+          "image": "https://images.pexels.com/photos/7539985/pexels-photo-7539985.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Capital",
             "Heritage",
@@ -1757,19 +1744,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Narikala Fortress",
               "description": "An ancient fortress overlooking Tbilisi, offering breathtaking panoramic views of the city and the Kura River.",
-              "image": "https://images.unsplash.com/photo-1572553640049-96e9e5e2a17d?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/11653610/pexels-photo-11653610.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Holy Trinity Cathedral",
               "description": "One of the largest Orthodox churches in the world, admired for its magnificent architecture and peaceful atmosphere.",
-              "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/16658272/pexels-photo-16658272.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Batumi",
           "description": "Batumi is Georgia's vibrant Black Sea resort, known for its beaches, modern skyline, botanical gardens, and lively nightlife.",
-          "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+          "image": "https://images.pexels.com/photos/11815773/pexels-photo-11815773.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Beaches",
             "Modern",
@@ -1779,19 +1766,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Batumi Boulevard",
               "description": "A scenic seaside promenade lined with palm trees, cafés, sculptures, and beautiful Black Sea views.",
-              "image": "https://images.pexels.com/photos/15059509/pexels-photo-15059509.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/35778764/pexels-photo-35778764.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Ali and Nino Statue",
               "description": "A moving sculpture symbolizing eternal love and one of Batumi's most iconic landmarks.",
-              "image": "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/34518816/pexels-photo-34518816.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Kazbegi (Stepantsminda)",
           "description": "Kazbegi is one of Georgia's most breathtaking mountain destinations, famous for dramatic peaks, hiking trails, and stunning landscapes.",
-          "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+          "image": "https://images.pexels.com/photos/1280840/pexels-photo-1280840.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Mountains",
             "Hiking",
@@ -1801,12 +1788,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Gergeti Trinity Church",
               "description": "Perched high above the mountains, this iconic church offers one of the most spectacular views in the Caucasus.",
-              "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/9407207/pexels-photo-9407207.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Mount Kazbek",
               "description": "One of Georgia's highest mountains, attracting hikers, climbers, and nature lovers from around the world.",
-              "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/33273790/pexels-photo-33273790.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
@@ -1920,7 +1907,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Athens",
           "description": "The birthplace of democracy, Athens is a city where ancient monuments blend with vibrant neighborhoods and modern culture.",
-          "image": "countries/georgia.webp",
+          "image": "https://images.pexels.com/photos/15141202/pexels-photo-15141202.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "History",
             "UNESCO",
@@ -1930,19 +1917,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Acropolis",
               "description": "The most famous landmark in Greece, featuring magnificent ancient temples overlooking the city.",
-              "image": "https://images.pexels.com/photos/161342/pexels-photo-161342.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/36825391/pexels-photo-36825391.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Parthenon",
               "description": "An architectural masterpiece dedicated to the goddess Athena and a symbol of classical civilization.",
-              "image": "https://images.pexels.com/photos/161342/pexels-photo-161342.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/14375296/pexels-photo-14375296.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Santorini",
           "description": "Santorini is Greece's most famous island, celebrated for its whitewashed villages, blue-domed churches, volcanic cliffs, and unforgettable sunsets.",
-          "image": "https://images.pexels.com/photos/161342/pexels-photo-161342.jpeg?auto=compress&cs=tinysrgb&w=800",
+          "image": "https://images.pexels.com/photos/1010655/pexels-photo-1010655.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Romantic",
             "Views",
@@ -1952,19 +1939,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Oia Village",
               "description": "The island's most iconic village, offering breathtaking sunset views, charming white houses, and narrow streets overlooking the Aegean Sea.",
-              "image": "https://images.pexels.com/photos/161342/pexels-photo-161342.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/38464216/pexels-photo-38464216.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Blue Dome Churches",
               "description": "These beautiful blue-domed churches are among the most photographed landmarks in Greece and symbolize Santorini's unique architecture.",
-              "image": "https://images.pexels.com/photos/161342/pexels-photo-161342.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/33851769/pexels-photo-33851769.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Mykonos",
           "description": "Mykonos is famous for its beautiful beaches, charming whitewashed streets, vibrant nightlife, and picturesque waterfront.",
-          "image": "https://images.pexels.com/photos/24244275/pexels-photo-24244275.jpeg?auto=compress&cs=tinysrgb&w=800",
+          "image": "https://images.pexels.com/photos/37844835/pexels-photo-37844835.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Luxury",
             "Beaches",
@@ -1974,12 +1961,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Mykonos Windmills",
               "description": "These historic windmills are the island's most recognizable landmark and offer spectacular sunset views.",
-              "image": "https://images.pexels.com/photos/161342/pexels-photo-161342.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/37844835/pexels-photo-37844835.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Little Venice",
               "description": "A beautiful waterfront neighborhood where colorful buildings stand directly above the sea.",
-              "image": "https://images.pexels.com/photos/161342/pexels-photo-161342.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/24244358/pexels-photo-24244358.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
@@ -2093,7 +2080,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Sarajevo",
           "description": "Sarajevo is a fascinating city where Ottoman, Austro-Hungarian, and modern cultures come together in a unique historical atmosphere.",
-          "image": "countries/georgia.webp",
+          "image": "https://images.pexels.com/photos/38183710/pexels-photo-38183710.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Culture",
             "History",
@@ -2103,19 +2090,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Baščaršija",
               "description": "The historic old bazaar filled with traditional cafés, artisan shops, and authentic Bosnian culture.",
-              "image": "https://images.unsplash.com/photo-1590159763121-7c9fdda23c4b?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/28305255/pexels-photo-28305255.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Latin Bridge",
               "description": "A famous bridge known for its important role in world history and its beautiful riverside setting.",
-              "image": "https://images.unsplash.com/photo-1572553640049-96e9e5e2a17d?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/20813448/pexels-photo-20813448.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Mostar",
           "description": "Mostar is Bosnia and Herzegovina's most famous destination, celebrated for its iconic bridge, Ottoman architecture, and picturesque riverside scenery.",
-          "image": "https://images.unsplash.com/photo-1572553640049-96e9e5e2a17d?auto=format&fit=crop&w=800&q=80",
+          "image": "https://images.pexels.com/photos/16854727/pexels-photo-16854727.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "UNESCO",
             "Bridge",
@@ -2125,19 +2112,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Stari Most (Old Bridge)",
               "description": "A UNESCO World Heritage Site and the symbol of Mostar, this stunning stone bridge spans the Neretva River and is famous for its breathtaking views and traditional diving performances.",
-              "image": "https://images.unsplash.com/photo-1572553640049-96e9e5e2a17d?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/33660903/pexels-photo-33660903.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Mostar Old Bazaar",
               "description": "A charming historic district filled with cobblestone streets, traditional cafés, handmade crafts, and authentic Bosnian souvenirs.",
-              "image": "https://images.unsplash.com/photo-1590159763121-7c9fdda23c4b?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/33670339/pexels-photo-33670339.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Blagaj",
           "description": "Blagaj is a peaceful destination known for its crystal-clear spring, dramatic cliffs, and centuries-old monastery.",
-          "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80",
+          "image": "https://images.pexels.com/photos/29962035/pexels-photo-29962035.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Scenic",
             "Spiritual",
@@ -2147,12 +2134,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Blagaj Tekke",
               "description": "A historic Dervish monastery beautifully built beside the source of the Buna River.",
-              "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/30175102/pexels-photo-30175102.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Buna River Spring",
               "description": "One of Europe's largest natural springs, surrounded by breathtaking cliffs and turquoise water.",
-              "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/33196209/pexels-photo-33196209.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
@@ -2266,7 +2253,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Sheki",
           "description": "Sheki is one of Azerbaijan's oldest and most beautiful cities, known for its Silk Road history, mountain scenery, and magnificent architecture.",
-          "image": "countries/georgia.webp",
+          "image": "https://images.pexels.com/photos/13502463/pexels-photo-13502463.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Heritage",
             "Palace",
@@ -2276,19 +2263,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Sheki Khan's Palace",
               "description": "A masterpiece of Azerbaijani architecture, famous for its colorful stained-glass windows, intricate paintings, and beautiful wooden craftsmanship.",
-              "image": "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/13502463/pexels-photo-13502463.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Kish Albanian Church",
               "description": "One of the oldest churches in the Caucasus, surrounded by peaceful mountain landscapes and rich history.",
-              "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/37497202/pexels-photo-37497202.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Quba",
           "description": "Quba is a peaceful mountain destination famous for forests, waterfalls, traditional villages, and breathtaking natural scenery.",
-          "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+          "image": "https://images.pexels.com/photos/30624421/pexels-photo-30624421.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Nature",
             "Mountains",
@@ -2298,19 +2285,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Afurja Waterfall",
               "description": "One of Azerbaijan's tallest waterfalls, surrounded by lush forests and dramatic mountain landscapes.",
-              "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/18531657/pexels-photo-18531657.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Shahdag Mountain Resort",
               "description": "A year-round resort offering skiing, hiking, cable cars, and adventure activities with stunning mountain views.",
-              "image": "https://images.unsplash.com/photo-1520587165-2e74e1b94b35?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/32136804/pexels-photo-32136804.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         },
         {
           "name": "Ganja",
           "description": "Ganja is Azerbaijan's second-largest city, combining historic monuments, beautiful parks, and important cultural landmarks.",
-          "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80",
+          "image": "https://images.pexels.com/photos/792776/pexels-photo-792776.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "tags": [
             "Culture",
             "History",
@@ -2320,12 +2307,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Javad Khan Street",
               "description": "A lively pedestrian street filled with cafés, restaurants, local shops, and historic architecture.",
-              "image": "https://images.unsplash.com/photo-1590159763121-7c9fdda23c4b?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/20098621/pexels-photo-20098621.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Nizami Mausoleum",
               "description": "A magnificent monument dedicated to the legendary Persian poet Nizami Ganjavi.",
-              "image": "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/19439205/pexels-photo-19439205.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
@@ -2439,22 +2426,51 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Paphos",
           "description": "Paphos is one of Cyprus' most famous coastal destinations, offering ancient ruins, beautiful beaches, and UNESCO World Heritage sites.",
-          "image": "countries/georgia.webp",
-          "tags": [
-            "UNESCO",
-            "Mythology",
-            "Heritage"
-          ],
+          "image": "https://images.pexels.com/photos/14637245/pexels-photo-14637245.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
           "attractions": [
             {
               "name": "Paphos Archaeological Park",
               "description": "Discover impressive Roman villas decorated with beautifully preserved mosaics and ancient ruins.",
-              "image": "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=800&q=80"
+              "image": "https://images.pexels.com/photos/11062554/pexels-photo-11062554.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             },
             {
               "name": "Aphrodite's Rock",
               "description": "Legend says this spectacular sea rock is the birthplace of Aphrodite, the Greek goddess of love.",
-              "image": "https://images.pexels.com/photos/5811777/pexels-photo-5811777.jpeg?auto=compress&cs=tinysrgb&w=800"
+              "image": "https://images.pexels.com/photos/8962406/pexels-photo-8962406.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            }
+          ]
+        },
+        {
+          "name": "Ayia Napa",
+          "description": "A world-famous beach resort known for crystal-clear turquoise waters, golden sand beaches, sea caves, and lively nightlife.",
+          "image": "https://images.pexels.com/photos/32056712/pexels-photo-32056712.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "attractions": [
+            {
+              "name": "Nissi Beach",
+              "description": "One of Europe's most famous beaches, featuring powdery white sand and shallow, crystal-clear turquoise water.",
+              "image": "https://images.pexels.com/photos/32056716/pexels-photo-32056716.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            },
+            {
+              "name": "Cape Greco National Forest Park",
+              "description": "A stunning coastal nature reserve featuring sea caves, natural stone bridges, hiking trails, and cliff-diving spots.",
+              "image": "https://images.pexels.com/photos/9255956/pexels-photo-9255956.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            }
+          ]
+        },
+        {
+          "name": "Limassol",
+          "description": "Cyprus' vibrant southern coastal hub, blending luxury marina living, medieval castles, beach promenades, and ancient ruins.",
+          "image": "https://images.pexels.com/photos/36934330/pexels-photo-36934330.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "attractions": [
+            {
+              "name": "Limassol Marina",
+              "description": "A modern waterfront destination featuring luxury yachts, seaside dining, stylish boutiques, and scenic promenades.",
+              "image": "https://images.pexels.com/photos/36934330/pexels-photo-36934330.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+            },
+            {
+              "name": "Kourion Ancient Amphitheatre",
+              "description": "A magnificent ancient Greco-Roman theater perched high on a cliff offering spectacular Mediterranean Sea views.",
+              "image": "https://images.pexels.com/photos/36623829/pexels-photo-36623829.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
             }
           ]
         }
