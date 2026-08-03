@@ -400,7 +400,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
         $spec = $this->findSpecification('air');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, 'Air Conditioner', $acValue, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, $spec->name, $acValue, $spec->icon);
         }
     }
 
@@ -409,13 +409,16 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
      */
     protected function addDoorsSpec(Vehicle $vehicle, $value): void
     {
-        if (!is_numeric($value)) {
+        if (empty($value) && $value !== '0' && $value !== 0) {
             return;
         }
 
+        $num = preg_replace('/[^0-9]/', '', (string)$value);
+        $finalValue = !empty($num) ? $num : (string)$value;
+
         $spec = $this->findSpecification('door');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, 'Doors', $value, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, $spec->name, $finalValue, $spec->icon);
         }
     }
 
@@ -424,13 +427,13 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
      */
     protected function addSuitcaseSpec(Vehicle $vehicle, $value): void
     {
-        if (empty($value)) {
+        if (empty($value) && $value !== '0' && $value !== 0) {
             return;
         }
 
         $spec = $this->findSpecification('suitcase');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, 'Suitcase', $value, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, $spec->name, (string)$value, $spec->icon);
         }
     }
 
@@ -439,13 +442,16 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
      */
     protected function addSeatsSpec(Vehicle $vehicle, $value): void
     {
-        if (!is_numeric($value)) {
+        if (empty($value) && $value !== '0' && $value !== 0) {
             return;
         }
 
-        $spec = $this->findSpecification('seats');
+        $num = preg_replace('/[^0-9]/', '', (string)$value);
+        $finalValue = !empty($num) ? $num : (string)$value;
+
+        $spec = $this->findSpecification('seat');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, 'Number Of Seats', $value, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, $spec->name, $finalValue, $spec->icon);
         }
     }
 
@@ -470,7 +476,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
         $spec = $this->findSpecification('fuel');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, 'Fuel', $normalized, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, $spec->name, $normalized, $spec->icon);
         }
     }
 
@@ -503,6 +509,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
     {
         return Specification::query()
             ->where('name', 'like', '%' . $namePattern . '%')
+            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($namePattern) . '%'])
             ->first();
     }
 
@@ -511,10 +518,15 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
      */
     protected function createVehicleSpecification(int $vehicleId, string $name, $value, ?string $icon): void
     {
+        VehicleSpecification::query()
+            ->where('vehicle_id', $vehicleId)
+            ->where('name', $name)
+            ->delete();
+
         VehicleSpecification::query()->insert([
             'vehicle_id' => $vehicleId,
             'name' => $name,
-            'value' => $value,
+            'value' => (string)$value,
             'icon' => $icon,
         ]);
     }
@@ -529,11 +541,14 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             return;
         }
 
+        $trimmed = trim($locationTypeName);
         $locationType = LocationType::query()
-            ->where('name', 'like', '%' . strtolower(trim($locationTypeName)) . '%')
+            ->where('name', 'like', '%' . $trimmed . '%')
+            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($trimmed) . '%'])
             ->first();
 
         if ($locationType) {
+            LocationTypeVehicle::query()->where('vehicle_id', $vehicle->id)->delete();
             LocationTypeVehicle::query()->insert([
                 'location_type_id' => $locationType->id,
                 'vehicle_id' => $vehicle->id,
@@ -551,11 +566,14 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             return;
         }
 
+        $trimmed = trim($fuelPolicyName);
         $fuelPolicy = FuelPolicy::query()
-            ->where('name', 'like', '%' . strtolower(trim($fuelPolicyName)) . '%')
+            ->where('name', 'like', '%' . $trimmed . '%')
+            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($trimmed) . '%'])
             ->first();
 
         if ($fuelPolicy) {
+            $vehicle->fuel_policy_id = $fuelPolicy->id;
             $vehicle->fuel_policy = $fuelPolicy->id;
             $vehicle->save();
         }
@@ -624,7 +642,11 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             }
         }
 
-        return null;
+        if (in_array($lowercaseValue, ['yes', 'true', '1', 'y', 'a/c', 'ac'])) {
+            return 'Air Conditioning';
+        }
+
+        return trim($value);
     }
 
     /**
