@@ -40,6 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-current-user-profile', [\App\Http\Controllers\UserController::class, 'profile']);
     Route::post('/vehicles/bulk-upload', [\App\Http\Controllers\VehicleController::class, 'bulkUpload']);
     Route::get('/vehicles/bulk-upload/template', [\App\Http\Controllers\VehicleController::class, 'downloadBulkUploadTemplate']);
+    Route::post('/post/vehicles', [\App\Http\Controllers\VehicleController::class, 'create']);
+    Route::post('/edit-vehicle-price', [\App\Http\Controllers\VehicleController::class, 'updatePrice']);
+    Route::post('/update/vehicles/activation', [\App\Http\Controllers\VehicleController::class, 'updateActivation']);
+    Route::post('/delete/vehicles/{id}', [\App\Http\Controllers\VehicleController::class, 'destroy']);
+    Route::get('/edit/vehicles/{id}', [\App\Http\Controllers\VehicleController::class, 'edit']);
     Route::post('/upload', [\App\Http\Controllers\UserController::class, 'upload']);
 });
 
@@ -130,6 +135,10 @@ Route::prefix('supplier')->middleware(['auth:sanctum', 'active_supplier'])->grou
     Route::delete('promo/{id}', [\App\Http\Controllers\PromosController::class, 'destroy']);
 
     // Vehicles Management
+    Route::post('post/vehicles', [\App\Http\Controllers\VehicleController::class, 'create']);
+    Route::post('edit-vehicle-price', [\App\Http\Controllers\VehicleController::class, 'updatePrice']);
+    Route::post('update/vehicles/activation', [\App\Http\Controllers\VehicleController::class, 'updateActivation']);
+    Route::post('delete/vehicles/{id}', [\App\Http\Controllers\VehicleController::class, 'destroy']);
     Route::get('edit/vehicles/{id}', [\App\Http\Controllers\VehicleController::class, 'edit']);
 
     // Dashboard Stats
