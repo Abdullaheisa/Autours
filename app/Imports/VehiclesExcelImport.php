@@ -439,18 +439,25 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
     }
 
-    /**
-     * Add suitcase specification
-     */
     protected function addSuitcaseSpec(Vehicle $vehicle, $value): void
     {
         if (empty($value) && $value !== '0' && $value !== 0) {
             return;
         }
 
+        $valStr = strtolower(trim((string)$value));
+
+        // Normalize Small / Medium / Large (also supports numbers 1->Small, 2->Medium, 3->Large)
+        $normalized = match (true) {
+            str_contains($valStr, 'small') || $valStr === 's' || $valStr === '1' => 'Small',
+            str_contains($valStr, 'med') || $valStr === 'm' || $valStr === '2'   => 'Medium',
+            str_contains($valStr, 'l') || str_contains($valStr, 'big') || $valStr === '3' => 'Large',
+            default => ucfirst(strtolower(trim((string)$value))),
+        };
+
         $spec = $this->findSpecification('suitcase');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, $spec->name, (string)$value, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, $spec->name, $normalized, $spec->icon);
         }
     }
 
@@ -591,7 +598,6 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
         if ($fuelPolicy) {
             $vehicle->fuel_policy_id = $fuelPolicy->id;
-            $vehicle->fuel_policy = $fuelPolicy->id;
             $vehicle->save();
         }
     }

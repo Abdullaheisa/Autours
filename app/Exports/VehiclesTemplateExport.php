@@ -78,7 +78,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 'Economy',
                 'Air Conditioning',
                 4,
-                2,
+                'Medium',
                 5,
                 'Gas',
                 'Automatic',
@@ -100,7 +100,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 'Compact',
                 'Air Conditioning',
                 4,
-                3,
+                'Large',
                 5,
                 'Gas',
                 'Manual',
@@ -122,7 +122,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 '',  // Category
                 '',  // Air Condition (e.g: Air Conditioning)
                 '',  // Doors (e.g: 4)
-                '',  // Suitcase (e.g: 2)
+                '',  // Suitcase (Small / Medium / Large)
                 '',  // Seats (e.g: 5)
                 '',  // Fuel Type (e.g: Gas)
                 '',  // Transmission (e.g: Automatic)
@@ -347,7 +347,7 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
         // Build the reference data array
         $data = [
             // Header row
-            ['Categories', 'Fuel Policies', 'Location Types', 'Confirmation Types', 'Air Condition Values', 'Transmission Types', 'Fuel Types'],
+            ['Categories', 'Fuel Policies', 'Location Types', 'Confirmation Types', 'Air Condition Values', 'Transmission Types', 'Fuel Types', 'Suitcase Options'],
         ];
 
         // Find the max rows needed
@@ -362,6 +362,7 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
         $acValues = ['A/C', 'Air Conditioning', 'AC'];
         $transmissionTypes = ['Automatic', 'Manual', 'Semi-Automatic'];
         $fuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'LPG'];
+        $suitcaseOptions = ['Small', 'Medium', 'Large'];
 
         for ($i = 0; $i < $maxRows; $i++) {
             $data[] = [
@@ -372,6 +373,7 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
                 $acValues[$i] ?? '',
                 $transmissionTypes[$i] ?? '',
                 $fuelTypes[$i] ?? '',
+                $suitcaseOptions[$i] ?? '',
             ];
         }
 
@@ -400,7 +402,7 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
     public function styles(Worksheet $sheet): array
     {
         // Header style
-        $sheet->getStyle('A1:G1')->applyFromArray([
+        $sheet->getStyle('A1:H1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
