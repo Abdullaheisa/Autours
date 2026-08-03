@@ -379,7 +379,14 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
 
   // ── Derived values ─────────────────────────
   const selectedPhoto = dynamicData.photos.find(
-    (p: any) => String(p.id) === formData.vehiclePhotoId || p.photo === formData.vehiclePhotoId
+    (p: any) =>
+      String(p.id) === formData.vehiclePhotoId ||
+      (p.photo && p.photo === formData.vehiclePhotoId) ||
+      (p.name && formData.vehiclePhotoId && (
+        p.name.toLowerCase() === String(formData.vehiclePhotoId).toLowerCase() ||
+        String(formData.vehiclePhotoId).toLowerCase().includes(p.name.toLowerCase()) ||
+        p.name.toLowerCase().includes(String(formData.vehiclePhotoId).toLowerCase())
+      ))
   );
   const selectedFeatures = dynamicData.includedItems.filter(
     (item: any) => formData.includedFeatures.includes(item.id)
@@ -591,7 +598,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
                           photoUrl = `${backendBase}/img/vehicles/${photoUrl}`;
                         }
                         const catLabel = photo.category?.name || photo.category_name || "";
-                        const isSelected = formData.vehiclePhotoId === String(photo.id);
+                        const isSelected = selectedPhoto ? selectedPhoto.id === photo.id : formData.vehiclePhotoId === String(photo.id);
                         return (
                           <button
                             type="button"

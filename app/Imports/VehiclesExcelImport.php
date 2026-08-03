@@ -245,31 +245,48 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
      */
     protected function setVehiclePhoto(Vehicle $vehicle, ?string $vehicleName, int $rowNumber): void
     {
-        $vehicleName = $vehicleName ?? 'Unknown Vehicle';
-        // Try exact match first
+        if (empty($vehicleName)) {
+            $vehicle->photo = null;
+            return;
+        }
+
+        $cleanName = trim($vehicleName);
+
+        // 1. Try exact / partial match on name in VehiclesPhotos
         $photo = VehiclesPhotos::query()
-            ->where('name', 'like', '%' . trim(strtolower($vehicleName)) . '%')
+            ->where('name', 'like', '%' . $cleanName . '%')
+            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($cleanName) . '%'])
             ->first();
 
-        // If no exact match, try matching just the car model (first two words)
+        // 2. Try first two words (e.g. "Toyota Corolla" from "Toyota Corolla 2024")
         if ($photo === null) {
-            $nameParts = explode(' ', trim($vehicleName));
-            if (count($nameParts) >= 2) {
-                $shortName = $nameParts[0] . ' ' . $nameParts[1];
+            $parts = preg_split('/\s+/', $cleanName);
+            if (count($parts) >= 2) {
+                $twoWords = $parts[0] . ' ' . $parts[1];
                 $photo = VehiclesPhotos::query()
-                    ->where('name', 'like', '%' . strtolower($shortName) . '%')
+                    ->where('name', 'like', '%' . $twoWords . '%')
+                    ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($twoWords) . '%'])
                     ->first();
             }
         }
 
+        // 3. Try reverse match: see if any VehiclesPhotos name is contained inside cleanName
         if ($photo === null) {
-            // Photo is nullable - vehicle will be created without a photo.
-            // The supplier can add a photo later from the dashboard.
-            $vehicle->photo = null;
-            info("Warning: No photo found for vehicle '{$vehicleName}' in row {$rowNumber}. Vehicle created without photo.");
+            $allPhotos = VehiclesPhotos::query()->get();
+            foreach ($allPhotos as $p) {
+                if (!empty($p->name) && stripos($cleanName, trim($p->name)) !== false) {
+                    $photo = $p;
+                    break;
+                }
+            }
+        }
+
+        if ($photo !== null) {
+            $vehicle->photo = $photo->photo ?: (string)$photo->id;
+            info("Photo matched for vehicle '{$vehicleName}': {$photo->name} ({$vehicle->photo})");
         } else {
-            $vehicle->photo = $photo->photo;
-            info("Photo found for vehicle '{$vehicleName}': {$photo->photo}");
+            $vehicle->photo = null;
+            info("No photo matched for vehicle '{$vehicleName}' in row {$rowNumber}. Uploaded without photo.");
         }
     }
 
