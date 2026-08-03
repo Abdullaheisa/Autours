@@ -106,85 +106,84 @@ function BookingContent() {
     dispatch(restoreAuth());
   }, [dispatch]);
 
-  // Direct mount-time API fetch using authApi.getProfile() to bypass stale session/Redux states!
+  // ── Profile prefill: runs on mount regardless of Redux auth state timing ──────
+  // We read the token directly from localStorage/cookies so we don't depend on
+  // isAuthenticated being true yet (restoreAuth is async and may not have finished).
+  const [profilePrefillDone, setProfilePrefillDone] = useState(false);
+
+  const applyProfileData = useCallback((profile: any) => {
+    if (!profile) return;
+    const nameParts = (profile.name || '').split(' ');
+    const title = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts[0] : 'Mr.';
+    const name = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts.slice(1).join(' ') : (profile.name || '');
+
+    setGender(title);
+    setFullName(name);
+    setEmail(profile.email || '');
+    if (profile.country) setCountry(profile.country);
+
+    const rawPhone = profile.phone_num || profile.phone || '';
+    if (rawPhone) {
+      const cleaned = rawPhone.trim();
+      if (cleaned.startsWith('+')) {
+        const matched = COUNTRY_CODES.find(c => cleaned.startsWith(`+${c.code}`));
+        if (matched) {
+          setMobileCode(`+${matched.code}`);
+          setPhone(cleaned.substring(matched.code.length + 1));
+        } else {
+          setPhone(cleaned);
+        }
+      } else if (cleaned.startsWith('00')) {
+        const matched = COUNTRY_CODES.find(c => cleaned.startsWith(`00${c.code}`));
+        if (matched) {
+          setMobileCode(`+${matched.code}`);
+          setPhone(cleaned.substring(matched.code.length + 2));
+        } else {
+          setPhone(cleaned);
+        }
+      } else {
+        setPhone(cleaned);
+      }
+    }
+    setProfilePrefillDone(true);
+  }, []);
+
+  // Mount-time fetch: tries API first, falls back to Redux loggedInUser
   useEffect(() => {
-    const fetchFreshProfile = async () => {
-      if (isAuthenticated) {
+    const fetchProfile = async () => {
+      // Check if a token exists at all (works even before Redux finishes restoreAuth)
+      const token = typeof window !== 'undefined'
+        ? (localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || document.cookie.match(/auth_token=([^;]+)/)?.[1])
+        : null;
+
+      if (token) {
         try {
           const res: any = await authApi.getProfile();
           const profile = res?.data || res;
-          if (profile) {
-            const nameParts = (profile.name || '').split(' ');
-            const title = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts[0] : 'Mr.';
-            const name = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts.slice(1).join(' ') : (profile.name || '');
-            
-            setGender(title);
-            setFullName(name);
-            setEmail(profile.email || '');
-            if (profile.country) {
-              setCountry(profile.country);
-            }
+          applyProfileData(profile);
+          return;
+        } catch (err) {
+          console.warn('Booking: getProfile failed, falling back to Redux user', err);
+        }
+      }
 
-            const rawUserPhone = profile.phone_num || profile.phone || '';
-            if (rawUserPhone) {
-              const cleanedPhone = rawUserPhone.trim();
-              if (cleanedPhone.startsWith('+')) {
-                const matchedCodeObj = COUNTRY_CODES.find(c => cleanedPhone.startsWith(`+${c.code}`));
-                if (matchedCodeObj) {
-                  setMobileCode(`+${matchedCodeObj.code}`);
-                  setPhone(cleanedPhone.substring(matchedCodeObj.code.length + 1));
-                } else {
-                  setPhone(cleanedPhone);
-                }
-              } else if (cleanedPhone.startsWith('00')) {
-                const matchedCodeObj = COUNTRY_CODES.find(c => cleanedPhone.startsWith(`00${c.code}`));
-                if (matchedCodeObj) {
-                  setMobileCode(`+${matchedCodeObj.code}`);
-                  setPhone(cleanedPhone.substring(matchedCodeObj.code.length + 2));
-                } else {
-                  setPhone(cleanedPhone);
-                }
-              } else {
-                setPhone(cleanedPhone);
-              }
-            }
-          }
-        } catch (error) {
-          console.warn("Failed to fetch fresh profile at booking mount, using loggedInUser fallback:", error);
-        }
-      } else if (loggedInUser) {
-        // Fallback for offline/redux state if getProfile is not ready yet
-        const nameParts = loggedInUser.name.split(' ');
-        const title = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts[0] : 'Mr.';
-        const name = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts.slice(1).join(' ') : loggedInUser.name;
-        
-        setGender(title);
-        setFullName(name);
-        setEmail(loggedInUser.email || '');
-        if (loggedInUser.country) {
-          setCountry(loggedInUser.country);
-        }
-
-        const rawUserPhone = (loggedInUser as any).phone_num || (loggedInUser as any).phone || '';
-        if (rawUserPhone) {
-          const cleanedPhone = rawUserPhone.trim();
-          if (cleanedPhone.startsWith('+')) {
-            const matchedCodeObj = COUNTRY_CODES.find(c => cleanedPhone.startsWith(`+${c.code}`));
-            if (matchedCodeObj) {
-              setMobileCode(`+${matchedCodeObj.code}`);
-              setPhone(cleanedPhone.substring(matchedCodeObj.code.length + 1));
-            } else {
-              setPhone(cleanedPhone);
-            }
-          } else {
-            setPhone(cleanedPhone);
-          }
-        }
+      // Fallback: use Redux loggedInUser if already populated
+      if (loggedInUser) {
+        applyProfileData(loggedInUser);
       }
     };
 
-    fetchFreshProfile();
-  }, [isAuthenticated, loggedInUser]);
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // If Redux loggedInUser becomes available after mount (restoreAuth completes late)
+  // and we haven't filled the form yet, use it as a final fallback.
+  useEffect(() => {
+    if (!profilePrefillDone && loggedInUser) {
+      applyProfileData(loggedInUser);
+    }
+  }, [loggedInUser, profilePrefillDone, applyProfileData]);
 
   // ── Checkboxes ───────────────────────────────────────────────────────────────
   const [rememberMe, setRememberMe] = useState(true);
@@ -566,8 +565,7 @@ function BookingContent() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="E-mail..."
-                      disabled={isAuthenticated}
-                      className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
+                      className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                 </div>

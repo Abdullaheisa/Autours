@@ -8,11 +8,10 @@ import { Vehicle } from '@/types';
 import { Car, ChevronRight, Sparkles, ShieldCheck } from 'lucide-react';
 import { assets } from '@/config/assets';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import { Autoplay, Navigation } from 'swiper/modules';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 
 const WORLD_CATEGORY_ORDER = ['mini', 'small', 'standard', 'economy', 'full size', 'compact suv', 'suv', 'van', 'family', 'luxury'];
 
@@ -275,12 +274,12 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
   };
 
   return (
-    <section className="py-16 md:py-24 bg-[#f8fafc] border-y border-slate-150">
+    <section className="py-8 md:py-12 bg-[#f8fafc] border-y border-slate-150">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-6 md:mb-12">
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/20 text-gray-950 text-xs font-black uppercase tracking-wider mb-4 border border-primary/30">
+        <div className="text-center max-w-3xl mx-auto mb-4 md:mb-6">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/20 text-gray-950 text-xs font-black uppercase tracking-wider mb-2 md:mb-3 border border-primary/30">
             <Sparkles size={14} className="text-gray-900" />
             Diverse Vehicle Options
           </span>
@@ -295,7 +294,7 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
         {/* Category Navigation Tabs */}
         <div 
           ref={tabsContainerRef}
-          className="flex items-center justify-start md:justify-center gap-2 overflow-x-auto pb-3 mb-6 md:mb-10 no-scrollbar w-full px-4 md:px-0"
+          className="flex items-center justify-start md:justify-center gap-2 overflow-x-auto pb-3 mb-4 md:mb-6 no-scrollbar w-full px-4 md:px-0"
         >
           {fleetCategories.map((cat, index) => {
             const isActive = cat.id === activeTab;
@@ -322,7 +321,7 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
           <Swiper
             onSwiper={(swiper) => { swiperRef.current = swiper; }}
             onSlideChange={handleSlideChange}
-            modules={[Autoplay, Pagination, Navigation]}
+            modules={[Autoplay, Navigation]}
             grabCursor={true}
             slidesPerView={1}
             spaceBetween={30}
@@ -331,12 +330,8 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
               disableOnInteraction: false,
               pauseOnMouseEnter: true,
             }}
-            pagination={{
-              clickable: true,
-              dynamicBullets: true,
-            }}
             loop={false}
-            className="w-full !pb-12"
+            className="w-full"
           >
             {fleetCategories.map((category) => (
               <SwiperSlide key={category.id} className="px-1">

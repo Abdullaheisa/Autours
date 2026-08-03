@@ -40,17 +40,17 @@ export default function BrandFAQSection({ brandName, faqs }: BrandFAQSectionProp
   };
 
   return (
-    <section className="bg-gradient-to-br from-primary via-primary-300 to-primary-600 relative overflow-hidden">
+    <section className="py-6 md:py-8 bg-gradient-to-br from-primary via-primary-300 to-primary-600 relative overflow-hidden">
       {/* Decorative blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-primary-100 rounded-full opacity-30 blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-primary-600 rounded-full opacity-20 blur-3xl" />
       </div>
 
-      <div className="max-w-6xl xl:max-w-[90rem] 2xl:max-w-[95rem] mb-10 mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-6xl xl:max-w-[90rem] 2xl:max-w-[95rem] mb-4 md:mb-6 mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-        {/* â”€â”€â”€ Header â”€â”€â”€ */}
-        <div className="text-center my-10">
+        {/* ——— Header ——— */}
+        <div className="text-center my-4 md:my-6">
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}

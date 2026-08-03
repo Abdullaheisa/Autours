@@ -22,9 +22,9 @@ export default function WhyBookSection({
   const shouldShowToggle = descriptionParagraphs.length > 1 || description.length > 250;
 
   return (
-    <section className="py-10 md:py-14 bg-white border-b border-gray-100">
+    <section className="py-6 md:py-8 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {/* Header: Title & Logo */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h3 className="text-2xl md:text-[28px] font-black text-gray-900 tracking-tight">
@@ -45,9 +45,9 @@ export default function WhyBookSection({
           </div>
 
           {/* Description paragraphs */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Desktop: Show everything */}
-            <div className="hidden md:block space-y-6">
+            <div className="hidden md:block space-y-4">
               {descriptionParagraphs.map((para: string, i: number) => (
                 <p key={i} className="text-base md:text-[17px] text-gray-700 leading-[1.8] font-normal">
                   {para}

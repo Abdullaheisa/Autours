@@ -115,7 +115,7 @@ export default async function BrandCountryPage({ params }: PageProps) {
 
         {/* ─── Locations Accordions ─────────────────────────────────────────── */}
         {(country.airportBranches.length > 0 || country.cityBranches.length > 0) && (
-          <section className="py-12 md:py-16 bg-white">
+          <section className="py-6 md:py-8 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <LocationsAccordion
                 airportBranches={country.airportBranches}
@@ -128,7 +128,7 @@ export default async function BrandCountryPage({ params }: PageProps) {
 
         {/* ─── Other Countries ─────────────────────────────────────────────── */}
         {brand.countries.length > 1 && (
-          <section className="py-12 bg-white border-t border-gray-100">
+          <section className="py-6 md:py-8 bg-white border-t border-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-base md:text-[17px] font-black text-gray-900 mb-5 tracking-tight">
                 Other {brand.name} destinations

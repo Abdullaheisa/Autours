@@ -18,10 +18,10 @@ export default function BrandCountriesGrid({
   countries,
 }: BrandCountriesGridProps) {
   return (
-    <section className="py-12 lg:py-16 bg-white">
+    <section className="py-6 lg:py-8 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section title */}
-        <div className="mb-8">
+        <div className="mb-4 md:mb-5">
           <p className="text-[16px] md:text-[18px] font-bold text-gray-700 leading-relaxed">
             Get instant access to all{' '}
             <Link

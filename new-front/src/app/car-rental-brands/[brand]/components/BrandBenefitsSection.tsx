@@ -11,13 +11,13 @@ interface BrandBenefitsSectionProps {
 
 export default function BrandBenefitsSection({ brandName, benefits }: BrandBenefitsSectionProps) {
   return (
-    <section className="brand-benefits-section py-14 lg:py-20 bg-[#fafafa] border-y border-gray-100">
+    <section className="brand-benefits-section py-8 lg:py-10 bg-[#fafafa] border-y border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ─── Header ─── */}
-        <div className="mb-12 text-center">
+        <div className="mb-6 md:mb-8 text-center">
           {/* Decorative accent line */}
-          <div className="flex items-center justify-center gap-3 mb-5">
+          <div className="flex items-center justify-center gap-3 mb-3">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--primary)] rounded-full" />
             <span className="text-[12px] font-extrabold text-[var(--primary)] tracking-[0.2em] uppercase">
               Why Book with Autours

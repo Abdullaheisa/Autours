@@ -23,6 +23,7 @@ import FAQ from '@/components/sections/FAQ';
 import AirportsSection from './AirportsSection';
 import TravelInfoSection from './TravelInfoSection';
 import StepsDocsSection from './StepsDocsSection';
+import HighlightsSection from './HighlightsSection';
 
 
 
@@ -333,6 +334,11 @@ export default function CountryPageContent({ data }: Props) {
         )}
 
         <TravelInfoSection travelInfo={data.travelInfo} />
+
+        {/* Top Destinations / Highlights */}
+        {data.highlights && (
+          <HighlightsSection highlights={data.highlights} countryName={data.name} />
+        )}
 
         <StepsDocsSection steps={data.steps} documents={data.documents} />
 

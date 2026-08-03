@@ -35,9 +35,9 @@ export default function CarRentalBrandsHero({
   brandLogo,
 }: CarRentalBrandsHeroProps) {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 md:pb-4">
       {/* Breadcrumb */}
-      <nav aria-label="breadcrumb" className="mb-5">
+      <nav aria-label="breadcrumb" className="mb-3">
         <ol className="inline-flex flex-wrap items-center gap-0.5 px-3 py-2 rounded-2xl bg-gray-50/80 border border-gray-100 text-xs font-bold text-gray-500">
           <li>
             <Link

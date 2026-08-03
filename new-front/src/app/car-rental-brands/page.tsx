@@ -65,7 +65,7 @@ export default async function CarRentalBrandsPage() {
           }
         />
         {/* ─── Brands Grid ───────────────────────────────────────────────────── */}
-        <section className="py-12 lg:py-16 bg-white">
+        <section className="py-6 lg:py-8 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-5">

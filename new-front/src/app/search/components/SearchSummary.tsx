@@ -27,8 +27,8 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
       {!forceMobileLayout && (
         <div className="hidden lg:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal size={14} className="text-yellow-700" />
-            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Your Search Details</h3>
+            <SlidersHorizontal size={15} className="text-yellow-700" />
+            <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-gray-800">Your Search Details</h3>
           </div>
         </div>
       )}
@@ -86,20 +86,20 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
       {!forceMobileLayout && (
         <div className="hidden lg:block p-5 space-y-5">
         {/* Pick-up */}
-        <div className="space-y-2.5">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pick-up Location</h4>
-          <div className="flex items-start gap-2 text-sm font-semibold text-gray-700">
-            <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
-            <p>{locationText || 'Not selected'}</p>
+        <div className="space-y-2">
+          <h4 className="text-xs font-medium uppercase tracking-wider text-gray-400">Pick-up Location</h4>
+          <div className="flex items-start gap-2 text-base font-normal text-gray-800">
+            <CheckCircle2 size={18} className="text-primary shrink-0 mt-0.5" />
+            <p className="leading-snug">{locationText || 'Not selected'}</p>
           </div>
           {searchParams.dateFrom && (
-            <div className="flex items-center gap-x-3 gap-y-1 text-xs font-semibold text-gray-500 pl-6 flex-wrap">
+            <div className="flex items-center gap-x-3 gap-y-1 text-sm font-normal text-gray-600 pl-6 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <Calendar size={14} />
+                <Calendar size={15} />
                 {searchParams.dateFrom}
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock size={14} />
+                <Clock size={15} />
                 {searchParams.startTime || '10:00'}
               </div>
             </div>
@@ -109,20 +109,20 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
         <div className="h-px bg-gray-100" />
 
         {/* Drop-off */}
-        <div className="space-y-2.5">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Drop-off Location</h4>
-          <div className="flex items-start gap-2 text-sm font-semibold text-gray-700">
-            <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
-            <p>{locationText || 'Not selected'}</p>
+        <div className="space-y-2">
+          <h4 className="text-xs font-medium uppercase tracking-wider text-gray-400">Drop-off Location</h4>
+          <div className="flex items-start gap-2 text-base font-normal text-gray-800">
+            <CheckCircle2 size={18} className="text-primary shrink-0 mt-0.5" />
+            <p className="leading-snug">{locationText || 'Not selected'}</p>
           </div>
           {searchParams.dateTo && (
-            <div className="flex items-center gap-x-3 gap-y-1 text-xs font-semibold text-gray-500 pl-6 flex-wrap">
+            <div className="flex items-center gap-x-3 gap-y-1 text-sm font-normal text-gray-600 pl-6 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <Calendar size={14} />
+                <Calendar size={15} />
                 {searchParams.dateTo}
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock size={14} />
+                <Clock size={15} />
                 {searchParams.endTime || '10:00'}
               </div>
             </div>
@@ -134,12 +134,12 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
           <>
             <div className="h-px bg-gray-100" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-500">Duration</span>
-              <span className="text-xs font-black text-gray-900">{daysNumber} {daysNumber === 1 ? 'Day' : 'Days'}</span>
+              <span className="text-sm font-normal text-gray-600">Duration</span>
+              <span className="text-sm font-medium text-gray-900">{daysNumber} {daysNumber === 1 ? 'Day' : 'Days'}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-500">Currency</span>
-              <span className="text-xs font-black text-gray-900">{currencyCode}</span>
+              <span className="text-sm font-normal text-gray-600">Currency</span>
+              <span className="text-sm font-medium text-gray-900">{currencyCode}</span>
             </div>
           </>
         )}

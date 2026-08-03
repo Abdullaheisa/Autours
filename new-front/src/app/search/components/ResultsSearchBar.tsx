@@ -181,8 +181,8 @@ export default function ResultsSearchBar({
       {onClose && (
         <div className="lg:hidden flex items-center justify-between bg-yellow-50 px-5 py-3 border-b border-yellow-100">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal size={14} className="text-yellow-700" />
-            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>
+            <SlidersHorizontal size={15} className="text-yellow-700" />
+            <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-gray-800">Modify Search</h3>
           </div>
           <button
             onClick={onClose}
@@ -196,15 +196,15 @@ export default function ResultsSearchBar({
 
       <div className="hidden lg:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal size={14} className="text-yellow-700" />
-          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-800">Modify Search</h3>
+          <SlidersHorizontal size={15} className="text-yellow-700" />
+          <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-gray-800">Modify Search</h3>
         </div>
       </div>
 
       <form onSubmit={handleReSearch} className="p-5 space-y-3">
         <div className="relative" ref={locationsRef}>
           <div className="relative">
-            <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+            <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
             <input
               type="text"
               value={location}
@@ -216,7 +216,7 @@ export default function ResultsSearchBar({
               }}
               onFocus={() => !readOnlyLocation && location.length > 0 && setShowLocations(true)}
               placeholder="Pickup Location"
-              className={`w-full pl-9 pr-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 outline-none transition-all ${readOnlyLocation ? 'opacity-60 cursor-not-allowed' : 'focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+              className={`w-full pl-9 pr-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 outline-none transition-all ${readOnlyLocation ? 'opacity-60 cursor-not-allowed' : 'focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
             />
           </div>
           {showLocations && (
@@ -274,18 +274,18 @@ export default function ResultsSearchBar({
               type="button"
               onClick={() => setShowCalendar(!showCalendar)}
               aria-label="Select pickup date" // 🚀 Accessibility Fix
-              className="flex items-center gap-2 px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex items-center gap-2 px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <Calendar size={14} className="text-gray-400" aria-hidden="true" />
+              <Calendar size={16} className="text-gray-400" aria-hidden="true" />
               {startDate ? format(startDate, 'yyyy/MM/dd') : 'Pickup'}
             </button>
             <button
               type="button"
               onClick={() => setShowCalendar(!showCalendar)}
               aria-label="Select return date" // 🚀 Accessibility Fix
-              className="flex items-center gap-2 px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex items-center gap-2 px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <Calendar size={14} className="text-gray-400" aria-hidden="true" />
+              <Calendar size={16} className="text-gray-400" aria-hidden="true" />
               {endDate ? format(endDate, 'yyyy/MM/dd') : 'Return'}
             </button>
           </div>
@@ -298,16 +298,16 @@ export default function ResultsSearchBar({
               onClick={() => setShowStartTime(!showStartTime)}
               aria-label={`Select pickup time, currently ${startTime}`} // 🚀 Accessibility Fix
               aria-expanded={showStartTime}
-              className="w-full flex items-center justify-between px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full flex items-center justify-between px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <span>{startTime}</span>
-              <Clock size={12} className="text-gray-300" aria-hidden="true" />
+              <Clock size={14} className="text-gray-400" aria-hidden="true" />
             </button>
             {showStartTime && (
               <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-[160px] overflow-y-auto z-[60]">
                 {TIME_OPTIONS.map((time) => (
                   <button key={time} type="button" onClick={() => { setStartTime(time); setShowStartTime(false); }}
-                    className={`w-full px-3 py-2 text-left text-[10px] font-bold hover:bg-primary/10 transition-all ${startTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
+                    className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-primary/10 transition-all ${startTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
                   >{time}</button>
                 ))}
               </div>
@@ -319,16 +319,16 @@ export default function ResultsSearchBar({
               onClick={() => setShowEndTime(!showEndTime)}
               aria-label={`Select return time, currently ${endTime}`} // 🚀 Accessibility Fix
               aria-expanded={showEndTime}
-              className="w-full flex items-center justify-between px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full flex items-center justify-between px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <span>{endTime}</span>
-              <Clock size={12} className="text-gray-300" aria-hidden="true" />
+              <Clock size={14} className="text-gray-400" aria-hidden="true" />
             </button>
             {showEndTime && (
               <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-[160px] overflow-y-auto z-[60]">
                 {TIME_OPTIONS.map((time) => (
                   <button key={time} type="button" onClick={() => { setEndTime(time); setShowEndTime(false); }}
-                    className={`w-full px-3 py-2 text-left text-[10px] font-bold hover:bg-primary/10 transition-all ${endTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
+                    className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-primary/10 transition-all ${endTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
                   >{time}</button>
                 ))}
               </div>
@@ -339,7 +339,7 @@ export default function ResultsSearchBar({
         <button
           type="submit"
           disabled={isSearching || !location.trim() || !startDate || !endDate}
-          className="w-full py-3.5 bg-primary text-gray-900 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3.5 bg-primary text-gray-900 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSearching ? (
             <div className="w-4 h-4 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
