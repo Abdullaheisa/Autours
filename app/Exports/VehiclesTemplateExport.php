@@ -51,35 +51,36 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
         return [
             // Header row
             [
-                'Row #',           // A - COL_ROW_NUMBER (0)
-                'Vehicle Name',    // B - COL_VEHICLE_NAME (1)
-                'Category',        // C - COL_CATEGORY (2)
-                'Air Condition',   // D - COL_AIR_CONDITION (3)
-                'Doors',           // E - COL_DOORS (4)
-                'Suitcase',        // F - COL_SUITCASE (5)
-                'Seats',           // G - COL_SEATS (6)
-                'Fuel Type',       // H - COL_FUEL (7)
-                'Transmission',    // I - COL_TRANSMISSION (8)
-                'Location Type',   // J - COL_LOCATION_TYPE (9)
-                'Fuel Policy',     // K - COL_FUEL_POLICY (10)
-                'Reserved',        // L - COL_RESERVED_11 (11)
-                'Confirmation',    // M - COL_CONFIRMATION_TYPE (12)
-                'Reserved',        // N - COL_RESERVED_13 (13)
-                'Reserved',        // O - COL_RESERVED_14 (14)
-                'Price (1-3 Days)',// P - COL_PRICE_1_3_DAYS (15)
-                'Week Price',      // Q - COL_PRICE_WEEK (16)
-                'Month Price',     // R - COL_PRICE_MONTH (17)
+                'Row #',              // A - COL_ROW_NUMBER (0)
+                'Vehicle Name',       // B - COL_VEHICLE_NAME (1)
+                'Category',           // C - COL_CATEGORY (2)
+                'Air Condition',      // D - COL_AIR_CONDITION (3)
+                'Doors',              // E - COL_DOORS (4)
+                'Suitcase',           // F - COL_SUITCASE (5)
+                'Seats',              // G - COL_SEATS (6)
+                'Fuel Type',          // H - COL_FUEL (7)
+                'Transmission',       // I - COL_TRANSMISSION (8)
+                'Location Type',      // J - COL_LOCATION_TYPE (9)
+                'Fuel Policy',        // K - COL_FUEL_POLICY (10)
+                'Reserved',           // L - COL_RESERVED_11 (11)
+                'Confirmation',       // M - COL_CONFIRMATION_TYPE (12)
+                'Reserved',           // N - COL_RESERVED_13 (13)
+                'Reserved',           // O - COL_RESERVED_14 (14)
+                'Price (1-3 Days)',   // P - COL_PRICE_1_3_DAYS (15)
+                'Week Price',         // Q - COL_PRICE_WEEK (16)
+                'Month Price',        // R - COL_PRICE_MONTH (17)
+                'Description',        // S - COL_DESCRIPTION (18)
             ],
             // Sample data row 1
             [
                 1,
                 'Toyota Corolla 2024',
                 'Economy',
-                'A/C',
+                'Air Conditioning',
                 4,
                 2,
                 5,
-                'Petrol',
+                'Gas',
                 'Automatic',
                 'Airport',
                 'Full to Full',
@@ -90,6 +91,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 50.00,
                 45.00,
                 40.00,
+                'A reliable and fuel-efficient sedan, perfect for city driving and airport transfers.',
             ],
             // Sample data row 2
             [
@@ -100,7 +102,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 4,
                 3,
                 5,
-                'Petrol',
+                'Gas',
                 'Manual',
                 'City',
                 'Same to Same',
@@ -111,27 +113,29 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 55.00,
                 48.00,
                 42.00,
+                'A stylish compact car offering excellent performance and comfort for urban trips.',
             ],
-            // Sample data row 3 (empty template)
+            // Empty template row - fill in your vehicle data here
             [
                 3,
+                '',  // Vehicle Name (required)
+                '',  // Category
+                '',  // Air Condition (e.g: Air Conditioning)
+                '',  // Doors (e.g: 4)
+                '',  // Suitcase (e.g: 2)
+                '',  // Seats (e.g: 5)
+                '',  // Fuel Type (e.g: Gas)
+                '',  // Transmission (e.g: Automatic)
+                '',  // Location Type
+                '',  // Fuel Policy
+                '',
+                '',  // Confirmation (Instant Confirmation / On Request)
                 '',
                 '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
+                '',  // Price 1-3 Days (required, must be > 0)
+                '',  // Week Price (optional)
+                '',  // Month Price (optional)
+                '',  // Description (optional)
             ],
         ];
     }
@@ -145,7 +149,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
             'A' => 8,   // Row #
             'B' => 25,  // Vehicle Name
             'C' => 15,  // Category
-            'D' => 15,  // Air Condition
+            'D' => 18,  // Air Condition
             'E' => 8,   // Doors
             'F' => 10,  // Suitcase
             'G' => 8,   // Seats
@@ -154,12 +158,13 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
             'J' => 15,  // Location Type
             'K' => 15,  // Fuel Policy
             'L' => 10,  // Reserved
-            'M' => 20,  // Confirmation
+            'M' => 22,  // Confirmation
             'N' => 10,  // Reserved
             'O' => 10,  // Reserved
             'P' => 18,  // Price (1-3 Days)
             'Q' => 12,  // Week Price
             'R' => 12,  // Month Price
+            'S' => 50,  // Description
         ];
     }
 
@@ -169,7 +174,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
     public function styles(Worksheet $sheet): array
     {
         // Set header row style
-        $sheet->getStyle('A1:R1')->applyFromArray([
+        $sheet->getStyle('A1:S1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -190,7 +195,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
         ]);
 
         // Set sample data row styles
-        $sheet->getStyle('A2:R4')->applyFromArray([
+        $sheet->getStyle('A2:S4')->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
@@ -203,15 +208,25 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
         ]);
 
         // Highlight sample rows with light blue
-        $sheet->getStyle('A2:R3')->applyFromArray([
+        $sheet->getStyle('A2:S3')->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => 'DEEAF6'],
             ],
         ]);
 
+        // Highlight Description column header in a different color
+        $sheet->getStyle('S1')->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '7030A0'],
+            ],
+        ]);
+
         // Set row height
         $sheet->getRowDimension(1)->setRowHeight(25);
+        // Enable text wrap for description column
+        $sheet->getStyle('S2:S100')->getAlignment()->setWrapText(true);
 
         return [];
     }

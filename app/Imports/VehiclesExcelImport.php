@@ -39,6 +39,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
     private const COL_PRICE_1_3_DAYS = 15;
     private const COL_PRICE_WEEK = 16;
     private const COL_PRICE_MONTH = 17;
+    private const COL_DESCRIPTION = 18;
 
     /**
      * Sheet indices
@@ -124,6 +125,13 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
             if (!$this->isValidDataRow($row)) {
                 info("Row {$rowIndex}: Skipped (invalid data row) - Col0: " . ($row[0] ?? 'null') . ", Col1: " . ($row[1] ?? 'null'));
+                continue;
+            }
+
+            // Skip rows with empty vehicle name silently (template empty rows)
+            $vehicleName = trim($row[self::COL_VEHICLE_NAME] ?? '');
+            if (empty($vehicleName)) {
+                info("Row {$rowIndex}: Skipped (empty vehicle name)");
                 continue;
             }
 
@@ -213,6 +221,12 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         $vehicle->activation = true;
         $vehicle->instant_confirmation = $this->isInstantConfirmation($row[self::COL_CONFIRMATION_TYPE]);
 
+        // Set description (optional)
+        $description = trim($row[self::COL_DESCRIPTION] ?? '');
+        if (!empty($description)) {
+            $vehicle->description = $description;
+        }
+
         // Set photo
         $this->setVehiclePhoto($vehicle, $vehicleName, $rowNumber);
 
@@ -227,7 +241,7 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
     /**
      * Find and set vehicle photo based on name matching
-     * Photo is REQUIRED - database has NOT NULL constraint
+     * Photo is optional (column is nullable) - can be added later from dashboard
      */
     protected function setVehiclePhoto(Vehicle $vehicle, ?string $vehicleName, int $rowNumber): void
     {
@@ -248,10 +262,11 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             }
         }
 
-
         if ($photo === null) {
-            $this->addError($rowNumber, "No photo found for vehicle '{$vehicleName}'. Please upload a photo for this vehicle first in the Photos section");
-            info("Error: No photo found for vehicle '{$vehicleName}' in row {$rowNumber}");
+            // Photo is nullable - vehicle will be created without a photo.
+            // The supplier can add a photo later from the dashboard.
+            $vehicle->photo = null;
+            info("Warning: No photo found for vehicle '{$vehicleName}' in row {$rowNumber}. Vehicle created without photo.");
         } else {
             $vehicle->photo = $photo->photo;
             info("Photo found for vehicle '{$vehicleName}': {$photo->photo}");
@@ -443,9 +458,19 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             return;
         }
 
+        // Normalize fuel value: Gas = Petrol
+        $normalized = match (strtolower(trim($value))) {
+            'gas', 'petrol', 'gasoline' => 'Gas',
+            'diesel'                    => 'Diesel',
+            'electric', 'ev'            => 'Electric',
+            'hybrid'                    => 'Hybrid',
+            'lpg'                       => 'LPG',
+            default                     => ucfirst(strtolower(trim($value))),
+        };
+
         $spec = $this->findSpecification('fuel');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, 'Fuel', $value, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, 'Fuel', $normalized, $spec->icon);
         }
     }
 
@@ -458,9 +483,16 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             return;
         }
 
+        $normalized = match (strtolower(trim($value))) {
+            'auto', 'automatic' => 'Automatic',
+            'manual'           => 'Manual',
+            'semi-automatic'   => 'Semi-Automatic',
+            default            => ucfirst(strtolower(trim($value))),
+        };
+
         $spec = $this->findSpecification('trans');
         if ($spec) {
-            $this->createVehicleSpecification($vehicle->id, $spec->name, $value, $spec->icon);
+            $this->createVehicleSpecification($vehicle->id, $spec->name, $normalized, $spec->icon);
         }
     }
 

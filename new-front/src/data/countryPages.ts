@@ -2080,7 +2080,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Sarajevo",
           "description": "Sarajevo is a fascinating city where Ottoman, Austro-Hungarian, and modern cultures come together in a unique historical atmosphere.",
-          "image": "https://images.pexels.com/photos/38183710/pexels-photo-38183710.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "image": "countries/georgia.webp",
           "tags": [
             "Culture",
             "History",
@@ -2090,19 +2090,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Baščaršija",
               "description": "The historic old bazaar filled with traditional cafés, artisan shops, and authentic Bosnian culture.",
-              "image": "https://images.pexels.com/photos/28305255/pexels-photo-28305255.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1590159763121-7c9fdda23c4b?auto=format&fit=crop&w=800&q=80"
             },
             {
               "name": "Latin Bridge",
               "description": "A famous bridge known for its important role in world history and its beautiful riverside setting.",
-              "image": "https://images.pexels.com/photos/20813448/pexels-photo-20813448.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1572553640049-96e9e5e2a17d?auto=format&fit=crop&w=800&q=80"
             }
           ]
         },
         {
           "name": "Mostar",
           "description": "Mostar is Bosnia and Herzegovina's most famous destination, celebrated for its iconic bridge, Ottoman architecture, and picturesque riverside scenery.",
-          "image": "https://images.pexels.com/photos/16854727/pexels-photo-16854727.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "image": "https://images.unsplash.com/photo-1572553640049-96e9e5e2a17d?auto=format&fit=crop&w=800&q=80",
           "tags": [
             "UNESCO",
             "Bridge",
@@ -2112,19 +2112,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Stari Most (Old Bridge)",
               "description": "A UNESCO World Heritage Site and the symbol of Mostar, this stunning stone bridge spans the Neretva River and is famous for its breathtaking views and traditional diving performances.",
-              "image": "https://images.pexels.com/photos/33660903/pexels-photo-33660903.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1572553640049-96e9e5e2a17d?auto=format&fit=crop&w=800&q=80"
             },
             {
               "name": "Mostar Old Bazaar",
               "description": "A charming historic district filled with cobblestone streets, traditional cafés, handmade crafts, and authentic Bosnian souvenirs.",
-              "image": "https://images.pexels.com/photos/33670339/pexels-photo-33670339.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1590159763121-7c9fdda23c4b?auto=format&fit=crop&w=800&q=80"
             }
           ]
         },
         {
           "name": "Blagaj",
           "description": "Blagaj is a peaceful destination known for its crystal-clear spring, dramatic cliffs, and centuries-old monastery.",
-          "image": "https://images.pexels.com/photos/29962035/pexels-photo-29962035.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80",
           "tags": [
             "Scenic",
             "Spiritual",
@@ -2134,12 +2134,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Blagaj Tekke",
               "description": "A historic Dervish monastery beautifully built beside the source of the Buna River.",
-              "image": "https://images.pexels.com/photos/30175102/pexels-photo-30175102.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80"
             },
             {
               "name": "Buna River Spring",
               "description": "One of Europe's largest natural springs, surrounded by breathtaking cliffs and turquoise water.",
-              "image": "https://images.pexels.com/photos/33196209/pexels-photo-33196209.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80"
             }
           ]
         }
@@ -2253,7 +2253,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Sheki",
           "description": "Sheki is one of Azerbaijan's oldest and most beautiful cities, known for its Silk Road history, mountain scenery, and magnificent architecture.",
-          "image": "https://images.pexels.com/photos/13502463/pexels-photo-13502463.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "image": "countries/georgia.webp",
           "tags": [
             "Heritage",
             "Palace",
@@ -2263,19 +2263,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Sheki Khan's Palace",
               "description": "A masterpiece of Azerbaijani architecture, famous for its colorful stained-glass windows, intricate paintings, and beautiful wooden craftsmanship.",
-              "image": "https://images.pexels.com/photos/13502463/pexels-photo-13502463.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=800&q=80"
             },
             {
               "name": "Kish Albanian Church",
               "description": "One of the oldest churches in the Caucasus, surrounded by peaceful mountain landscapes and rich history.",
-              "image": "https://images.pexels.com/photos/37497202/pexels-photo-37497202.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80"
             }
           ]
         },
         {
           "name": "Quba",
           "description": "Quba is a peaceful mountain destination famous for forests, waterfalls, traditional villages, and breathtaking natural scenery.",
-          "image": "https://images.pexels.com/photos/30624421/pexels-photo-30624421.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
           "tags": [
             "Nature",
             "Mountains",
@@ -2285,19 +2285,19 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Afurja Waterfall",
               "description": "One of Azerbaijan's tallest waterfalls, surrounded by lush forests and dramatic mountain landscapes.",
-              "image": "https://images.pexels.com/photos/18531657/pexels-photo-18531657.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80"
             },
             {
               "name": "Shahdag Mountain Resort",
               "description": "A year-round resort offering skiing, hiking, cable cars, and adventure activities with stunning mountain views.",
-              "image": "https://images.pexels.com/photos/32136804/pexels-photo-32136804.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1520587165-2e74e1b94b35?auto=format&fit=crop&w=800&q=80"
             }
           ]
         },
         {
           "name": "Ganja",
           "description": "Ganja is Azerbaijan's second-largest city, combining historic monuments, beautiful parks, and important cultural landmarks.",
-          "image": "https://images.pexels.com/photos/792776/pexels-photo-792776.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "image": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80",
           "tags": [
             "Culture",
             "History",
@@ -2307,12 +2307,12 @@ export const countryPagesData: Record<string, CountryPageData> = {
             {
               "name": "Javad Khan Street",
               "description": "A lively pedestrian street filled with cafés, restaurants, local shops, and historic architecture.",
-              "image": "https://images.pexels.com/photos/20098621/pexels-photo-20098621.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1590159763121-7c9fdda23c4b?auto=format&fit=crop&w=800&q=80"
             },
             {
               "name": "Nizami Mausoleum",
               "description": "A magnificent monument dedicated to the legendary Persian poet Nizami Ganjavi.",
-              "image": "https://images.pexels.com/photos/19439205/pexels-photo-19439205.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=800&q=80"
             }
           ]
         }
@@ -2426,51 +2426,22 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Paphos",
           "description": "Paphos is one of Cyprus' most famous coastal destinations, offering ancient ruins, beautiful beaches, and UNESCO World Heritage sites.",
-          "image": "https://images.pexels.com/photos/14637245/pexels-photo-14637245.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "image": "countries/georgia.webp",
+          "tags": [
+            "UNESCO",
+            "Mythology",
+            "Heritage"
+          ],
           "attractions": [
             {
               "name": "Paphos Archaeological Park",
               "description": "Discover impressive Roman villas decorated with beautifully preserved mosaics and ancient ruins.",
-              "image": "https://images.pexels.com/photos/11062554/pexels-photo-11062554.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=800&q=80"
             },
             {
               "name": "Aphrodite's Rock",
               "description": "Legend says this spectacular sea rock is the birthplace of Aphrodite, the Greek goddess of love.",
-              "image": "https://images.pexels.com/photos/8962406/pexels-photo-8962406.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-            }
-          ]
-        },
-        {
-          "name": "Ayia Napa",
-          "description": "A world-famous beach resort known for crystal-clear turquoise waters, golden sand beaches, sea caves, and lively nightlife.",
-          "image": "https://images.pexels.com/photos/32056712/pexels-photo-32056712.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-          "attractions": [
-            {
-              "name": "Nissi Beach",
-              "description": "One of Europe's most famous beaches, featuring powdery white sand and shallow, crystal-clear turquoise water.",
-              "image": "https://images.pexels.com/photos/32056716/pexels-photo-32056716.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-            },
-            {
-              "name": "Cape Greco National Forest Park",
-              "description": "A stunning coastal nature reserve featuring sea caves, natural stone bridges, hiking trails, and cliff-diving spots.",
-              "image": "https://images.pexels.com/photos/9255956/pexels-photo-9255956.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-            }
-          ]
-        },
-        {
-          "name": "Limassol",
-          "description": "Cyprus' vibrant southern coastal hub, blending luxury marina living, medieval castles, beach promenades, and ancient ruins.",
-          "image": "https://images.pexels.com/photos/36934330/pexels-photo-36934330.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-          "attractions": [
-            {
-              "name": "Limassol Marina",
-              "description": "A modern waterfront destination featuring luxury yachts, seaside dining, stylish boutiques, and scenic promenades.",
-              "image": "https://images.pexels.com/photos/36934330/pexels-photo-36934330.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-            },
-            {
-              "name": "Kourion Ancient Amphitheatre",
-              "description": "A magnificent ancient Greco-Roman theater perched high on a cliff offering spectacular Mediterranean Sea views.",
-              "image": "https://images.pexels.com/photos/36623829/pexels-photo-36623829.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+              "image": "https://images.pexels.com/photos/5811777/pexels-photo-5811777.jpeg?auto=compress&cs=tinysrgb&w=800"
             }
           ]
         }
