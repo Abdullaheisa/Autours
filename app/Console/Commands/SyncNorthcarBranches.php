@@ -81,8 +81,17 @@ class SyncNorthcarBranches extends Command
             $now = \Carbon\Carbon::now()->toDateTimeString();
 
             $this->info('Processing locations...');
+            // Sort locations descending by length of LocationCode.
+            // Northcar returns rates ONLY for the longer 'NC' suffixed codes (e.g. DXBNC instead of DXB).
+            // Processing longest first ensures the rate-bearing station ID is kept in the database.
+            usort($locations, function ($a, $b) {
+                return strlen($b['LocationCode'] ?? '') <=> strlen($a['LocationCode'] ?? '');
+            });
+
             $bar = $this->output->createProgressBar(count($locations));
             $bar->start();
+
+            $seenAirports = [];
 
             foreach ($locations as $location) {
                 $locationCode = (string) ($location['LocationCode'] ?? '');
@@ -91,16 +100,60 @@ class SyncNorthcarBranches extends Command
                 $currency = (string) ($location['Currency'] ?? '');
                 
                 $latRaw = (string) ($location['Latitude'] ?? '');
-                $lat = is_numeric($latRaw) ? $latRaw : null;
+                $lat = is_numeric($latRaw) && abs((float) $latRaw) <= 90 ? $latRaw : null;
                 
                 $lngRaw = (string) ($location['Longitude'] ?? '');
-                $lng = is_numeric($lngRaw) ? $lngRaw : null;
+                $lng = is_numeric($lngRaw) && abs((float) $lngRaw) <= 180 ? $lngRaw : null;
 
                 if (empty($locationCode) || empty($name)) {
                     $bar->advance();
                     continue;
                 }
+
+                // Guess country from address first for better normalization context
+                $parts = array_map('trim', explode(',', $address));
+                $guessedCountryRaw = count($parts) > 1 ? end($parts) : '';
                 
+                // Only use the guessed country if it's a recognized, valid country name
+                $isoCode = \App\Services\CountryCurrencyResolver::resolveCountryCode($guessedCountryRaw);
+                $guessedCountry = $isoCode ? \App\Services\CountryCurrencyResolver::normalizeCountryName($guessedCountryRaw) : '';
+
+                // Northcar appends "NC" (or sometimes "IR") to standard IATA codes (e.g., HERNC -> HER). 
+                // We strip this suffix ONLY for the normalizer so it can successfully match the IATA code.
+                $normalizedIata = preg_replace('/(NC|IR)$/i', '', $locationCode);
+
+                // Pre-normalize data
+                $normData = $normalizer->normalize(
+                    $name,
+                    $name, // Fallback city
+                    $guessedCountry, // Use valid guessed country
+                    $locationCode,
+                    $normalizedIata
+                );
+
+                if (empty($normData['country'])) {
+                    $normData['country'] = $guessedCountry ?: null;
+                }
+
+                $locationType = (!empty($normData['airport_id']) || stripos($name, 'airport') !== false || stripos($name, 'terminal') !== false) ? 'Airport' : 'Downtown';
+
+                if ($locationType !== 'Airport') {
+                    $bar->advance();
+                    continue;
+                }
+
+                if (isset($normData['airport_id'])) {
+                    if (in_array($normData['airport_id'], $seenAirports)) {
+                        $bar->advance();
+                        continue;
+                    }
+                    $seenAirports[] = $normData['airport_id'];
+
+                    // Overwrite the API's text info with our DB's canonical info
+                    $name = $normData['normalized_name'];
+                    $address = $normData['normalized_name'];
+                }
+
                 $validStationIds[] = $locationCode;
 
                 if (isset($existingMap[$locationCode])) {
@@ -109,26 +162,17 @@ class SyncNorthcarBranches extends Command
                     $created++;
                 }
 
-                // Pre-normalize data
-                $normData = $normalizer->normalize(
-                    $name,
-                    $name, // Fallback city
-                    '',    // Fallback country
-                    $locationCode,
-                    $locationCode
-                );
-
                 $upsertData[] = array_merge([
                     'company_id' => $supplierUser->id,
                     'station_id' => $locationCode,
                     'name' => $name,
                     'location' => $name,
-                    'city' => $name,
                     'adresse' => $address,
-                    'currency' => $currency,
+                    'city' => $name,
+                    'currency' => \App\Services\CountryCurrencyResolver::resolveCurrency($guessedCountryRaw),
                     'lat' => $lat,
                     'lng' => $lng,
-                    'location_type' => 'Airport',
+                    'location_type' => $locationType,
                     'abriviation' => $locationCode,
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -140,15 +184,28 @@ class SyncNorthcarBranches extends Command
             $bar->finish();
             $this->newLine(2);
 
-            // Bulk upsert in chunks
             $this->info('Saving branches to the database...');
-            foreach (array_chunk($upsertData, 500) as $chunk) {
-                Branch::upsert(
-                    $chunk,
-                    ['company_id', 'station_id'],
-                    ['name', 'location', 'city', 'country', 'adresse', 'currency', 'lat', 'lng', 'location_type', 'abriviation', 'airport_id', 'updated_at']
-                );
-            }
+            $newBranchesData = [];
+            
+            // Begin a transaction for faster updates
+            \Illuminate\Support\Facades\DB::transaction(function () use ($upsertData, &$newBranchesData, $existingMap) {
+                foreach ($upsertData as $data) {
+                    if (isset($existingMap[$data['station_id']])) {
+                        // Update existing
+                        Branch::where('company_id', $data['company_id'])
+                            ->where('station_id', $data['station_id'])
+                            ->update($data);
+                    } else {
+                        // Collect for bulk insert
+                        $newBranchesData[] = $data;
+                    }
+                }
+
+                // Bulk insert new branches
+                foreach (array_chunk($newBranchesData, 500) as $chunk) {
+                    Branch::insert($chunk);
+                }
+            });
 
             // Delete branches no longer returned
             $this->info('Cleaning up orphaned branches...');

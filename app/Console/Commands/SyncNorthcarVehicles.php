@@ -58,12 +58,15 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
 
         $this->loadSpecificationDefinitions();
 
-        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addMonth()->format('m-d-Y');
+        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addMonth()->format('m/d/Y');
         
-        $pickupDateTime = Carbon::parse($pickupDate)->format('mdY h:i A');
-        $dropoffDateTime1 = Carbon::parse($pickupDate)->addDay()->format('mdY h:i A');
-        $dropoffDateTime7 = Carbon::parse($pickupDate)->addDays(7)->format('mdY h:i A');
-        $dropoffDateTime30 = Carbon::parse($pickupDate)->addDays(30)->format('mdY h:i A');
+        // Append 10:00 AM to ensure we query during standard business hours, otherwise it defaults to 12:00 AM (midnight) which returns no rates for closed offices.
+        $baseDate = Carbon::parse($pickupDate . ' 10:00 AM');
+        
+        $pickupDateTime = $baseDate->format('mdY h:i A');
+        $dropoffDateTime1 = (clone $baseDate)->addDay()->format('mdY h:i A');
+        $dropoffDateTime7 = (clone $baseDate)->addDays(7)->format('mdY h:i A');
+        $dropoffDateTime30 = (clone $baseDate)->addDays(30)->format('mdY h:i A');
 
         $this->info("Using pickup: {$pickupDateTime}");
         $pricesOnly = $this->hasOption('prices-only') && $this->option('prices-only');
@@ -84,7 +87,8 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
             $rates30 = $this->extractRates($data30);
 
             if (empty($rates1)) {
-                $this->warn("No rates found for branch {$branch->station_id}");
+                $this->warn("No rates found for branch {$branch->station_id}. Deleting branch.");
+                $branch->delete();
                 continue;
             }
 
@@ -164,7 +168,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
         $payload = $data['Payload'] ?? null;
         if (!$payload) return $rates;
         
-        $vehicles = $payload['Vehicles']['Vehicle'] ?? $payload['Vehicle'] ?? null;
+        $vehicles = $payload['Vehicles']['Vehicle'] ?? $payload['Vehicle'] ?? $payload['RateProduct'] ?? null;
         if (!$vehicles) return $rates;
 
         // Ensure array of vehicles
@@ -174,8 +178,8 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
 
         foreach ($vehicles as $v) {
             $classCode = $v['ClassCode'] ?? '';
-            $rateCharge = (float)($v['RateCharge'] ?? $v['TotalPricing']['RateCharge'] ?? 0);
-            $makeModel = $v['VehicleMakeModel'] ?? $v['MakeModel'] ?? $classCode;
+            $rateCharge = (float)($v['RateCharge'] ?? $v['RateAmount'] ?? $v['TotalPricing']['RateCharge'] ?? 0);
+            $makeModel = $v['ModelDesc'] ?? $v['VehicleMakeModel'] ?? $v['MakeModel'] ?? $classCode;
 
             if ($classCode && $rateCharge > 0) {
                 $rates[$classCode] = [
