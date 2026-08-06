@@ -76,6 +76,7 @@ class BranchNormalizationService
                 'airport_id' => $airport->id,
                 'normalized_name' => $airport->airport_name,
                 'location' => $airport->city,
+                'country' => \App\Services\CountryCurrencyResolver::normalizeCountryName($airport->country),
                 'abriviation' => strtoupper($airport->iata_code),
             ];
         }
@@ -87,6 +88,7 @@ class BranchNormalizationService
             'airport_id' => null,
             'normalized_name' => null,
             'location' => $normalizedLocation,
+            'country' => null,
         ];
     }
 

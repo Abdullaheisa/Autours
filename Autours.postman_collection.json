@@ -1,0 +1,236 @@
+{
+  "info": {
+    "_postman_id": "1ddd19ee-8f16-4b99-9d60-cbe6e8162f01",
+    "name": "Autours",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52491417",
+    "_collection_link": "https://go.postman.co/collection/52491417-1ddd19ee-8f16-4b99-9d60-cbe6e8162f01?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Rate Request",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n  <Dategmtime TimeZone=\"UTC\">10172024 08:58 PM</Dategmtime>\r\n  <Sender>\r\n    <SenderID>AUTOURS</SenderID>\r\n  </Sender>\r\n  <Recipient>\r\n    <RecipientID>AUTOURS</RecipientID>\r\n  </Recipient>\r\n  <TradingPartner>\r\n    <TradingPartnerCode>TRN</TradingPartnerCode>\r\n  </TradingPartner>\r\n  <Customer>\r\n    <CustomerNumber>CRB1062</CustomerNumber>\r\n    <Passcode>A@u#t@0u#r@s</Passcode>\r\n  </Customer>\r\n  <Message>\r\n    <MessageID>REQRAT</MessageID>\r\n    <MessageDesc>Request rates</MessageDesc>\r\n  </Message>\r\n  <Payload> \r\n    <RentalLocationID>YVR</RentalLocationID> \r\n    <ReturnLocationID>YVR</ReturnLocationID> \r\n    <PickupDateTime>07292026 11:00 AM</PickupDateTime> \r\n    <ReturnDateTime>07302026 11:00 AM</ReturnDateTime> \r\n    <RateSource>Inclusive</RateSource> \r\n</Payload> \r\n</TRNXML>",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Request Reservation",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n  <Dategmtime TimeZone=\"UTC\">10172024 08:58 PM</Dategmtime>\r\n  <Sender>\r\n    <SenderID>AUTOURS</SenderID>\r\n  </Sender>\r\n  <Recipient>\r\n    <RecipientID>AUTOURS</RecipientID>\r\n  </Recipient>\r\n  <TradingPartner>\r\n    <TradingPartnerCode>TRN</TradingPartnerCode>\r\n  </TradingPartner>\r\n  <Customer>\r\n    <CustomerNumber>CRB1062</CustomerNumber>\r\n    <Passcode>A@u#t@0u#r@s</Passcode>\r\n  </Customer>\r\n<Message>\r\n          <MessageID>REQREZ</MessageID>\r\n          <MessageDesc>Reservation Details</MessageDesc>\r\n       </Message>\r\n       <Payload>\r\n          <ConfirmNum>AURSIyy0020794</ConfirmNum>\r\n       </Payload>\r\n</TRNXML>\r\n\r\n\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Extras",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n  <Dategmtime TimeZone=\"UTC\">10172024 08:58 PM</Dategmtime>\r\n  <Sender>\r\n    <SenderID>AUTOURS</SenderID>\r\n  </Sender>\r\n  <Recipient>\r\n    <RecipientID>AUTOURS</RecipientID>\r\n  </Recipient>\r\n  <TradingPartner>\r\n    <TradingPartnerCode>TRN</TradingPartnerCode>\r\n  </TradingPartner>\r\n  <Customer>\r\n    <CustomerNumber>CRB1062</CustomerNumber>\r\n    <Passcode>A@u#t@0u#r@s</Passcode>\r\n  </Customer>\r\n<Message>\r\n<MessageID>REQEXT</MessageID>\r\n<MessageDesc></MessageDesc>\r\n</Message>\r\n<Payload>\r\n    <RentalLocationID>YVR</RentalLocationID> \r\n    <ReturnLocationID>YVR</ReturnLocationID> \r\n    <PickupDateTime>07292026 11:00 AM</PickupDateTime> \r\n    <ReturnDateTime>07302026 11:00 AM</ReturnDateTime> \r\n</Payload>\r\n</TRNXML>",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Policy",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n  <Dategmtime TimeZone=\"UTC\">10172024 08:58 PM</Dategmtime>\r\n  <Sender>\r\n    <SenderID>AUTOURS</SenderID>\r\n  </Sender>\r\n  <Recipient>\r\n    <RecipientID>AUTOURS</RecipientID>\r\n  </Recipient>\r\n  <TradingPartner>\r\n    <TradingPartnerCode>TRN</TradingPartnerCode>\r\n  </TradingPartner>\r\n  <Customer>\r\n    <CustomerNumber>CRB1062</CustomerNumber>\r\n    <Passcode>A@u#t@0u#r@s</Passcode>\r\n  </Customer>\r\n<Message>\r\n<MessageID>REQPOL</MessageID>\r\n<MessageDesc>Request Policy</MessageDesc>\r\n</Message>\r\n<Payload>\r\n<RentalLocationID>YVR</RentalLocationID>\r\n<ClassCode>ECAH</ClassCode>\r\n</Payload>\r\n</TRNXML>\r\n\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reservation",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n\t\t\t<Dategmtime TimeZone=\"ET\">7/2/2024 9:25:19 PM</Dategmtime>\r\n\t\t\t<Sender>\r\n\t\t\t<SenderID>AUTOURS</SenderID>\r\n\t\t\t</Sender>\r\n\t\t\t<Recipient>\r\n\t\t\t<RecipientID>AUTOURS</RecipientID>\r\n\t\t\t</Recipient>\r\n\t\t\t<TradingPartner>\r\n\t\t\t<TradingPartnerCode>TRN</TradingPartnerCode>\r\n\t\t\t</TradingPartner>\r\n\t\t\t<Customer>\r\n\t\t\t<CustomerNumber>CRB1062</CustomerNumber>\r\n\t\t\t<Passcode>A@u#t@0u#r@s</Passcode>\r\n\t\t\t</Customer>\r\n    <Message>\r\n        <MessageID>ADDREZ</MessageID>\r\n        <MessageDesc>Add Reservation</MessageDesc>\r\n    </Message>\r\n    <Payload>\r\n        <SupplierName>NorthCarRental</SupplierName>\r\n    <RentalLocationID>YVR</RentalLocationID> \r\n    <ReturnLocationID>YVR</ReturnLocationID> \r\n    <PickupDateTime>07292026 11:00 AM</PickupDateTime> \r\n    <ReturnDateTime>07302026 11:00 AM</ReturnDateTime> \r\n    <RateID>286</RateID>\r\n    <ClassCode>CCAR</ClassCode>\r\n        <RenterFirst>TEST</RenterFirst>\r\n        <RenterLast>TEST</RenterLast>\r\n        <EmailAddress>test@gmail.com</EmailAddress>\r\n        <RenterHomePhone>12345689</RenterHomePhone>\r\n        <RenterAddress1>Test</RenterAddress1>\r\n        <RenterCity>Test</RenterCity>\r\n        <RenterCountry>GBP</RenterCountry>\r\n        <CurrencyCode>CAD</CurrencyCode>\r\n        <TotalPricing>\r\n            <RentalDays>1</RentalDays>\r\n            <RateCharge>90.00</RateCharge>\r\n            <TotalExtras>0.00</TotalExtras>\r\n            <TotalCharges>90.00</TotalCharges>\r\n        </TotalPricing>\r\n    </Payload>\r\n</TRNXML>",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cancellation",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n<Dategmtime TimeZone=\"UTC\">02062019 04:23 PM</Dategmtime>\r\n  <Sender>\r\n    <SenderID>AUTOURS</SenderID>\r\n  </Sender>\r\n  <Recipient>\r\n    <RecipientID>AUTOURS</RecipientID>\r\n  </Recipient>\r\n  <TradingPartner>\r\n    <TradingPartnerCode>TRN</TradingPartnerCode>\r\n  </TradingPartner>\r\n  <Customer>\r\n    <CustomerNumber>CRB1062</CustomerNumber>\r\n    <Passcode>A@u#t@0u#r@s</Passcode>\r\n  </Customer>\r\n  <Message>\r\n\t\t<MessageID>REQCAN</MessageID>\r\n\t\t<MessageDesc>Request Cancellation</MessageDesc>\r\n\t</Message>\r\n\t<Payload>\r\n \t\t<ConfirmNum>AURSIyy0020794</ConfirmNum>\r\n \t</Payload>\r\n</TRNXML>"
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Location",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n\t\t\t<Dategmtime TimeZone=\"ET\">7/2/2024 9:25:19 PM</Dategmtime>\r\n\t\t\t<Sender>\r\n\t\t\t<SenderID>AUTOURS</SenderID>\r\n\t\t\t</Sender>\r\n\t\t\t<Recipient>\r\n\t\t\t<RecipientID>AUTOURS</RecipientID>\r\n\t\t\t</Recipient>\r\n\t\t\t<TradingPartner>\r\n\t\t\t<TradingPartnerCode>TRN</TradingPartnerCode>\r\n\t\t\t</TradingPartner>\r\n\t\t\t<Customer>\r\n\t\t\t<CustomerNumber>CRB1062</CustomerNumber>\r\n\t\t\t<Passcode>A@u#t@0u#r@s</Passcode>\r\n\t\t\t</Customer>\r\n\t<Message>\r\n<MessageID>REQLOC</MessageID>\r\n</Message>\r\n</TRNXML>"
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reservation with Extras",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "<TRNXML Version=\"1.0.0\">\r\n\t\t\t<Dategmtime TimeZone=\"ET\">7/2/2024 9:25:19 PM</Dategmtime>\r\n\t\t\t<Sender>\r\n\t\t\t<SenderID>AUTOURS</SenderID>\r\n\t\t\t</Sender>\r\n\t\t\t<Recipient>\r\n\t\t\t<RecipientID>AUTOURS</RecipientID>\r\n\t\t\t</Recipient>\r\n\t\t\t<TradingPartner>\r\n\t\t\t<TradingPartnerCode>TRN</TradingPartnerCode>\r\n\t\t\t</TradingPartner>\r\n\t\t\t<Customer>\r\n\t\t\t<CustomerNumber>CRB1062</CustomerNumber>\r\n\t\t\t<Passcode>A@u#t@0u#r@s</Passcode>\r\n\t\t\t</Customer>\r\n    <Message>\r\n        <MessageID>ADDREZ</MessageID>\r\n        <MessageDesc>Add Reservation</MessageDesc>\r\n    </Message>\r\n    <Payload>\r\n        <SupplierName>NorthCarRental</SupplierName>\r\n    <RentalLocationID>YVR</RentalLocationID> \r\n    <ReturnLocationID>YVR</ReturnLocationID> \r\n    <PickupDateTime>07292026 11:00 AM</PickupDateTime> \r\n    <ReturnDateTime>07302026 11:00 AM</ReturnDateTime> \r\n    <RateID>286</RateID>\r\n    <ClassCode>CCAR</ClassCode>\r\n        <RenterFirst>TEST</RenterFirst>\r\n        <RenterLast>TEST</RenterLast>\r\n        <EmailAddress>test@gmail.com</EmailAddress>\r\n        <RenterHomePhone>12345689</RenterHomePhone>\r\n        <RenterAddress1>Test</RenterAddress1>\r\n        <RenterCity>Test</RenterCity>\r\n        <RenterCountry>GBP</RenterCountry>\r\n        <CurrencyCode>CAD</CurrencyCode>\r\n        <TotalPricing>\r\n            <RentalDays>1</RentalDays>\r\n            <RateCharge>90.00</RateCharge>\r\n            <TotalExtras>10.00</TotalExtras>\r\n            <TotalCharges>100.00</TotalCharges>\r\n            <DailyExtra>\r\n              <ExtraCode>Additional Driver</ExtraCode>\r\n            <ExtraDesc>Additional Driver</ExtraDesc>\r\n            <ExtraAmount>10</ExtraAmount>\r\n            <ExtraAutoApply>TRUE</ExtraAutoApply>\r\n            <ExtraOnRequest>TRUE</ExtraOnRequest>\r\n            </DailyExtra>\r\n        </TotalPricing>\r\n    </Payload>\r\n</TRNXML>"
+        },
+        "url": {
+          "raw": "https://rms.carrentalsbooking.uk/api/autours",
+          "protocol": "https",
+          "host": [
+            "rms",
+            "carrentalsbooking",
+            "uk"
+          ],
+          "path": [
+            "api",
+            "autours"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
