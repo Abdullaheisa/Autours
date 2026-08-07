@@ -28,19 +28,19 @@ export interface BrandExtra {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const defaultBrandExtra: Omit<BrandExtra, 'brandId'> = {
   benefits: [
-    { icon: 'ShieldCheck',  title: 'تأمين شامل وخيارات مرنة',      description: 'نوفر خيارات تأمين متنوعة تشمل التأمين الشامل مع إمكانية إعفاء كامل من المسؤولية لراحة بالك.' },
-    { icon: 'Zap',          title: 'استلام سريع ورقمي',           description: 'إجراءات استلام مبسطة وسريعة عند المكتب لتبدأ رحلتك فوراً بدون انتظار طويل.' },
-    { icon: 'Sparkles',     title: 'أسطول سيارات حديث ومعقم',       description: 'جميع السيارات تخضع لفحص دقيق وتطهير كامل قبل التسليم، وهي من أحدث الموديلات السنوية.' },
-    { icon: 'MapPin',       title: 'مواقع استلام متعددة',          description: 'فروع مريحة في المطارات الحيوية ووسط المدن لتسهيل استلام وتسليم السيارة أينما كنت.' },
-    { icon: 'Headphones',   title: 'دعم فني ومساعدة على الطريق 24/7', description: 'فريق الدعم ومساعدة الطريق متواجد على مدار الساعة لخدمتك في حالات الطوارئ أو الأعطال.' },
-    { icon: 'Calendar',     title: 'حجز مرن وإلغاء سهل',          description: 'يمكنك تعديل تفاصيل حجزك أو إلغائه بكل سهولة ووفقاً لسياسات إلغاء مرنة وواضحة.' },
+    { icon: 'ShieldCheck',  title: 'Comprehensive Insurance & Flexible Options', description: 'We provide various insurance options including full coverage with zero excess for your peace of mind.' },
+    { icon: 'Zap',          title: 'Fast & Digital Pickup',                      description: 'Streamlined and quick counter procedures so you can start your journey right away without long waiting times.' },
+    { icon: 'Sparkles',     title: 'Modern & Sanitized Fleet',                  description: 'All vehicles undergo thorough inspection and sanitization before delivery, featuring recent annual models.' },
+    { icon: 'MapPin',       title: 'Multiple Pickup Locations',                 description: 'Convenient branches at major airports and city centres for easy vehicle pickup and drop-off anywhere you are.' },
+    { icon: 'Headphones',   title: '24/7 Roadside Assistance & Support',        description: 'Our customer support and roadside assistance teams are available around the clock to help in emergencies or breakdowns.' },
+    { icon: 'Calendar',     title: 'Flexible Booking & Easy Cancellation',       description: 'Modify your reservation details or cancel easily in accordance with clear, flexible cancellation policies.' },
   ],
   faqs: [
-    { question: 'ما هي المستندات المطلوبة لاستلام السيارة؟',         answer: 'تحتاج إلى رخصة قيادة سارية المفعول (سعودية أو دولية للمغتربين)، الهوية الوطنية أو الإقامة (أو جواز السفر للزوار)، وبطاقة ائتمانية باسم السائق الرئيسي لدفع الوديعة.' },
-    { question: 'هل هناك حد أدنى لسن السائق للحجز؟',                answer: 'الحد الأدنى للسن هو 21 عاماً لغالبية الفئات. قد تفرض بعض الشركات رسوماً إضافية للسائقين الشباب (تحت 25 عاماً) أو تتطلب عمراً أكبر للفئات الفاخرة.' },
-    { question: 'كيف يتم التعامل مع المخالفات المرورية أثناء الإيجار؟', answer: 'يتم تسجيل أي مخالفات مرورية (مثل ساهر) على رخصة السائق مباشرة عبر الأنظمة الحكومية (مثل تم / أبشر)، ويتحمل المستأجر قيمتها بالإضافة إلى أي رسوم إدارية تطبقها الشركة.' },
-    { question: 'هل أحتاج لدفع وديعة تأمينية مستردة عند الاستلام؟',  answer: 'نعم، تتطلب جميع الشركات حجز مبلغ تأميني (تفويض مؤقت) على بطاقة الائتمان الخاصة بك عند الاستلام. يتم فك هذا الحجز تلقائياً خلال 10 إلى 15 يوم عمل من تاريخ إعادة السيارة سليمة وخلوها من المخالفات.' },
-    { question: 'ما هي سياسة الوقود المتبعة؟',                      answer: 'السياسة الأكثر شيوعاً هي (ممتلئ إلى ممتلئ)؛ حيث تستلم السيارة بخزان وقود ممتلئ ويتعين عليك إعادتها ممتلئة لتجنب دفع رسوم تعبئة إضافية من قِبل مكتب التأجير.' },
+    { question: 'What documents are required to pick up the car?', answer: 'You need a valid driving licence (local or international for visitors), a national ID or passport, and a credit card in the main driver\'s name for the deposit.' },
+    { question: 'Is there a minimum age requirement for renting a car?', answer: 'The standard minimum age is 21 for most vehicle categories. Young driver surcharges may apply for drivers under 25, or higher age limits for luxury vehicles.' },
+    { question: 'How are traffic fines handled during the rental period?', answer: 'Traffic violations incurred during the rental period are registered against the driver\'s licence or sent to the rental company, which charges the renter along with any administrative fees.' },
+    { question: 'Do I need to pay a refundable security deposit at pickup?', answer: 'Yes, all rental suppliers require a temporary security deposit hold on your credit card at pickup. The hold is automatically released after vehicle return once inspected and checked for fines.' },
+    { question: 'What is the standard fuel policy?', answer: 'The most common policy is Full-to-Full. You receive the vehicle with a full tank of fuel and must return it full to avoid refuelling charges from the rental branch.' },
   ],
 };
 
