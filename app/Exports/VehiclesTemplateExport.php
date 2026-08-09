@@ -18,7 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 class VehiclesTemplateExport implements WithMultipleSheets
 {
     /**
-     * Export multiple sheets: Vehicles and Included
+     * Export multiple sheets: Vehicles, Included, and Reference Data
      */
     public function sheets(): array
     {
@@ -51,27 +51,29 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
         return [
             // Header row
             [
-                'Row #',              // A - COL_ROW_NUMBER (0)
-                'Vehicle Name',       // B - COL_VEHICLE_NAME (1)
-                'Category',           // C - COL_CATEGORY (2)
-                'Air Condition',      // D - COL_AIR_CONDITION (3)
-                'Doors',              // E - COL_DOORS (4)
-                'Suitcase',           // F - COL_SUITCASE (5)
-                'Seats',              // G - COL_SEATS (6)
-                'Fuel Type',          // H - COL_FUEL (7)
-                'Transmission',       // I - COL_TRANSMISSION (8)
-                'Location Type',      // J - COL_LOCATION_TYPE (9)
-                'Fuel Policy',        // K - COL_FUEL_POLICY (10)
-                'Reserved',           // L - COL_RESERVED_11 (11)
-                'Confirmation',       // M - COL_CONFIRMATION_TYPE (12)
-                'Reserved',           // N - COL_RESERVED_13 (13)
-                'Reserved',           // O - COL_RESERVED_14 (14)
-                'Price (1-3 Days)',   // P - COL_PRICE_1_3_DAYS (15)
-                'Week Price',         // Q - COL_PRICE_WEEK (16)
-                'Month Price',        // R - COL_PRICE_MONTH (17)
-                'Description',        // S - COL_DESCRIPTION (18)
+                'Row #',                   // A (0)
+                'Vehicle Name',            // B (1)
+                'Category',                // C (2)
+                'Air Condition',           // D (3)
+                'Doors',                   // E (4)
+                'Suitcase',                // F (5)
+                'Seats',                   // G (6)
+                'Fuel Type',               // H (7)
+                'Transmission',            // I (8)
+                'Location Type',           // J (9)
+                'Fuel Policy',             // K (10)
+                'Reserved',                // L (11)
+                'Confirmation',            // M (12)
+                'Pricing Mode',            // N (13) - standard | granular | dynamic
+                'Price (1-2 Days)',        // O (14) - Daily Base Price
+                'Price (3-4 Days)',        // P (15) - Granular / Custom
+                'Price (5-7 Days)',        // Q (16) - Week Price
+                'Price (8-14 Days)',       // R (17) - Granular / Custom
+                'Price (15-30 Days)',      // S (18) - Month Price
+                'Custom Price Ranges JSON',// T (19) - JSON string for custom tiers
+                'Description',             // U (20)
             ],
-            // Sample data row 1
+            // Sample Row 1: Standard Pricing
             [
                 1,
                 'Toyota Corolla 2024',
@@ -86,14 +88,16 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 'Full to Full',
                 '',
                 'Instant Confirmation',
+                'standard',
+                50.00,                     // Price 1-2 Days
                 '',
+                45.00,                     // Week Price (5-7 Days)
                 '',
-                50.00,
-                45.00,
-                40.00,
+                40.00,                     // Month Price (15-30 Days)
+                '',
                 'A reliable and fuel-efficient sedan, perfect for city driving and airport transfers.',
             ],
-            // Sample data row 2
+            // Sample Row 2: Granular 5-Tier Pricing
             [
                 2,
                 'Honda Civic 2024',
@@ -108,33 +112,61 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
                 'Same to Same',
                 '',
                 'On Request',
+                'granular',
+                60.00,                     // 1-2 Days
+                55.00,                     // 3-4 Days
+                50.00,                     // 5-7 Days
+                45.00,                     // 8-14 Days
+                40.00,                     // 15-30 Days
                 '',
-                '',
-                55.00,
-                48.00,
-                42.00,
                 'A stylish compact car offering excellent performance and comfort for urban trips.',
             ],
-            // Empty template row - fill in your vehicle data here
+            // Sample Row 3: Custom Dynamic Pricing Ranges
             [
                 3,
+                'Mercedes-Benz C-Class',
+                'Luxury',
+                'Air Conditioning',
+                4,
+                'Medium',
+                5,
+                'Gas',
+                'Automatic',
+                'Airport',
+                'Full to Full',
+                '',
+                'Instant Confirmation',
+                'dynamic',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '[{"minDays":1,"maxDays":3,"price":120},{"minDays":4,"maxDays":10,"price":100},{"minDays":11,"maxDays":30,"price":85}]',
+                'Premium executive sedan with custom flexible pricing tiers.',
+            ],
+            // Empty template row for supplier input
+            [
+                4,
                 '',  // Vehicle Name (required)
                 '',  // Category
-                '',  // Air Condition (e.g: Air Conditioning)
-                '',  // Doors (e.g: 4)
-                '',  // Suitcase (Small / Medium / Large)
-                '',  // Seats (e.g: 5)
-                '',  // Fuel Type (e.g: Gas)
-                '',  // Transmission (e.g: Automatic)
+                '',  // Air Condition
+                '',  // Doors
+                '',  // Suitcase
+                '',  // Seats
+                '',  // Fuel Type
+                '',  // Transmission
                 '',  // Location Type
                 '',  // Fuel Policy
                 '',
-                '',  // Confirmation (Instant Confirmation / On Request)
-                '',
-                '',
-                '',  // Price 1-3 Days (required, must be > 0)
-                '',  // Week Price (optional)
-                '',  // Month Price (optional)
+                '',  // Confirmation
+                'standard', // Pricing Mode: standard | granular | dynamic
+                '',  // Price 1-2 Days (required)
+                '',  // Price 3-4 Days
+                '',  // Price 5-7 Days / Week Price
+                '',  // Price 8-14 Days
+                '',  // Price 15-30 Days / Month Price
+                '',  // Custom Price Ranges JSON (optional)
                 '',  // Description (optional)
             ],
         ];
@@ -159,12 +191,14 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
             'K' => 15,  // Fuel Policy
             'L' => 10,  // Reserved
             'M' => 22,  // Confirmation
-            'N' => 10,  // Reserved
-            'O' => 10,  // Reserved
-            'P' => 18,  // Price (1-3 Days)
-            'Q' => 12,  // Week Price
-            'R' => 12,  // Month Price
-            'S' => 50,  // Description
+            'N' => 15,  // Pricing Mode
+            'O' => 18,  // Price (1-2 Days)
+            'P' => 18,  // Price (3-4 Days)
+            'Q' => 18,  // Price (5-7 Days)
+            'R' => 18,  // Price (8-14 Days)
+            'S' => 18,  // Price (15-30 Days)
+            'T' => 35,  // Custom Price Ranges JSON
+            'U' => 45,  // Description
         ];
     }
 
@@ -174,7 +208,7 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
     public function styles(Worksheet $sheet): array
     {
         // Set header row style
-        $sheet->getStyle('A1:S1')->applyFromArray([
+        $sheet->getStyle('A1:U1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -194,8 +228,8 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
             ],
         ]);
 
-        // Set sample data row styles
-        $sheet->getStyle('A2:S4')->applyFromArray([
+        // Highlight sample rows
+        $sheet->getStyle('A2:U5')->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
@@ -208,25 +242,23 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
         ]);
 
         // Highlight sample rows with light blue
-        $sheet->getStyle('A2:S3')->applyFromArray([
+        $sheet->getStyle('A2:U4')->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => 'DEEAF6'],
             ],
         ]);
 
-        // Highlight Description column header in a different color
-        $sheet->getStyle('S1')->applyFromArray([
+        // Highlight Description column header
+        $sheet->getStyle('U1')->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => '7030A0'],
             ],
         ]);
 
-        // Set row height
         $sheet->getRowDimension(1)->setRowHeight(25);
-        // Enable text wrap for description column
-        $sheet->getStyle('S2:S100')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('U2:U100')->getAlignment()->setWrapText(true);
 
         return [];
     }
@@ -237,23 +269,15 @@ class VehiclesSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
  */
 class IncludedSheet implements FromArray, WithTitle, WithStyles, WithColumnWidths
 {
-    /**
-     * Sheet title
-     */
     public function title(): string
     {
         return 'Included Items';
     }
 
-    /**
-     * Column headers and sample data
-     */
     public function array(): array
     {
         return [
-            // Header row
             ['What is Included'],
-            // Sample items
             ['Unlimited Mileage'],
             ['Third Party Liability Insurance'],
             ['Collision Damage Waiver (CDW)'],
@@ -261,16 +285,12 @@ class IncludedSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
             ['Road Assistance 24/7'],
             ['Airport Fees'],
             ['VAT'],
-            // Empty rows for more entries
             [''],
             [''],
             [''],
         ];
     }
 
-    /**
-     * Column widths
-     */
     public function columnWidths(): array
     {
         return [
@@ -278,12 +298,8 @@ class IncludedSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
         ];
     }
 
-    /**
-     * Apply styles to the worksheet
-     */
     public function styles(Worksheet $sheet): array
     {
-        // Header style
         $sheet->getStyle('A1')->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -303,7 +319,6 @@ class IncludedSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
             ],
         ]);
 
-        // Sample data style
         $sheet->getStyle('A2:A8')->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
@@ -327,35 +342,26 @@ class IncludedSheet implements FromArray, WithTitle, WithStyles, WithColumnWidth
  */
 class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumnWidths
 {
-    /**
-     * Sheet title
-     */
     public function title(): string
     {
         return 'Reference Data';
     }
 
-    /**
-     * Reference data for valid values
-     */
     public function array(): array
     {
         $categories = Category::query()->pluck('name')->toArray();
         $fuelPolicies = FuelPolicy::query()->pluck('name')->toArray();
         $locationTypes = LocationType::query()->pluck('name')->toArray();
 
-        // Build the reference data array
         $data = [
-            // Header row
-            ['Categories', 'Fuel Policies', 'Location Types', 'Confirmation Types', 'Air Condition Values', 'Transmission Types', 'Fuel Types', 'Suitcase Options'],
+            ['Categories', 'Fuel Policies', 'Location Types', 'Confirmation Types', 'Air Condition Values', 'Transmission Types', 'Fuel Types', 'Suitcase Options', 'Pricing Modes'],
         ];
 
-        // Find the max rows needed
         $maxRows = max(
             count($categories),
             count($fuelPolicies),
             count($locationTypes),
-            4 // For static options
+            5
         );
 
         $confirmationTypes = ['Instant Confirmation', 'On Request'];
@@ -363,6 +369,7 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
         $transmissionTypes = ['Automatic', 'Manual', 'Semi-Automatic'];
         $fuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'LPG'];
         $suitcaseOptions = ['Small', 'Medium', 'Large'];
+        $pricingModes = ['standard', 'granular', 'dynamic'];
 
         for ($i = 0; $i < $maxRows; $i++) {
             $data[] = [
@@ -374,15 +381,13 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
                 $transmissionTypes[$i] ?? '',
                 $fuelTypes[$i] ?? '',
                 $suitcaseOptions[$i] ?? '',
+                $pricingModes[$i] ?? '',
             ];
         }
 
         return $data;
     }
 
-    /**
-     * Column widths
-     */
     public function columnWidths(): array
     {
         return [
@@ -393,16 +398,14 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
             'E' => 20,
             'F' => 20,
             'G' => 15,
+            'H' => 15,
+            'I' => 15,
         ];
     }
 
-    /**
-     * Apply styles to the worksheet
-     */
     public function styles(Worksheet $sheet): array
     {
-        // Header style
-        $sheet->getStyle('A1:H1')->applyFromArray([
+        $sheet->getStyle('A1:I1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -426,4 +429,3 @@ class ReferenceDataSheet implements FromArray, WithTitle, WithStyles, WithColumn
         return [];
     }
 }
-

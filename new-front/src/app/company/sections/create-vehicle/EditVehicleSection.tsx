@@ -1,246 +1,28 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from "react";
-import {
-  Car, MapPin, Tag, DollarSign, ShieldCheck, Settings,
-  ChevronDown, ChevronUp, Check, X, Info, Image as ImageIcon,
-  Wind, DoorOpen, Fuel, Users, Luggage, Settings2, Loader2,
-  Gauge, Cog, Palette, Sparkles, Briefcase, Search
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
-import RichTextEditor from "@/components/shared/RichTextEditor";
 import { supplierApi } from "@/services/api/supplierApi";
 import { photoApi, vehicleManagementApi, specificationApi } from "@/services/api";
 import toast from "react-hot-toast";
 
-// ─────────────────────────────────────────────
-// Small reusable components
-// ─────────────────────────────────────────────
+import { VehicleFormData, VehicleDynamicData } from "./components/types";
+import CarDetailsSection from "./components/CarDetailsSection";
+import PricesSection from "./components/PricesSection";
+import IncludedFeaturesSection from "./components/IncludedFeaturesSection";
+import SpecificationsSection from "./components/SpecificationsSection";
 
-const SectionCard = ({
-  icon: Icon,
-  title,
-  children
+export default function EditVehicleSection({
+  vehicleId,
+  onBack,
 }: {
-  icon: React.ElementType,
-  title: string,
-  children: React.ReactNode
-}) => (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-    <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-3 bg-gray-50/30 rounded-t-2xl">
-      <div className="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center">
-        <Icon size={18} className="text-primary-600" />
-      </div>
-      <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
-    </div>
-    <div className="p-6">
-      {children}
-    </div>
-  </div>
-);
-
-/** A searchable dropdown select field */
-const SelectField = ({
-  label,
-  value,
-  onChange,
-  options = [],
-  placeholder = "Select...",
-}: {
-  label: string;
-  value: string;
-  onChange?: (val: string) => void;
-  options?: { value: string; label: string }[];
-  placeholder?: string;
-}) => {
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setSearchQuery("");
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [open]);
-
-  const filteredOptions = useMemo(() => {
-    if (!searchQuery.trim()) return options;
-    return options.filter((opt) =>
-      opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [options, searchQuery]);
-
-  const selectedLabel = options.find((opt) => opt.value === value)?.label;
-
-  return (
-    <div className="space-y-2" ref={dropdownRef}>
-      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">{label}</label>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => {
-            setOpen((p) => !p);
-            setSearchQuery("");
-          }}
-          className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm transition-all text-left
-            ${open ? "border-primary-500 ring-2 ring-primary-500/10 bg-white" : "border-gray-200"}
-            ${value ? "text-gray-900 font-medium" : "text-gray-400"}
-          `}
-        >
-          <span className="truncate">{selectedLabel || placeholder}</span>
-          <ChevronDown
-            size={16}
-            className={`text-gray-400 transition-transform duration-200 shrink-0 ${open ? "rotate-180" : ""}`}
-          />
-        </button>
-
-        {open && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
-            <div className="p-2 border-b border-gray-100 flex items-center gap-2">
-              <Search size={14} className="text-gray-400 shrink-0 ml-1" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                className="w-full px-2 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 focus:bg-white"
-              />
-            </div>
-
-            <div className="max-h-60 overflow-y-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  onChange?.("");
-                  setOpen(false);
-                  setSearchQuery("");
-                }}
-                className="w-full px-4 py-2.5 text-left text-xs font-bold border-b border-gray-50 text-gray-400 hover:bg-gray-50"
-              >
-                Clear selection
-              </button>
-
-              {filteredOptions.length === 0 ? (
-                <div className="px-4 py-4 text-center text-xs text-gray-400">No results found</div>
-              ) : (
-                filteredOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      onChange?.(opt.value);
-                      setOpen(false);
-                      setSearchQuery("");
-                    }}
-                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors block truncate
-                      ${value === opt.value
-                        ? "bg-primary-50 text-primary-700 font-bold"
-                        : "text-gray-700 hover:bg-gray-50 font-medium"
-                      }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const PriceField = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange?: (val: string) => void;
-}) => (
-  <div className="space-y-2">
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block text-center">{label}</label>
-    <div className="relative">
-      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-      <input
-        type="number"
-        value={value}
-        onChange={(e) => onChange?.(e.target.value)}
-        placeholder="0.00"
-        className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-center transition-all"
-      />
-    </div>
-  </div>
-);
-
-const CarSeat = ({ size = 14, className = "" }: { size?: number; className?: string }) => (
-  <span
-    className={`inline-block bg-current ${className}`}
-    style={{
-      width: `${size}px`,
-      height: `${size}px`,
-      maskImage: "url('/img/icons/chair.svg')",
-      maskSize: "contain",
-      maskRepeat: "no-repeat",
-      maskPosition: "center",
-      WebkitMaskImage: "url('/img/icons/chair.svg')",
-      WebkitMaskSize: "contain",
-      WebkitMaskRepeat: "no-repeat",
-      WebkitMaskPosition: "center",
-      verticalAlign: "middle"
-    }}
-  />
-);
-
-const AirConditionIcon = ({ size = 14, className = "" }: { size?: number; className?: string }) => (
-  <span
-    className={`inline-block bg-current ${className}`}
-    style={{
-      width: `${size}px`,
-      height: `${size}px`,
-      maskImage: "url('/img/icons/air.png')",
-      maskSize: "contain",
-      maskRepeat: "no-repeat",
-      maskPosition: "center",
-      WebkitMaskImage: "url('/img/icons/air.png')",
-      WebkitMaskSize: "contain",
-      WebkitMaskRepeat: "no-repeat",
-      WebkitMaskPosition: "center",
-      verticalAlign: "middle"
-    }}
-  />
-);
-
-const SpecIcon = ({ name }: { name: string }) => {
-  if (name === "Armchair") return <CarSeat size={14} />;
-  if (name === "Wind") return <AirConditionIcon size={14} />;
-  const icons: Record<string, any> = { DoorOpen, Fuel, Users, Luggage, Settings2, Gauge, Cog, Palette, Sparkles, Briefcase, Car };
-  const Icon = icons[name] || Settings;
-  return <Icon size={14} />;
-};
-
-// ─────────────────────────────────────────────
-// Main component
-// ─────────────────────────────────────────────
-export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: number, onBack: () => void }) {
-  const [photoSearch, setPhotoSearch] = useState("");
+  vehicleId: number;
+  onBack: () => void;
+}) {
   // ── Form state ─────────────────────────────
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<VehicleFormData>({
     vehiclePhotoId: "",
     pickupLocationId: "",   // branch ID
     categoryId: "",          // category ID
@@ -248,26 +30,37 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
     fuelPolicyId: "",        // fuel-policy ID
     reserveWithoutConfirmation: false,
     description: "",
+    
+    // Pricing mode & fields
+    pricingMode: 'standard',
     price12: "",
     price37: "",
     price830: "",
-    includedFeatures: [] as number[],
+    price34: "",
+    price57: "",
+    price814: "",
+    price1530: "",
+    customPriceTiers: [],
+
+    includedFeatures: [],
     showIncludedDropdown: false,
     showVehicleDropdown: false,
-    specifications: {} as Record<string, string>,
+    specifications: {},
   });
 
   // ── Dynamic data from API ──────────────────
-  const [dynamicData, setDynamicData] = useState({
-    photos: [] as any[],
-    categories: [] as any[],
-    branches: [] as any[],
-    locationTypes: [] as any[],
-    fuelPolicies: [] as any[],
-    includedItems: [] as any[],
-    specifications: [] as any[],
+  const [dynamicData, setDynamicData] = useState<VehicleDynamicData>({
+    photos: [],
+    categories: [],
+    branches: [],
+    locationTypes: [],
+    fuelPolicies: [],
+    includedItems: [],
+    specifications: [],
   });
   const [dataLoading, setDataLoading] = useState(true);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -314,11 +107,16 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
 
           const includedFeatures = Array.isArray(vehicleData.what_is_included)
             ? vehicleData.what_is_included.map((name: any) => {
-              if (typeof name === 'object' && name !== null) return name.id;
-              const found = includedList.find((item: any) => item.what_is_included === name || item.id === name);
-              return found ? found.id : null;
-            }).filter((id: any) => id !== null)
+                if (typeof name === 'object' && name !== null) return name.id;
+                const found = includedList.find((item: any) => item.what_is_included === name || item.id === name);
+                return found ? found.id : null;
+              }).filter((id: any) => id !== null)
             : [];
+
+          // Detect pricing mode from backend response or default to 'standard'
+          const detectedMode = vehicleData.pricing_mode || 'standard';
+          const granular = vehicleData.granular_prices || {};
+          const customTiers = Array.isArray(vehicleData.custom_price_tiers) ? vehicleData.custom_price_tiers : [];
 
           setFormData({
             vehiclePhotoId: vehicleData.photo || "",
@@ -332,9 +130,17 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
             fuelPolicyId: String(vehicleData.fuel_policy_id || ""),
             reserveWithoutConfirmation: vehicleData.instant_confirmation === 0,
             description: vehicleData.description || "",
-            price12: String(vehicleData.price || ""),
+
+            pricingMode: detectedMode,
+            price12: String(vehicleData.price || granular.price_1_2 || ""),
             price37: String(vehicleData.week_price || ""),
             price830: String(vehicleData.month_price || ""),
+            price34: String(granular.price_3_4 || ""),
+            price57: String(granular.price_5_7 || ""),
+            price814: String(granular.price_8_14 || ""),
+            price1530: String(granular.price_15_30 || ""),
+            customPriceTiers: customTiers,
+
             includedFeatures: includedFeatures,
             showIncludedDropdown: false,
             showVehicleDropdown: false,
@@ -348,96 +154,105 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
       }
     };
     fetchData();
-  }, []);
+  }, [vehicleId]);
 
-  // ── Validation & submission ────────────────
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const updateFormData = (fields: Partial<VehicleFormData>) => {
+    setFormData((prev) => ({ ...prev, ...fields }));
+  };
 
-  // ── Click-outside for dropdowns ───────────
-  const includedDropdownRef = useRef<HTMLDivElement>(null);
-  const vehicleDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (includedDropdownRef.current && !includedDropdownRef.current.contains(e.target as Node)) {
-        setFormData(p => ({ ...p, showIncludedDropdown: false }));
-      }
-      if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(e.target as Node)) {
-        setFormData(p => ({ ...p, showVehicleDropdown: false }));
-        setPhotoSearch("");
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // ── Derived values ─────────────────────────
-  const selectedPhoto = dynamicData.photos.find(
-    (p: any) => String(p.id) === formData.vehiclePhotoId || p.photo === formData.vehiclePhotoId
-  );
-  const selectedFeatures = dynamicData.includedItems.filter(
-    (item: any) => formData.includedFeatures.includes(item.id)
-  );
-  const filteredPhotos = useMemo(() => {
-    if (!photoSearch.trim()) return dynamicData.photos;
-    return dynamicData.photos.filter((p: any) =>
-      p.name.toLowerCase().includes(photoSearch.toLowerCase())
-    );
-  }, [dynamicData.photos, photoSearch]);
-
-  // ── Handlers ──────────────────────────────
   const handleFeatureToggle = (id: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       includedFeatures: prev.includedFeatures.includes(id)
-        ? prev.includedFeatures.filter(f => f !== id)
+        ? prev.includedFeatures.filter((f) => f !== id)
         : [...prev.includedFeatures, id],
     }));
   };
 
-  const handleVehicleSelect = (photoId: string) => {
-    setFormData(p => ({ ...p, vehiclePhotoId: photoId, showVehicleDropdown: false }));
-    setPhotoSearch("");
+  const handleSpecChange = (name: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      specifications: {
+        ...prev.specifications,
+        [name]: value,
+      },
+    }));
   };
 
   const handleSubmit = async () => {
     setValidationErrors([]);
 
-    // Client-side quick check before hitting the server
     const errors: string[] = [];
     if (!formData.vehiclePhotoId) errors.push("Vehicle photo is required.");
     if (!formData.pickupLocationId) errors.push("Pickup location (branch) is required.");
     if (!formData.categoryId) errors.push("Category is required.");
     if (!formData.description || formData.description.replace(/<[^>]+>/g, '').trim().length < 5)
       errors.push("Description must be at least 5 characters.");
-    if (!formData.price12 || parseFloat(formData.price12) < 1)
-      errors.push("Price (1-2 days) must be at least 1.");
-    if (!formData.price37 || parseFloat(formData.price37) < 1)
-      errors.push("Price (3-7 days) must be at least 1.");
-    if (!formData.price830 || parseFloat(formData.price830) < 1)
-      errors.push("Price (8-30 days) must be at least 1.");
+
+    // Validate prices based on active mode
+    if (formData.pricingMode === 'standard') {
+      if (!formData.price12 || parseFloat(formData.price12) < 1)
+        errors.push("Price (1-2 days) must be at least 1.");
+      if (!formData.price37 || parseFloat(formData.price37) < 1)
+        errors.push("Price (3-7 days) must be at least 1.");
+      if (!formData.price830 || parseFloat(formData.price830) < 1)
+        errors.push("Price (8-30 days) must be at least 1.");
+    } else if (formData.pricingMode === 'granular') {
+      if (!formData.price12 || parseFloat(formData.price12) < 1) errors.push("Price (1-2 days) is required.");
+      if (!formData.price34 || parseFloat(formData.price34) < 1) errors.push("Price (3-4 days) is required.");
+      if (!formData.price57 || parseFloat(formData.price57) < 1) errors.push("Price (5-7 days) is required.");
+      if (!formData.price814 || parseFloat(formData.price814) < 1) errors.push("Price (8-14 days) is required.");
+      if (!formData.price1530 || parseFloat(formData.price1530) < 1) errors.push("Price (15-30 days) is required.");
+    } else if (formData.pricingMode === 'dynamic') {
+      if (formData.customPriceTiers.length === 0) {
+        errors.push("Please add at least one custom price tier.");
+      } else {
+        formData.customPriceTiers.forEach((tier, i) => {
+          if (!tier.price || parseFloat(tier.price) < 1) {
+            errors.push(`Tier #${i + 1} price is required.`);
+          }
+        });
+      }
+    }
+
     if (errors.length > 0) {
       setValidationErrors(errors);
-      errors.forEach(err => toast.error(err));
+      errors.forEach((err) => toast.error(err));
       window.scrollTo(0, 0);
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const selectedPhoto = dynamicData.photos.find(
+        (p: any) => String(p.id) === formData.vehiclePhotoId || p.photo === formData.vehiclePhotoId
+      );
+      const selectedFeatures = dynamicData.includedItems.filter(
+        (item: any) => formData.includedFeatures.includes(item.id)
+      );
+
+      // Main fallback prices for backend
+      let basePrice = formData.price12 || "0";
+      let weekPrice = formData.price37 || formData.price57 || basePrice;
+      let monthPrice = formData.price830 || formData.price1530 || weekPrice;
+
+      if (formData.pricingMode === 'dynamic' && formData.customPriceTiers.length > 0) {
+        basePrice = formData.customPriceTiers[0].price || "0";
+        weekPrice = formData.customPriceTiers[1]?.price || formData.customPriceTiers[0].price || basePrice;
+        monthPrice = formData.customPriceTiers[formData.customPriceTiers.length - 1]?.price || weekPrice;
+      }
+
       const form = new FormData();
       form.append("update", "1");
       form.append("id", String(vehicleId));
       form.append("photo", selectedPhoto?.photo || formData.vehiclePhotoId);
       form.append("name", selectedPhoto?.name || "Vehicle");
       form.append("description", formData.description);
-      form.append("price", formData.price12);
-      form.append("week_price", formData.price37);
-      form.append("month_price", formData.price830);
+      form.append("price", basePrice);
+      form.append("week_price", weekPrice);
+      form.append("month_price", monthPrice);
 
       form.append("pickupLoc", formData.pickupLocationId);
-
       form.append("category", formData.categoryId);
       form.append("instant_confirmation", formData.reserveWithoutConfirmation ? "0" : "1");
 
@@ -448,19 +263,32 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
         form.append("fuel_policy", formData.fuelPolicyId);
       }
 
-      // Use selected feature names/columns
-      const names = selectedFeatures.map(item => item.what_is_included || item.name || String(item.id));
+      const names = selectedFeatures.map((item) => item.what_is_included || item.name || String(item.id));
       form.append("included", names.join(","));
+
+      // Append multi-model pricing data
+      form.append("pricing_mode", formData.pricingMode);
+      if (formData.pricingMode === 'granular') {
+        form.append("granular_prices", JSON.stringify({
+          price_1_2: formData.price12,
+          price_3_4: formData.price34,
+          price_5_7: formData.price57,
+          price_8_14: formData.price814,
+          price_15_30: formData.price1530,
+        }));
+      } else if (formData.pricingMode === 'dynamic') {
+        form.append("custom_price_tiers", JSON.stringify(formData.customPriceTiers));
+      }
 
       const specs = Object.entries(formData.specifications)
         .filter(([, v]) => v !== "")
         .map(([name, value]) => {
-          const specObj = dynamicData.specifications.find(s => s.name === name);
+          const specObj = dynamicData.specifications.find((s) => s.name === name);
           return {
             name: name,
             value: value,
             selectedOption: value,
-            icon: specObj?.icon || "Settings"
+            icon: specObj?.icon || "Settings",
           };
         });
       if (specs.length > 0) {
@@ -479,7 +307,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
           ([key, val]) => `${key}: ${(val as string[]).join(', ')}`
         );
         setValidationErrors(list);
-        list.forEach(err => toast.error(err));
+        list.forEach((err) => toast.error(err));
       } else {
         const msg = error.message || "An unexpected error occurred.";
         setValidationErrors([msg]);
@@ -491,13 +319,6 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
     }
   };
 
-  // ── Helpers to convert API arrays → SelectField options ──
-  const toOpts = (arr: any[], labelKey = "name") =>
-    arr.map((item: any) => ({ value: String(item.id), label: item[labelKey] || item.location || item.type || item.what_is_included || String(item.id) }));
-
-  // ─────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────
   return (
     <SectionLayout>
       <PageHeader
@@ -511,7 +332,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
         {validationErrors.length > 0 && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl shadow-sm">
             <h3 className="text-red-800 font-bold mb-2">
-              Please fix the following errors to create the vehicle:
+              Please fix the following errors to update the vehicle:
             </h3>
             <ul className="list-disc pl-5 text-red-600 text-sm space-y-1">
               {validationErrors.map((err, i) => (
@@ -529,332 +350,35 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
           </div>
         )}
 
-        {/* ── Car Details ── */}
-        <SectionCard icon={Car} title="Car Details">
-          <div className="space-y-6">
+        {/* Car Details */}
+        <CarDetailsSection
+          formData={formData}
+          dynamicData={dynamicData}
+          onChange={updateFormData}
+        />
 
-            {/* Vehicle Photo – custom image dropdown */}
-            <div className="space-y-2 relative" ref={vehicleDropdownRef}>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
-                Vehicle Photo
-              </label>
+        {/* Prices Section (Multi-Model Support) */}
+        <PricesSection
+          formData={formData}
+          onChange={updateFormData}
+        />
 
-              {/* Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData(p => ({ ...p, showVehicleDropdown: !p.showVehicleDropdown }));
-                  setPhotoSearch("");
-                }}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 hover:bg-gray-100 transition-all"
-              >
-                <span className={selectedPhoto ? "text-gray-900 font-medium" : "text-gray-400"}>
-                  {selectedPhoto
-                    ? `${selectedPhoto.name}${selectedPhoto.category?.name ? ` (${selectedPhoto.category.name})` : ''}`
-                    : "Select a vehicle image…"}
-                </span>
-                {formData.showVehicleDropdown
-                  ? <ChevronUp size={16} className="text-gray-400" />
-                  : <ChevronDown size={16} className="text-gray-400" />
-                }
-              </button>
+        {/* Included Features */}
+        <IncludedFeaturesSection
+          formData={formData}
+          includedItems={dynamicData.includedItems}
+          onToggleFeature={handleFeatureToggle}
+          onChange={updateFormData}
+        />
 
-              {/* Dropdown list */}
-              {formData.showVehicleDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-80">
-                  {/* Photo Search Bar */}
-                  <div className="p-2 border-b border-gray-100 flex items-center gap-2">
-                    <Search size={14} className="text-gray-400 shrink-0 ml-1" />
-                    <input
-                      type="text"
-                      value={photoSearch}
-                      onChange={(e) => setPhotoSearch(e.target.value)}
-                      placeholder="Search photo..."
-                      className="w-full px-2 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500/20 focus:bg-white"
-                    />
-                  </div>
-                  <div className="overflow-y-auto flex-1">
-                    {filteredPhotos.length === 0 ? (
-                      <div className="px-4 py-6 text-center text-gray-400 text-sm">
-                        No matching photos found in library.
-                      </div>
-                    ) : (
-                      filteredPhotos.map((photo: any) => {
-                        const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-                        let photoUrl = photo.photo || photo.image || photo.url || null;
-                        if (photoUrl && !photoUrl.startsWith('http') && !photoUrl.startsWith('data:') && !photoUrl.startsWith('/')) {
-                          photoUrl = `${backendBase}/img/vehicles/${photoUrl}`;
-                        }
-                        const catLabel = photo.category?.name || photo.category_name || "";
-                        const isSelected = formData.vehiclePhotoId === String(photo.id);
-                        return (
-                          <button
-                            type="button"
-                            key={photo.id}
-                            onClick={() => handleVehicleSelect(String(photo.id))}
-                            className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${isSelected ? "bg-primary-50/50" : ""
-                              }`}
-                          >
-                            <div className="w-16 h-12 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
-                              {photoUrl ? (
-                                <img src={photoUrl} alt={photo.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <Car size={16} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-bold truncate ${isSelected ? "text-primary-700" : "text-gray-900"}`}>
-                                {photo.name}
-                              </p>
-                              {catLabel && <p className="text-xs text-gray-500">{catLabel}</p>}
-                            </div>
-                            {isSelected && (
-                              <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
-                                <Check size={12} className="text-white" strokeWidth={3} />
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
+        {/* Specifications */}
+        <SpecificationsSection
+          specifications={dynamicData.specifications}
+          values={formData.specifications}
+          onChangeSpec={handleSpecChange}
+        />
 
-              {/* Selected preview */}
-              {selectedPhoto && (() => {
-                const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-                let photoUrl = selectedPhoto.photo || selectedPhoto.image || selectedPhoto.url || null;
-                if (photoUrl && !photoUrl.startsWith('http') && !photoUrl.startsWith('data:') && !photoUrl.startsWith('/')) {
-                  photoUrl = `${backendBase}/img/vehicles/${photoUrl}`;
-                }
-                const catLabel = selectedPhoto.category?.name || selectedPhoto.category_name || "";
-                return (
-                  <div className="mt-3 p-4 bg-primary-50 rounded-xl border border-primary-100 flex items-center gap-4">
-                    <div className="w-24 h-16 rounded-lg overflow-hidden border-2 border-white shadow-sm bg-white">
-                      {photoUrl ? (
-                        <img src={photoUrl} alt={selectedPhoto.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50">
-                          <Car size={20} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-gray-900">{selectedPhoto.name}</p>
-                      {catLabel && <p className="text-xs text-primary-600 font-medium">{catLabel}</p>}
-                      <p className="text-[10px] text-gray-400 mt-1">Image pulled from vehicle library</p>
-                    </div>
-                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-primary-200">
-                      <ImageIcon size={18} className="text-primary-500" />
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Row 1: Pickup Location, Category, Location Types */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <SelectField
-                label="Pickup Location"
-                value={formData.pickupLocationId}
-                onChange={(v) => setFormData(p => ({ ...p, pickupLocationId: v }))}
-                options={toOpts(dynamicData.branches, "name")}
-                placeholder="Select branch…"
-              />
-              <SelectField
-                label="Category"
-                value={formData.categoryId}
-                onChange={(v) => setFormData(p => ({ ...p, categoryId: v }))}
-                options={toOpts(dynamicData.categories, "name")}
-                placeholder="Select category…"
-              />
-              <SelectField
-                label="Location Type"
-                value={formData.locationTypeId}
-                onChange={(v) => setFormData(p => ({ ...p, locationTypeId: v }))}
-                options={toOpts(dynamicData.locationTypes, "type")}
-                placeholder="Select location type…"
-              />
-            </div>
-
-            {/* Row 2: Fuel Policy + Reserve toggle */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SelectField
-                label="Fuel Policy"
-                value={formData.fuelPolicyId}
-                onChange={(v) => setFormData(p => ({ ...p, fuelPolicyId: v }))}
-                options={toOpts(dynamicData.fuelPolicies, "name")}
-                placeholder="Select fuel policy…"
-              />
-              <div className="flex items-end">
-                <div className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="flex items-center gap-2">
-                    <Info size={14} className="text-gray-400" />
-                    <span className="text-xs font-bold text-gray-700">Reserve Without Confirmation</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData(p => ({ ...p, reserveWithoutConfirmation: !p.reserveWithoutConfirmation }))
-                    }
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${formData.reserveWithoutConfirmation ? 'bg-primary-500' : 'bg-gray-300'
-                      }`}
-                  >
-                    <span
-                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${formData.reserveWithoutConfirmation ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Vehicle Description */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
-                Vehicle Description
-              </label>
-              <RichTextEditor
-                value={formData.description}
-                onChange={(html) => setFormData(p => ({ ...p, description: html }))}
-                placeholder="Tell customers more about this vehicle…"
-                minHeight={140}
-                className="rounded-xl"
-              />
-            </div>
-          </div>
-        </SectionCard>
-
-        {/* ── Prices ── */}
-        <SectionCard icon={Tag} title="Prices Section">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <PriceField label="Price 1-2 days" value={formData.price12} onChange={(v) => setFormData(p => ({ ...p, price12: v }))} />
-            <PriceField label="3 - 7 Days Price" value={formData.price37} onChange={(v) => setFormData(p => ({ ...p, price37: v }))} />
-            <PriceField label="8-30 Days Price" value={formData.price830} onChange={(v) => setFormData(p => ({ ...p, price830: v }))} />
-          </div>
-        </SectionCard>
-
-        {/* ── What is Included ── */}
-        <SectionCard icon={ShieldCheck} title="What is included?">
-          <div className="space-y-3 relative" ref={includedDropdownRef}>
-            {/* Trigger */}
-            <button
-              type="button"
-              onClick={() => setFormData(p => ({ ...p, showIncludedDropdown: !p.showIncludedDropdown }))}
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm hover:bg-gray-100 transition-all"
-            >
-              <span className={selectedFeatures.length > 0 ? "text-gray-900 font-medium" : "text-gray-400"}>
-                {selectedFeatures.length > 0
-                  ? `${selectedFeatures.length} features selected`
-                  : "Select features…"}
-              </span>
-              {formData.showIncludedDropdown
-                ? <ChevronUp size={16} className="text-gray-400" />
-                : <ChevronDown size={16} className="text-gray-400" />
-              }
-            </button>
-
-            {/* Dropdown menu */}
-            {formData.showIncludedDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
-                {dynamicData.includedItems.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-gray-400 text-sm">No items available.</div>
-                ) : (
-                  dynamicData.includedItems.map((item: any) => (
-                    <button
-                      type="button"
-                      key={item.id}
-                      onClick={() => handleFeatureToggle(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-gray-50 border-b border-gray-50 last:border-0 ${formData.includedFeatures.includes(item.id) ? "bg-primary-50/50" : ""
-                        }`}
-                    >
-                      <div
-                        className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors shrink-0 ${formData.includedFeatures.includes(item.id)
-                            ? "bg-primary-500 border-primary-500 text-white"
-                            : "bg-white border-gray-200"
-                          }`}
-                      >
-                        {formData.includedFeatures.includes(item.id) && (
-                          <Check size={12} strokeWidth={3} />
-                        )}
-                      </div>
-                      <span
-                        className={`text-sm font-medium ${formData.includedFeatures.includes(item.id) ? "text-primary-700" : "text-gray-700"
-                          }`}
-                      >
-                        {item.what_is_included || item.name}
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-
-            {/* Selected tags */}
-            {selectedFeatures.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                {selectedFeatures.map((feature: any) => (
-                  <span
-                    key={feature.id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-700 text-xs font-bold rounded-lg border border-primary-200"
-                  >
-                    <Check size={12} />
-                    {feature.what_is_included || feature.name}
-                    <button
-                      type="button"
-                      onClick={() => handleFeatureToggle(feature.id)}
-                      className="ml-1 hover:text-primary-900"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </SectionCard>
-
-        {/* ── Specifications ── */}
-        <SectionCard icon={Settings} title="Specifications">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {dynamicData.specifications.map((spec: any) => (
-              <div key={spec.id} className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-                    <SpecIcon name={spec.icon} />
-                  </div>
-                  {spec.name}
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.specifications[spec.name] || ""}
-                    onChange={(e) =>
-                      setFormData(p => ({
-                        ...p,
-                        specifications: {
-                          ...p.specifications,
-                          [spec.name]: e.target.value,
-                        },
-                      }))
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 appearance-none transition-all cursor-pointer"
-                  >
-                    <option value="">Select Option…</option>
-                    {spec.options.map((opt: string, i: number) => (
-                      <option key={i} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-
-        {/* ── Submit ── */}
+        {/* Actions */}
         <div className="flex items-center justify-center gap-4 pt-4">
           <button
             type="button"

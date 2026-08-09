@@ -22,5 +22,4 @@ class Profit extends Model
 
     public $timestamps = true;
 
-
 }

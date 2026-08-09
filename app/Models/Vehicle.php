@@ -41,11 +41,16 @@ class Vehicle extends Model
         'negotiation_status',
         'negotiation_notes',
         'negotiation_priority',
-        'instant_confirmation'
+        'instant_confirmation',
+        'pricing_mode',
+        'granular_prices',
+        'custom_price_tiers'
     ];
 
     protected $casts = [
-        'specifications' => 'array'
+        'specifications' => 'array',
+        'granular_prices' => 'array',
+        'custom_price_tiers' => 'array'
     ];
 
     protected $appends = [

@@ -573,6 +573,22 @@ class VehicleController extends Controller
                 $existingVehicle->instant_confirmation = $request->instant_confirmation == 'false' ? 0 : 1;
             }
 
+            if ($request->has('pricing_mode')) {
+                $existingVehicle->pricing_mode = $request->pricing_mode;
+            }
+
+            if ($request->has('granular_prices')) {
+                $existingVehicle->granular_prices = is_string($request->granular_prices) 
+                    ? json_decode($request->granular_prices, true) 
+                    : $request->granular_prices;
+            }
+
+            if ($request->has('custom_price_tiers')) {
+                $existingVehicle->custom_price_tiers = is_string($request->custom_price_tiers) 
+                    ? json_decode($request->custom_price_tiers, true) 
+                    : $request->custom_price_tiers;
+            }
+
 
             if ($request->has('pickupLoc')) {
                 if (is_numeric($request->pickupLoc)) {
@@ -679,6 +695,22 @@ class VehicleController extends Controller
 
             if ($request->has('category')) {
                 $item->category = $request->category;
+            }
+
+            if ($request->has('pricing_mode')) {
+                $item->pricing_mode = $request->pricing_mode;
+            }
+
+            if ($request->has('granular_prices')) {
+                $item->granular_prices = is_string($request->granular_prices) 
+                    ? json_decode($request->granular_prices, true) 
+                    : $request->granular_prices;
+            }
+
+            if ($request->has('custom_price_tiers')) {
+                $item->custom_price_tiers = is_string($request->custom_price_tiers) 
+                    ? json_decode($request->custom_price_tiers, true) 
+                    : $request->custom_price_tiers;
             }
 
 

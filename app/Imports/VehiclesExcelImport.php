@@ -19,7 +19,7 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 {
     /**
-     * Column indices for the Vehicles sheet
+     * Legacy Column Indices fallback
      */
     private const COL_ROW_NUMBER = 0;
     private const COL_VEHICLE_NAME = 1;
@@ -32,30 +32,26 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
     private const COL_TRANSMISSION = 8;
     private const COL_LOCATION_TYPE = 9;
     private const COL_FUEL_POLICY = 10;
-    private const COL_RESERVED_11 = 11;
     private const COL_CONFIRMATION_TYPE = 12;
-    private const COL_RESERVED_13 = 13;
-    private const COL_RESERVED_14 = 14;
     private const COL_PRICE_1_3_DAYS = 15;
     private const COL_PRICE_WEEK = 16;
     private const COL_PRICE_MONTH = 17;
     private const COL_DESCRIPTION = 18;
 
-    /**
-     * Sheet indices
-     */
     private const SHEET_VEHICLES = 0;
     private const SHEET_INCLUDED = 1;
-
-    /**
-     * Air conditioning keywords
-     */
     private const AC_KEYWORDS = ['air', 'condition', 'ac', 'a/c'];
 
-    protected int $branchId;
-    protected int $supplierId;
-    protected array $vehicleIds = [];
-    protected array $errors = [];
+    public int $branchId;
+    public int $supplierId;
+    public array $vehicleIds = [];
+    public array $errors = [];
+
+    /**
+     * Dynamic Header Map (header_key => column_index or array info)
+     */
+    protected array $headerMap = [];
+    protected array $customRangeHeaders = [];
 
     public function __construct(int $branchId, int $supplierId)
     {
@@ -63,25 +59,16 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         $this->supplierId = $supplierId;
     }
 
-    /**
-     * Get vehicle IDs after import
-     */
     public function getVehicleIds(): array
     {
         return $this->vehicleIds;
     }
 
-    /**
-     * Get errors after import
-     */
     public function getErrors(): array
     {
         return $this->errors;
     }
 
-    /**
-     * Define which sheets to import
-     */
     public function sheets(): array
     {
         return [
@@ -90,9 +77,6 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         ];
     }
 
-    /**
-     * Process each sheet collection
-     */
     public function collection(Collection $collection)
     {
         if (empty($this->vehicleIds)) {
@@ -103,44 +87,42 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
     }
 
     /**
-     * Process the vehicles sheet and create vehicle records
+     * Process the vehicles sheet with Smart Header Mapping
      */
     protected function processVehiclesSheet(Collection $collection): array
     {
         $vehicleIds = [];
         $headerSkipped = false;
 
-        info("=== Starting Vehicle Import ===");
+        info("=== Starting Smart Vehicle Import ===");
         info("Total rows in collection: " . $collection->count());
 
         foreach ($collection as $rowIndex => $row) {
-            // Skip header row (first row or row with text in first column)
+            // Process row 0 to map headers dynamically
             if (!$headerSkipped) {
                 $headerSkipped = true;
-                if (!$this->isValidDataRow($row)) {
-                    info("Row {$rowIndex}: Skipped (header row)");
+                if ($this->isHeaderRow($row)) {
+                    $this->parseHeaders($row);
+                    info("Header mapping parsed: " . json_encode($this->headerMap));
                     continue;
                 }
             }
 
             if (!$this->isValidDataRow($row)) {
-                info("Row {$rowIndex}: Skipped (invalid data row) - Col0: " . ($row[0] ?? 'null') . ", Col1: " . ($row[1] ?? 'null'));
+                info("Row {$rowIndex}: Skipped (invalid data row)");
                 continue;
             }
 
-            // Skip rows with empty vehicle name silently (template empty rows)
-            $vehicleName = trim($row[self::COL_VEHICLE_NAME] ?? '');
+            $vehicleName = $this->getCellValue($row, 'vehicle_name', self::COL_VEHICLE_NAME);
             if (empty($vehicleName)) {
                 info("Row {$rowIndex}: Skipped (empty vehicle name)");
                 continue;
             }
 
             $rowNumber = $rowIndex + 1;
-            info("Row {$rowNumber}: Processing vehicle - Name: " . ($row[self::COL_VEHICLE_NAME] ?? 'null'));
+            info("Row {$rowNumber}: Processing vehicle - Name: " . $vehicleName);
 
-            // Track errors before this row
             $errorCountBefore = count($this->errors);
-
             $vehicle = $this->createVehicleFromRow($row, $rowNumber);
 
             if ($vehicle === null) {
@@ -148,11 +130,9 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
                 continue;
             }
 
-            // Check if this row had errors - skip saving but continue processing
             $errorCountAfter = count($this->errors);
             if ($errorCountAfter > $errorCountBefore) {
-                // Row had errors, don't save but continue with next row
-                info("Row {$rowNumber}: Skipped due to errors - " . json_encode(array_slice($this->errors, $errorCountBefore)));
+                info("Row {$rowNumber}: Skipped due to errors");
                 continue;
             }
 
@@ -165,84 +145,163 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             $this->processFuelPolicy($vehicle, $row);
         }
 
-
-
         return $vehicleIds;
     }
 
     /**
-     * Check if the row contains valid data
-     * A row is valid if it has a numeric row number OR has a vehicle name
+     * Parse and map headers dynamically from row 0
      */
+    protected function parseHeaders(Collection|array $headerRow): void
+    {
+        $this->headerMap = [];
+        $this->customRangeHeaders = [];
+
+        foreach ($headerRow as $index => $cellValue) {
+            if (empty($cellValue)) continue;
+            $cleanHeader = strtolower(trim((string)$cellValue));
+
+            if (str_contains($cleanHeader, 'row #') || $cleanHeader === 'row') {
+                $this->headerMap['row_number'] = $index;
+            } elseif (str_contains($cleanHeader, 'vehicle name') || str_contains($cleanHeader, 'car name') || $cleanHeader === 'name') {
+                $this->headerMap['vehicle_name'] = $index;
+            } elseif (str_contains($cleanHeader, 'category')) {
+                $this->headerMap['category'] = $index;
+            } elseif (str_contains($cleanHeader, 'air') || str_contains($cleanHeader, 'ac')) {
+                $this->headerMap['air_condition'] = $index;
+            } elseif (str_contains($cleanHeader, 'door')) {
+                $this->headerMap['doors'] = $index;
+            } elseif (str_contains($cleanHeader, 'suitcase') || str_contains($cleanHeader, 'luggage')) {
+                $this->headerMap['suitcase'] = $index;
+            } elseif (str_contains($cleanHeader, 'seat')) {
+                $this->headerMap['seats'] = $index;
+            } elseif (str_contains($cleanHeader, 'fuel type') || $cleanHeader === 'fuel') {
+                $this->headerMap['fuel_type'] = $index;
+            } elseif (str_contains($cleanHeader, 'transmission')) {
+                $this->headerMap['transmission'] = $index;
+            } elseif (str_contains($cleanHeader, 'location type')) {
+                $this->headerMap['location_type'] = $index;
+            } elseif (str_contains($cleanHeader, 'fuel policy')) {
+                $this->headerMap['fuel_policy'] = $index;
+            } elseif (str_contains($cleanHeader, 'confirmation')) {
+                $this->headerMap['confirmation'] = $index;
+            } elseif (str_contains($cleanHeader, 'pricing mode') || $cleanHeader === 'mode') {
+                $this->headerMap['pricing_mode'] = $index;
+            } elseif (str_contains($cleanHeader, 'custom price ranges') || str_contains($cleanHeader, 'custom tiers')) {
+                $this->headerMap['custom_tiers_json'] = $index;
+            } elseif (str_contains($cleanHeader, 'description')) {
+                $this->headerMap['description'] = $index;
+            }
+
+            // Match standard and granular price columns first
+            if (str_contains($cleanHeader, 'price (1-2') || str_contains($cleanHeader, 'price 1-2')) {
+                $this->headerMap['price_1_2'] = $index;
+            } elseif (str_contains($cleanHeader, 'price (3-4') || str_contains($cleanHeader, 'price 3-4')) {
+                $this->headerMap['price_3_4'] = $index;
+            } elseif (str_contains($cleanHeader, 'price (5-7') || str_contains($cleanHeader, 'week price')) {
+                $this->headerMap['price_5_7'] = $index;
+            } elseif (str_contains($cleanHeader, 'price (8-14') || str_contains($cleanHeader, 'price 8-14')) {
+                $this->headerMap['price_8_14'] = $index;
+            } elseif (str_contains($cleanHeader, 'price (15-30') || str_contains($cleanHeader, 'month price')) {
+                $this->headerMap['price_15_30'] = $index;
+            } elseif (str_contains($cleanHeader, 'price (1-3') || str_contains($cleanHeader, 'price 1-3') || str_contains($cleanHeader, 'daily price')) {
+                $this->headerMap['price_1_3'] = $index;
+            } elseif (preg_match('/price\s*\(?\s*(\d+)\s*-\s*(\d+)\s*(?:days?)?\s*\)?/i', $cleanHeader, $matches)) {
+                // Custom dynamic range match (e.g. 1-4, 5-10, 11-30)
+                $min = (int)$matches[1];
+                $max = (int)$matches[2];
+                $this->customRangeHeaders[] = [
+                    'index' => $index,
+                    'min' => $min,
+                    'max' => $max,
+                    'header' => (string)$cellValue
+                ];
+            }
+        }
+    }
+
+    protected function getCellValue(Collection|array $row, string $key, int $fallbackIndex): ?string
+    {
+        if (isset($this->headerMap[$key]) && isset($row[$this->headerMap[$key]])) {
+            $val = trim((string)$row[$this->headerMap[$key]]);
+            if ($val !== '') return $val;
+        }
+        if (isset($row[$fallbackIndex])) {
+            $val = trim((string)$row[$fallbackIndex]);
+            if ($val !== '') return $val;
+        }
+        return null;
+    }
+
     protected function isValidDataRow(Collection|array $row): bool
     {
-        // Check if first column is numeric (row number)
-        if (is_numeric($row[self::COL_ROW_NUMBER] ?? null)) {
+        $rowNumIdx = $this->headerMap['row_number'] ?? self::COL_ROW_NUMBER;
+        if (is_numeric($row[$rowNumIdx] ?? null)) {
             return true;
         }
 
-        // Also accept rows where vehicle name is not empty (flexible format)
-        $vehicleName = $row[self::COL_VEHICLE_NAME] ?? null;
-        if (!empty($vehicleName) && !$this->isHeaderRow($vehicleName)) {
+        $vName = $this->getCellValue($row, 'vehicle_name', self::COL_VEHICLE_NAME);
+        if (!empty($vName) && !$this->isHeaderRowValue($vName)) {
             return true;
         }
 
         return false;
     }
 
-    /**
-     * Check if this looks like a header row
-     */
-    protected function isHeaderRow($value): bool
+    protected function isHeaderRow(Collection|array $row): bool
     {
-        $headerKeywords = ['vehicle', 'name', 'car', 'model', 'category', 'row'];
-        $lowerValue = strtolower(trim($value));
+        foreach ($row as $cell) {
+            if ($cell && $this->isHeaderRowValue((string)$cell)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function isHeaderRowValue($value): bool
+    {
+        $headerKeywords = ['vehicle', 'name', 'car', 'model', 'category', 'row #', 'air condition'];
+        $lowerValue = strtolower(trim((string)$value));
 
         foreach ($headerKeywords as $keyword) {
             if (str_contains($lowerValue, $keyword)) {
                 return true;
             }
         }
-
         return false;
     }
 
     /**
-     * Create a new Vehicle instance from row data
+     * Create Vehicle from Row with Smart Pricing Engine
      */
     protected function createVehicleFromRow(Collection|array $row, int $rowNumber): ?Vehicle
     {
         $vehicle = new Vehicle();
-        $vehicleName = $row[self::COL_VEHICLE_NAME];
+        $vehicleName = $this->getCellValue($row, 'vehicle_name', self::COL_VEHICLE_NAME);
 
         $vehicle->name = $vehicleName;
         $vehicle->pickup_loc = $this->branchId;
         $vehicle->supplier = $this->supplierId;
         $vehicle->activation = true;
-        $vehicle->instant_confirmation = $this->isInstantConfirmation($row[self::COL_CONFIRMATION_TYPE]);
 
-        // Set description (optional)
-        $description = trim($row[self::COL_DESCRIPTION] ?? '');
+        $confVal = $this->getCellValue($row, 'confirmation', self::COL_CONFIRMATION_TYPE);
+        $vehicle->instant_confirmation = $this->isInstantConfirmation($confVal);
+
+        $description = $this->getCellValue($row, 'description', self::COL_DESCRIPTION);
         if (!empty($description)) {
             $vehicle->description = $description;
         }
 
-        // Set photo
         $this->setVehiclePhoto($vehicle, $vehicleName, $rowNumber);
+        
+        $catVal = $this->getCellValue($row, 'category', self::COL_CATEGORY);
+        $this->setVehicleCategory($vehicle, $catVal, $rowNumber);
 
-        // Set category
-        $this->setVehicleCategory($vehicle, $row[self::COL_CATEGORY], $rowNumber);
-
-        // Set pricing
-        $this->setVehiclePricing($vehicle, $row, $rowNumber);
+        // Smart Pricing calculation
+        $this->setSmartVehiclePricing($vehicle, $row, $rowNumber);
 
         return $vehicle;
     }
 
-    /**
-     * Find and set vehicle photo based on name matching
-     * Photo is optional (column is nullable) - can be added later from dashboard
-     */
     protected function setVehiclePhoto(Vehicle $vehicle, ?string $vehicleName, int $rowNumber): void
     {
         if (empty($vehicleName)) {
@@ -252,13 +311,11 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
         $cleanName = trim($vehicleName);
 
-        // 1. Try exact / partial match on name in VehiclesPhotos
         $photo = VehiclesPhotos::query()
             ->where('name', 'like', '%' . $cleanName . '%')
             ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($cleanName) . '%'])
             ->first();
 
-        // 2. Try first two words (e.g. "Toyota Corolla" from "Toyota Corolla 2024")
         if ($photo === null) {
             $parts = preg_split('/\s+/', $cleanName);
             if (count($parts) >= 2) {
@@ -270,7 +327,6 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             }
         }
 
-        // 3. Try reverse match: see if any VehiclesPhotos name is contained inside cleanName
         if ($photo === null) {
             $allPhotos = VehiclesPhotos::query()->get();
             foreach ($allPhotos as $p) {
@@ -283,21 +339,14 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
         if ($photo !== null) {
             $vehicle->photo = $photo->photo ?: (string)$photo->id;
-            info("Photo matched for vehicle '{$vehicleName}': {$photo->name} ({$vehicle->photo})");
         } else {
             $vehicle->photo = null;
-            info("No photo matched for vehicle '{$vehicleName}' in row {$rowNumber}. Uploaded without photo.");
         }
     }
 
-    /**
-     * Find and set vehicle category
-     * If category is empty or not found, set to null (optional)
-     */
     protected function setVehicleCategory(Vehicle $vehicle, ?string $categoryName, int $rowNumber): void
     {
         if (empty($categoryName)) {
-            info("Warning: Category is empty for row {$rowNumber}");
             $vehicle->category = null;
             return;
         }
@@ -306,133 +355,151 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
             ->where('name', 'like', '%' . trim($categoryName) . '%')
             ->first();
 
-        if ($category === null) {
-            info("Warning: Category '{$categoryName}' not found for row {$rowNumber}");
-        }
-
         $vehicle->category = $category?->id;
     }
 
     /**
-     * Set vehicle pricing from row data
-     * Only daily price is required, week and month prices are optional
+     * Smart Pricing Engine: Detects Standard, Granular, and Custom Price Range Columns
      */
-    protected function setVehiclePricing(Vehicle $vehicle, Collection|array $row, int $rowNumber): void
+    protected function setSmartVehiclePricing(Vehicle $vehicle, Collection|array $row, int $rowNumber): void
     {
-        $dailyPrice = $this->parsePrice($row[self::COL_PRICE_1_3_DAYS] ?? null);
-        $weekPrice = $this->parsePrice($row[self::COL_PRICE_WEEK] ?? null);
-        $monthPrice = $this->parsePrice($row[self::COL_PRICE_MONTH] ?? null);
+        $explicitMode = strtolower(trim((string)($this->getCellValue($row, 'pricing_mode', -1) ?? '')));
+        $customJsonStr = $this->getCellValue($row, 'custom_tiers_json', -1);
 
-        // Validate daily price (required)
+        // 1. Check if explicit JSON custom tiers column is provided
+        if (!empty($customJsonStr)) {
+            $decodedTiers = json_decode($customJsonStr, true);
+            if (is_array($decodedTiers) && count($decodedTiers) > 0) {
+                $vehicle->pricing_mode = 'dynamic';
+                $vehicle->custom_price_tiers = $decodedTiers;
+                $vehicle->price = $this->parsePrice($decodedTiers[0]['price'] ?? 0) ?? 0;
+                $vehicle->week_price = $this->parsePrice($decodedTiers[1]['price'] ?? $vehicle->price);
+                $vehicle->month_price = $this->parsePrice(end($decodedTiers)['price'] ?? $vehicle->week_price);
+                return;
+            }
+        }
+
+        // 2. Check if custom Price (X-Y Days) headers were detected
+        if (!empty($this->customRangeHeaders)) {
+            $dynamicTiers = [];
+            foreach ($this->customRangeHeaders as $rangeInfo) {
+                $rawVal = $row[$rangeInfo['index']] ?? null;
+                $parsedP = $this->parsePrice($rawVal);
+                if ($parsedP !== null && $parsedP > 0) {
+                    $dynamicTiers[] = [
+                        'id' => 'tier_' . $rangeInfo['min'] . '_' . $rangeInfo['max'],
+                        'minDays' => $rangeInfo['min'],
+                        'maxDays' => $rangeInfo['max'],
+                        'price' => (string)$parsedP,
+                    ];
+                }
+            }
+
+            if (count($dynamicTiers) > 0) {
+                $vehicle->pricing_mode = 'dynamic';
+                $vehicle->custom_price_tiers = $dynamicTiers;
+                $vehicle->price = (float)$dynamicTiers[0]['price'];
+                $vehicle->week_price = isset($dynamicTiers[1]) ? (float)$dynamicTiers[1]['price'] : $vehicle->price;
+                $vehicle->month_price = (float)end($dynamicTiers)['price'];
+                return;
+            }
+        }
+
+        // 3. Check for 5 Granular Pricing columns
+        $p12  = $this->parsePrice($this->getCellValue($row, 'price_1_2', -1));
+        $p34  = $this->parsePrice($this->getCellValue($row, 'price_3_4', -1));
+        $p57  = $this->parsePrice($this->getCellValue($row, 'price_5_7', self::COL_PRICE_WEEK));
+        $p814 = $this->parsePrice($this->getCellValue($row, 'price_8_14', -1));
+        $p1530= $this->parsePrice($this->getCellValue($row, 'price_15_30', self::COL_PRICE_MONTH));
+
+        if ($explicitMode === 'granular' || ($p34 !== null || $p814 !== null)) {
+            $p12Final = $p12 ?? $this->parsePrice($row[self::COL_PRICE_1_3_DAYS] ?? null) ?? 0;
+            $vehicle->pricing_mode = 'granular';
+            $vehicle->granular_prices = [
+                'price_1_2'  => (string)($p12Final),
+                'price_3_4'  => (string)($p34 ?? $p12Final),
+                'price_5_7'  => (string)($p57 ?? $p34 ?? $p12Final),
+                'price_8_14' => (string)($p814 ?? $p57 ?? $p12Final),
+                'price_15_30'=> (string)($p1530 ?? $p814 ?? $p12Final),
+            ];
+
+            $vehicle->price = (float)$p12Final;
+            $vehicle->week_price = (float)($p57 ?? $p34 ?? $p12Final);
+            $vehicle->month_price = (float)($p1530 ?? $p814 ?? $vehicle->week_price);
+            return;
+        }
+
+        // 4. Default Standard Pricing Model (1-3 Days / Week / Month)
+        $dailyPrice = $p12 ?? $this->parsePrice($row[self::COL_PRICE_1_3_DAYS] ?? null);
+        $weekPrice  = $p57 ?? $this->parsePrice($row[self::COL_PRICE_WEEK] ?? null);
+        $monthPrice = $p1530 ?? $this->parsePrice($row[self::COL_PRICE_MONTH] ?? null);
+
         if (!$this->isValidPrice($dailyPrice)) {
-            $this->addError($rowNumber, "1-3 days Price is required and must be greater than 0");
+            $this->addError($rowNumber, "Price is required and must be greater than 0");
         }
+
+        $vehicle->pricing_mode = !empty($explicitMode) ? $explicitMode : 'standard';
         $vehicle->price = $dailyPrice ?? 0;
-
-        // Week price is optional but must be valid if provided
-        if ($weekPrice !== null && $weekPrice < 0) {
-            $this->addError($rowNumber, "Week Price cannot be negative");
-        }
         $vehicle->week_price = $weekPrice;
-
-        // Month price is optional
-        if ($monthPrice !== null && $monthPrice < 0) {
-            $this->addError($rowNumber, "Month Price cannot be negative");
-        }
         $vehicle->month_price = $monthPrice;
     }
 
-    /**
-     * Parse price value - handles various formats
-     */
     protected function parsePrice($value): ?float
     {
         if ($value === null || $value === '') {
             return null;
         }
-
-        // Remove currency symbols and whitespace
         $cleaned = preg_replace('/[^0-9.,]/', '', (string)$value);
-
-        // Handle comma as decimal separator
         $cleaned = str_replace(',', '.', $cleaned);
-
         if ($cleaned === '' || !is_numeric($cleaned)) {
             return null;
         }
-
         return (float)$cleaned;
     }
 
-    /**
-     * Check if price is valid (not null, not empty, and greater than 0)
-     */
     protected function isValidPrice($price): bool
     {
         return !empty($price) && $price > 0;
     }
 
-    /**
-     * Check if price is negative
-     */
-    protected function isNegativePrice($price): bool
-    {
-        return $price !== null && $price < 0;
-    }
-
-    /**
-     * Determine if confirmation type is instant
-     */
     protected function isInstantConfirmation(?string $confirmationType): int
     {
         return str_contains(strtolower($confirmationType ?? ''), 'instant') ? 1 : 0;
     }
 
-    /**
-     * Process and save vehicle specifications
-     */
     protected function processVehicleSpecifications(Vehicle $vehicle, Collection|array $row): void
     {
-        $this->addAirConditionSpec($vehicle, $row[self::COL_AIR_CONDITION]);
-        $this->addDoorsSpec($vehicle, $row[self::COL_DOORS]);
-        $this->addSuitcaseSpec($vehicle, $row[self::COL_SUITCASE]);
-        $this->addSeatsSpec($vehicle, $row[self::COL_SEATS]);
-        $this->addFuelSpec($vehicle, $row[self::COL_FUEL]);
-        $this->addTransmissionSpec($vehicle, $row[self::COL_TRANSMISSION]);
+        $acVal   = $this->getCellValue($row, 'air_condition', self::COL_AIR_CONDITION);
+        $doorVal = $this->getCellValue($row, 'doors', self::COL_DOORS);
+        $suitVal = $this->getCellValue($row, 'suitcase', self::COL_SUITCASE);
+        $seatVal = $this->getCellValue($row, 'seats', self::COL_SEATS);
+        $fuelVal = $this->getCellValue($row, 'fuel_type', self::COL_FUEL);
+        $transVal= $this->getCellValue($row, 'transmission', self::COL_TRANSMISSION);
+
+        $this->addAirConditionSpec($vehicle, $acVal);
+        $this->addDoorsSpec($vehicle, $doorVal);
+        $this->addSuitcaseSpec($vehicle, $suitVal);
+        $this->addSeatsSpec($vehicle, $seatVal);
+        $this->addFuelSpec($vehicle, $fuelVal);
+        $this->addTransmissionSpec($vehicle, $transVal);
     }
 
-    /**
-     * Add air condition specification
-     */
     protected function addAirConditionSpec(Vehicle $vehicle, ?string $value): void
     {
-        if (empty($value)) {
-            return;
-        }
-
+        if (empty($value)) return;
         $acValue = $this->parseAirConditionValue($value);
-        if ($acValue === null) {
-            return;
-        }
-
+        if ($acValue === null) return;
         $spec = $this->findSpecification('air');
         if ($spec) {
             $this->createVehicleSpecification($vehicle->id, $spec->name, $acValue, $spec->icon);
         }
     }
 
-    /**
-     * Add doors specification
-     */
     protected function addDoorsSpec(Vehicle $vehicle, $value): void
     {
-        if (empty($value) && $value !== '0' && $value !== 0) {
-            return;
-        }
-
+        if (empty($value) && $value !== '0' && $value !== 0) return;
         $num = preg_replace('/[^0-9]/', '', (string)$value);
         $finalValue = !empty($num) ? $num : (string)$value;
-
         $spec = $this->findSpecification('door');
         if ($spec) {
             $this->createVehicleSpecification($vehicle->id, $spec->name, $finalValue, $spec->icon);
@@ -441,19 +508,18 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
 
     protected function addSuitcaseSpec(Vehicle $vehicle, $value): void
     {
-        if (empty($value) && $value !== '0' && $value !== 0) {
-            return;
-        }
-
+        if (empty($value) && $value !== '0' && $value !== 0) return;
         $valStr = strtolower(trim((string)$value));
 
-        // Normalize Small / Medium / Large (also supports numbers 1->Small, 2->Medium, 3->Large)
-        $normalized = match (true) {
-            str_contains($valStr, 'small') || $valStr === 's' || $valStr === '1' => 'Small',
-            str_contains($valStr, 'med') || $valStr === 'm' || $valStr === '2'   => 'Medium',
-            str_contains($valStr, 'l') || str_contains($valStr, 'big') || $valStr === '3' => 'Large',
-            default => ucfirst(strtolower(trim((string)$value))),
-        };
+        if ($valStr === '1' || str_contains($valStr, 'small')) {
+            $normalized = 'Small';
+        } elseif ($valStr === '2' || str_contains($valStr, 'medium')) {
+            $normalized = 'Medium';
+        } elseif ($valStr === '3' || str_contains($valStr, 'large')) {
+            $normalized = 'Large';
+        } else {
+            $normalized = ucfirst($valStr);
+        }
 
         $spec = $this->findSpecification('suitcase');
         if ($spec) {
@@ -461,15 +527,9 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
     }
 
-    /**
-     * Add seats specification
-     */
     protected function addSeatsSpec(Vehicle $vehicle, $value): void
     {
-        if (empty($value) && $value !== '0' && $value !== 0) {
-            return;
-        }
-
+        if (empty($value) && $value !== '0' && $value !== 0) return;
         $num = preg_replace('/[^0-9]/', '', (string)$value);
         $finalValue = !empty($num) ? $num : (string)$value;
 
@@ -479,24 +539,22 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
     }
 
-    /**
-     * Add fuel type specification
-     */
-    protected function addFuelSpec(Vehicle $vehicle, ?string $value): void
+    protected function addFuelSpec(Vehicle $vehicle, $value): void
     {
-        if (empty($value)) {
-            return;
-        }
+        if (empty($value)) return;
+        $valStr = strtolower(trim((string)$value));
 
-        // Normalize fuel value: Gas = Petrol
-        $normalized = match (strtolower(trim($value))) {
-            'gas', 'petrol', 'gasoline' => 'Gas',
-            'diesel'                    => 'Diesel',
-            'electric', 'ev'            => 'Electric',
-            'hybrid'                    => 'Hybrid',
-            'lpg'                       => 'LPG',
-            default                     => ucfirst(strtolower(trim($value))),
-        };
+        if (str_contains($valStr, 'gas') || str_contains($valStr, 'petrol') || str_contains($valStr, 'gasoline')) {
+            $normalized = 'Gas';
+        } elseif (str_contains($valStr, 'diesel')) {
+            $normalized = 'Diesel';
+        } elseif (str_contains($valStr, 'hybrid')) {
+            $normalized = 'Hybrid';
+        } elseif (str_contains($valStr, 'electric')) {
+            $normalized = 'Electric';
+        } else {
+            $normalized = ucfirst($valStr);
+        }
 
         $spec = $this->findSpecification('fuel');
         if ($spec) {
@@ -504,96 +562,84 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
     }
 
-    /**
-     * Add transmission specification
-     */
-    protected function addTransmissionSpec(Vehicle $vehicle, ?string $value): void
+    protected function addTransmissionSpec(Vehicle $vehicle, $value): void
     {
-        if (empty($value)) {
-            return;
+        if (empty($value)) return;
+        $valStr = strtolower(trim((string)$value));
+
+        if (str_contains($valStr, 'auto')) {
+            $normalized = 'Automatic';
+        } elseif (str_contains($valStr, 'manual')) {
+            $normalized = 'Manual';
+        } else {
+            $normalized = ucfirst($valStr);
         }
 
-        $normalized = match (strtolower(trim($value))) {
-            'auto', 'automatic' => 'Automatic',
-            'manual'           => 'Manual',
-            'semi-automatic'   => 'Semi-Automatic',
-            default            => ucfirst(strtolower(trim($value))),
-        };
-
-        $spec = $this->findSpecification('trans');
+        $spec = $this->findSpecification('transmission');
         if ($spec) {
             $this->createVehicleSpecification($vehicle->id, $spec->name, $normalized, $spec->icon);
         }
     }
 
-    /**
-     * Find a specification by name pattern
-     */
-    protected function findSpecification(string $namePattern): ?Specification
+    protected function parseAirConditionValue(string $value): ?string
+    {
+        $lower = strtolower(trim($value));
+        foreach (self::AC_KEYWORDS as $keyword) {
+            if (str_contains($lower, $keyword)) {
+                return 'Air Conditioning';
+            }
+        }
+        if (in_array($lower, ['yes', '1', 'true', 'y'])) {
+            return 'Air Conditioning';
+        }
+        return null;
+    }
+
+    protected function findSpecification(string $keyword): ?Specification
     {
         return Specification::query()
-            ->where('name', 'like', '%' . $namePattern . '%')
-            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($namePattern) . '%'])
+            ->where('name', 'like', '%' . $keyword . '%')
+            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($keyword) . '%'])
             ->first();
     }
 
-    /**
-     * Create a vehicle specification record
-     */
     protected function createVehicleSpecification(int $vehicleId, string $name, $value, ?string $icon): void
     {
-        VehicleSpecification::query()
-            ->where('vehicle_id', $vehicleId)
-            ->where('name', $name)
-            ->delete();
-
         VehicleSpecification::query()->insert([
             'vehicle_id' => $vehicleId,
             'name' => $name,
-            'value' => (string)$value,
-            'icon' => $icon,
+            'value' => $value,
+            'icon' => $icon ?? 'Settings',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 
-    /**
-     * Process and save location type for vehicle
-     */
     protected function processLocationType(Vehicle $vehicle, Collection|array $row): void
     {
-        $locationTypeName = $row[self::COL_LOCATION_TYPE] ?? null;
-        if (empty($locationTypeName)) {
-            return;
-        }
+        $locTypeVal = $this->getCellValue($row, 'location_type', self::COL_LOCATION_TYPE);
+        if (empty($locTypeVal)) return;
 
-        $trimmed = trim($locationTypeName);
         $locationType = LocationType::query()
-            ->where('name', 'like', '%' . $trimmed . '%')
-            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($trimmed) . '%'])
+            ->where('name', 'like', '%' . trim($locTypeVal) . '%')
+            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower(trim($locTypeVal)) . '%'])
             ->first();
 
         if ($locationType) {
-            LocationTypeVehicle::query()->where('vehicle_id', $vehicle->id)->delete();
             LocationTypeVehicle::query()->insert([
-                'location_type_id' => $locationType->id,
                 'vehicle_id' => $vehicle->id,
+                'location_type_id' => $locationType->id,
             ]);
         }
     }
 
-    /**
-     * Process and save fuel policy for vehicle
-     */
     protected function processFuelPolicy(Vehicle $vehicle, Collection|array $row): void
     {
-        $fuelPolicyName = $row[self::COL_FUEL_POLICY] ?? null;
-        if (empty($fuelPolicyName)) {
-            return;
-        }
+        $fpVal = $this->getCellValue($row, 'fuel_policy', self::COL_FUEL_POLICY);
+        if (empty($fpVal)) return;
 
-        $trimmed = trim($fuelPolicyName);
         $fuelPolicy = FuelPolicy::query()
-            ->where('name', 'like', '%' . $trimmed . '%')
-            ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($trimmed) . '%'])
+            ->where('name', 'like', '%' . trim($fpVal) . '%')
             ->first();
 
         if ($fuelPolicy) {
@@ -602,106 +648,50 @@ class VehiclesExcelImport implements ToCollection, WithMultipleSheets
         }
     }
 
-    /**
-     * Process the included items sheet
-     */
     protected function processIncludedSheet(Collection $collection): void
     {
-        if ($this->hasErrors()) {
+        info("=== Processing Included Sheet ===");
+        info("Total rows in included collection: " . $collection->count());
+
+        if (empty($this->vehicleIds)) {
+            info("No vehicle IDs available for included processing");
             return;
         }
 
-        foreach ($collection as $row) {
-            $includedName = $row[0] ?? null;
-
-            if (empty($includedName)) {
-                break;
+        $headerSkipped = false;
+        foreach ($collection as $rowIndex => $row) {
+            if (!$headerSkipped) {
+                $headerSkipped = true;
+                continue;
             }
 
-            $included = $this->createIncluded($includedName);
-            $this->linkIncludedToVehicles($included->id);
-        }
-    }
+            $includedName = trim((string)($row[0] ?? ''));
+            if (empty($includedName)) continue;
 
-    /**
-     * Create a new included item
-     */
-    protected function createIncluded(string $name): Included
-    {
-        $included = new Included();
-        $included->what_is_included = $name;
-        $included->save();
+            $included = Included::query()
+                ->where('what_is_included', 'like', '%' . $includedName . '%')
+                ->first();
 
-        return $included;
-    }
+            if ($included) {
+                foreach ($this->vehicleIds as $vId) {
+                    $exists = VehicleIncluded::query()
+                        ->where('vehicle_id', $vId)
+                        ->where('included_id', $included->id)
+                        ->exists();
 
-    /**
-     * Link an included item to all imported vehicles
-     */
-    protected function linkIncludedToVehicles(int $includedId): void
-    {
-        foreach ($this->vehicleIds as $vehicleId) {
-            VehicleIncluded::query()->insert([
-                'vehicle_id' => $vehicleId,
-                'included_id' => $includedId,
-            ]);
-        }
-    }
-
-    /**
-     * Parse air condition value from various input formats
-     */
-    protected function parseAirConditionValue(?string $value): ?string
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        $lowercaseValue = strtolower(trim($value));
-
-        foreach (self::AC_KEYWORDS as $keyword) {
-            if (str_contains($lowercaseValue, $keyword)) {
-                return 'Air Conditioning';
+                    if (!$exists) {
+                        VehicleIncluded::query()->insert([
+                            'vehicle_id' => $vId,
+                            'included_id' => $included->id,
+                        ]);
+                    }
+                }
             }
         }
-
-        if (in_array($lowercaseValue, ['yes', 'true', '1', 'y', 'a/c', 'ac'])) {
-            return 'Air Conditioning';
-        }
-
-        return trim($value);
     }
 
-    /**
-     * Add an error to the errors array
-     */
     protected function addError(int $rowNumber, string $message): void
     {
-        $this->errors[] = [
-            'row' => $rowNumber,
-            'error' => "{$message} in row number {$rowNumber}",
-        ];
-    }
-
-    /**
-     * Check if there are any errors
-     */
-    protected function hasErrors(): bool
-    {
-        return !empty($this->errors);
-    }
-
-    /**
-     * Magic getter for backward compatibility
-     */
-    public function __get(string $name)
-    {
-        return match ($name) {
-            'errors' => $this->errors,
-            'vehicleIds' => $this->vehicleIds,
-            'branchId' => $this->branchId,
-            'supplierId' => $this->supplierId,
-            default => null,
-        };
+        $this->errors[] = "Row {$rowNumber}: {$message}";
     }
 }

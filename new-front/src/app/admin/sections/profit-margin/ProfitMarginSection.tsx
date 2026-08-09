@@ -124,8 +124,6 @@ export default function ProfitMarginsPage() {
     profitApi.getAll(params)
       .then((res: any) => {
         setRawApiResponse(res);
-        // apiClient.get() unwraps axios response.data, so res IS the Laravel paginator:
-        // { data: [...items], current_page, last_page, total, per_page, ... }
         const items: any[] = Array.isArray(res?.data) ? res.data
           : Array.isArray(res) ? res
           : [];
@@ -156,7 +154,6 @@ export default function ProfitMarginsPage() {
       .finally(() => setIsLoading(false));
   }, [searchQuery, selectedCountry, selectedSupplier, selectedBranch, selectedCategory, showNoProfitOnly]);
 
-  // Reset to page 1 when filters change, then fetch
   useEffect(() => {
     const prev = filtersRef.current;
     const filtersChanged =
@@ -182,7 +179,6 @@ export default function ProfitMarginsPage() {
     fetchData(page);
   }, [fetchData]);
 
-  // Stats (computed from current page — totals come from server)
   const avgMargin =
     vehicles.length > 0
       ? vehicles.reduce((sum, v) => sum + v.profit1_2 + v.profit3_7 + v.profit8_30 + v.profitWeekend, 0) /
@@ -191,7 +187,6 @@ export default function ProfitMarginsPage() {
   const savedCount = vehicles.filter((v) => v.isSaved).length;
   const activeBranches = new Set(vehicles.map((v) => v.branch)).size;
 
-  // Handlers
   const handleVehicleProfitChange = (
     id: number,
     field: keyof Omit<VehicleProfit, "id" | "name" | "image" | "country" | "supplier" | "branch" | "isSaved">,
@@ -257,68 +252,106 @@ export default function ProfitMarginsPage() {
 
   return (
     <SectionLayout>
-      {/* Page Header */}
       <PageHeader
-        title="Profit Margins"
-        description={`Manage vehicle pricing margins — ${totalCount} vehicles total`}
-        showAction={false}
+        title="Profit Margin Settings"
+        description="Set profit percentage margins per vehicle category"
       />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatsCard label="Total Vehicles" value={totalCount} icon={<Car size={20} />} color="blue" />
-        <StatsCard label="Avg Margin (page)" value={`${avgMargin.toFixed(1)}%`} icon={<Percent size={20} />} color="emerald" />
-        <StatsCard label="Saved (page)" value={savedCount} icon={<Save size={20} />} color="purple" />
-        <StatsCard label="Branches (page)" value={activeBranches} icon={<Store size={20} />} color="amber" />
-      </div>
-
-      {/* Filters */}
-      <ProfitFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedCountry={selectedCountry}
-        onCountryChange={setSelectedCountry}
-        selectedSupplier={selectedSupplier}
-        onSupplierChange={setSelectedSupplier}
-        selectedBranch={selectedBranch}
-        onBranchChange={setSelectedBranch}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        countries={countries}
-        suppliers={suppliers}
-        branches={branches}
-        categories={categories}
-        showNoProfitOnly={showNoProfitOnly}
-        onToggleNoProfit={setShowNoProfitOnly}
-        onClearFilters={clearFilters}
-        onSearchClick={() => fetchData(1)}
-      />
-
-      {/* Profit Percentage Form */}
-      <ProfitPercentageForm onSubmit={handleGlobalSubmit} />
-
-      {/* Vehicle Table */}
-      <VehicleProfitTable
-        vehicles={vehicles}
-        onUpdateVehicle={handleVehicleProfitChange}
-        onSaveRow={handleSaveRow}
-        onClearFilters={clearFilters}
-      />
-
-      {/* Server-side Pagination Footer */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-2xl border border-gray-100 px-6 py-4 shadow-sm">
-          <span className="text-xs font-bold text-gray-500">
-            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-            {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} vehicles
-          </span>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
+      <div className="space-y-6 pb-12">
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <StatsCard
+            label="Total Vehicles"
+            value={totalCount}
+            icon={<DollarSign size={20} className="text-blue-600" />}
+            color="blue"
+          />
+          <StatsCard
+            label="Avg Margin %"
+            value={`${avgMargin.toFixed(1)}%`}
+            icon={<Percent size={20} className="text-emerald-600" />}
+            color="emerald"
+          />
+          <StatsCard
+            label="Saved Vehicles"
+            value={savedCount}
+            icon={<Wallet size={20} className="text-amber-600" />}
+            color="amber"
+          />
+          <StatsCard
+            label="Active Branches"
+            value={activeBranches}
+            icon={<Store size={20} className="text-purple-600" />}
+            color="purple"
           />
         </div>
-      )}
+
+        {/* Global Profit Form */}
+        <ProfitPercentageForm onSubmit={handleGlobalSubmit} />
+
+        {/* Filters */}
+        <ProfitFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedCountry={selectedCountry}
+          onCountryChange={setSelectedCountry}
+          countries={countries}
+          selectedSupplier={selectedSupplier}
+          onSupplierChange={setSelectedSupplier}
+          suppliers={suppliers}
+          selectedBranch={selectedBranch}
+          onBranchChange={setSelectedBranch}
+          branches={branches}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          categories={categories}
+          showNoProfitOnly={showNoProfitOnly}
+          onToggleNoProfit={(val) => setShowNoProfitOnly(val)}
+          onClearFilters={clearFilters}
+          onSearchClick={() => fetchData(1)}
+        />
+
+        {/* Error Alert */}
+        {apiError && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm flex items-center justify-between">
+            <span>Notice: {apiError}. Showing cached or local data.</span>
+            <button
+              onClick={() => fetchData(currentPage)}
+              className="px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-medium text-xs transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Vehicles Table */}
+        {isLoading ? (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center text-gray-500">
+            <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm font-medium">Loading vehicle profit margins…</p>
+          </div>
+        ) : (
+          <>
+            <VehicleProfitTable
+              vehicles={vehicles}
+              onUpdateVehicle={handleVehicleProfitChange}
+              onSaveRow={handleSaveRow}
+              onClearFilters={clearFilters}
+            />
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pt-2">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </SectionLayout>
   );
 }
