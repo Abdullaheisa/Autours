@@ -169,7 +169,7 @@ class SyncNorthcarBranches extends Command
                     'location' => $name,
                     'adresse' => $address,
                     'city' => $name,
-                    'currency' => \App\Services\CountryCurrencyResolver::resolveCurrency($guessedCountryRaw),
+                    'currency' => $currency ?: \App\Services\CountryCurrencyResolver::resolveCurrency($guessedCountryRaw),
                     'lat' => $lat,
                     'lng' => $lng,
                     'location_type' => $locationType,

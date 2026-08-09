@@ -34,7 +34,23 @@
     <meta name="robots" content="index, follow">
 
     <link rel="canonical" href="{{ url()->current() }}">
-
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1377275434528711');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1377275434528711&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
     @vite('resources/js/app.js')
     @inertiaHead
 </head>
@@ -58,24 +74,6 @@
 <script src="{{url('assets/libs/apexcharts/dist/apexcharts.min.js')}}"></script>
 <script src="{{url('assets/libs/simplebar/dist/simplebar.js')}}"></script>
 <script src="{{url('assets/js/dashboard.js')}}"></script>
-
-<!-- Meta Pixel Code -->
-<script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1313651383940831');
-    fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-               src="https://www.facebook.com/tr?id=1313651383940831&ev=PageView&noscript=1"
-    /></noscript>
-<!-- End Meta Pixel Code -->
 
 <script>
     if (typeof fbq !== 'undefined') {
