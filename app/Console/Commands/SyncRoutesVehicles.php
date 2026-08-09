@@ -130,7 +130,8 @@ class SyncRoutesVehicles extends Command
                         $classCode = $rate['ClassCode'] ?? null;
                         if (!$classCode) continue;
 
-                        $price = (float) ($rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0);
+                        $priceStr = (string) ($rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0);
+                        $price = (float) str_replace(',', '', $priceStr);
                         if ($price <= 0) continue;
 
                         $dayPrice = round($price / $days, 2);
