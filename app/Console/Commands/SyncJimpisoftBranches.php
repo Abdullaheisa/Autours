@@ -89,6 +89,7 @@ class SyncJimpisoftBranches extends Command
             $city = (string) ($station['City'] ?? $station['city'] ?? '');
             $latitude = (string) ($station['Latitude'] ?? $station['latitude'] ?? '');
             $longitude = (string) ($station['Longitude'] ?? $station['longitude'] ?? '');
+            $currency = (string) ($station['currency'] ?? '');
 
             if (empty($stationId) || empty($stationName)) {
                 continue;
@@ -107,7 +108,7 @@ class SyncJimpisoftBranches extends Command
                     'adresse' => $stationName,
                     'city' => $city,
                     'country' => $country,
-                    'currency' => CountryCurrencyResolver::resolveCurrencyByCountryName($country),
+                    'currency' => $currency ?: CountryCurrencyResolver::resolveCurrencyByCountryName($country),
                     'lat' => $latitude,
                     'lng' => $longitude,
                     'location_type' => $this->detectLocationType($stationName),
