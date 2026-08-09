@@ -36,7 +36,9 @@ class User extends Authenticatable
         'fuel_policy_id',
         'password_reset_key',
         'integration',
-        'webhook_url'
+        'webhook_url',
+        'default_pricing_mode',
+        'default_custom_price_tiers'
     ];
 
     /**
@@ -57,6 +59,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'integration' => 'boolean',
+        'default_custom_price_tiers' => 'array',
     ];
 
     public function vehicles() {

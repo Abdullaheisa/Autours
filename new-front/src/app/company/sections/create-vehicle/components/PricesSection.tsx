@@ -1,10 +1,12 @@
 'use client';
 
 import React from "react";
-import { Tag, Plus, Trash2, Sliders, Calendar, Sparkles } from "lucide-react";
+import { Tag, Plus, Trash2, Sliders, Calendar, Sparkles, Save, CheckCircle2 } from "lucide-react";
 import SectionCard from "./SectionCard";
 import PriceField from "./PriceField";
 import { VehicleFormData, PricingMode, CustomPriceTier } from "./types";
+import { uploadApi } from "@/services/api";
+import toast from "react-hot-toast";
 
 interface PricesSectionProps {
   formData: VehicleFormData;
@@ -16,6 +18,25 @@ export const PricesSection: React.FC<PricesSectionProps> = ({
   onChange,
 }) => {
   const mode = formData.pricingMode || 'standard';
+
+  const handleSaveAsDefault = async () => {
+    const templateTiers = formData.customPriceTiers.map(t => ({
+      id: t.id,
+      minDays: t.minDays,
+      maxDays: t.maxDays,
+    }));
+    localStorage.setItem('company_default_pricing_mode', mode);
+    localStorage.setItem('company_default_custom_tiers', JSON.stringify(templateTiers));
+    try {
+      const form = new FormData();
+      form.append('default_pricing_mode', mode);
+      form.append('default_custom_price_tiers', JSON.stringify(templateTiers));
+      await uploadApi.uploadProfile(form);
+      toast.success("Saved as company's default pricing template!");
+    } catch {
+      toast.success("Saved as local company preference!");
+    }
+  };
 
   const handleModeChange = (newMode: PricingMode) => {
     onChange({ pricingMode: newMode });
@@ -64,40 +85,51 @@ export const PricesSection: React.FC<PricesSectionProps> = ({
             <span>Pricing Model:</span>
           </div>
 
-          <div className="flex items-center gap-1.5 w-full sm:w-auto bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 w-full sm:w-auto bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+              <button
+                type="button"
+                onClick={() => handleModeChange('standard')}
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  mode === 'standard'
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Standard (3 Tiers)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeChange('granular')}
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  mode === 'granular'
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Granular (5 Tiers)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeChange('dynamic')}
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  mode === 'dynamic'
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <Sparkles size={13} />
+                Custom Ranges
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => handleModeChange('standard')}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                mode === 'standard'
-                  ? 'bg-primary-500 text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+              onClick={handleSaveAsDefault}
+              className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shrink-0"
+              title="Save current layout as company default template"
             >
-              Standard (3 Tiers)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleModeChange('granular')}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                mode === 'granular'
-                  ? 'bg-primary-500 text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              Granular (5 Tiers)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleModeChange('dynamic')}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                mode === 'dynamic'
-                  ? 'bg-primary-500 text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <Sparkles size={13} />
-              Custom Ranges
+              <Save size={13} />
+              Set as Default
             </button>
           </div>
         </div>

@@ -54,6 +54,14 @@ class UserController extends Controller
         unset($updateData['role']);
         unset($updateData['description']);
 
+        if ($request->has('default_custom_price_tiers')) {
+            $tiers = $request->default_custom_price_tiers;
+            if (is_string($tiers)) {
+                $tiers = json_decode($tiers, true);
+            }
+            $updateData['default_custom_price_tiers'] = $tiers;
+        }
+
         // Prevent unique constraint violations for phone_num
         if ($request->has('phone_num') && !empty(trim($request->phone_num))) {
             $reqPhone = preg_replace('/[^0-9]/', '', $request->phone_num);

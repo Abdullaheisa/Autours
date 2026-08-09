@@ -62,6 +62,40 @@ export default function CreateVehicleSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const companyMode = (user as any)?.default_pricing_mode || localStorage.getItem('company_default_pricing_mode') || 'standard';
+    let companyTiers = (user as any)?.default_custom_price_tiers;
+    if (typeof companyTiers === 'string') {
+      try { companyTiers = JSON.parse(companyTiers); } catch {}
+    }
+    if (!companyTiers || !Array.isArray(companyTiers) || companyTiers.length === 0) {
+      const cachedTiers = localStorage.getItem('company_default_custom_tiers');
+      if (cachedTiers) {
+        try { companyTiers = JSON.parse(cachedTiers); } catch {}
+      }
+    }
+
+    const formattedTiers = Array.isArray(companyTiers) && companyTiers.length > 0
+      ? companyTiers.map((t: any, idx: number) => ({
+          id: String(t.id || idx + 1),
+          minDays: Number(t.minDays || 1),
+          maxDays: Number(t.maxDays || 1),
+          price: "",
+        }))
+      : [
+          { id: "1", minDays: 1, maxDays: 3, price: "" },
+          { id: "2", minDays: 4, maxDays: 7, price: "" },
+          { id: "3", minDays: 8, maxDays: 15, price: "" },
+          { id: "4", minDays: 16, maxDays: 30, price: "" },
+        ];
+
+    setFormData(prev => ({
+      ...prev,
+      pricingMode: companyMode as any,
+      customPriceTiers: formattedTiers,
+    }));
+  }, [user]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const [photosRes, catsRes, branchesRes, locTypesRes, fuelPolRes, includedRes, specsRes] =
