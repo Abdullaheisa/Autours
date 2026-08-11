@@ -100,6 +100,11 @@ class Kernel extends ConsoleKernel
          $schedule->command('northcar:sync-vehicles')->dailyAt('10:15')->withoutOverlapping();
          $schedule->command('northcar:sync-vehicles --prices-only')->everyTwoHours()->withoutOverlapping();
 
+         // Sync Green Motion branches and full vehicles daily, prices every 2 hours
+         $schedule->command('greenmotion:sync-branches --real')->dailyAt('10:30');
+         $schedule->command('greenmotion:sync-vehicles --real')->dailyAt('10:45')->withoutOverlapping();
+         $schedule->command('greenmotion:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
+
          // Sync exchange rates every 4 hours without overlapping
          $schedule->command('sync:exchange-rates')->everyFourHours()->withoutOverlapping();
      }   
