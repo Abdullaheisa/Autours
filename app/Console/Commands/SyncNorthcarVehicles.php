@@ -194,7 +194,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
 
         foreach ($vehicles as $v) {
             $classCode = $v['ClassCode'] ?? '';
-            $rateStr = (string)($v['RateCharge'] ?? $v['RateAmount'] ?? $v['TotalPricing']['RateCharge'] ?? 0);
+            $rateStr = (string)($v['TotalPricing']['TotalCharges'] ?? $v['TotalPricing']['RateCharge'] ?? $v['RateAmount'] ?? $v['RateCharge'] ?? 0);
             $rateCharge = (float)str_replace(',', '', $rateStr);
             $makeModel = $v['ModelDesc'] ?? $v['VehicleMakeModel'] ?? $v['MakeModel'] ?? $classCode;
             $currency = (string)($v['CurrencyCode'] ?? '');
