@@ -99,6 +99,22 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
                 $weekPrice = $rates7[$classCode]['RateCharge'] ?? $dayPrice;
                 $monthPrice = $rates30[$classCode]['RateCharge'] ?? $dayPrice;
                 
+                $apiCurrency = $rateInfo['Currency'] ?? '';
+                $branchCurrency = $branch->currency;
+
+                if (!empty($apiCurrency) && !empty($branchCurrency) && $apiCurrency !== $branchCurrency) {
+                    $rateObj = \App\Models\CurrencyRate::where('currency_from', $apiCurrency)
+                        ->where('currency_to', $branchCurrency)
+                        ->first();
+                    if ($rateObj) {
+                        $dayPrice = round($dayPrice * $rateObj->rate, 2);
+                        $weekPrice = round($weekPrice * $rateObj->rate, 2);
+                        $monthPrice = round($monthPrice * $rateObj->rate, 2);
+                    } else {
+                        $this->warn("No currency conversion rate found from {$apiCurrency} to {$branchCurrency}. Saving raw price.");
+                    }
+                }
+
                 // If it's weekly/monthly total, convert to per day if needed. Assuming the API returns total or per day. 
                 // We will assume it returns Total rate and we divide it to get per day for week/month if it's much larger.
                 if ($weekPrice > $dayPrice * 3) {
@@ -181,11 +197,13 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
             $rateStr = (string)($v['RateCharge'] ?? $v['RateAmount'] ?? $v['TotalPricing']['RateCharge'] ?? 0);
             $rateCharge = (float)str_replace(',', '', $rateStr);
             $makeModel = $v['ModelDesc'] ?? $v['VehicleMakeModel'] ?? $v['MakeModel'] ?? $classCode;
+            $currency = (string)($v['CurrencyCode'] ?? '');
 
             if ($classCode && $rateCharge > 0) {
                 $rates[$classCode] = [
                     'RateCharge' => $rateCharge,
                     'MakeModel' => $makeModel,
+                    'Currency' => $currency,
                 ];
             }
         }
