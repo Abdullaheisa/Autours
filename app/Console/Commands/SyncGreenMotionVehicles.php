@@ -137,9 +137,9 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 $price7 = $carData['parsed_prices'][7] ?? null;
                 $price30 = $carData['parsed_prices'][30] ?? null;
 
-                $dayPrice = $price1 ?? 0;
-                $weekPrice = $price7 ?? 0;
-                $monthPrice = $price30 ?? 0;
+                $dayPrice = $price1 ? round((float)$price1, 2) : 0;
+                $weekPrice = $price7 ? round((float)$price7 / 7, 2) : $dayPrice;
+                $monthPrice = $price30 ? round((float)$price30 / 30, 2) : $weekPrice;
                 
                 if ($dayPrice <= 0 && $weekPrice <= 0 && $monthPrice <= 0) {
                     continue;
