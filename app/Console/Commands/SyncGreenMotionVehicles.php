@@ -221,6 +221,9 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                     $acValue = $this->extractString($carData['airConditioning'] ?? null, 'no');
                     $ac = strtolower($acValue) === 'yes';
                     $this->syncSpecifications($vehicle->id, $transmission, $fuel, $seats, $doors, $ac, $baggage);
+                    
+                    // Sync Inclusions
+                    $this->syncInclusions($vehicle, $carData, $branch);
                 }
             }
 
@@ -360,6 +363,49 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
 
         if (!empty($records)) {
             VehicleSpecification::query()->insert($records);
+        }
+    }
+
+    protected function syncInclusions(Vehicle $vehicle, array $carData, Branch $branch): void
+    {
+        $includedIds = [];
+
+        // Taxes usually included by default
+        $taxesIncluded = \App\Models\Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
+        $includedIds[] = $taxesIncluded->id;
+
+        // Mileage
+        $mileageValue = $this->extractString($carData['mileage'] ?? null, '');
+        if (!empty($mileageValue) && strtolower($mileageValue) !== 'unlimited') {
+            $limit = (int) filter_var($mileageValue, FILTER_SANITIZE_NUMBER_INT);
+            if ($limit > 0) {
+                $incText = "Mileage Limit: {$limit} km";
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
+                $includedIds[] = $inc->id;
+            } else {
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
+                $includedIds[] = $inc->id;
+            }
+        } else {
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
+            $includedIds[] = $inc->id;
+        }
+
+        // CDW and TP (often standard with an excess)
+        $excessValue = (float) $this->extractString($carData['excess'] ?? null, '0');
+        if ($excessValue > 0) {
+            $currency = $branch->currency ?? 'GBP';
+            $incText = "Collision Damage Waiver (Excess: {$excessValue} {$currency})";
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
+            $includedIds[] = $inc->id;
+
+            $tpText = "Theft Protection (Excess: {$excessValue} {$currency})";
+            $incTp = \App\Models\Included::firstOrCreate(['what_is_included' => $tpText]);
+            $includedIds[] = $incTp->id;
+        }
+
+        if (!empty($includedIds)) {
+            $vehicle->included()->sync($includedIds);
         }
     }
 
