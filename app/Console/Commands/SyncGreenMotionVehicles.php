@@ -122,15 +122,15 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                     continue;
                 }
 
-                $transmission = (string) ($carData['transmission'] ?? 'Manual');
-                $fuel = (string) ($carData['fuel'] ?? 'Petrol');
-                $seats = (int) filter_var($carData['adults'] ?? '4', FILTER_SANITIZE_NUMBER_INT);
+                $transmission = $this->extractString($carData['transmission'] ?? null, 'Manual');
+                $fuel = $this->extractString($carData['fuel'] ?? null, 'Petrol');
+                $seats = (int) filter_var($this->extractString($carData['adults'] ?? null, '4'), FILTER_SANITIZE_NUMBER_INT);
                 
                 // Estimate doors
                 $doors = str_contains(strtolower($vehicleName), '5') ? 5 : (str_contains(strtolower($vehicleName), '3') ? 3 : 4);
                 
-                $baggageSmall = (int) filter_var($carData['luggageSmall'] ?? '0', FILTER_SANITIZE_NUMBER_INT);
-                $baggageLarge = (int) filter_var($carData['luggageLarge'] ?? '0', FILTER_SANITIZE_NUMBER_INT);
+                $baggageSmall = (int) filter_var($this->extractString($carData['luggageSmall'] ?? null, '0'), FILTER_SANITIZE_NUMBER_INT);
+                $baggageLarge = (int) filter_var($this->extractString($carData['luggageLarge'] ?? null, '0'), FILTER_SANITIZE_NUMBER_INT);
                 $baggage = $baggageSmall + $baggageLarge;
 
                 $price1 = $carData['parsed_prices'][1] ?? null;
@@ -152,7 +152,7 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                     $normalizedName .= ' ' . $transValue;
                 }
 
-                $groupName = (string) ($carData['groupName'] ?? '');
+                $groupName = $this->extractString($carData['groupName'] ?? null, '');
                 $categoryId = $this->resolveCategoryFromGroupName($groupName);
 
                 if ($this->option('dry-run')) {
@@ -218,7 +218,8 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 }
 
                 if ($vehicle->wasRecentlyCreated || !$pricesOnly) {
-                    $ac = strtolower((string)($carData['airConditioning'] ?? 'no')) === 'yes';
+                    $acValue = $this->extractString($carData['airConditioning'] ?? null, 'no');
+                    $ac = strtolower($acValue) === 'yes';
                     $this->syncSpecifications($vehicle->id, $transmission, $fuel, $seats, $doors, $ac, $baggage);
                 }
             }
@@ -368,6 +369,17 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
         return $fallback ? $fallback->id : (Category::first()?->id ?? 1);
     }
 
+    protected function extractString($value, string $default = ''): string
+    {
+        if (is_array($value)) {
+            if (empty($value)) {
+                return $default;
+            }
+            return isset($value[0]) ? (string) $value[0] : $default;
+        }
+        return (string) ($value ?? $default);
+    }
+
     protected function normalizeTransmission(string $value): string
     {
         $lower = strtolower($value);
@@ -402,7 +414,9 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
             $pickupDateArg,
             $pickupTimeArg,
             $dropoffDateArg,
-            $dropoffTimeArg
+            $dropoffTimeArg,
+            30,
+            $branch->currency ?? 'GBP'
         );
     }
 }

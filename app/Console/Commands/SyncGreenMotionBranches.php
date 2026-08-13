@@ -83,8 +83,8 @@ class SyncGreenMotionBranches extends Command
                     continue;
                 }
 
-                $resolvedCountry = CountryCurrencyResolver::resolveCountryName($countryName ?: 'TR');
-                $currency = CountryCurrencyResolver::resolveCurrency($countryName ?: 'TR');
+                $resolvedCountry = CountryCurrencyResolver::normalizeCountryName($countryName ?: 'Turkey') ?? $countryName;
+                $currency = CountryCurrencyResolver::resolveCurrencyByCountryName($countryName ?: 'Turkey');
 
                 $branch = Branch::updateOrCreate(
                     [
