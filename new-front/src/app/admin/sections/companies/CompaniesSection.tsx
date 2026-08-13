@@ -138,6 +138,7 @@ export default function CompaniesSection() {
           rating: user.rating ?? 0,
           status,
           branches: user.branches || [],
+          vehicles_hidden: user.vehicles_hidden ?? false,
           since: user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A',
           image: getLogoUrl(user.logo),
           description: user.description,

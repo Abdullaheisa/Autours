@@ -38,7 +38,8 @@ class User extends Authenticatable
         'integration',
         'webhook_url',
         'default_pricing_mode',
-        'default_custom_price_tiers'
+        'default_custom_price_tiers',
+        'vehicles_hidden'
     ];
 
     /**
@@ -60,6 +61,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'integration' => 'boolean',
         'default_custom_price_tiers' => 'array',
+        'vehicles_hidden' => 'boolean',
     ];
 
     public function vehicles() {

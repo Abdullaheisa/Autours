@@ -209,7 +209,8 @@ class UserController extends Controller
 
         $companies = $query->with(['parent', 'branches:id,company_id,country,activation'])
             ->withCount(['vehicles'])
-            ->get();
+            ->get()
+            ->makeVisible('vehicles_hidden');
 
         // Calculate real rental stats, revenue, and average ratings from database
         $stats = DB::table('rentals')
@@ -537,5 +538,29 @@ class UserController extends Controller
                 'message' => $e->getMessage()
             ], StatusCodes::SERVER_ERROR);
         }
+    }
+
+    /**
+     * Toggle vehicles visibility for a supplier.
+     * When hidden, the supplier's vehicles won't appear in public search results.
+     */
+    public function toggleSupplierVehiclesVisibility(int $id)
+    {
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        if (!$user || $user->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $supplier = User::findOrFail($id);
+        $supplier->vehicles_hidden = !$supplier->vehicles_hidden;
+        $supplier->save();
+
+        return response()->json([
+            'status' => true,
+            'vehicles_hidden' => $supplier->vehicles_hidden,
+            'message' => $supplier->vehicles_hidden
+                ? 'Supplier vehicles are now hidden from search results.'
+                : 'Supplier vehicles are now visible in search results.'
+        ]);
     }
 }

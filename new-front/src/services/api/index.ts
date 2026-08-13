@@ -41,6 +41,8 @@ export const companyApi = {
   getAll: () => apiClient.get("/api/admin/get/companies"),
   getSuppliers: () => apiClient.get("/get/suppliers"),
   assignParent: (data: unknown) => apiClient.post("/assign-parent", data),
+  toggleVehiclesVisibility: (supplierId: number) =>
+    apiClient.post(`/api/admin/suppliers/${supplierId}/toggle-vehicles-visibility`, {}),
 };
 
 // Category API

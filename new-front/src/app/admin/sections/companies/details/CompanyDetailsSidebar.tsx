@@ -1,7 +1,9 @@
 "use client";
 
-import { ExternalLink, ShieldCheck, Clock } from "lucide-react";
+import { useState } from "react";
+import { ExternalLink, ShieldCheck, Clock, Eye, EyeOff } from "lucide-react";
 import { apiClient } from "@/services/api/axiosClient";
+import { companyApi } from "@/services/api";
 import toast from "react-hot-toast";
 
 interface CompanyDetailsSidebarProps {
@@ -9,8 +11,75 @@ interface CompanyDetailsSidebarProps {
 }
 
 export default function CompanyDetailsSidebar({ company }: CompanyDetailsSidebarProps) {
+  const [vehiclesHidden, setVehiclesHidden] = useState<boolean>(company.vehicles_hidden ?? false);
+  const [toggling, setToggling] = useState(false);
+
+  const handleToggleVisibility = async () => {
+    setToggling(true);
+    try {
+      const res: any = await companyApi.toggleVehiclesVisibility(company.id);
+      if (res && res.status === true) {
+        setVehiclesHidden(res.vehicles_hidden);
+        toast.success(res.message || (res.vehicles_hidden ? "Vehicles hidden" : "Vehicles visible"));
+      } else {
+        toast.error(res?.message || "Failed to toggle visibility");
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.response?.data?.message || "Failed to toggle visibility");
+    } finally {
+      setToggling(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Vehicle Visibility Toggle */}
+      <div className={`rounded-3xl p-6 border transition-colors duration-300 ${
+        vehiclesHidden 
+          ? 'bg-red-50 border-red-200' 
+          : 'bg-emerald-50 border-emerald-200'
+      }`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            {vehiclesHidden ? (
+              <EyeOff size={18} className="text-red-600" />
+            ) : (
+              <Eye size={18} className="text-emerald-600" />
+            )}
+            <h3 className="text-sm font-bold text-gray-900">Vehicle Visibility</h3>
+          </div>
+        </div>
+        <p className={`text-xs mb-4 ${vehiclesHidden ? 'text-red-600' : 'text-emerald-700'}`}>
+          {vehiclesHidden
+            ? "All vehicles from this supplier are currently hidden from search results."
+            : "All vehicles from this supplier are visible in search results."}
+        </p>
+        <button
+          onClick={handleToggleVisibility}
+          disabled={toggling}
+          className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            vehiclesHidden
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200'
+              : 'bg-red-600 hover:bg-red-700 text-white shadow-sm shadow-red-200'
+          }`}
+        >
+          {toggling ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : vehiclesHidden ? (
+            <>
+              <Eye size={16} />
+              Show Vehicles in Search
+            </>
+          ) : (
+            <>
+              <EyeOff size={16} />
+              Hide Vehicles from Search
+            </>
+          )}
+        </button>
+      </div>
+
       <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
         <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Business Details</h3>
         <div className="space-y-4">

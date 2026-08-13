@@ -221,6 +221,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
     // Company & Requests
     Route::post('/impersonate/{userId}', [\App\Http\Controllers\Api\AuthController::class, 'impersonate']);
     Route::get('/get/companies', [\App\Http\Controllers\UserController::class, 'Companies']);
+    Route::post('/suppliers/{id}/toggle-vehicles-visibility', [\App\Http\Controllers\UserController::class, 'toggleSupplierVehiclesVisibility']);
     Route::get('/get/requests', [\App\Http\Controllers\UserController::class, 'memberships']);
     Route::post('/accept/requests', [\App\Http\Controllers\UserController::class, 'acceptMemberships']);
     Route::post('/delete/requests', [\App\Http\Controllers\UserController::class, 'deleteMemberships']);

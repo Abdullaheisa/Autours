@@ -127,7 +127,10 @@ class VehicleController extends Controller
                 ]);
             }
             $query = $filteredVehicles->whereHas('supplierUser', function($q) {
-                $q->where('role', 'active_supplier');
+                $q->where('role', 'active_supplier')
+                  ->where(function($q2) {
+                      $q2->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
+                  });
             })->with('category', 'fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'profit', 'included', 'branch', 'locationType', 'specifications');
 
             if ($request->category) {
@@ -482,7 +485,10 @@ class VehicleController extends Controller
 //         }
 
         $vehicles = $vehicles->whereHas('supplierUser', function($q) {
-            $q->where('role', 'active_supplier');
+            $q->where('role', 'active_supplier')
+              ->where(function($q2) {
+                  $q2->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
+              });
         })->where('activation', true);
 
         $results = $vehicles->with(['category', 'supplierUser'])->get();
@@ -1108,7 +1114,10 @@ class VehicleController extends Controller
         $locations = Branch::query()
             ->with(['airport', 'company:id,name,logo,company'])
             ->whereHas('company', function ($query) {
-                $query->where('role', 'active_supplier');
+                $query->where('role', 'active_supplier')
+                      ->where(function($q) {
+                          $q->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
+                      });
             })
             ->has('vehicles')
             ->orderBy('name')
@@ -1169,7 +1178,10 @@ class VehicleController extends Controller
             ->with(['airport', 'company:id,name,logo,company'])
             ->where('activation', 1)
             ->whereHas('company', function ($query) {
-                $query->where('role', 'active_supplier');
+                $query->where('role', 'active_supplier')
+                      ->where(function($q) {
+                          $q->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
+                      });
             })
             ->where(function ($query) use ($searchCountry) {
                 $query->where('country', 'ilike', $searchCountry)
@@ -1220,6 +1232,11 @@ class VehicleController extends Controller
             $vehicles->where('activation', 1)
                 ->whereHas('supplierUser', function ($q) {
                     $q->where('role', 'active_supplier');
+                    if (!request()->user() || request()->user()->role !== 'admin') {
+                        $q->where(function($q2) {
+                            $q2->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
+                        });
+                    }
                 })
                 ->whereHas('branch', function ($q) {
                     $q->where('activation', 1);
@@ -1325,7 +1342,10 @@ class VehicleController extends Controller
             $currency = $request->currency;
             $selectedVehicle = Vehicle::where('id', $request->id)
                 ->whereHas('supplierUser', function($q) {
-                    $q->where('role', 'active_supplier');
+                    $q->where('role', 'active_supplier')
+                      ->where(function($q2) {
+                          $q2->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
+                      });
                 })
                 ->with('locationType','category', 'fuelPolicy', 'branch', 'included', 'specifications', 'supplierUser.fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'fuelPolicy')->first();
 
@@ -2156,6 +2176,7 @@ class VehicleController extends Controller
               AND b.deleted_at IS NULL
               AND b.activation = true
               AND u.role = 'active_supplier'
+              AND (u.vehicles_hidden = false OR u.vehicles_hidden IS NULL)
               AND c.name IS NOT NULL AND TRIM(c.name) != ''
               AND (u.company IS NOT NULL OR u.name IS NOT NULL)
             ORDER BY b.country, c.name,

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Mail, Car, CalendarCheck, DollarSign, Star, Globe, MoreHorizontal, ArrowUpRight } from "lucide-react";
+import { MapPin, Mail, Car, CalendarCheck, DollarSign, Star, Globe, MoreHorizontal, ArrowUpRight, EyeOff } from "lucide-react";
 
 interface CompanyCardProps {
   company: any;
@@ -21,11 +21,17 @@ export default function CompanyCard({ company, onView, statusColorMap, statusDot
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        <div className="absolute top-2.5 left-2.5">
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border backdrop-blur-sm bg-white/90 ${statusColorMap[company.status] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
             <span className={`w-1 h-1 rounded-full ${statusDotMap[company.status] || "bg-gray-500"}`} />
             {company.status}
           </span>
+          {company.vehicles_hidden && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border backdrop-blur-sm bg-red-50/90 text-red-700 border-red-200">
+              <EyeOff size={10} />
+              Hidden
+            </span>
+          )}
         </div>
         <div className="absolute top-2.5 right-2.5">
           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-white/90 backdrop-blur-sm rounded-md text-[10px] font-bold text-gray-900">
@@ -78,3 +84,4 @@ export default function CompanyCard({ company, onView, statusColorMap, statusDot
     </div>
   );
 }
+
