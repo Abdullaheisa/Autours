@@ -117,7 +117,10 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
             }
 
             foreach ($allVehiclesByTag as $tag => $carData) {
-                $vehicleName = (string) ($carData['@attributes']['name'] ?? '');
+                $vehicleName = str_replace(',', '', (string) ($carData['@attributes']['name'] ?? ''));
+                if (str_contains($vehicleName, '/')) {
+                    $vehicleName = trim(explode('/', $vehicleName)[0]);
+                }
                 if (empty($vehicleName)) {
                     continue;
                 }
