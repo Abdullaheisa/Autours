@@ -223,7 +223,7 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 if ($vehicle->wasRecentlyCreated || !$pricesOnly) {
                     $acValue = $this->extractString($carData['airConditioning'] ?? null, 'no');
                     $ac = strtolower($acValue) === 'yes';
-                    $this->syncSpecifications($vehicle->id, $transmission, $fuel, $seats, $doors, $ac, $baggage);
+                    $this->syncSpecifications($vehicle->id, $transValue, $fuel, $seats, $doors, $ac, $baggage);
                     
                     // Sync Inclusions
                     $this->syncInclusions($vehicle, $carData, $branch);
