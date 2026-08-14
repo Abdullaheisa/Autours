@@ -156,7 +156,8 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 }
 
                 $groupName = $this->extractString($carData['groupName'] ?? null, '');
-                $categoryId = $this->resolveCategoryFromGroupName($groupName);
+                $acriss = $this->extractString($carData['acriss'] ?? null, '');
+                $categoryId = $this->resolveCategoryFromGroupName($groupName, $acriss);
 
                 if ($this->option('dry-run')) {
                     $this->line("  [DRY RUN] Would sync vehicle '{$normalizedName}' - Price: {$dayPrice}");
@@ -412,8 +413,69 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
         }
     }
 
-    protected function resolveCategoryFromGroupName(string $groupName): int
+    protected function resolveCategoryFromGroupName(string $groupName, string $acriss = ''): int
     {
+        $acriss = strtoupper(trim($acriss));
+        $firstLetter = $acriss[0] ?? '';
+        $secondLetter = $acriss[1] ?? '';
+        $fourthLetter = $acriss[3] ?? '';
+        
+        $categoryName = 'Economy';
+        
+        // Vans / Minivans
+        if ($secondLetter === 'V') {
+            $categoryName = 'Minivan';
+        }
+        // SUVs
+        elseif ($secondLetter === 'F' || $secondLetter === 'J') {
+            if (in_array($firstLetter, ['M', 'E', 'C'])) {
+                $categoryName = 'Compact SUV';
+            } else {
+                $categoryName = 'SUV';
+            }
+        }
+        // Standard Cars
+        else {
+            switch ($firstLetter) {
+                case 'M':
+                case 'N':
+                    $categoryName = 'Mini';
+                    break;
+                case 'C':
+                case 'D':
+                    $categoryName = 'Small';
+                    break;
+                case 'I':
+                case 'J':
+                case 'S':
+                case 'R':
+                    $categoryName = 'Standard';
+                    break;
+                case 'F':
+                case 'G':
+                case 'O':
+                    $categoryName = 'Full Size';
+                    break;
+                case 'P':
+                case 'U':
+                case 'L':
+                case 'W':
+                case 'X':
+                    $categoryName = 'Luxury';
+                    break;
+                case 'E':
+                case 'H':
+                default:
+                    $categoryName = 'Economy';
+                    break;
+            }
+        }
+
+        $category = Category::where('name', $categoryName)->first();
+        if ($category) {
+            return $category->id;
+        }
+
         $fallback = Category::where('name', 'Economy')->first();
         return $fallback ? $fallback->id : (Category::first()?->id ?? 1);
     }
