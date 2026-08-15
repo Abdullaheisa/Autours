@@ -169,7 +169,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
                         'weekend_profit' => 5,
                     ]);
 
-                    $this->syncVehicleSpecifications($vehicle, $classCode);
+                    $this->syncVehicleSpecifications($vehicle, $classCode, $rateInfo['RawData'] ?? []);
                     $this->createdCount++;
                 }
             }
@@ -204,6 +204,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
                     'RateCharge' => $rateCharge,
                     'MakeModel' => $makeModel,
                     'Currency' => $currency,
+                    'RawData' => $v,
                 ];
             }
         }
@@ -223,7 +224,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
         }
     }
 
-    private function syncVehicleSpecifications(Vehicle $vehicle, string $sipp): void
+    private function syncVehicleSpecifications(Vehicle $vehicle, string $sipp, array $rawData = []): void
     {
         VehicleSpecification::where('vehicle_id', $vehicle->id)->delete();
 
@@ -249,6 +250,52 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
                 'name' => 'Air Conditioner',
                 'value' => $acValue,
                 'icon' => $this->specDefinitions['Air Conditioner']['icon'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        // Try to extract Suitcase / Bags
+        $bags = $rawData['BaggageQuantity'] ?? $rawData['Baggage'] ?? $rawData['Luggage'] ?? $rawData['Bags'] ?? $rawData['Suitcases'] ?? null;
+        if ($bags !== null && isset($this->specDefinitions['Suitcase'])) {
+            $suitValue = 'Small';
+            if ((int)$bags >= 4) {
+                $suitValue = 'Large';
+            } elseif ((int)$bags >= 2) {
+                $suitValue = 'Medium';
+            }
+            // Some frontends look for 'bags' or 'luggage' in option/value, or 'Suitcase'
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Suitcase',
+                'value' => (string)$bags,
+                'icon' => $this->specDefinitions['Suitcase']['icon'] ?? 'suitcase',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        // Try to extract Seats
+        $seats = $rawData['PassengerQuantity'] ?? $rawData['Seats'] ?? $rawData['Passengers'] ?? null;
+        if ($seats !== null && isset($this->specDefinitions['Number of seats'])) {
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Number of seats',
+                'value' => (string)$seats,
+                'icon' => $this->specDefinitions['Number of seats']['icon'] ?? 'user',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        // Try to extract Doors
+        $doors = $rawData['DoorCount'] ?? $rawData['Doors'] ?? null;
+        if ($doors !== null && isset($this->specDefinitions['Doors'])) {
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Doors',
+                'value' => (string)$doors,
+                'icon' => $this->specDefinitions['Doors']['icon'] ?? 'door-closed',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

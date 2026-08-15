@@ -100,7 +100,6 @@ XML;
         $payloadTag = $payload ? "<Payload>{$payload}</Payload>" : "";
 
         return <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
 <TRNXML Version="1.0.0">
   <Dategmtime TimeZone="UTC">{$date}</Dategmtime>
   <Sender>
