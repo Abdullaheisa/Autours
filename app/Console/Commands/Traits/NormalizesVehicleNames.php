@@ -79,6 +79,9 @@ trait NormalizesVehicleNames
         // Only uppercase to avoid matching partial words if boundaries fail, and exclude standalone V which is in BR-V / HR-V
         $name = preg_replace('/\b(?:II|III|IV|VI|VII|VIII)\b/', '', $name);
 
+        // Remove the word "SUV" from the name
+        $name = preg_replace('/\bSUV\b/i', '', $name);
+
         // Remove extra spaces that might have been left over or duplicated
         $name = trim(preg_replace('/\s+/', ' ', $name));
 
