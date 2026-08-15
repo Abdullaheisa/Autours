@@ -258,7 +258,11 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                     
                     $inclusions = [];
                     foreach ($carData['RENTALCONDITIONS'] ?? [] as $condition) {
-                        $condName = trim((string)($condition['RENTALCONDITIONNAME'] ?? ''));
+                        $condValue = $condition['RENTALCONDITIONNAME'] ?? '';
+                        $condName = is_array($condValue) 
+                            ? trim((string)($condValue['rentalConditionName'] ?? $condValue['name'] ?? json_encode($condValue)))
+                            : trim((string)$condValue);
+                            
                         if (!empty($condName)) {
                             $inclusions[] = $condName;
                         }
@@ -281,6 +285,14 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
         $progress->finish();
         
         $this->newLine();
+        
+        if (!$this->option('dry-run')) {
+            if ($pricesOnly) {
+                $this->info("Vehicle Price Sync Complete. Updated: {$this->updatedCount}.");
+            } else {
+                $this->info("Vehicle Sync Complete. Created: {$this->createdCount}, Updated: {$this->updatedCount}.");
+            }
+        }
 
         if (!$this->option('dry-run') && !$pricesOnly) {
             $branchesDeleted = 0;
@@ -371,7 +383,8 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                     return ['VEHICLEIMAGE' => $img['url'] ?? ''];
                 }, $v['vehicleImages']) : [],
                 'RENTALCONDITIONS' => !empty($v['rentalConditions']) ? array_map(function($cond) {
-                    return ['RENTALCONDITIONNAME' => $cond];
+                    $condString = is_array($cond) ? ($cond['rentalConditionName'] ?? $cond['name'] ?? json_encode($cond)) : $cond;
+                    return ['RENTALCONDITIONNAME' => $condString];
                 }, $v['rentalConditions']) : [],
             ];
         }

@@ -79,6 +79,12 @@ class SyncAutofixBranches extends Command
         // ------------------------------------------------------------------
         $created = 0;
         $updated = 0;
+        $isDryRun = $this->option('dry-run');
+
+        if (!$isDryRun) {
+            $progress = $this->output->createProgressBar(count($locations));
+            $progress->start();
+        }
 
         foreach ($locations as $location) {
             $locationId = (string) ($location['locationId'] ?? '');
@@ -91,10 +97,11 @@ class SyncAutofixBranches extends Command
             $lng = $location['coordinate']['longitude'] ?? null;
 
             if (empty($locationId) || empty($locationName)) {
+                if (!$isDryRun) $progress->advance();
                 continue;
             }
 
-            if ($this->option('dry-run')) {
+            if ($isDryRun) {
                 $this->line("[DRY RUN] Would sync location ID {$locationId} -> '{$locationName}'");
                 continue;
             }
@@ -143,10 +150,14 @@ class SyncAutofixBranches extends Command
             } else {
                 $updated++;
             }
+            
+            if (!$isDryRun) $progress->advance();
         }
 
-        if (!$this->option('dry-run')) {
-            $this->info("Sync complete. Created: {$created}, Updated: {$updated}.");
+        if (!$isDryRun) {
+            $progress->finish();
+            $this->newLine();
+            $this->info("Branch Sync complete. Created: {$created}, Updated: {$updated}.");
         }
 
         return self::SUCCESS;

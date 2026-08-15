@@ -19,7 +19,7 @@ class AutofixRestApiService
         $this->username = $username;
         $this->password = $password;
         // User must set this in their .env
-        $this->baseUrl = rtrim(env('AUTOFIX_API_BASE_URL') ?: 'https://api.kolaycar.com', '/');
+        $this->baseUrl = rtrim(env('AUTOFIX_API_BASE_URL') ?: 'https://racapi.autofixrental.com', '/');
     }
 
     private function authenticate(): bool
