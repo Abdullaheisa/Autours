@@ -24,6 +24,22 @@ class Vehicle extends Model
         $this->attributes['name'] = $value;
     }
 
+    public function getNameAttribute($value)
+    {
+        if (empty($value)) return $value;
+
+        if (stripos($value, 'Automatic') === false && stripos($value, 'Manual') === false) {
+            if ($this->relationLoaded('specifications')) {
+                $transSpec = $this->specifications->firstWhere('name', 'Transmission');
+                if ($transSpec && $transSpec->value) {
+                    $transStr = strtolower($transSpec->value) === 'automatic' ? 'Automatic' : 'Manual';
+                    return trim($value) . ' ' . $transStr;
+                }
+            }
+        }
+        return $value;
+    }
+
 
     protected $fillable = [
         'photo',
