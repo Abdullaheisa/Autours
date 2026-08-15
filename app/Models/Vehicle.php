@@ -30,10 +30,13 @@ class Vehicle extends Model
 
         if (stripos($value, 'Automatic') === false && stripos($value, 'Manual') === false) {
             if ($this->relationLoaded('specifications')) {
-                $transSpec = $this->specifications->firstWhere('name', 'Transmission');
-                if ($transSpec && $transSpec->value) {
-                    $transStr = strtolower($transSpec->value) === 'automatic' ? 'Automatic' : 'Manual';
-                    return trim($value) . ' ' . $transStr;
+                $specs = $this->getRelation('specifications');
+                if ($specs) {
+                    $transSpec = $specs->firstWhere('name', 'Transmission');
+                    if ($transSpec && $transSpec->value) {
+                        $transStr = strtolower($transSpec->value) === 'automatic' ? 'Automatic' : 'Manual';
+                        return trim($value) . ' ' . $transStr;
+                    }
                 }
             }
         }
