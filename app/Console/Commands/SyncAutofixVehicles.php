@@ -272,6 +272,19 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                     if (!empty($kmLimit) && is_numeric($kmLimit) && $kmLimit > 0) {
                         $inclusions[] = "Mileage Limit: {$kmLimit} km";
                     }
+                    
+                    if (!empty($carData['DEPOSITPRICE'])) {
+                        $inclusions[] = "Security Deposit: {$carData['DEPOSITPRICE']} {$carData['CURRENCY']}";
+                    }
+                    if (!empty($carData['MINAGE'])) {
+                        $inclusions[] = "Minimum Driver Age: {$carData['MINAGE']} years";
+                    }
+                    if (!empty($carData['MINLICENSE'])) {
+                        $inclusions[] = "Minimum Driving License Age: {$carData['MINLICENSE']} years";
+                    }
+                    if (!empty($carData['CCREQUIRED'])) {
+                        $inclusions[] = "Credit Card Required for Deposit";
+                    }
 
                     if (!empty($inclusions)) {
                         $this->syncInclusions($vehicle, array_unique($inclusions));
@@ -386,6 +399,11 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                     $condString = is_array($cond) ? ($cond['rentalConditionName'] ?? $cond['name'] ?? json_encode($cond)) : $cond;
                     return ['RENTALCONDITIONNAME' => $condString];
                 }, $v['rentalConditions']) : [],
+                'DEPOSITPRICE' => $v['depositPrice'] ?? null,
+                'MINAGE' => $v['vendorMinimumDriverAge'] ?? null,
+                'MINLICENSE' => $v['vendorMinimumDrivingLicenseAge'] ?? null,
+                'CCREQUIRED' => !empty($v['depositCreditCardRequired']),
+                'CURRENCY' => $v['currencyCode'] ?? 'EUR',
             ];
         }
 
