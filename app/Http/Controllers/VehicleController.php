@@ -77,6 +77,16 @@ class VehicleController extends Controller
 
 
             $filteredVehicles = Vehicle::query();
+            
+            if ($dateFrom) {
+                $startDate = \Carbon\Carbon::parse($dateFrom);
+                $diffInDays = \Carbon\Carbon::now()->startOfDay()->diffInDays($startDate->copy()->startOfDay(), false);
+                if ($diffInDays < 7) {
+                    $filteredVehicles->whereHas('supplierUser', function ($q) {
+                        $q->where('email', '!=', 'Jincy@drivus.ae');
+                    });
+                }
+            }
 
             if ($location) {
                 $filteredVehicles->whereHas('branch', function ($q) use ($location) {
@@ -473,19 +483,18 @@ class VehicleController extends Controller
             });
         }
 
-//         if ($date && $date !== null) {
-//             $startDate = $date[0];
-//             $endDate = $date[1];
-//
-//             $rented = Rental::query()
-//             ->where('end_date', '>', $endDate)
-//             ->orWhere('end_date', '>', $startDate);
-//
-//             $exclude = $rented->pluck('vehicle_id')->unique();
-//
-//             $vehicles->whereNotIn('id', $exclude);
-//
-//         }
+        if ($date && is_array($date) && count($date) > 0) {
+            $startDate = \Carbon\Carbon::parse($date[0]);
+            $diffInDays = \Carbon\Carbon::now()->startOfDay()->diffInDays($startDate->copy()->startOfDay(), false);
+            
+            // If pickup is less than 7 days away, hide Jimpisoft vehicles 
+            // since Jimpisoft (Drivus) does not provide rates for close-in bookings.
+            if ($diffInDays < 7) {
+                $vehicles->whereHas('supplierUser', function ($q) {
+                    $q->where('email', '!=', 'Jincy@drivus.ae');
+                });
+            }
+        }
 
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
         $vehicles = $vehicles->whereHas('supplierUser', function($q) use ($user) {
