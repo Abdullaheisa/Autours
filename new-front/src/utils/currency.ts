@@ -13,12 +13,11 @@ export const formatPrice = (
   try {
     // Determine decimal places based on currency
     const isThreeDecimal = currency === 'KWD' || currency === 'BHD' || currency === 'OMR';
-    const minFrac = isThreeDecimal ? 3 : 0;
     const maxFrac = isThreeDecimal ? 3 : 2;
 
-    // Format the number only (no currency symbol)
+    // Format the number only (no currency symbol, no trailing .000 zeros for whole numbers)
     const numFormatter = new Intl.NumberFormat(locale, {
-      minimumFractionDigits: minFrac,
+      minimumFractionDigits: 0,
       maximumFractionDigits: maxFrac,
     });
 

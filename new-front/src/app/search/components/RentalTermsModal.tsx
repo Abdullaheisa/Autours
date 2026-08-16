@@ -32,11 +32,11 @@ function RentalTermAccordionItem({ term, defaultOpen = false }: RentalTermItemPr
         <span className="flex items-center gap-3">
           <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isOpen ? 'bg-gray-950' : 'bg-primary'}`} />
           <span
-            className="font-extrabold text-gray-900 text-sm md:text-base leading-snug tracking-normal"
+            className="font-normal text-gray-900 text-base md:text-[17px] leading-snug tracking-normal"
             dangerouslySetInnerHTML={{ __html: title }}
           />
         </span>
-        <span className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-gray-700 font-bold border border-gray-200 shrink-0 ml-2 shadow-2xs transition-colors">
+        <span className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-gray-700 font-medium border border-gray-200 shrink-0 ml-2 shadow-2xs transition-colors">
           {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
       </button>
@@ -53,15 +53,15 @@ function RentalTermAccordionItem({ term, defaultOpen = false }: RentalTermItemPr
           >
             <div className="p-4 md:p-6">
               <div
-                className="text-xs md:text-sm text-gray-800 font-medium leading-relaxed
+                className="text-xs md:text-sm text-gray-600 font-normal leading-relaxed
                   [&_p]:mb-3 [&_p:last-child]:mb-0
-                  [&_strong]:font-black [&_strong]:text-gray-950
-                  [&_h1]:text-base [&_h1]:font-black [&_h1]:text-gray-900 [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:uppercase
-                  [&_h2]:text-sm md:[&_h2]:text-base [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mt-4 [&_h2]:mb-2
-                  [&_h3]:text-sm [&_h3]:font-bold [&_h3]:text-gray-900 [&_h3]:mt-3 [&_h3]:mb-1.5
+                  [&_strong]:font-semibold [&_strong]:text-gray-900
+                  [&_h1]:text-base [&_h1]:font-medium [&_h1]:text-gray-900 [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:uppercase
+                  [&_h2]:text-sm md:[&_h2]:text-base [&_h2]:font-medium [&_h2]:text-gray-900 [&_h2]:mt-4 [&_h2]:mb-2
+                  [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-gray-900 [&_h3]:mt-3 [&_h3]:mb-1.5
                   [&_ul]:list-none [&_ul]:pl-0 [&_ul]:space-y-2 [&_ul]:my-3
-                  [&_li]:flex [&_li]:items-start [&_li]:gap-3 [&_li]:bg-gray-50/80 [&_li]:p-3.5 [&_li]:rounded-xl [&_li]:border [&_li]:border-gray-150 [&_li]:text-xs [&_li]:md:text-sm [&_li]:font-bold [&_li]:text-gray-800
-                  [&_li]:before:content-['✓'] [&_li]:before:w-5 [&_li]:before:h-5 [&_li]:before:rounded-md [&_li]:before:bg-primary/20 [&_li]:before:text-gray-950 [&_li]:before:flex [&_li]:before:items-center [&_li]:before:justify-center [&_li]:before:shrink-0 [&_li]:before:mt-0.5 [&_li]:before:font-black [&_li]:before:text-xs [&_li]:before:border [&_li]:before:border-primary/30
+                  [&_li]:flex [&_li]:items-start [&_li]:gap-3 [&_li]:bg-gray-50/80 [&_li]:p-3.5 [&_li]:rounded-xl [&_li]:border [&_li]:border-gray-150 [&_li]:text-xs [&_li]:md:text-sm [&_li]:font-normal [&_li]:text-gray-700
+                  [&_li]:before:content-['✓'] [&_li]:before:w-5 [&_li]:before:h-5 [&_li]:before:rounded-md [&_li]:before:bg-primary/20 [&_li]:before:text-gray-950 [&_li]:before:flex [&_li]:before:items-center [&_li]:before:justify-center [&_li]:before:shrink-0 [&_li]:before:mt-0.5 [&_li]:before:font-semibold [&_li]:before:text-xs [&_li]:before:border [&_li]:before:border-primary/30
                   [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1.5 [&_ol]:my-3 [&_ol_li]:list-item [&_ol_li]:before:content-none [&_ol_li]:bg-transparent [&_ol_li]:p-0 [&_ol_li]:border-none [&_ol_li]:shadow-none
                 "
                 dangerouslySetInnerHTML={{ __html: description }}
@@ -137,10 +137,10 @@ export default function RentalTermsModal({
                 <Info className="text-gray-950" size={22} />
               </div>
               <div>
-                <h4 className="text-lg md:text-xl font-black text-gray-900 tracking-tight leading-tight">
+                <h4 className="text-lg md:text-xl font-semibold text-gray-900 tracking-tight leading-tight">
                   Rental Terms & Policies
                 </h4>
-                <p className="text-xs text-gray-500 font-bold mt-0.5">
+                <p className="text-xs text-gray-500 font-normal mt-0.5">
                   {supplierName
                     ? `${supplierName} requirements & rental conditions`
                     : 'Important rental conditions for this vehicle'}
@@ -156,7 +156,7 @@ export default function RentalTermsModal({
                 ))
               ) : (
                 <div className="bg-gray-50 rounded-2xl p-8 text-center border border-gray-150">
-                  <p className="text-gray-500 font-bold text-sm">
+                  <p className="text-gray-500 font-normal text-sm">
                     No rental terms available for this supplier.
                   </p>
                 </div>
@@ -167,7 +167,7 @@ export default function RentalTermsModal({
             <div className="pt-4 mt-4 border-t border-gray-150">
               <button
                 onClick={onClose}
-                className="w-full py-3.5 bg-primary hover:bg-yellow-400 text-gray-950 rounded-2xl font-black text-xs md:text-sm uppercase tracking-wider transition-all shadow-md hover:shadow-lg active:scale-[0.99] focus:outline-none border border-black/5 flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-primary hover:bg-yellow-400 text-gray-950 rounded-2xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all shadow-md hover:shadow-lg active:scale-[0.99] focus:outline-none border border-black/5 flex items-center justify-center gap-2"
               >
                 I Understand & Agree
               </button>

@@ -222,13 +222,13 @@ export default async function BlogPostDetail({ params }: PageProps) {
               <div className="w-24 md:w-32 h-1.5 md:h-2 bg-primary rounded-full mb-6"></div>
               
               <div className="flex flex-wrap items-center gap-6 text-gray-600 border-b border-gray-100 pb-5">
-                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
+                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-gray-900">
                   {authorLinkedin ? (
                     <a
                       href={authorLinkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group"
+                      className="flex items-center gap-2 text-gray-900 hover:text-black transition-colors cursor-pointer group"
                     >
                       {authorImage ? (
                         <div className="relative w-[40px] h-[40px] rounded-full overflow-hidden border border-gray-200 transform translate-z-0">
@@ -241,12 +241,12 @@ export default async function BlogPostDetail({ params }: PageProps) {
                           />
                         </div>
                       ) : (
-                        <User size={15} className="text-primary" aria-hidden="true" />
+                        <User size={15} className="text-gray-900" aria-hidden="true" />
                       )}
-                      <span>By <span className="underline decoration-dotted decoration-primary group-hover:decoration-solid">{authorName}</span></span>
+                      <span className="text-gray-900 font-extrabold">By <span className="underline decoration-dotted decoration-gray-400 group-hover:decoration-solid text-gray-900">{authorName}</span></span>
                     </a>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-gray-900">
                       {authorImage ? (
                         <div className="relative w-[40px] h-[40px] rounded-full overflow-hidden border border-gray-200 transform translate-z-0">
                           <Image
@@ -258,9 +258,9 @@ export default async function BlogPostDetail({ params }: PageProps) {
                           />
                         </div>
                       ) : (
-                        <User size={15} className="text-primary" aria-hidden="true" />
+                        <User size={15} className="text-gray-900" aria-hidden="true" />
                       )}
-                      <span>By {authorName}</span>
+                      <span className="text-gray-900 font-extrabold">By {authorName}</span>
                     </div>
                   )}
                 </div>

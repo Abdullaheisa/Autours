@@ -67,10 +67,26 @@ export const countryNamesMap: Record<string, string> = {
   "Türkiye": "Turkey",
   "TÜRKIYE": "Turkey",
   "TÜRKİYE": "Turkey",
+  "Turkiye": "Turkey",
+  "TURKIYE": "Turkey",
   "Gaziemir": "Turkey",
   "GAZIEMIR": "Turkey",
   "Demo Street": "United Arab Emirates",
   "DEMO STREET": "United Arab Emirates",
+  "Costa Rica": "Costa Rica",
+  "Nicaragua": "Nicaragua",
+  "Uganda": "Uganda",
+  "Zimbabwe": "Zimbabwe",
+  "California": "United States",
+  "Florida": "United States",
+  "Nevada": "United States",
+  "Texas": "United States",
+  "New York": "United States",
+  "Illinois": "United States",
+  "Hawaii": "United States",
+  "Washington": "United States",
+  "Arizona": "United States",
+  "Colorado": "United States",
 };
 
 export const countryFlags: Record<string, string> = {
@@ -104,6 +120,33 @@ export const countryFlags: Record<string, string> = {
   "Australia": "🇦🇺",
   "Germany": "🇩🇪",
   "France": "🇫🇷",
+  "Costa Rica": "🇨🇷",
+  "Nicaragua": "🇳🇮",
+  "Uganda": "🇺🇬",
+  "Zimbabwe": "🇿🇼",
+  "Kenya": "🇰🇪",
+  "Malawi": "🇲🇼",
+  "Zambia": "🇿🇲",
+  "Fiji": "🇫🇯",
+  "Nepal": "🇳🇵",
+  "Pakistan": "🇵🇰",
+  "Philippines": "🇵🇭",
+  "Singapore": "🇸🇬",
+  "Thailand": "🇹🇭",
+  "Vietnam": "🇻🇳",
+  "Indonesia": "🇮🇩",
+  "Japan": "🇯🇵",
+  "South Korea": "🇰🇷",
+  "China": "🇨🇳",
+  "India": "🇮🇳",
+  "Venezuela": "🇻🇪",
+  "Liechtenstein": "🇱🇮",
+  "Grenada": "🇬🇩",
+  "Antigua and Barbuda": "🇦🇬",
+  "Saint Lucia": "🇱🇨",
+  "Trinidad and Tobago": "🇹🇹",
+  "Bahamas": "🇧🇸",
+  "Barbados": "🇧🇧",
 };
 
 // ISO 2-letter codes for flagcdn.com image flags (works on all platforms including Windows)
@@ -201,6 +244,7 @@ export const countryIsoMap: Record<string, string> = {
   "Saint Martin": "mf",
   "Sint Maarten": "sx",
   "St. Lucia": "lc",
+  "Saint Lucia": "lc",
   "U.s. Virgin Islands": "vi",
   "Us Virgin Islands": "vi",
   "Venezuela": "ve",
@@ -214,12 +258,42 @@ export const countryIsoMap: Record<string, string> = {
   "Curacao": "cw",
   "Curaçao": "cw",
   "Bahamas": "bs",
+  "Barbados": "bb",
   "Seychelles": "sc",
   "Trinidad And Tobago": "tt",
   "Trinidad and Tobago": "tt",
   "Azerbaijan": "az",
   "Latvia": "lv",
   "Bosnia And Herzegovina": "ba",
+  "Lithuania": "lt",
+  "Luxembourg": "lu",
+  "Anguilla": "ai",
+  "Guadeloupe": "gp",
+  "Costa Rica": "cr",
+  "Nicaragua": "ni",
+  "Uganda": "ug",
+  "Zimbabwe": "zw",
+  "Turkiye": "tr",
+  "Türkiye": "tr",
+  "California": "us",
+  "Florida": "us",
+  "Nevada": "us",
+  "Texas": "us",
+  "New York": "us",
+  "Illinois": "us",
+  "Hawaii": "us",
+  "Washington": "us",
+  "Arizona": "us",
+  "Colorado": "us",
+  "Massachusetts": "us",
+  "Michigan": "us",
+  "New Jersey": "us",
+  "North Carolina": "us",
+  "Ohio": "us",
+  "Pennsylvania": "us",
+  "Tennessee": "us",
+  "Virginia": "us",
+  "Utah": "us",
 };
 
 export function getCountryFullName(countryName?: string): string {
@@ -265,5 +339,22 @@ export function getCountryFlag(countryName?: string): string {
 export function getCountryIso(countryName?: string): string | null {
   if (!countryName) return null;
   const fullName = getCountryFullName(countryName);
-  return countryIsoMap[fullName] || countryIsoMap[countryName.trim()] || null;
+  if (countryIsoMap[fullName]) return countryIsoMap[fullName];
+  
+  const trimmed = countryName.trim();
+  if (countryIsoMap[trimmed]) return countryIsoMap[trimmed];
+
+  // Case-insensitive lookup fallback
+  const lowerTrimmed = trimmed.toLowerCase();
+  for (const [key, val] of Object.entries(countryIsoMap)) {
+    if (key.toLowerCase() === lowerTrimmed) return val;
+  }
+
+  // ISO 2-letter code check
+  if (trimmed.length === 2 && /^[a-zA-Z]{2}$/.test(trimmed)) {
+    const code = trimmed.toLowerCase();
+    return code === 'uk' ? 'gb' : code;
+  }
+
+  return null;
 }

@@ -628,7 +628,7 @@ function BookingContent() {
                       Processing...
                     </>
                   ) : (
-                    'Continue To Payment'
+                    'Confirm Booking'
                   )}
                 </button>
               </div>
