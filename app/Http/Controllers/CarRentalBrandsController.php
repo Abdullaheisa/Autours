@@ -288,6 +288,14 @@ class CarRentalBrandsController extends Controller
 
     private function getCountryFlagEmoji($countryCode)
     {
+        if (empty($countryCode)) {
+            return '🌐';
+        }
+
+        if (str_starts_with(strtoupper($countryCode), 'US-')) {
+            return '🇺🇸';
+        }
+
         $codePoints = array_map(function ($char) {
             return 127397 + ord($char);
         }, str_split(strtoupper($countryCode)));
