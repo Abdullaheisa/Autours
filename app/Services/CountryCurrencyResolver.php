@@ -364,7 +364,7 @@ class CountryCurrencyResolver
             'new york' => 'US-NY',
             'illinois' => 'US-IL',
             'hawaii' => 'US-HI',
-            'united states', 'usa', 'united states of america', 'washington', 'arizona', 'colorado', 'massachusetts', 'michigan', 'new jersey', 'north carolina', 'ohio', 'pennsylvania', 'tennessee', 'virginia', 'utah' => 'US',
+            'united states', 'usa', 'united states of america', 'washington', 'arizona', 'colorado', 'massachusetts', 'michigan', 'new jersey', 'north carolina', 'north car', 'ohio', 'pennsylvania', 'tennessee', 'virginia', 'utah' => 'US',
             'uruguay' => 'UY',
             'u.s. virgin islands', 'us virgin islands' => 'VI',
             'australia' => 'AU',
