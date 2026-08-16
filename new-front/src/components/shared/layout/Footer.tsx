@@ -77,7 +77,7 @@ export default function Footer() {
       <div className="w-full h-[3px] sm:h-[6px] md:h-[10px] bg-[#0f172a]" />
 
       <footer className="bg-primary pt-10 pb-6 text-black border-t border-black/5">
-      <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         
         <motion.div 
           initial={{ opacity: 0 }}
@@ -99,7 +99,7 @@ export default function Footer() {
           </Link>
         </motion.div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-8 mb-8">
           {Object.entries(footerLinks).map(([category, links], idx) => (
             <motion.div 
               key={category}
@@ -109,7 +109,7 @@ export default function Footer() {
               transition={{ delay: idx * 0.05 }}
               className="space-y-2"
             >
-              <h2 className="text-sm sm:text-base lg:text-[17px] xl:text-[18px] 2xl:text-lg font-black text-black">
+              <h2 className="text-sm sm:text-base lg:text-[16px] xl:text-[17px] font-black text-black">
                 {category}
               </h2>
               <ul className="space-y-0.5">
@@ -118,7 +118,7 @@ export default function Footer() {
                     <Link 
                       href={link.href}
                       onClick={(e) => scrollToSection(e, link.href)}
-                      className="text-[13px] sm:text-[14px] lg:text-[15px] xl:text-[16px] 2xl:text-[17px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
+                      className="text-[13px] sm:text-[14px] lg:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm block"
                     >
                       {link.name}
                     </Link>
@@ -128,22 +128,23 @@ export default function Footer() {
             </motion.div>
           ))}
 
+          {/* Top Countries Column */}
           <motion.div 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
-            className="space-y-2 min-h-[160px]" // Fix CLS by reserving space
+            className="space-y-2"
           >
-            <h2 className="text-sm sm:text-base lg:text-[17px] xl:text-[18px] 2xl:text-lg font-black text-black">
-              Location
+            <h2 className="text-sm sm:text-base lg:text-[16px] xl:text-[17px] font-black text-black">
+              Countries
             </h2>
             <ul className="space-y-0.5">
               {displayedCountries.map((country) => (
                 <li key={country?.id}>
                   <Link 
                     href={`/countries/${country?.id}`}
-                    className="text-[13px] sm:text-[14px] lg:text-[15px] xl:text-[16px] 2xl:text-[17px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm"
+                    className="text-[13px] sm:text-[14px] lg:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm block"
                   >
                     {country?.name} Car Rental
                   </Link>
@@ -156,6 +157,29 @@ export default function Footer() {
             >
               + View All Locations
             </Link>
+          </motion.div>
+
+          {/* Top Cities Column */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="space-y-2"
+          >
+            <h2 className="text-sm sm:text-base lg:text-[16px] xl:text-[17px] font-black text-black">
+              Top Cities
+            </h2>
+            <ul className="space-y-0.5">
+              <li>
+                <Link 
+                  href="/cities/dubai"
+                  className="text-[13px] sm:text-[14px] lg:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm block"
+                >
+                  Dubai Car Rental
+                </Link>
+              </li>
+            </ul>
           </motion.div>
         </div>
 

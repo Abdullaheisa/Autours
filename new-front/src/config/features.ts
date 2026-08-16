@@ -24,6 +24,9 @@ export const features = {
   /** Dynamic country pages (/countries/uae, /countries/egypt, etc.) */
   countryPages: true,
 
+  /** Dynamic city pages (/cities/dubai, /cities/riyadh, etc.) */
+  cityPages: true,
+
   /** Car Rental Brands pages (/car-rental-brands, /car-rental-brands/[brand], etc.) */
   carRentalBrands: true,
 

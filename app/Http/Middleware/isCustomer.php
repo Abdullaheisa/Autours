@@ -17,16 +17,33 @@ class isCustomer
      */
     public function handle(Request $request, Closure $next)
     {
-        $user = Auth::guard('sanctum')->user() ?? Auth::user();
-        if ($user && $user->role == 'customer') {
+        // 1. Check Sanctum Bearer token first (priority for API requests)
+        $user = Auth::guard('sanctum')->user();
+
+        // 2. Fallback to web session only if no Sanctum Bearer token was provided
+        if (!$user) {
+            $user = Auth::guard('web')->user() ?? Auth::user();
+        }
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated. Please log in or register as a customer to place a booking.',
+            ], 401);
+        }
+
+        if ($user->role === 'customer' || $user->role === 'user' || empty($user->role)) {
             if (Auth::guard('sanctum')->check()) {
                 Auth::shouldUse('sanctum');
             } else {
                 Auth::setUser($user);
             }
             return $next($request);
-        } else {
-            return abort(401, 'Unauthorized');
         }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Only customer accounts can place vehicle bookings. Administrator and Supplier accounts cannot book vehicles.',
+        ], 403);
     }
 }

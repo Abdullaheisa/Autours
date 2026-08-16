@@ -23,6 +23,13 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     setChecked(true);
   }, [dispatch]);
 
+  const isAuthorized = Boolean(
+    checked &&
+    isAuthenticated &&
+    user &&
+    (!allowedRoles || allowedRoles.length === 0 || isRoleAllowed(user.role, allowedRoles))
+  );
+
   useEffect(() => {
     if (!checked) return;
 
@@ -31,21 +38,17 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       return;
     }
 
-    if (allowedRoles && user && !isRoleAllowed(user.role, allowedRoles)) {
+    if (allowedRoles && allowedRoles.length > 0 && (!user || !isRoleAllowed(user.role, allowedRoles))) {
       router.replace('/login');
     }
   }, [checked, isAuthenticated, user, allowedRoles, router]);
 
-  if (!checked || !isAuthenticated) {
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-400 border-t-transparent" />
       </div>
     );
-  }
-
-  if (allowedRoles && user && !isRoleAllowed(user.role, allowedRoles)) {
-    return null;
   }
 
   return <>{children}</>;

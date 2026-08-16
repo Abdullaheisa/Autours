@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('vehicles_hidden')->default(false)->after('role');
-        });
+        if (!Schema::hasColumn('users', 'vehicles_hidden')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->boolean('vehicles_hidden')->default(false)->after('role');
+            });
+        }
     }
 
     /**

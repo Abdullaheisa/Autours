@@ -1174,6 +1174,54 @@ class VehicleController extends Controller
         return response()->json($airports);
     }
 
+    public function getLocationsByCity($city)
+    {
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+
+        $locations = Branch::query()
+            ->with(['airport', 'company:id,name,logo,company'])
+            ->where('activation', 1)
+            ->whereHas('company', function ($query) {
+                $query->where('role', 'active_supplier');
+            })
+            ->where(function ($query) use ($city) {
+                $query->where('location', 'ilike', "%{$city}%")
+                      ->orWhere('city', 'ilike', "%{$city}%");
+            })
+            ->orderBy('name')
+            ->get()
+            ->map(function ($branch) {
+                if (empty($branch->abriviation) && $branch->airport) {
+                    $branch->abriviation = $branch->airport->iata_code;
+                }
+
+                $minPrice1 = \App\Models\Vehicle::where('pickup_loc', $branch->id)
+                    ->where('activation', 1)
+                    ->min(\DB::raw('CASE WHEN month_price > 0 THEN month_price ELSE price END'));
+
+                $minPrice2 = \App\Models\Vehicle::whereHas('branches', function ($query) use ($branch) {
+                    $query->where('branches.id', $branch->id);
+                })->where('activation', 1)->min(\DB::raw('CASE WHEN month_price > 0 THEN month_price ELSE price END'));
+
+                $minPrice = null;
+                if ($minPrice1 !== null && $minPrice2 !== null) {
+                    $minPrice = min($minPrice1, $minPrice2);
+                } else {
+                    $minPrice = $minPrice1 ?? $minPrice2;
+                }
+
+                $branch['min_price'] = $minPrice !== null ? (float)$minPrice : null;
+
+                return $branch;
+            })
+            ->filter(function ($branch) {
+                return $branch['min_price'] !== null;
+            })
+            ->values();
+
+        return response()->json($locations);
+    }
+
     public function getLocationsByCountry($country)
     {
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
@@ -1196,13 +1244,8 @@ class VehicleController extends Controller
         $locations = Branch::query()
             ->with(['airport', 'company:id,name,logo,company'])
             ->where('activation', 1)
-            ->whereHas('company', function ($query) use ($user) {
+            ->whereHas('company', function ($query) {
                 $query->where('role', 'active_supplier');
-                if (!$user || $user->role !== 'admin') {
-                    $query->where(function($q) {
-                        $q->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
-                    });
-                }
             })
             ->where(function ($query) use ($searchCountry) {
                 $query->where('country', 'ilike', $searchCountry)
@@ -2236,6 +2279,96 @@ class VehicleController extends Controller
             }
 
             $finalOutput[$row->country][$row->category_name] = [
+                'id' => $row->id,
+                'car_name' => $row->car_name,
+                'photo' => $row->photo,
+                'supplier' => $row->supplier_name,
+                'supplier_logo' => $row->supplier_logo,
+                'price' => (float)$row->price,
+                'currency' => $row->currency ?? 'AED',
+                'transmission' => $vSpecs['transmission'] ?? $vSpecs['gear'] ?? 'Automatic',
+                'fuelType' => $vSpecs['fuel'] ?? 'Petrol',
+                'seats' => isset($vSpecs['number of seats']) ? (int)$vSpecs['number of seats'] : (isset($vSpecs['seats']) ? (int)$vSpecs['seats'] : 5),
+                'doors' => isset($vSpecs['doors']) ? (int)$vSpecs['doors'] : 4,
+                'suitcases' => $vSpecs['suitcase'] ?? $vSpecs['suitcases'] ?? $vSpecs['luggage'] ?? '',
+                'ac' => isset($vSpecs['air conditioner']) ? ($vSpecs['air conditioner'] === 'Air Conditioning' || $vSpecs['air conditioner'] === 'Yes') : true,
+            ];
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => $finalOutput
+        ]);
+    }
+
+    public function getCheapestByCity($city)
+    {
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        $adminCondition = "";
+        if (!$user || $user->role !== 'admin') {
+            $adminCondition = " AND (u.vehicles_hidden = false OR u.vehicles_hidden IS NULL) ";
+        }
+
+        $searchCity = trim(str_replace('-', ' ', $city));
+        $cityParam = "%{$searchCity}%";
+
+        // Query cheapest active vehicles specifically attached to branches in this city
+        $rows = DB::select("
+            SELECT DISTINCT ON (c.name)
+                v.id,
+                v.name AS car_name,
+                v.photo,
+                b.location,
+                b.city,
+                b.country,
+                b.currency,
+                c.name AS category_name,
+                COALESCE(u.company, u.name) AS supplier_name,
+                u.logo AS supplier_logo,
+                ROUND(
+                  ((CASE WHEN v.month_price > 0 THEN v.month_price ELSE v.price END)
+                  * (1 + COALESCE(p.per_month_profit, 0) / 100.0))::numeric
+                , 2) AS price
+            FROM vehicles v
+            INNER JOIN branches b ON (b.id = v.pickup_loc OR EXISTS (SELECT 1 FROM branch_vehicle bv WHERE bv.vehicle_id = v.id AND bv.branch_id = b.id))
+            INNER JOIN categories c ON c.id = v.category
+            INNER JOIN users u ON u.id = v.supplier
+            LEFT JOIN profits p ON p.vehicle_id = v.id
+            WHERE v.activation = true
+              AND v.deleted_at IS NULL
+              AND b.activation = true
+              AND b.deleted_at IS NULL
+              AND (b.city ILIKE ? OR b.location ILIKE ?)
+              AND u.role = 'active_supplier'
+              $adminCondition
+              AND c.name IS NOT NULL AND TRIM(c.name) != ''
+              AND (u.company IS NOT NULL OR u.name IS NOT NULL)
+            ORDER BY c.name,
+                (CASE WHEN v.month_price > 0 THEN v.month_price ELSE v.price END)
+                * (1 + COALESCE(p.per_month_profit, 0) / 100.0) ASC
+        ", [$cityParam, $cityParam]);
+
+        // Fetch specs only for the winning vehicles
+        $vehicleIds = array_map(fn($r) => $r->id, $rows);
+        $specs = DB::table('vehicle_specifications')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->get()
+            ->groupBy('vehicle_id');
+
+        $finalOutput = [];
+        foreach ($rows as $row) {
+            $vSpecs = [];
+            if (isset($specs[$row->id])) {
+                foreach ($specs[$row->id] as $sp) {
+                    $name = strtolower(trim($sp->name));
+                    $val = trim($sp->value);
+                    if ($val) {
+                        $vSpecs[$name] = $val;
+                    }
+                }
+            }
+
+            $finalOutput[$row->category_name] = [
                 'id' => $row->id,
                 'car_name' => $row->car_name,
                 'photo' => $row->photo,

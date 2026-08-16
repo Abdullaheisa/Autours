@@ -34,14 +34,17 @@ export default function LoginPage() {
         try {
           const userObj = JSON.parse(impersonateUserJson);
 
-          // Clear old sessionStorage (leave localStorage intact so Admin session is untouched!)
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('user');
+          // Save active session to both localStorage and sessionStorage
+          localStorage.setItem('token', impersonateToken);
+          localStorage.setItem('user', JSON.stringify(userObj));
+          localStorage.setItem('isImpersonated', 'true');
 
-          // Write new session to sessionStorage
           sessionStorage.setItem('token', impersonateToken);
           sessionStorage.setItem('user', JSON.stringify(userObj));
           sessionStorage.setItem('isImpersonated', 'true');
+
+          // Save token to cookie for SSR consistency
+          document.cookie = `token=${impersonateToken};path=/;max-age=2592000;SameSite=Lax`;
 
           // Set Bearer token on axiosClient globally
           axiosClient.defaults.headers.common['Authorization'] = `Bearer ${impersonateToken}`;

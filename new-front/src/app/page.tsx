@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 // 🚀 السحر هنا: تحميل الكومبوننتس اللي تحت الـ Fold "على الطلب" (Lazy Loading)
 // ده هيقلل حجم الجافاسكريبت اللي بيتحمل في البداية لأكثر من 60%
 const PartnersBanner = dynamic(() => import('@/components/sections/PartnersBanner'));
+const StatsSection = dynamic(() => import('@/components/sections/StatsSection'));
 const Features = dynamic(() => import('@/components/sections/Features'));
 const Locations = dynamic(() => import('@/components/sections/Locations'));
 const Fleet = dynamic(() => import('@/components/sections/Fleet'));
@@ -52,6 +53,8 @@ export default function HomePage() {
         
         <SectionDivider />
         <PartnersBanner />
+        
+        <StatsSection />
         
         {/* باقي الكومبوننتس هتتحمل في الخلفية بدون ما تجمد المتصفح */}
         <Features />

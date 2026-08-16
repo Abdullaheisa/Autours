@@ -31,6 +31,14 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
 
+Route::post('/post/user/data', [\App\Http\Controllers\Auth\RegisterController::class, 'store']);
+
+Route::middleware(['auth:sanctum', 'customer'])->group(function () {
+    Route::post('/book/vehicles', [\App\Http\Controllers\BookingsController::class, 'book']);
+    Route::post('/cancel/booking', [\App\Http\Controllers\BookingsController::class, 'cancelBooking']);
+});
+Route::get('/booking/{id}', [\App\Http\Controllers\BookingsController::class, 'bookingInvoice']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
@@ -46,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/delete/vehicles/{id}', [\App\Http\Controllers\VehicleController::class, 'destroy']);
     Route::get('/edit/vehicles/{id}', [\App\Http\Controllers\VehicleController::class, 'edit']);
     Route::post('/upload', [\App\Http\Controllers\UserController::class, 'upload']);
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markRead']);
+    Route::patch('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllRead']);
 });
 
 Route::get('/vehicles/bulk-upload/template', [\App\Http\Controllers\VehicleController::class, 'downloadBulkUploadTemplate']);
@@ -333,6 +344,8 @@ Route::post('/search/vehicles', [\App\Http\Controllers\VehicleController::class,
 Route::get('/get/airports', [\App\Http\Controllers\VehicleController::class, 'getGlobalAirports']);
 Route::get('/get/locations', [\App\Http\Controllers\VehicleController::class, 'getLocations']);
 Route::get('/get/locations/country/{country}', [\App\Http\Controllers\VehicleController::class, 'getLocationsByCountry']);
+Route::get('/get/locations/city/{city}', [\App\Http\Controllers\VehicleController::class, 'getLocationsByCity']);
+Route::get('/get/cheapest-vehicles/city/{city}', [\App\Http\Controllers\VehicleController::class, 'getCheapestByCity']);
 Route::get('/get/rentals', [\App\Http\Controllers\BookingsController::class, 'getRentals'])->middleware('auth:sanctum');
 Route::get('/get/rentals/admin', [\App\Http\Controllers\BookingsController::class, 'getAdminRentals']);
 Route::post('/delete/rentals', [\App\Http\Controllers\BookingsController::class, 'destroy']);
@@ -385,10 +398,7 @@ Route::post('/rating', [\App\Http\Controllers\RatesController::class, 'store']);
 // Booking Invoice (Sanctum protected)
 Route::get('/invoice/booking/{id}', [\App\Http\Controllers\BookingsController::class, 'bookingInvoice'])->middleware('auth:sanctum');
 
-// Notifications (Sanctum protected)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/notifications',                            [\App\Http\Controllers\NotificationController::class, 'index']);
-    Route::patch('/notifications/{id}/read',               [\App\Http\Controllers\NotificationController::class, 'markRead']);
-    Route::patch('/notifications/read-all',                [\App\Http\Controllers\NotificationController::class, 'markAllRead']);
-});
+// Platform Public Statistics API
+Route::get('/stats', [\App\Http\Controllers\StatsController::class, 'index']);
+
 

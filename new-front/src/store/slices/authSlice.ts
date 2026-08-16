@@ -104,14 +104,17 @@ export const loginThunk = createAsyncThunk(
           return rejectWithValue('No token received from server.');
         }
 
-        const remember = credentials.rememberMe !== false;
-        const storage = remember ? localStorage : sessionStorage;
-        storage.setItem('token', token);
+        // Save to BOTH localStorage and sessionStorage to prevent desync
+        localStorage.setItem('token', token);
+        sessionStorage.setItem('token', token);
+        if (typeof document !== 'undefined') {
+          document.cookie = `token=${token};path=/;max-age=2592000;SameSite=Lax`;
+        }
         
         // Set header on axiosClient for future requests
         axiosClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-        const userData: any = response.data || {};
+        const userData: any = response.user || response.data || {};
         const user: User = {
           id: userData.id?.toString() || '1',
           name: userData.user_name || userData.name || credentials.email,
@@ -123,7 +126,8 @@ export const loginThunk = createAsyncThunk(
           phone_num: userData.phone_num || undefined,
           country: userData.country || undefined,
         };
-        storage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('user', JSON.stringify(user));
         return { user, token };
       }
 
@@ -188,32 +192,30 @@ const authSlice = createSlice({
   reducers: {
     restoreAuth: (state) => {
       if (typeof window !== 'undefined') {
-        let token = null;
-        let userRaw = null;
-
-        // If this tab is impersonating, we MUST use sessionStorage to avoid conflicting with admin session in localStorage
-        if (sessionStorage.getItem('isImpersonated') === 'true') {
-          token = sessionStorage.getItem('token');
-          userRaw = sessionStorage.getItem('user');
-        }
-
-        if (!token || !userRaw) {
-          token = localStorage.getItem('token');
-          userRaw = localStorage.getItem('user');
-        }
-        if (!token || !userRaw) {
-          token = sessionStorage.getItem('token');
-          userRaw = sessionStorage.getItem('user');
-        }
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
 
         if (token && userRaw) {
-          const parsed = JSON.parse(userRaw) as User;
-          state.token = token;
-          state.user = { ...parsed, role: normalizeAuthRole(parsed.role), status: parsed.status || parsed.role };
-          state.isAuthenticated = true;
-          // ✅ Set the Bearer token on axiosClient immediately so all
-          // subsequent requests are authenticated without waiting for another render.
-          axiosClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          try {
+            const parsed = JSON.parse(userRaw) as User;
+            state.token = token;
+            state.user = { ...parsed, role: normalizeAuthRole(parsed.role), status: parsed.status || parsed.role };
+            state.isAuthenticated = true;
+            // Set Bearer token on axiosClient immediately
+            axiosClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            document.cookie = `token=${token};path=/;max-age=2592000;SameSite=Lax`;
+          } catch (e) {
+            console.error('Failed to parse user from storage:', e);
+            state.token = null;
+            state.user = null;
+            state.isAuthenticated = false;
+          }
+        } else {
+          // If token or user is missing, ensure state is cleanly unauthenticated
+          state.token = null;
+          state.user = null;
+          state.isAuthenticated = false;
+          delete axiosClient.defaults.headers.common['Authorization'];
         }
       }
     },
@@ -225,16 +227,25 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
+      delete axiosClient.defaults.headers.common['Authorization'];
       if (typeof window !== 'undefined') {
-        if (sessionStorage.getItem('isImpersonated') === 'true') {
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('user');
-          sessionStorage.removeItem('isImpersonated');
-        } else {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isImpersonated');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('isImpersonated');
+        
+        // Purge all cookies
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i];
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};`;
+          }
         }
       }
     },

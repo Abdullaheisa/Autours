@@ -44,14 +44,7 @@ axiosClient.interceptors.request.use(
     //    Always inject — logout needs the token to revoke it server-side.
     //    If there is no token yet (login / register), this block is skipped safely.
     if (typeof window !== 'undefined') {
-      let token = null;
-      if (sessionStorage.getItem('isImpersonated') === 'true') {
-        token = sessionStorage.getItem('token');
-        config.withCredentials = false; // Prevents sending admin session cookies that override Bearer token
-      }
-      if (!token) {
-        token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      }
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         config.headers = config.headers ?? {};
         config.headers['Authorization'] = `Bearer ${token}`;

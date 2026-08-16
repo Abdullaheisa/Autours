@@ -183,7 +183,7 @@ export const countryPagesData: Record<string, CountryPageData> = {
         {
           "name": "Dubai",
           "description": "Dubai is a world-famous destination where futuristic architecture, luxury shopping, stunning beaches, and unforgettable attractions create one of the most exciting travel experiences in the world.",
-          "image": "countries/uae.webp",
+          "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80",
           "tags": [
             "Luxury",
             "Shopping",

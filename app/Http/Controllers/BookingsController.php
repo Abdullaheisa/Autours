@@ -273,15 +273,23 @@ class BookingsController extends Controller
 
             DB::commit();
 
-            // Send WhatsApp Notification to site owners via BeOn API
-            $this->sendWhatsAppBookingNotification($item);
-            if ($request->old_rental_id) {
-                event(new UpdateBooking($oldRental, $item));
+            // Safely send notifications & events (never abort booking if mail server has issues)
+            try {
+                // Send WhatsApp Notification to site owners via BeOn API
+                $this->sendWhatsAppBookingNotification($item);
+                if ($request->old_rental_id) {
+                    event(new UpdateBooking($oldRental, $item));
+                }
+                if ($vehicle && $vehicle->instant_confirmation) {
+                    event(new NewRental($item->id));
+                } else {
+                    event(new NewRentalRequest($item->id));
+                }
+            } catch (\Throwable $notifEx) {
+                \Illuminate\Support\Facades\Log::warning("Booking notification warning: " . $notifEx->getMessage(), [
+                    'rental_id' => $item->id,
+                ]);
             }
-            if ($vehicle->instant_confirmation)
-                event(new NewRental($item->id));
-            else
-                event(new NewRentalRequest($item->id));
 
             return response()->json([
                 'data' => $item,
