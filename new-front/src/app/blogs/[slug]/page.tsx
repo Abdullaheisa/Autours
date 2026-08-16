@@ -11,6 +11,7 @@ import { getBlogImageUrl } from '@/utils/getImageUrl';
 import { SERVER_API_BASE } from '@/config/api';
 import BlogSearchSidebar from '@/app/blogs/components/BlogSearchSidebar';
 import BlogCategories from '@/app/blogs/components/BlogCategories';
+import { scopeBlogHtml } from '@/utils/scopeBlogHtml';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -279,8 +280,8 @@ export default async function BlogPostDetail({ params }: PageProps) {
             <ShareButtons url={`${siteConfig.url}/blogs/${post.slug || post.id}`} title={post.title} />
  
             <div 
-              className="prose prose-base max-w-none text-gray-800 leading-relaxed space-y-4 prose-headings:font-black prose-headings:text-gray-900 prose-strong:font-bold prose-strong:text-gray-900 prose-table:w-full prose-table:border-collapse prose-table:my-6 prose-th:bg-gray-100 prose-th:border prose-th:border-gray-200 prose-th:p-3 prose-th:text-left prose-td:border prose-td:border-gray-200 prose-td:p-3 overflow-x-auto"
-              dangerouslySetInnerHTML={{ __html: (post.content || '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') }}
+              className="blog-article-content prose prose-base max-w-none text-gray-800 leading-relaxed space-y-4 prose-headings:font-black prose-headings:text-gray-900 prose-strong:font-bold prose-strong:text-gray-900 prose-table:w-full prose-table:border-collapse prose-table:my-6 prose-th:bg-gray-100 prose-th:border prose-th:border-gray-200 prose-th:p-3 prose-th:text-left prose-td:border prose-td:border-gray-200 prose-td:p-3 overflow-x-auto"
+              dangerouslySetInnerHTML={{ __html: scopeBlogHtml(post.content || '', 'blog-article-content') }}
             />
  
             {post.tags && post.tags.trim() !== '' && (
