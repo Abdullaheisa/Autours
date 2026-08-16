@@ -106,44 +106,58 @@ class SyncAutofixBranches extends Command
                 continue;
             }
 
-            $countryName = CountryCurrencyResolver::resolveCountryName($country ?: 'TR');
-            $currency = CountryCurrencyResolver::resolveCurrency($country ?: 'TR');
+            $countryCode = CountryCurrencyResolver::resolveCountryCode($country ?: 'Turkey');
+            if (empty($countryCode)) {
+                $countryCode = 'TR'; // fallback
+            }
+            $countryName = CountryCurrencyResolver::resolveCountryName($countryCode);
+            $currency = CountryCurrencyResolver::resolveCurrency($countryCode);
+
+            $branchData = [
+                'name' => $locationName,
+                'location' => $locationName,
+                'adresse' => $address ?: $locationName,
+                'city' => $city ?: $locationName,
+                'country' => $countryName,
+                'currency' => $currency,
+                'lat' => $lat,
+                'lng' => $lng,
+                'location_type' => str_contains(strtolower($locationName), 'airport') ? 'Airport' : 'Downtown',
+                'abriviation' => $locationId,
+            ];
+
+            // Normalize branch name/location against canonical airports
+            $normalizer = new BranchNormalizationService();
+            $normData = $normalizer->normalize(
+                $branchData['name'],
+                $branchData['city'],
+                $branchData['country'],
+                $locationId,
+                $branchData['abriviation']
+            );
+
+            if (!empty($normData['airport_id'])) {
+                $branchData['airport_id'] = $normData['airport_id'];
+                $branchData['name'] = $normData['normalized_name'];
+                $branchData['location'] = $normData['location'];
+                $branchData['city'] = $normData['location'];
+                $branchData['country'] = $normData['country'] ?? $branchData['country'];
+                $branchData['abriviation'] = $normData['abriviation'] ?? $branchData['abriviation'];
+                $branchData['location_type'] = 'Airport';
+            } else {
+                $branchData['airport_id'] = null;
+                if (!empty($normData['location'])) {
+                    $branchData['location'] = $normData['location'];
+                }
+            }
 
             $branch = Branch::updateOrCreate(
                 [
                     'company_id' => $supplierUserId,
                     'station_id' => $locationId,
                 ],
-                [
-                    'name' => $locationName,
-                    'location' => $locationName,
-                    'adresse' => $address ?: $locationName,
-                    'city' => $city ?: $locationName,
-                    'country' => $countryName,
-                    'currency' => $currency,
-                    'lat' => $lat,
-                    'lng' => $lng,
-                    'location_type' => str_contains(strtolower($locationName), 'airport') ? 'Airport' : 'Downtown',
-                    'abriviation' => $locationId,
-                ]
+                $branchData
             );
-
-            // Normalize branch name/location against canonical airports
-            $normalizer = new BranchNormalizationService();
-            $normData = $normalizer->normalize(
-                $branch->name,
-                $branch->city ?? '',
-                $branch->country ?? '',
-                $branch->station_id,
-                $branch->abriviation
-            );
-
-            $branch->update(array_filter([
-                'airport_id' => $normData['airport_id'] ?? null,
-                'name' => $normData['normalized_name'] ?? null,
-                'location' => $normData['location'] ?? null,
-                'abriviation' => $normData['abriviation'] ?? null,
-            ]));
 
             if ($branch->wasRecentlyCreated) {
                 $created++;
