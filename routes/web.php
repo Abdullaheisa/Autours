@@ -265,6 +265,8 @@ Route::post('/search/vehicles', [VehicleController::class, 'search']);
 Route::get('/get/airports', [VehicleController::class, 'getGlobalAirports']);
 Route::get('/get/locations', [VehicleController::class, 'getLocations']);
 Route::get('/get/locations/country/{country}', [VehicleController::class, 'getLocationsByCountry']);
+Route::get('/get/locations/city/{city}', [VehicleController::class, 'getLocationsByCity']);
+Route::get('/get/cheapest-vehicles/city/{city}', [VehicleController::class, 'getCheapestByCity']);
 Route::get('/get/cheapest-vehicle', [VehicleController::class, 'getCheapestByCountry']);
 
 Route::get('/get/rentals', [BookingsController::class, 'getRentals'])->middleware('auth:sanctum');
@@ -471,4 +473,9 @@ Route::get('/docs/swagger.json', function () {
         'Content-Type' => 'application/json'
     ]);
 })->name('api.docs.json');
+
+// Platform Statistics Routes
+Route::get('/stats', [\App\Http\Controllers\StatsController::class, 'index']);
+Route::get('/api/stats', [\App\Http\Controllers\StatsController::class, 'index']);
+
 

@@ -75,6 +75,31 @@ export default function CountrySection({
         <p className="text-neutral-600 text-sm sm:text-base leading-relaxed max-w-lg">
           {description}
         </p>
+
+        {/* Related Cities Links if available */}
+        {(() => {
+          const relatedCities = [
+            ...(countrySlug === 'uae' || countryName.toLowerCase().includes('emirates')
+              ? [{ slug: 'dubai', name: 'Dubai' }]
+              : [])
+          ];
+          if (relatedCities.length === 0) return null;
+          return (
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Popular Cities:</span>
+              {relatedCities.map((city) => (
+                <Link
+                  key={city.slug}
+                  href={`/cities/${city.slug}`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/15 hover:bg-primary text-black text-xs font-black transition-all border border-primary/30 shadow-sm hover:scale-105"
+                >
+                  <MapPin className="w-3 h-3" />
+                  {city.name} Car Rental
+                </Link>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Images Grid */}

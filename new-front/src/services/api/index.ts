@@ -405,6 +405,41 @@ export const vehicleApi = {
     }
   },
 
+  getLocationsByCity: async (city: string): Promise<LocationBranch[]> => {
+    try {
+      const cityKey = city.toLowerCase().trim();
+      const cacheKey = `autours_locations_city_${cityKey}`;
+      if (typeof window !== 'undefined') {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) return JSON.parse(cached);
+      }
+
+      const data = await apiClient.get<any[]>(`/get/locations/city/${city}`);
+      const mapped = (data || []).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name || '',
+        location: loc.location || '',
+        country: loc.country || '',
+        adresse: loc.adresse || loc.location_address || '',
+        location_address: loc.location_address || loc.adresse || '',
+        location_type: loc.location_type || '',
+        abriviation: loc.abriviation || loc.abbreviation || '',
+        min_price: loc.min_price != null ? Number(loc.min_price) : null,
+        currency: loc.currency || '',
+        airport_id: loc.airport_id || null,
+        company: loc.company || null,
+      }));
+
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
+      }
+      return mapped;
+    } catch (err) {
+      console.error('[LOCATIONS BY CITY ERROR]', err);
+      return [];
+    }
+  },
+
   getVehicleData: async (payload: { id: number; location: string; date_from: string; date_to: string; currency: string }) => {
     const response = await apiClient.post<any>('/get/vehicle/data', cleanPayload(payload as any));
     return response;
@@ -413,6 +448,16 @@ export const vehicleApi = {
   getCheapestVehicles: async () => {
     const response = await apiClient.get<any>('/get/cheapest-vehicle');
     return response;
+  },
+
+  getCheapestVehiclesByCity: async (city: string) => {
+    try {
+      const response = await apiClient.get<any>(`/get/cheapest-vehicles/city/${city}`);
+      return response;
+    } catch (err) {
+      console.error('[CHEAPEST VEHICLES BY CITY ERROR]', err);
+      return { status: false, data: {} };
+    }
   },
 };
 

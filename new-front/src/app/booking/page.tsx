@@ -12,10 +12,10 @@ import toast from 'react-hot-toast';
 import Stepper from '@/app/search/components/Stepper';
 import SearchSummary from '@/app/search/components/SearchSummary';
 import CarCard from '@/app/search/components/CarCard';
-import { Check, User, Phone, Globe, Mail, Lock, ChevronDown } from 'lucide-react';
+import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle } from 'lucide-react';
 import { RootState, AppDispatch } from '@/store';
 import { fetchVehicles } from '@/store/slices/searchSlice';
-import { restoreAuth } from '@/store/slices/authSlice';
+import { restoreAuth, logout } from '@/store/slices/authSlice';
 import { Vehicle, Currency } from '@/types';
 import { worldCountries } from '@/data/worldCountries';
 import { getVehicleDisplayPrice } from '@/utils/vehiclePrice';
@@ -100,15 +100,27 @@ function BookingContent() {
   const [country, setCountry] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const isCustomer = Boolean(
+    isAuthenticated &&
+    loggedInUser &&
+    loggedInUser.role === 'customer' &&
+    email &&
+    loggedInUser.email?.toLowerCase().trim() === email.toLowerCase().trim() &&
+    (typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null)
+  );
 
-  //Prefill details if already logged in
+  const isManagementAccount = Boolean(
+    isAuthenticated &&
+    loggedInUser &&
+    (loggedInUser.role === 'admin' || loggedInUser.role === 'supplier' || loggedInUser.role === 'active_supplier')
+  );
+
+  // Prefill details if already logged in as customer
   useEffect(() => {
     dispatch(restoreAuth());
   }, [dispatch]);
 
-  // ── Profile prefill: runs on mount regardless of Redux auth state timing ──────
-  // We read the token directly from localStorage/cookies so we don't depend on
-  // isAuthenticated being true yet (restoreAuth is async and may not have finished).
+  // ── Profile prefill: only runs for authenticated customers ──────────────────
   const [profilePrefillDone, setProfilePrefillDone] = useState(false);
 
   const applyProfileData = useCallback((profile: any) => {
@@ -148,42 +160,12 @@ function BookingContent() {
     setProfilePrefillDone(true);
   }, []);
 
-  // Mount-time fetch: tries API first, falls back to Redux loggedInUser
+  // Mount-time fetch: only for customer accounts
   useEffect(() => {
-    const fetchProfile = async () => {
-      // Check if a token exists at all (works even before Redux finishes restoreAuth)
-      const token = typeof window !== 'undefined'
-        ? (localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || document.cookie.match(/auth_token=([^;]+)/)?.[1])
-        : null;
-
-      if (token) {
-        try {
-          const res: any = await authApi.getProfile();
-          const profile = res?.data || res;
-          applyProfileData(profile);
-          return;
-        } catch (err) {
-          console.warn('Booking: getProfile failed, falling back to Redux user', err);
-        }
-      }
-
-      // Fallback: use Redux loggedInUser if already populated
-      if (loggedInUser) {
-        applyProfileData(loggedInUser);
-      }
-    };
-
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // If Redux loggedInUser becomes available after mount (restoreAuth completes late)
-  // and we haven't filled the form yet, use it as a final fallback.
-  useEffect(() => {
-    if (!profilePrefillDone && loggedInUser) {
+    if (isCustomer && loggedInUser) {
       applyProfileData(loggedInUser);
     }
-  }, [loggedInUser, profilePrefillDone, applyProfileData]);
+  }, [isCustomer, loggedInUser, applyProfileData]);
 
   // ── Checkboxes ───────────────────────────────────────────────────────────────
   const [rememberMe, setRememberMe] = useState(true);
@@ -289,6 +271,14 @@ function BookingContent() {
 
   // ── Register then Book ───────────────────────────────────────────────────────
   const handleBook = async () => {
+    // Check if logged in as admin or supplier
+    if (isManagementAccount) {
+      toast.error(
+        `Management accounts (${loggedInUser?.role === 'admin' ? 'Administrator' : 'Company/Supplier'}) cannot book cars. Please log out and use a Customer account.`
+      );
+      return;
+    }
+
     // Validate
     if (!gender) { toast.error('Please select Mr/Mrs'); return; }
     if (!fullName.trim()) { toast.error('Please enter your full name'); return; }
@@ -296,7 +286,7 @@ function BookingContent() {
     if (!phone.trim()) { toast.error('Please enter a valid phone number'); return; }
     if (!country) { toast.error('Please select your country'); return; }
     if (!email.trim()) { toast.error('Please enter a valid email'); return; }
-    if (!isAuthenticated && !password.trim()) { toast.error('Please enter a password'); return; }
+    if (!isCustomer && !password.trim()) { toast.error('Please enter a password'); return; }
     if (!rentalTerms) { toast.error('Please approve the rental terms'); return; }
     if (!selectedVehicle) { toast.error('No vehicle selected'); return; }
     if (!searchStateParams.dateFrom || !searchStateParams.dateTo) {
@@ -305,42 +295,96 @@ function BookingContent() {
 
     setIsSubmitting(true);
     try {
-      let token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      let customerToken = isCustomer
+        ? (localStorage.getItem('token') || sessionStorage.getItem('token'))
+        : null;
 
-      if (!isAuthenticated && !token) {
-        // Step 1: Register customer if not logged in
-        const regRes: any = await apiClient.post('/post/user/data', {
-          name: `${gender} ${fullName.trim()}`,
-          gender,
-          phone: phone.trim(),
-          mobile_code: mobileCode,
-          country,
-          email: email.trim(),
-          password: password.trim(),
-          user_type: 'customer',
-          supplier: 0,
-        });
+      if (!isCustomer || !customerToken) {
+        // Step 1: Try Logging In first (in case user already has an account)
+        let authSuccessful = false;
+        try {
+          const loginRes: any = await authApi.login({
+            email: email.trim(),
+            password: password.trim(),
+          });
 
-        if (!regRes?.status) {
-          toast.error(extractLaravelError(regRes) || 'Registration failed');
-          setIsSubmitting(false);
-          return;
+          if (loginRes && (loginRes.status === true || loginRes.token)) {
+            const user = loginRes.user || loginRes.data;
+            // Ensure logged in account is a customer
+            if (user && (user.role === 'admin' || user.role === 'supplier' || user.role === 'active_supplier')) {
+              toast.error('The account associated with this email is a Management/Company account. Car bookings can only be placed by Customer accounts.');
+              setIsSubmitting(false);
+              return;
+            }
+
+            customerToken = loginRes.token;
+            if (customerToken) {
+              localStorage.setItem('token', customerToken);
+              sessionStorage.setItem('token', customerToken);
+              document.cookie = `token=${customerToken};path=/;max-age=2592000;SameSite=Lax`;
+              apiClient.defaults.headers.common['Authorization'] = `Bearer ${customerToken}`;
+            }
+            if (user) {
+              localStorage.setItem('user', JSON.stringify(user));
+              sessionStorage.setItem('user', JSON.stringify(user));
+            }
+            dispatch(restoreAuth());
+            authSuccessful = true;
+          }
+        } catch (loginErr: any) {
+          // Login failed (e.g. invalid credentials or new user) — will attempt registration next
         }
-        toast.success('Account created successfully!');
 
-        token = regRes?.data?.token;
-        const user = regRes?.data?.user;
-        if (token) {
-          localStorage.setItem('token', token);
-          sessionStorage.setItem('token', token);
-        }
-        if (user) {
-          localStorage.setItem('user', JSON.stringify(user));
-          sessionStorage.setItem('user', JSON.stringify(user));
-        }
+        // If not authenticated via login, attempt registration for new customer
+        if (!authSuccessful) {
+          try {
+            const regRes: any = await apiClient.post('/post/user/data', {
+              name: `${gender} ${fullName.trim()}`,
+              gender,
+              phone: phone.trim(),
+              mobile_code: mobileCode,
+              country,
+              email: email.trim(),
+              password: password.trim(),
+              user_type: 'customer',
+              supplier: 0,
+            });
 
-        // Sync Redux auth state immediately
-        dispatch(restoreAuth());
+            if (!regRes?.status) {
+              const errText = extractLaravelError(regRes);
+              if (errText.toLowerCase().includes('already been taken') || errText.toLowerCase().includes('taken')) {
+                toast.error('This email already has an account, but the password was incorrect. Please enter your correct password.');
+              } else {
+                toast.error(errText || 'Registration failed');
+              }
+              setIsSubmitting(false);
+              return;
+            }
+
+            customerToken = regRes?.data?.token || regRes?.token;
+            const user = regRes?.data?.user || regRes?.user;
+            if (customerToken) {
+              localStorage.setItem('token', customerToken);
+              sessionStorage.setItem('token', customerToken);
+              document.cookie = `token=${customerToken};path=/;max-age=2592000;SameSite=Lax`;
+              apiClient.defaults.headers.common['Authorization'] = `Bearer ${customerToken}`;
+            }
+            if (user) {
+              localStorage.setItem('user', JSON.stringify(user));
+              sessionStorage.setItem('user', JSON.stringify(user));
+            }
+            dispatch(restoreAuth());
+          } catch (regErr: any) {
+            const errText = extractLaravelError(regErr?.response?.data) || regErr?.message || '';
+            if (errText.toLowerCase().includes('already been taken') || errText.toLowerCase().includes('taken')) {
+              toast.error('This email already has an account, but the password was incorrect. Please enter your correct password.');
+            } else {
+              toast.error(errText || 'Registration failed');
+            }
+            setIsSubmitting(false);
+            return;
+          }
+        }
       }
 
       // Step 2: Book vehicle
@@ -460,6 +504,30 @@ function BookingContent() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+              {/* ── Management Account Alert Banner ───────────────────────────── */}
+              {isManagementAccount && (
+                <div className="md:col-span-2 p-4 sm:p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3.5 text-amber-900 shadow-sm">
+                  <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={22} />
+                  <div className="flex-1 text-xs sm:text-sm">
+                    <p className="font-bold text-amber-950 text-sm sm:text-base">
+                      {loggedInUser?.role === 'admin' ? 'Administrator Account' : 'Company / Supplier Account'} ({loggedInUser?.email})
+                    </p>
+                    <p className="text-amber-800 mt-1 leading-relaxed">
+                      Car rental bookings can only be placed by <strong>Customer</strong> accounts. Company and Administrator accounts are not permitted to book vehicles.
+                    </p>
+                    <div className="mt-3 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => dispatch(logout())}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
+                      >
+                        Log Out to Book as Customer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Gender + Full Name */}
               <div className="flex flex-col sm:flex-row gap-3 md:col-span-1">
                 <div className="w-full sm:w-28 shrink-0">
@@ -555,7 +623,7 @@ function BookingContent() {
               </div>
 
               {/* Email + Password */}
-              <div className={`md:col-span-2 grid grid-cols-1 ${isAuthenticated ? "grid-cols-1" : "md:grid-cols-2"} gap-4`}>
+              <div className={`md:col-span-2 grid grid-cols-1 ${isCustomer ? "grid-cols-1" : "md:grid-cols-2"} gap-4`}>
                 <div>
                   <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
                   <div className="relative">
@@ -569,7 +637,7 @@ function BookingContent() {
                     />
                   </div>
                 </div>
-                {!isAuthenticated && (
+                {!isCustomer && (
                   <div>
                     <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Password</label>
                     <div className="relative">
@@ -619,7 +687,7 @@ function BookingContent() {
               <div className="pt-2 md:col-span-2">
                 <button
                   onClick={handleBook}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isManagementAccount}
                   className="w-full py-4 px-8 bg-primary text-gray-900 rounded-xl font-black text-[16px] transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
                 >
                   {isSubmitting ? (
@@ -627,6 +695,8 @@ function BookingContent() {
                       <div className="w-5 h-5 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
                       Processing...
                     </>
+                  ) : isManagementAccount ? (
+                    'Cannot Book with Management Account'
                   ) : (
                     'Confirm Booking'
                   )}
