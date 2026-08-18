@@ -38,12 +38,23 @@ export default function RentalReviewsSection() {
           const diffTime = Math.abs(end.getTime() - start.getTime());
           durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
+        const companyName = 
+          r.supplier?.company || 
+          r.supplier?.name || 
+          r.vehicle?.supplier?.company || 
+          r.vehicle?.supplier?.name || 
+          r.vehicle?.supplierUser?.company || 
+          r.vehicle?.supplierUser?.name || 
+          r.vehicle?.supplier_user?.company || 
+          r.vehicle?.supplier_user?.name || 
+          "Supplier";
+
         return {
           id: r.id,
           order_number: r.order_number,
           customer: r.customer?.name || "Customer",
           vehicle: r.vehicle?.name || r.vehicle?.model || "Vehicle",
-          company: r.supplier?.name || r.vehicle?.supplier?.name || "Supplier",
+          company: companyName,
           country: r.country || r.vehicle?.branch?.country || "Unknown",
           date: r.start_date,
           end_date: r.end_date,

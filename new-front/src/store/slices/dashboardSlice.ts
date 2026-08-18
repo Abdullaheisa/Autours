@@ -128,16 +128,29 @@ const dashboardSlice = createSlice({
           state.stats.totalCars = totalCars;
 
           // 2. Map Recent Bookings
-          const recentBookings = (data.customerTransactions || data.latestRentalsTransactions || []).map((booking: any) => ({
-            id: booking.id ? `BK-${booking.id}` : (booking.order_number || Math.random().toString()), // Guaranteed unique React key
-            orderNumber: booking.order_number || `BK-${booking.id}`, // Human readable display
-            customer: booking.customer?.name || "Unknown Customer",
-            vehicle: booking.vehicle?.name || `${booking.vehicle?.brand || ""} ${booking.vehicle?.model || ""}`.trim() || "Unknown Vehicle",
-            company: booking.supplier?.name || "Unknown Company",
-            country: booking.vehicle?.branch?.country || "UAE",
-            amount: Number(booking.price || 0),
-            status: mapStatus(booking.order_status),
-          }));
+          const recentBookings = (data.customerTransactions || data.latestRentalsTransactions || []).map((booking: any) => {
+            const companyName = 
+              booking.supplier?.company || 
+              booking.supplier?.name || 
+              booking.vehicle?.supplier?.company || 
+              booking.vehicle?.supplier?.name || 
+              booking.vehicle?.supplierUser?.company || 
+              booking.vehicle?.supplierUser?.name || 
+              booking.vehicle?.supplier_user?.company || 
+              booking.vehicle?.supplier_user?.name || 
+              "Unknown Company";
+
+            return {
+              id: booking.id ? `BK-${booking.id}` : (booking.order_number || Math.random().toString()), // Guaranteed unique React key
+              orderNumber: booking.order_number || `BK-${booking.id}`, // Human readable display
+              customer: booking.customer?.name || "Unknown Customer",
+              vehicle: booking.vehicle?.name || `${booking.vehicle?.brand || ""} ${booking.vehicle?.model || ""}`.trim() || "Unknown Vehicle",
+              company: companyName,
+              country: booking.vehicle?.branch?.country || "UAE",
+              amount: Number(booking.price || 0),
+              status: mapStatus(booking.order_status),
+            };
+          });
 
           // 3. Map Monthly Bookings Trend
           const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

@@ -54,7 +54,7 @@ export default function HomePage() {
         <SectionDivider />
         <PartnersBanner />
         
-        <StatsSection />
+        {/* <StatsSection /> */}
         
         {/* باقي الكومبوننتس هتتحمل في الخلفية بدون ما تجمد المتصفح */}
         <Features />

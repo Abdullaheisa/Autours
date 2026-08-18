@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, Filter, Download, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Search, Filter, Download, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, Trash2, Building2, Eye } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import Pagination from "@/components/ui/Pagination";
 import { rentalApi } from "@/services/api";
 import toast from "react-hot-toast";
+import BookingDetailsModal from "./BookingDetailsModal";
 
 export default function RentalsSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [rentalsData, setRentalsData] = useState<any[]>([]);
+  const [selectedRental, setSelectedRental] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -69,19 +71,65 @@ export default function RentalsSection() {
           const diffTime = Math.abs(end.getTime() - start.getTime());
           durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
+
+        const companyName = 
+          r.supplier?.company || 
+          r.supplier?.name || 
+          r.vehicle?.supplier?.company || 
+          r.vehicle?.supplier?.name || 
+          r.vehicle?.supplierUser?.company || 
+          r.vehicle?.supplierUser?.name || 
+          r.vehicle?.supplier_user?.company || 
+          r.vehicle?.supplier_user?.name || 
+          "Supplier";
+
         return {
           id: r.id,
           order_number: r.order_number,
           customer: r.customer?.name || "Customer",
-          avatar: "https://ui-avatars.com/api/?name=" + (r.customer?.name || "C"),
+          customer_id: r.customer_id || r.customer?.id,
+          customer_email: r.customer?.email || "—",
+          customer_phone: r.customer?.phone_num || r.customer?.phone || "—",
+          customer_country: r.customer?.country || "—",
+          customer_city: r.customer?.city || "—",
+          customer_address: r.customer?.address || "—",
+          customer_gender: r.customer?.gender || "",
+          avatar: "https://ui-avatars.com/api/?name=" + encodeURIComponent(r.customer?.name || "C"),
           vehicle: r.vehicle?.name || "Vehicle",
-          company: r.supplier?.name || "Supplier",
+          vehicle_photo: r.vehicle?.photo || "",
+          vehicle_category: r.vehicle?.category?.name || r.vehicle?.category?.name_en || r.vehicle?.category || "",
+          vehicle_branch: r.vehicle?.branch?.name || r.vehicle?.branch?.location || r.vehicle?.branch?.adresse || "",
+          vehicle_branch_city: r.vehicle?.branch?.city || "",
+          vehicle_branch_country: r.vehicle?.branch?.country || "",
+          company: companyName,
+          supplier_name: r.supplier?.name || r.vehicle?.supplierUser?.name || r.vehicle?.supplier?.name || "—",
+          supplier_company: r.supplier?.company || r.vehicle?.supplierUser?.company || companyName,
+          supplier_email: r.supplier?.email || r.vehicle?.supplierUser?.email || r.vehicle?.supplier?.email || "—",
+          supplier_phone: r.supplier?.phone_num || r.vehicle?.supplierUser?.phone_num || r.vehicle?.supplier?.phone_num || "—",
+          supplier_logo: r.supplier?.logo || r.vehicle?.supplierUser?.logo || r.vehicle?.supplier?.logo || "",
+          supplier_city: r.supplier?.city || r.vehicle?.supplierUser?.city || "",
+          supplier_country: r.supplier?.country || r.vehicle?.supplierUser?.country || "",
+          start_date: r.start_date,
+          end_date: r.end_date,
+          start_time: r.start_time,
+          end_time: r.end_time,
           dates: `${r.start_date} - ${r.end_date}`,
           duration: durationDays ? `${durationDays} days` : "-",
-          amount: `${r.price} ${r.currency}`,
+          amount: `${r.price} ${r.currency || ""}`,
+          price: r.price,
+          currency: r.currency || "",
+          profit_margin: r.profit_margin,
+          supplier_price: r.supplier_price,
+          payment_method: r.payment_method?.name || r.paymentMethod?.name || (r.payment_method_id ? `Method #${r.payment_method_id}` : "Online Payment"),
+          order_status: r.order_status,
           status: mapOrderStatus(r.order_status),
+          status_name: r.status?.name_en || r.status?.name_ar || mapOrderStatus(r.order_status),
           country: r.country || r.vehicle?.branch?.country || "Unknown",
-          rating: r.rate || r.rating || (r.rental_rates && r.rental_rates.length > 0 ? r.rental_rates[0].rating : 0) || 0
+          rating: r.rate || r.rating || (r.rental_rates && r.rental_rates.length > 0 ? r.rental_rates[0].rating : 0) || 0,
+          comment: r.comment || "",
+          rental_rates: r.rental_rates || [],
+          created_at: r.created_at,
+          raw: r
         };
       }));
     } catch (err) {
@@ -158,6 +206,7 @@ export default function RentalsSection() {
     const matchesSearch = !searchQuery ||
       rental.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rental.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      rental.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rental.order_number?.toLowerCase().includes(searchQuery.toLowerCase());
     const rentalStatus = String(rental.status || "").toLowerCase();
     const filterLower = statusFilter.toLowerCase();
@@ -247,7 +296,7 @@ export default function RentalsSection() {
           <div className="relative w-full sm:w-96">
             <input
               type="text"
-              placeholder="Search by customer, vehicle, or order #"
+              placeholder="Search by customer, vehicle, company, or order #"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
@@ -299,21 +348,30 @@ export default function RentalsSection() {
                     </tr>
                   ) : (
                     paginatedRentals.map((rental) => (
-                      <tr key={rental.id} className="hover:bg-gray-50/50 transition-colors">
+                      <tr 
+                        key={rental.id} 
+                        onClick={() => setSelectedRental(rental)}
+                        className="hover:bg-primary-50/20 transition-colors cursor-pointer group"
+                      >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                               <img src={rental.avatar} alt={rental.customer} className="w-full h-full object-cover" />
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-gray-900">{rental.customer}</p>
+                              <p className="text-sm font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{rental.customer}</p>
                               <p className="text-xs text-gray-500">{rental.order_number || `ID: ${rental.id}`}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <p className="text-sm font-medium text-gray-900">{rental.vehicle}</p>
-                          <p className="text-xs text-gray-500">{rental.company}</p>
+                          <p className="text-sm font-semibold text-gray-900">{rental.vehicle}</p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Building2 size={13} className="text-primary-600 shrink-0" />
+                            <span className="text-xs font-medium text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100/70 inline-flex items-center">
+                              {rental.company}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-5 py-4">
                           <span className="text-sm font-medium text-gray-950 bg-gray-100/80 px-2.5 py-1 rounded-lg border border-gray-200/50">{rental.country || "Unknown"}</span>
@@ -341,13 +399,22 @@ export default function RentalsSection() {
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <button 
-                            onClick={() => handleDelete(rental.id)}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
-                            title="Delete Rental"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              onClick={() => setSelectedRental(rental)}
+                              className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-colors cursor-pointer"
+                              title="View Full Booking Details"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(rental.id)}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                              title="Delete Rental"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -374,6 +441,14 @@ export default function RentalsSection() {
           </div>
         )}
       </div>
+
+      {/* Booking Details Modal */}
+      <BookingDetailsModal
+        isOpen={!!selectedRental}
+        onClose={() => setSelectedRental(null)}
+        rental={selectedRental}
+        onDelete={handleDelete}
+      />
     </SectionLayout>
   );
 }

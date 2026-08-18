@@ -160,12 +160,23 @@ export default function BookingsCalendarSection() {
       const list = Array.isArray(res?.data) ? res.data : (res?.rentals || res?.data?.rentals || (Array.isArray(res) ? res : []));
       const formatted = list.map((r: any) => {
         const type = r.order_status === 2 || r.order_status === 7 ? "completed" : r.order_status === 3 || r.order_status === 5 ? "cancelled" : "pending";
+        const companyName = 
+          r.supplier?.company || 
+          r.supplier?.name || 
+          r.vehicle?.supplier?.company || 
+          r.vehicle?.supplier?.name || 
+          r.vehicle?.supplierUser?.company || 
+          r.vehicle?.supplierUser?.name || 
+          r.vehicle?.supplier_user?.company || 
+          r.vehicle?.supplier_user?.name || 
+          "Company";
+
         return {
           id: r.order_number || `BK-${r.id}`,
           vehicle: r.vehicle?.name || "Vehicle",
           category: r.vehicle?.category?.name || r.vehicle?.category || "Economy",
           grade: r.vehicle?.specifications?.[0]?.value || "Standard",
-          companyName: r.supplier?.name || "Company",
+          companyName: companyName,
           country: getNormalizedCountry(r.vehicle?.branch?.country),
           countryName: getNormalizedCountry(r.vehicle?.branch?.country),
           duration: `${r.number_of_days || 1} Days`,
