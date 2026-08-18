@@ -88,6 +88,68 @@ XML;
         return $this->xmlToArray($response);
     }
 
+    /**
+     * Fetch terms and conditions (policy).
+     */
+    public function getPolicy(string $rentalLocationCode, string $classCode = 'ECAH'): array
+    {
+        $payload = <<<XML
+    <RentalLocationID>{$rentalLocationCode}</RentalLocationID>
+    <ClassCode>{$classCode}</ClassCode>
+XML;
+
+        $xml = $this->getBaseXml('REQPOL', 'Request Policy', $payload);
+        $response = $this->sendRequest($xml);
+
+        if (!$response) {
+            return [];
+        }
+
+        $messageId = (string) ($response->Message->MessageID ?? '');
+        if ($messageId === 'RSPERR') {
+            Log::info("Northcar API: Policy request error", [
+                'description' => (string) ($response->Message->MessageDescription ?? '')
+            ]);
+            return [];
+        }
+
+        return $this->xmlToArray($response);
+    }
+
+    /**
+     * Fetch extras.
+     */
+    public function getExtras(
+        string $pickupLocationCode,
+        string $returnLocationCode,
+        string $pickupDateTime,
+        string $returnDateTime
+    ): array {
+        $payload = <<<XML
+    <RentalLocationID>{$pickupLocationCode}</RentalLocationID> 
+    <ReturnLocationID>{$returnLocationCode}</ReturnLocationID> 
+    <PickupDateTime>{$pickupDateTime}</PickupDateTime> 
+    <ReturnDateTime>{$returnDateTime}</ReturnDateTime> 
+XML;
+
+        $xml = $this->getBaseXml('REQEXT', '', $payload);
+        $response = $this->sendRequest($xml);
+
+        if (!$response) {
+            return [];
+        }
+
+        $messageId = (string) ($response->Message->MessageID ?? '');
+        if ($messageId === 'RSPERR') {
+            Log::info("Northcar API: Extras request error", [
+                'description' => (string) ($response->Message->MessageDescription ?? '')
+            ]);
+            return [];
+        }
+
+        return $this->xmlToArray($response);
+    }
+
     public function setTimeout(int $seconds): void
     {
         $this->requestTimeout = max(1, $seconds);

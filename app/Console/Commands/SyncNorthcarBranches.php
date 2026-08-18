@@ -220,6 +220,66 @@ class SyncNorthcarBranches extends Command
                 $this->warn("Deleted orphaned branch: {$ob->name}");
             }
 
+            // Fetch and save Policies (T&C) for each country
+            $this->info('Fetching policies for unique countries...');
+            $countryToStation = [];
+            foreach ($upsertData as $data) {
+                $country = $data['country'] ?? 'Canada'; // Northcar default
+                if (!isset($countryToStation[$country])) {
+                    $countryToStation[$country] = $data['station_id'];
+                }
+            }
+
+            foreach ($countryToStation as $country => $stationId) {
+                $this->info("Fetching policies for {$country} using branch {$stationId}...");
+                $policyData = $service->getPolicy($stationId);
+                
+                if (!empty($policyData['Policy'])) {
+                    $policies = isset($policyData['Policy']['PolicyType']) 
+                        ? [$policyData['Policy']] 
+                        : $policyData['Policy'];
+
+                    $policiesAdded = 0;
+                    foreach ($policies as $policy) {
+                        $categoryType = $policy['PolicyType'] ?? 'General';
+                        $categoryName = is_array($categoryType) ? 'General' : (string) $categoryType;
+                        
+                        $policyText = $policy['PolicyText'] ?? '';
+                        $description = is_array($policyText) ? '' : (string) $policyText;
+                        
+                        $description = strip_tags($description);
+                        $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $description = trim(preg_replace("/\n+/", "\n", $description));
+
+                        if (!empty($description)) {
+                            // Check if exists or update
+                            $term = \App\Models\RentalTerms::updateOrCreate(
+                                [
+                                    'title' => $categoryName,
+                                    'created_by' => $supplierUser->id,
+                                    'country' => $country,
+                                ],
+                                [
+                                    'description' => $description,
+                                    'status' => 'approved',
+                                ]
+                            );
+
+                            \App\Models\SupplierRentalTerm::firstOrCreate([
+                                'rental_term_id' => $term->id,
+                                'supplier_id' => $supplierUser->id,
+                                'country' => $country,
+                            ]);
+
+                            $policiesAdded++;
+                        }
+                    }
+                    $this->info("Successfully saved {$policiesAdded} policies for {$country}.");
+                } else {
+                    $this->warn("No policies returned for {$country}.");
+                }
+            }
+
             $duration = round(microtime(true) - $startTime, 2);
 
             $this->newLine();
