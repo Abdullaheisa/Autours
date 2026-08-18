@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Globe2, Landmark, Plane, Store, MapPin, Car } from 'lucide-react';
 import { CLIENT_API_BASE, SERVER_API_BASE } from '@/config/api';
 
 interface StatData {
@@ -70,68 +69,62 @@ export default function StatsSection() {
       count: stats.countries || DEFAULT_STATS.countries,
       suffix: '+',
       title: 'Countries Served',
-      icon: Globe2,
     },
     {
       id: 'cities',
       count: stats.cities || DEFAULT_STATS.cities,
       suffix: '+',
       title: 'Cities Covered',
-      icon: Landmark,
     },
     {
       id: 'airports',
       count: stats.airports || DEFAULT_STATS.airports,
       suffix: '+',
       title: 'Available Airports',
-      icon: Plane,
     },
     {
       id: 'suppliers',
       count: stats.suppliers || DEFAULT_STATS.suppliers,
       suffix: '+',
       title: 'Rental Companies',
-      icon: Store,
     },
     {
       id: 'branches',
       count: stats.branches || DEFAULT_STATS.branches,
       suffix: '+',
       title: 'Global Branches',
-      icon: MapPin,
     },
     {
       id: 'cars',
       count: stats.cars || DEFAULT_STATS.cars,
       suffix: '+',
       title: 'Total Cars Available',
-      icon: Car,
     },
   ];
 
   return (
     <section 
       ref={containerRef}
-      className="relative py-16 sm:py-24 overflow-hidden bg-slate-950 border-y border-white/10"
+      className="relative py-14 sm:py-20 overflow-hidden bg-slate-950 border-y border-white/10"
     >
       {/* Background Banner Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-100 group-hover:scale-105"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-100"
         style={{ backgroundImage: "url('/img/Banner.webp')" }}
       />
 
-      {/* Balanced Overlay (slightly darker for crisp overall contrast, but not too dark) */}
+      {/* Balanced Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/55" />
 
-      <div className="relative z-10 max-w-7xl xl:max-w-[94rem] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-14">
+        <div className="text-center max-w-3xl mx-auto mb-9 md:mb-12">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400/25 text-amber-300 text-[11px] md:text-xs font-black tracking-wider uppercase mb-3 border border-amber-400/40 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400/25 text-amber-300 text-[11px] md:text-xs font-black tracking-wider uppercase mb-2.5 border border-amber-400/40 shadow-sm"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             <span>GLOBAL CAR RENTAL NETWORK</span>
@@ -141,7 +134,7 @@ export default function StatsSection() {
             initial={{ opacity: 0, y: 14 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.08 }}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight mb-3 drop-shadow-[0_3px_8px_rgba(0,0,0,0.9)]"
+            className="text-xl sm:text-2xl md:text-3xl lg:text-[2.25rem] font-extrabold text-white tracking-tight leading-snug mb-2.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
           >
             Worldwide Car Rental Network &amp; Global Coverage
           </motion.h2>
@@ -156,55 +149,49 @@ export default function StatsSection() {
           </motion.p>
         </div>
 
-        {/* 6 Frosted Glass Cards (Lighter & Airy) */}
+        {/* 6 Clean, Balanced Cards */}
         <div className="relative">
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex md:grid md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0"
+            className="flex md:grid md:grid-cols-6 gap-3 sm:gap-4 justify-center items-stretch overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {statItems.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 25 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.5, delay: 0.05 * idx, ease: [0.16, 1, 0.3, 1] }}
-                  className="snap-center shrink-0 w-[72vw] sm:w-[220px] md:w-auto bg-white/[0.10] hover:bg-white/[0.18] backdrop-blur-[2px] border border-white/25 hover:border-amber-400/60 p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-lg shadow-black/20 hover:shadow-2xl transition-all duration-300 flex flex-col items-center justify-between text-center group hover:-translate-y-1.5"
-                >
-                  {/* Top Yellow Icon Badge */}
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-400 text-gray-950 flex items-center justify-center shrink-0 shadow-md shadow-amber-400/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 mb-3">
-                    <Icon size={22} className="stroke-[2.5]" />
+            {statItems.map((item, idx) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: 0.04 * idx, ease: [0.16, 1, 0.3, 1] }}
+                className="snap-center shrink-0 w-[145px] sm:w-[160px] md:w-auto flex flex-col items-center justify-between group"
+              >
+                {/* Glass Card Box */}
+                <div className="w-full flex-1 bg-white/[0.10] hover:bg-white/[0.18] backdrop-blur-[2px] border border-white/25 hover:border-amber-400/60 py-5 px-3 sm:py-6 sm:px-4 rounded-2xl sm:rounded-3xl shadow-lg shadow-black/20 hover:shadow-2xl transition-all duration-300 flex flex-col items-center justify-center text-center group-hover:-translate-y-1 min-h-[115px] sm:min-h-[125px]">
+                  {/* Number & Suffix */}
+                  <div className="flex items-baseline justify-center text-3xl sm:text-4xl lg:text-[2.6rem] font-black text-white tracking-tight leading-none mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                    <AnimatedCounter value={item.count} start={isInView} />
+                    <span className="text-amber-400 font-extrabold text-lg sm:text-xl lg:text-2xl ml-1 align-top drop-shadow-sm">
+                      {item.suffix}
+                    </span>
                   </div>
 
-                  {/* Number & Title */}
-                  <div className="min-w-0 flex-1 flex flex-col items-center justify-center">
-                    <div className="flex items-baseline justify-center text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-black text-white tracking-tight leading-none mb-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                      <AnimatedCounter value={item.count} start={isInView} />
-                      <span className="text-amber-400 font-extrabold text-lg sm:text-xl ml-1 align-top drop-shadow-sm">
-                        {item.suffix}
-                      </span>
-                    </div>
+                  {/* Title / Label */}
+                  <h3 className="text-xs sm:text-[13px] md:text-sm font-bold text-gray-100 group-hover:text-white leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] line-clamp-2">
+                    {item.title}
+                  </h3>
+                </div>
 
-                    <h3 className="text-xs sm:text-[13px] font-bold text-gray-100 group-hover:text-white leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-                      {item.title}
-                    </h3>
-                  </div>
-
-                  {/* Animated Yellow / Orange Underline with Flowing Light Beam ("كأنه ماشي") */}
-                  <div className="relative w-full h-1 sm:h-1.5 bg-white/15 rounded-full overflow-hidden mt-4 group-hover:shadow-[0_0_12px_rgba(251,191,36,0.9)] transition-all duration-500">
-                    <div className="w-full h-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 rounded-full transition-transform duration-500 group-hover:scale-x-105" />
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-                  </div>
-                </motion.div>
-              );
-            })}
+                {/* Yellow / Orange Line OUTSIDE the Box */}
+                <div className="relative w-full h-1 bg-white/15 rounded-full overflow-hidden mt-2.5 group-hover:shadow-[0_0_12px_rgba(251,191,36,0.95)] transition-all duration-500 shrink-0">
+                  <div className="w-full h-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 rounded-full transition-transform duration-500 group-hover:scale-x-105" />
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                </div>
+              </motion.div>
+            ))}
           </div>
 
           {/* Mobile Pagination Dots */}
-          <div className="flex md:hidden justify-center items-center gap-1.5 mt-3">
+          <div className="flex md:hidden justify-center items-center gap-1.5 mt-3.5">
             {statItems.map((_, i) => (
               <div
                 key={i}

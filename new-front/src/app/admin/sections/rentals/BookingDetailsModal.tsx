@@ -8,7 +8,116 @@ import {
 } from "lucide-react";
 import { getVehicleImageUrl, getLogoUrl } from "@/utils/getImageUrl";
 import { axiosClient } from "@/services/api/axiosClient";
+import { worldCountries } from "@/data/worldCountries";
 import toast from "react-hot-toast";
+
+// Sort country codes by descending length (e.g. +1-242, +971, +20, +1) so +971 matches before +9, +966 before +96
+const SORTED_DIAL_CODES = [...worldCountries].sort((a, b) => b.code.length - a.code.length);
+
+function getCountryDialCode(countryNameOrCode?: string): string {
+  if (!countryNameOrCode || countryNameOrCode === "—") return "";
+  const cleaned = countryNameOrCode.trim().toLowerCase();
+  
+  if (cleaned.includes("emirates") || cleaned === "uae" || cleaned === "ae") return "+971";
+  if (cleaned.includes("saudi") || cleaned === "ksa" || cleaned === "sa") return "+966";
+  if (cleaned.includes("egypt") || cleaned === "eg") return "+20";
+  if (cleaned.includes("morocco") || cleaned === "ma") return "+212";
+  if (cleaned.includes("kuwait") || cleaned === "kw") return "+965";
+  if (cleaned.includes("bahrain") || cleaned === "bh") return "+973";
+  if (cleaned.includes("qatar") || cleaned === "qa") return "+974";
+  if (cleaned.includes("oman") || cleaned === "om") return "+968";
+  if (cleaned.includes("jordan") || cleaned === "jo") return "+962";
+  if (cleaned.includes("turkey") || cleaned.includes("türkiye") || cleaned === "tr") return "+90";
+  if (cleaned.includes("bangladesh") || cleaned === "bd") return "+880";
+  if (cleaned.includes("united states") || cleaned === "usa" || cleaned === "us") return "+1";
+  if (cleaned.includes("united kingdom") || cleaned === "uk" || cleaned === "gb") return "+44";
+  if (cleaned.includes("germany") || cleaned === "de") return "+49";
+  if (cleaned.includes("france") || cleaned === "fr") return "+33";
+  if (cleaned.includes("spain") || cleaned === "es") return "+34";
+  if (cleaned.includes("italy") || cleaned === "it") return "+39";
+  if (cleaned.includes("pakistan") || cleaned === "pk") return "+92";
+  if (cleaned.includes("india") || cleaned === "in") return "+91";
+
+  const found = worldCountries.find(
+    c => c.name.toLowerCase() === cleaned ||
+         c.iso.toLowerCase() === cleaned ||
+         c.code.toLowerCase() === cleaned
+  );
+  return found ? found.code : "";
+}
+
+function parsePhoneAndCode(rawPhone?: string, fallbackCountry?: string): { dialCode: string; cleanNumber: string; fullPhone: string } {
+  if (!rawPhone || rawPhone === "—") {
+    const dialCode = getCountryDialCode(fallbackCountry);
+    return { dialCode, cleanNumber: "—", fullPhone: "" };
+  }
+
+  const trimmed = rawPhone.trim();
+
+  // 1. If starts with + (exact code chosen at signup / checkout e.g. +20010123456788 or +966501234567)
+  if (trimmed.startsWith("+")) {
+    for (const c of SORTED_DIAL_CODES) {
+      const codeDigits = c.code.replace(/[^0-9]/g, "");
+      const fullCode = `+${codeDigits}`;
+      if (trimmed.startsWith(fullCode)) {
+        const remaining = trimmed.substring(fullCode.length).trim();
+        return {
+          dialCode: fullCode,
+          cleanNumber: remaining || trimmed,
+          fullPhone: trimmed
+        };
+      }
+    }
+    const match = trimmed.match(/^\+(\d{1,4})(.*)$/);
+    if (match) {
+      return {
+        dialCode: `+${match[1]}`,
+        cleanNumber: match[2].trim() || trimmed,
+        fullPhone: trimmed
+      };
+    }
+  }
+
+  // 2. If starts with 00 (e.g. 0020010123456788)
+  if (trimmed.startsWith("00")) {
+    const without00 = trimmed.substring(2);
+    for (const c of SORTED_DIAL_CODES) {
+      const codeDigits = c.code.replace(/[^0-9]/g, "");
+      if (without00.startsWith(codeDigits)) {
+        const remaining = without00.substring(codeDigits.length).trim();
+        return {
+          dialCode: `+${codeDigits}`,
+          cleanNumber: remaining || without00,
+          fullPhone: `+${without00}`
+        };
+      }
+    }
+  }
+
+  // 3. If starts with dial code digits directly (e.g. 20010123456788 or 212660186350)
+  for (const c of SORTED_DIAL_CODES) {
+    const codeDigits = c.code.replace(/[^0-9]/g, "");
+    if (codeDigits.length >= 2 && trimmed.startsWith(codeDigits)) {
+      const remaining = trimmed.substring(codeDigits.length).trim();
+      if (remaining.length >= 7) {
+        return {
+          dialCode: `+${codeDigits}`,
+          cleanNumber: remaining,
+          fullPhone: `+${trimmed}`
+        };
+      }
+    }
+  }
+
+  // 4. Fallback to registered country's code
+  const fallbackDialCode = getCountryDialCode(fallbackCountry);
+  const cleanPhone = trimmed.replace(/^0+/, "");
+  return {
+    dialCode: fallbackDialCode,
+    cleanNumber: trimmed,
+    fullPhone: fallbackDialCode ? `${fallbackDialCode}${cleanPhone}` : trimmed
+  };
+}
 
 interface BookingDetailsModalProps {
   isOpen: boolean;
@@ -124,6 +233,12 @@ export default function BookingDetailsModal({
   const vehiclePhotoUrl = rental.vehicle_photo ? getVehicleImageUrl(rental.vehicle_photo) : "";
   const supplierLogoUrl = rental.supplier_logo ? getLogoUrl(rental.supplier_logo) : "";
 
+  const customerCountry = rental.customer_country || rental.country || rental.raw?.customer?.country || "";
+  const customerParsed = parsePhoneAndCode(rental.customer_phone, customerCountry);
+
+  const supplierCountry = rental.supplier_country || rental.vehicle_branch_country || rental.country || rental.raw?.supplier?.country || rental.raw?.vehicle?.supplierUser?.country || "";
+  const supplierParsed = parsePhoneAndCode(rental.supplier_phone, supplierCountry);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-hidden">
       {/* Backdrop */}
@@ -235,25 +350,32 @@ export default function BookingDetailsModal({
                   )}
                 </div>
 
-                {/* Phone */}
+                {/* Phone with Exact Country Code Badge */}
                 <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-200/70">
                   <div className="flex items-center gap-2 min-w-0 text-gray-600">
                     <Phone size={14} className="text-gray-400 shrink-0" />
-                    <span className="text-gray-900 font-medium truncate">{rental.customer_phone || "—"}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {customerParsed.dialCode && (
+                        <span className="px-1.5 py-0.5 bg-amber-50 text-amber-800 font-bold rounded-md text-[10px] sm:text-[11px] border border-amber-200 shrink-0" title={`Country Code: ${customerParsed.dialCode}`}>
+                          {customerParsed.dialCode}
+                        </span>
+                      )}
+                      <span className="text-gray-900 font-medium truncate">{customerParsed.cleanNumber || rental.customer_phone || "—"}</span>
+                    </div>
                   </div>
                   {rental.customer_phone && rental.customer_phone !== "—" && (
                     <div className="flex items-center gap-1 shrink-0 ml-2">
                       <button 
-                        onClick={() => handleCopy(rental.customer_phone, "Phone")}
+                        onClick={() => handleCopy(customerParsed.fullPhone || rental.customer_phone, "Phone")}
                         className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors"
-                        title="Copy Phone"
+                        title={`Copy Phone (${customerParsed.fullPhone || rental.customer_phone})`}
                       >
                         {copiedField === "Phone" ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
                       </button>
                       <a 
-                        href={`tel:${rental.customer_phone}`}
+                        href={`tel:${customerParsed.fullPhone || rental.customer_phone}`}
                         className="p-1 text-primary-600 hover:text-primary-700 rounded transition-colors"
-                        title="Call Customer"
+                        title={`Call (${customerParsed.fullPhone || rental.customer_phone})`}
                       >
                         <ExternalLink size={13} />
                       </a>
@@ -322,17 +444,24 @@ export default function BookingDetailsModal({
                   )}
                 </div>
 
-                {/* Supplier Phone */}
+                {/* Supplier Phone with Exact Country Code Badge */}
                 <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-200/70">
                   <div className="flex items-center gap-2 min-w-0 text-gray-600">
                     <Phone size={14} className="text-gray-400 shrink-0" />
-                    <span className="text-gray-900 font-medium truncate">{rental.supplier_phone || "—"}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {supplierParsed.dialCode && (
+                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-800 font-bold rounded-md text-[10px] sm:text-[11px] border border-blue-200 shrink-0" title={`Country Code: ${supplierParsed.dialCode}`}>
+                          {supplierParsed.dialCode}
+                        </span>
+                      )}
+                      <span className="text-gray-900 font-medium truncate">{supplierParsed.cleanNumber || rental.supplier_phone || "—"}</span>
+                    </div>
                   </div>
                   {rental.supplier_phone && rental.supplier_phone !== "—" && (
                     <button 
-                      onClick={() => handleCopy(rental.supplier_phone, "Supplier Phone")}
+                      onClick={() => handleCopy(supplierParsed.fullPhone || rental.supplier_phone, "Supplier Phone")}
                       className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors shrink-0 ml-2"
-                      title="Copy Supplier Phone"
+                      title={`Copy Supplier Phone (${supplierParsed.fullPhone || rental.supplier_phone})`}
                     >
                       {copiedField === "Supplier Phone" ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
                     </button>
