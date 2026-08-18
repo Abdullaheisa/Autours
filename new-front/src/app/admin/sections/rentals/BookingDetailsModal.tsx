@@ -14,17 +14,37 @@ interface BookingDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   rental: any | null;
-  onDelete?: (id: number) => void;
 }
 
 export default function BookingDetailsModal({
   isOpen,
   onClose,
-  rental,
-  onDelete
+  rental
 }: BookingDetailsModalProps) {
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
   const [isDownloading, setIsDownloading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onClose();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalBodyOverflow || "unset";
+        document.documentElement.style.overflow = originalHtmlOverflow || "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
 
   if (!isOpen || !rental) return null;
 
@@ -167,7 +187,7 @@ export default function BookingDetailsModal({
               <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-gray-200/60">
                 <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
                   <User size={17} className="text-primary-600" />
-                  <span>Customer Details (بيانات العميل)</span>
+                  <span>Customer Details</span>
                 </div>
                 <span className="text-[11px] font-semibold text-gray-400 bg-white px-2 py-0.5 rounded-lg border border-gray-200">
                   ID: #{rental.customer_id || rental.raw?.customer_id || "—"}
@@ -257,7 +277,7 @@ export default function BookingDetailsModal({
               <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-gray-200/60">
                 <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
                   <Building2 size={17} className="text-blue-600" />
-                  <span>Company / Supplier (بيانات الشركة المحجوز منها)</span>
+                  <span>Supplier / Company</span>
                 </div>
                 <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
                   Supplier
@@ -337,7 +357,7 @@ export default function BookingDetailsModal({
             <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-gray-200/60">
               <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
                 <Car size={17} className="text-primary-600" />
-                <span>Vehicle &amp; Rental Schedule (بيانات السيارة ومواعيد الحجز)</span>
+                <span>Vehicle &amp; Rental Schedule</span>
               </div>
               {rental.vehicle_category && (
                 <span className="text-[11px] font-bold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-lg border border-primary-100">
@@ -370,7 +390,7 @@ export default function BookingDetailsModal({
                 <div className="bg-white p-3.5 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-1.5 text-gray-500 font-semibold mb-1">
                     <Calendar size={13} className="text-emerald-600" />
-                    <span>Pick-up (تاريخ الاستلام)</span>
+                    <span>Pick-up Date &amp; Time</span>
                   </div>
                   <p className="text-sm font-bold text-gray-900">{rental.start_date || "—"}</p>
                   {rental.start_time && (
@@ -384,7 +404,7 @@ export default function BookingDetailsModal({
                 <div className="bg-white p-3.5 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-1.5 text-gray-500 font-semibold mb-1">
                     <Calendar size={13} className="text-red-600" />
-                    <span>Drop-off (تاريخ التسليم)</span>
+                    <span>Drop-off Date &amp; Time</span>
                   </div>
                   <p className="text-sm font-bold text-gray-900">{rental.end_date || "—"}</p>
                   {rental.end_time && (
@@ -398,7 +418,7 @@ export default function BookingDetailsModal({
                 <div className="bg-white p-3.5 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-1.5 text-gray-500 font-semibold mb-1">
                     <Clock size={13} className="text-blue-600" />
-                    <span>Duration (المدة)</span>
+                    <span>Duration</span>
                   </div>
                   <p className="text-sm font-bold text-gray-900">{rental.duration || "—"}</p>
                 </div>
@@ -407,7 +427,7 @@ export default function BookingDetailsModal({
                 <div className="bg-white p-3.5 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-1.5 text-gray-500 font-semibold mb-1">
                     <MapPin size={13} className="text-amber-600" />
-                    <span>Location / Branch (الفرع / الموقع)</span>
+                    <span>Location / Branch</span>
                   </div>
                   <p className="text-sm font-bold text-gray-900 truncate" title={rental.vehicle_branch}>
                     {rental.vehicle_branch || rental.country || "—"}
@@ -422,7 +442,7 @@ export default function BookingDetailsModal({
             <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-gray-200/60">
               <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
                 <DollarSign size={17} className="text-emerald-600" />
-                <span>Financial &amp; Payment Details (التفاصيل المالية والدفع)</span>
+                <span>Financial &amp; Payment Details</span>
               </div>
               <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200">
                 Total: {rental.amount}
@@ -465,7 +485,7 @@ export default function BookingDetailsModal({
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-amber-200/50">
                 <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
                   <Star size={16} className="text-amber-500 fill-amber-500" />
-                  <span>Customer Review &amp; Rating (التقييم والملاحظات)</span>
+                  <span>Customer Review &amp; Rating</span>
                 </div>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }, (_, i) => (
@@ -490,41 +510,22 @@ export default function BookingDetailsModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/80 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            {onDelete && (
-              <button
-                onClick={() => {
-                  if (confirm("Are you sure you want to delete this rental?")) {
-                    onDelete(rental.id);
-                    onClose();
-                  }
-                }}
-                className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors cursor-pointer"
-              >
-                <Trash2 size={15} />
-                <span>Delete Rental</span>
-              </button>
-            )}
-          </div>
+        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/80 flex items-center justify-end gap-2.5">
+          <button
+            onClick={handleDownloadInvoice}
+            disabled={isDownloading}
+            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+          >
+            <Download size={15} />
+            <span>{isDownloading ? "Downloading..." : "Download Invoice PDF"}</span>
+          </button>
 
-          <div className="flex items-center gap-2.5 ml-auto">
-            <button
-              onClick={handleDownloadInvoice}
-              disabled={isDownloading}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors shadow-xs cursor-pointer disabled:opacity-50"
-            >
-              <Download size={15} />
-              <span>{isDownloading ? "Downloading..." : "Download Invoice PDF"}</span>
-            </button>
-
-            <button
-              onClick={onClose}
-              className="px-5 py-2.5 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors shadow-sm shadow-primary-200 cursor-pointer"
-            >
-              Close
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors shadow-sm shadow-primary-200 cursor-pointer"
+          >
+            Close
+          </button>
         </div>
 
       </div>

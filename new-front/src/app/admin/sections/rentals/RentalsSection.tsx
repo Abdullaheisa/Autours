@@ -447,7 +447,6 @@ export default function RentalsSection() {
         isOpen={!!selectedRental}
         onClose={() => setSelectedRental(null)}
         rental={selectedRental}
-        onDelete={handleDelete}
       />
     </SectionLayout>
   );
