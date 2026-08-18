@@ -71,11 +71,32 @@ class GreenMotionApiService
     private function parseResponse(string $xmlContent): array
     {
         try {
+            // Clean the XML response
+            $xmlContent = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $xmlContent);
+            
+            // Decode HTML entities (like &bull;, &ldquo;) to UTF-8 but keep XML entities intact
+            $xmlContent = preg_replace_callback('/&([a-zA-Z0-9]+);/', function ($matches) {
+                $xml_entities = ['lt', 'gt', 'amp', 'quot', 'apos'];
+                if (in_array($matches[1], $xml_entities)) {
+                    return $matches[0];
+                }
+                return html_entity_decode($matches[0], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            }, $xmlContent);
+
+            // Escape any remaining bare ampersands
+            $xmlContent = preg_replace('/&(?!lt;|gt;|amp;|quot;|apos;|#x?[0-9a-fA-F]+;)/', '&amp;', $xmlContent);
+
             // Suppress errors and load XML
+            libxml_use_internal_errors(true);
             $xml = @simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NOCDATA);
             
             if ($xml === false) {
-                Log::error('Green Motion API: Failed to parse XML response', ['xml' => $xmlContent]);
+                $errors = libxml_get_errors();
+                Log::error('Green Motion API: Failed to parse XML response', [
+                    'errors' => $errors,
+                    'xml' => $xmlContent
+                ]);
+                libxml_clear_errors();
                 return [];
             }
 
@@ -134,6 +155,29 @@ class GreenMotionApiService
         }
         
         return $serviceAreas;
+    }
+
+    /**
+     * Fetch terms and conditions for a specific country.
+     */
+    public function getTermsAndConditions(int $countryId, string $language = 'en'): array
+    {
+        $params = [
+            'country_id' => $countryId,
+            'language' => $language,
+            'plaintext' => 'n',
+        ];
+
+        $response = $this->sendRequest('getTermsAndConditions', $params);
+        
+        $categories = $response['category'] ?? [];
+        
+        // Normalize to always be a list of arrays
+        if (isset($categories['@attributes']) || isset($categories['condition']) || isset($categories['plaintext'])) {
+            $categories = [$categories];
+        }
+        
+        return $categories;
     }
 
     /**

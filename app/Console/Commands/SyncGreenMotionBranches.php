@@ -59,6 +59,13 @@ class SyncGreenMotionBranches extends Command
         $created = 0;
         $updated = 0;
 
+        if (!$this->option('dry-run')) {
+            $this->info('Clearing existing terms for Green Motion...');
+            $existingTermIds = \App\Models\SupplierRentalTerm::where('supplier_id', $supplierUserId)->pluck('rental_term_id');
+            \App\Models\SupplierRentalTerm::where('supplier_id', $supplierUserId)->delete();
+            \App\Models\RentalTerms::whereIn('id', $existingTermIds)->delete();
+        }
+
         foreach ($countries as $country) {
             $countryId = (int) ($country['countryID'] ?? 0);
             $countryName = (string) ($country['countryName'] ?? '');
@@ -124,6 +131,50 @@ class SyncGreenMotionBranches extends Command
                 } else {
                     $updated++;
                 }
+            }
+
+            if (!$this->option('dry-run')) {
+                $this->info("Fetching policies for {$countryName}...");
+                $termsCategories = $service->getTermsAndConditions($countryId);
+                $policiesAdded = 0;
+
+                foreach ($termsCategories as $category) {
+                    $categoryName = (string) ($category['@attributes']['name'] ?? 'General');
+                    
+                    // A category can have multiple conditions
+                    $conditions = $category['plaintext'] ?? $category['condition'] ?? [];
+                    if (is_string($conditions)) {
+                        $conditions = [$conditions];
+                    } elseif (is_array($conditions) && isset($conditions[0])) {
+                        // already an array of strings
+                    } elseif (is_array($conditions)) {
+                        $conditions = [];
+                    }
+
+                    $description = implode("\n", array_map('trim', $conditions));
+                    $description = str_ireplace(['<br>', '<br />', '<br/>', '</p>', '</div>'], "\n", $description);
+                    $description = strip_tags($description);
+                    $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $description = trim(preg_replace("/\n+/", "\n", $description));
+
+                    if (!empty($description)) {
+                        $term = \App\Models\RentalTerms::create([
+                            'title' => $categoryName,
+                            'description' => $description,
+                            'status' => 'approved',
+                            'created_by' => $supplierUserId,
+                            'country' => $resolvedCountry ?? $countryName,
+                        ]);
+
+                        \App\Models\SupplierRentalTerm::create([
+                            'rental_term_id' => $term->id,
+                            'supplier_id' => $supplierUserId,
+                            'country' => $resolvedCountry ?? $countryName,
+                        ]);
+                        $policiesAdded++;
+                    }
+                }
+                $this->info("Successfully saved {$policiesAdded} policies for {$countryName}.");
             }
         }
 
