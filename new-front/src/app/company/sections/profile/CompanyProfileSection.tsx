@@ -203,12 +203,7 @@ export default function CompanyProfileSection() {
       <PageHeader
         title="Company Profile"
         description="Manage your personal profile, company details, logo, and default pricing settings."
-        icon={Building}
-        breadcrumbs={[
-          { label: "Dashboard", href: "/company" },
-          { label: "Settings", href: "/company/settings" },
-          { label: "Profile" }
-        ]}
+        showAction={false}
       />
 
       {isLoading ? (
