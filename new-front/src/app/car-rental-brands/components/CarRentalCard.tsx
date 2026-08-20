@@ -39,6 +39,7 @@ export default function CarRentalCard({ href, title, logo, countryCode, id }: Ca
               alt={`${title} logo`}
               fill
               className="object-contain"
+              unoptimized
               onError={() => setImgSrc('/img/logo.png')}
             />
           </div>

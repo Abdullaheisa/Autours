@@ -98,7 +98,7 @@ export default function CompanyHeader({ title = "Dashboard", onMenuClick }: Comp
             </div>
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/20 shrink-0 relative bg-gray-50 flex items-center justify-center border border-gray-100">
               {avatarUrl ? (
-                <Image src={avatarUrl} alt={user?.name || "Company"} width={36} height={36} className="w-full h-full object-cover" />
+                <Image src={avatarUrl} alt={user?.name || "Company"} width={36} height={36} className="w-full h-full object-cover" unoptimized />
               ) : (
                 <div className="w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold text-xs sm:text-sm">
                   {initials}

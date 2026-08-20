@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { updateUser } from "@/store/slices/authSlice";
+import { normalizeAuthRole } from "@/utils/auth";
 import { User, Mail, Phone, MapPin, Camera, Save, Building, Globe, Languages, Sliders, Plus, Trash2, Tag, Sparkles, Calendar } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -16,6 +20,9 @@ interface CustomPriceTierTemplate {
 }
 
 export default function CompanyProfileSection() {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const [formData, setFormData] = useState({
     userName: "",
     userEmail: "",
@@ -156,6 +163,31 @@ export default function CompanyProfileSection() {
       localStorage.setItem('company_default_pricing_mode', defaultPricingMode);
       localStorage.setItem('company_default_custom_tiers', JSON.stringify(defaultCustomPriceTiers));
 
+      // Re-fetch fresh user data from server and synchronize to Redux & localStorage
+      try {
+        const freshUserRes: any = await authApi.getUser();
+        const freshData = freshUserRes?.data || freshUserRes || {};
+        if (freshData) {
+          if (freshData.logo) {
+            setLogo(freshData.logo);
+          }
+          setLogoFile(null);
+          dispatch(updateUser({
+            id: freshData.id?.toString() || user?.id || '1',
+            name: freshData.user_name || freshData.name || formData.userName,
+            email: freshData.email || formData.userEmail,
+            role: normalizeAuthRole(freshData.role || 'supplier'),
+            status: freshData.role || 'supplier',
+            avatar: freshData.logo || freshData.company_logo || freshData.photo || freshData.avatar || undefined,
+            logo: freshData.logo || freshData.company_logo || freshData.photo || freshData.avatar || undefined,
+            phone_num: freshData.phone_num || formData.userPhone,
+            country: freshData.country || formData.country,
+          }));
+        }
+      } catch (syncErr) {
+        console.warn("Failed to sync fresh user data to Redux:", syncErr);
+      }
+
       toast.success("Profile and Company Pricing Settings updated successfully!");
     } catch (err: any) {
       console.error("Failed to update profile", err);
@@ -169,86 +201,98 @@ export default function CompanyProfileSection() {
   return (
     <SectionLayout>
       <PageHeader
-        title="My Profile"
-        description="Manage your personal information and company settings"
-        showAction={false}
+        title="Company Profile"
+        description="Manage your personal profile, company details, logo, and default pricing settings."
+        icon={Building}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/company" },
+          { label: "Settings", href: "/company/settings" },
+          { label: "Profile" }
+        ]}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Column: Manager Info & Logo */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <User className="text-primary-600" size={20} /> Manager Information
-            </h3>
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column: Manager Info & Logo */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <User className="text-primary-600" size={20} /> Manager Information
+              </h3>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">User Name</label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="text"
-                    value={formData.userName}
-                    onChange={(e) => handleChange("userName", e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-                  />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">User Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      value={formData.userName}
+                      onChange={(e) => handleChange("userName", e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="email"
-                    value={formData.userEmail}
-                    onChange={(e) => handleChange("userEmail", e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-                  />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="email"
+                      value={formData.userEmail}
+                      onChange={(e) => handleChange("userEmail", e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="tel"
-                    value={formData.userPhone}
-                    onChange={(e) => handleChange("userPhone", e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-                  />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="tel"
+                      value={formData.userPhone}
+                      onChange={(e) => handleChange("userPhone", e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Company Logo</h3>
-            <ImageUploader
-              onChange={(url) => {
-                setLogo(url);
-              }}
-              onFileChange={(file) => {
-                setLogoFile(file);
-              }}
-            />
-            {logo && typeof logo === 'string' && !logo.startsWith('blob:') && (
-              <div className="mt-4">
-                <p className="text-xs text-gray-500 mb-2">Current Logo:</p>
-                <div className="w-[150px] h-[45px] relative rounded-lg border border-gray-200 overflow-hidden bg-white">
-                  <img src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${getBackendBaseUrl()}/img/${logo}`} alt="Current Logo" className="w-full h-full object-cover" />
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Company Logo</h3>
+              <ImageUploader
+                value={logo && !logo.startsWith('blob:') && !logo.startsWith('data:') ? (logo.startsWith('http') ? logo : `${getBackendBaseUrl()}/img/${logo}`) : logo}
+                onChange={(url) => {
+                  setLogo(url);
+                }}
+                onFileChange={(file) => {
+                  setLogoFile(file);
+                }}
+              />
+              {logo && typeof logo === 'string' && !logo.startsWith('blob:') && !logo.startsWith('data:') && (
+                <div className="mt-4">
+                  <p className="text-xs text-gray-500 mb-2">Current Logo:</p>
+                  <div className="w-[150px] h-[45px] relative rounded-lg border border-gray-200 overflow-hidden bg-white p-1 flex items-center justify-center">
+                    <img src={logo.startsWith('http') ? logo : `${getBackendBaseUrl()}/img/${logo}`} alt="Current Logo" className="w-full h-full object-contain" />
+                  </div>
                 </div>
-              </div>
-            )}
-            <p className="text-xs text-gray-400 mt-3 text-center">Click or drag to upload your company logo</p>
+              )}
+              <p className="text-xs text-gray-400 mt-3 text-center">Click or drag to upload your company logo</p>
+            </div>
           </div>
-        </div>
 
-        {/* Right Column: Company Info & Pricing Settings */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+          {/* Right Column: Company Info & Pricing Settings */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Building className="text-primary-600" size={20} /> Company Information
             </h3>
@@ -454,6 +498,7 @@ export default function CompanyProfileSection() {
           </div>
         </div>
       </div>
+      )}
     </SectionLayout>
   );
 }

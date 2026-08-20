@@ -101,7 +101,8 @@ class UserController extends Controller
 
         if ($request->hasFile('logo')) {
             $image      = $request->file('logo');
-            $image_name = $authUser->name . '_logo' . md5(Carbon::now()->toDateString()) . '.' . $image->extension();
+            $safeName   = \Illuminate\Support\Str::slug($authUser->name ?: 'supplier');
+            $image_name = $safeName . '_logo_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $image->extension();
             $image->move(public_path('img'), $image_name);
             $updateData['logo'] = $image_name;
         }
@@ -119,12 +120,12 @@ class UserController extends Controller
 
         $user->update($updateData);
 
-        // Synchronize description to CarRentalBrand
-        if ($request->has('description')) {
+        // Synchronize description, logo, and brand name to CarRentalBrand
+        if ($user->role === 'active_supplier' || $user->role === 'company' || \App\Models\CarRentalBrand::where('user_id', $user->id)->exists() || $request->has('description')) {
             \App\Models\CarRentalBrand::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'description' => $request->description,
+                    'description' => $user->description ?: '',
                     'name' => $user->company ?: $user->name,
                     'slug' => \Illuminate\Support\Str::slug($user->company ?: $user->name),
                     'display_name' => ($user->company ?: $user->name) . ' Car Rental',

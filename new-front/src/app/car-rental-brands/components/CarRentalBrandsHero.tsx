@@ -117,6 +117,7 @@ export default function CarRentalBrandsHero({
                           width={90}
                           height={45}
                           className="object-contain max-h-[45px] w-[90px] select-none"
+                          unoptimized
                         />
                       </div>
                     )}
@@ -162,6 +163,7 @@ export default function CarRentalBrandsHero({
                     width={120}
                     height={60}
                     className="object-contain max-h-[60px] w-[120px] select-none"
+                    unoptimized
                   />
                 </div>
               </div>
