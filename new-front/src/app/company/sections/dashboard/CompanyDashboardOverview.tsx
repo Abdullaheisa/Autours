@@ -1,0 +1,160 @@
+"use client";
+
+import { useMemo } from "react";
+import { Building2, CalendarCheck, DollarSign, Car, TrendingUp } from "lucide-react";
+import StatsGrid from "@/app/company/components/StatsGrid";
+import { CompanyRecentBookingsTable, CompanyMonthlyBookingsChart, CompanyVehicleCards } from "@/app/company/components/CompanyDashboardComponents";
+import { useState, useEffect } from "react";
+import { dashboardApi } from "@/services/api";
+
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+
+const LOGGED_IN_COMPANY = "MAHD Rent";
+
+export default function CompanyDashboardOverview() {
+  const [statsData, setStatsData] = useState<any>(null);
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    dashboardApi.getSupplier().then((res: any) => {
+      const charts = res?.data || {};
+      
+
+      const vehicles = charts.real_total_vehicles !== undefined ? Number(charts.real_total_vehicles) : 0;
+      const supplierRevenue = charts.supplierRevenue || [];
+      const NumberOfActiveVehicles = charts.NumberOfActiveVehicles || {};
+      const numberOfRentalsMonthly = charts.numberOfRentalsMonthly || {};
+      
+      const totalEarnings = charts.real_total_earnings !== undefined ? Number(charts.real_total_earnings) : supplierRevenue.reduce((acc: number, curr: any) => acc + Number(curr.profit || 0), 0);
+      const totalRentals = charts.real_total_rentals !== undefined ? Number(charts.real_total_rentals) : (numberOfRentalsMonthly.done || []).reduce((acc: number, curr: any) => acc + Number(curr.count || 0), 0);
+      const totalVehicles = charts.real_total_vehicles !== undefined ? Number(charts.real_total_vehicles) : 0;
+      const rating = (charts.real_avg_rating !== null && charts.real_avg_rating !== undefined) ? String(charts.real_avg_rating) : null;
+
+      setStatsData({
+        totalEarnings: totalEarnings.toLocaleString(),
+        totalRentals: totalRentals.toLocaleString(),
+        totalVehicles: totalVehicles.toLocaleString(),
+        rating: rating,
+        customerTransactions: charts.customerTransactions || [],
+        numberOfRentalsMonthly: numberOfRentalsMonthly,
+        latestVehicles: charts.latestVehicles || []
+      });
+    }).catch((err) => {
+      if (err?.response?.status !== 401) {
+        console.warn("Using mock data due to API error:", err.message);
+      }
+      setStatsData({
+        totalEarnings: "0",
+        totalRentals: "0",
+        totalVehicles: "0",
+        rating: "0",
+        customerTransactions: [],
+        numberOfRentalsMonthly: null,
+        latestVehicles: []
+      });
+    });
+  }, []);
+
+  const companyStats = useMemo(() => {
+    const data = statsData || {};
+    return [
+      { 
+        label: "Total Earnings", 
+        value: data.totalEarnings ? `$${data.totalEarnings}` : "$0", 
+        icon: <DollarSign size={20} />, 
+        change: "+0%", 
+        trend: "up" as const, 
+        color: "emerald" as const 
+      },
+      { 
+        label: "Total Rentals", 
+        value: data.totalRentals || 0,
+        icon: <CalendarCheck size={20} />, 
+        change: "+0%", 
+        trend: "up" as const, 
+        color: "blue" as const 
+      },
+      { 
+        label: "My Vehicles", 
+        value: data.totalVehicles || 0,
+        icon: <Car size={20} />, 
+        change: "+0", 
+        trend: "up" as const, 
+        color: "purple" as const 
+      },
+      { 
+        label: "Avg. Rating", 
+        value: data.rating ?? "N/A", 
+        icon: <Building2 size={20} />, 
+        trend: "up" as const, 
+        color: "amber" as const 
+      },
+    ];
+  }, [statsData]);
+
+  return (
+    <div className="space-y-6">
+      {user && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Welcome back, {user.name || "Partner"}!</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Logged in as: <span className="font-semibold text-primary-600">{user.email}</span> (Role: {user.role})
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wide">
+            {user.role} Account
+          </span>
+        </div>
+      )}
+
+      <StatsGrid stats={companyStats} />
+      
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <CompanyMonthlyBookingsChart data={statsData?.numberOfRentalsMonthly} />
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Earnings History</h3>
+          <div className="space-y-4">
+            {(!statsData || !statsData.customerTransactions || statsData.customerTransactions.length === 0) ? (
+              <div className="text-center py-8 text-gray-400 text-sm">No recent transactions</div>
+            ) : (
+              statsData.customerTransactions.slice(0, 5).map((rental: any) => (
+                <div key={rental.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100/60 transition-colors">
+                  <div className="flex items-center gap-3">
+
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {rental.order_number ? `Booking ${rental.order_number}` : "Payment Received"}
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        {rental.created_at ? new Date(rental.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "Recently"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-emerald-600">
+                    +${parseFloat(rental.price || 0).toFixed(2)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <CompanyRecentBookingsTable bookings={statsData?.customerTransactions} />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900">Featured Vehicles</h3>
+          <button className="text-sm text-primary-600 font-medium">View Fleet</button>
+        </div>
+        <CompanyVehicleCards vehicles={statsData?.latestVehicles} />
+      </div>
+    </div>
+  );
+}

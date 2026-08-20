@@ -22,8 +22,8 @@ class CreateRentalTerms extends FormRequest
     public function rules(): array
     {
         return [
-           'title' => 'required|string|min:10|max:100000',
-           'description' => 'required|string|min:10|max:100000',
+           'title' => 'required|string|min:1|max:100000',
+           'description' => 'required|string|min:1|max:100000',
         ];
     }
 }

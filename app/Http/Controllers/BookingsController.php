@@ -31,6 +31,8 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Mpdf\Mpdf;
 
 class BookingsController extends Controller
@@ -74,19 +76,19 @@ class BookingsController extends Controller
             $cancel24PolicyId = VehicleIncluded::query()->where('vehicle_id', $rental->vehicle_id)->where('included_id', 1)->first();
             $cancel48PolicyId = VehicleIncluded::query()->where('vehicle_id', $rental->vehicle_id)->where('included_id', 48)->first();
 
-            if ($rental->start_date->diffInDays($today) <= 2 && !is_null($cancel48PolicyId)) {
+            if ($rental->start_date->diffInDays($today) <= 2 && !is_null($cancel48PolicyId) && !$request->fareApproval) {
                 return response()->json([
                     'data' => [],
                     'message' => "There will be a fare to cancel"
                 ], StatusCodes::FORBIDDEN);
             }
-            if ($rental->start_date->diffInDays($today) <= 1 && !is_null($cancel24PolicyId)) {
+            if ($rental->start_date->diffInDays($today) <= 1 && !is_null($cancel24PolicyId) && !$request->fareApproval) {
                 return response()->json([
                     'data' => [],
                     'message' => "There will be a fare to cancel"
                 ], StatusCodes::FORBIDDEN);
             }
-            if (is_null($cancel24PolicyId) && is_null($cancel48PolicyId)) {
+            if (is_null($cancel24PolicyId) && is_null($cancel48PolicyId) && !$request->fareApproval) {
                 return response()->json([
                     'data' => [],
                     'message' => "There will be a fare to cancel"
@@ -135,22 +137,45 @@ class BookingsController extends Controller
         if ($request->has('has_review')) {
             $rentals->whereHas('rentalRates');
         }
-        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer')->orderBy('id', 'desc')->get();
+        $data = $rentals->with('supplier', 'vehicle.supplierUser', 'vehicle.branch', 'vehicle.category', 'status', 'customer', 'rentalRates.question', 'paymentMethod')->orderBy('id', 'desc')->paginate($request->get('per_page', 20));
 
-        return response()->json([
-            'rentals' => $data,
-            'rental_statuses' => RentalStatus::query()->get()
-        ]);
+        return response()->json($data);
+    }
+
+    public function destroy(Request $request)
+    {
+        try {
+            DB::transaction(function () use ($request) {
+                // Delete related rental rates to satisfy foreign key constraint
+                DB::table('rental_rates')->where('rental_id', $request->id)->delete();
+                
+                // Delete the rental record itself
+                Rental::query()->where('id', $request->id)->delete();
+            });
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Rental deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], StatusCodes::SERVER_ERROR);
+        }
     }
 
     public function getRentals(Request $request)
     {
+        // Resolve via sanctum guard (Bearer token) first, then session fallback
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
+             ?? \Illuminate\Support\Facades\Auth::user();
 
-        $user = auth()->user();
-        if(!$user) {
-            abort(401);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
-        $id = $user->id;
+
+        $id   = $user->id;
         $role = $user->role;
 
         $rentals = Rental::query();
@@ -170,27 +195,24 @@ class BookingsController extends Controller
         }
         if ($request->has('date_range') && $request->date_range) {
             $rentals->whereBetween('created_at', [$request->date_range[0], $request->date_range[1]]);
-
         }
         if ($request->has('has_review') && $request->has_review) {
             $rentals->whereHas('rentalRates');
-
         }
 
-
-        if ($role === 'active_supplier') {
+        // Scope supplier to only their vehicles — MUST be done before ->get()
+        if ($role === 'active_supplier' || $role === 'under_review') {
             $vehicles = Vehicle::where('supplier', $id)->pluck('id')->unique();
-            $data = $rentals->whereIn('vehicle_id', $vehicles)->get();
+            $rentals->whereIn('vehicle_id', $vehicles);
+        } elseif ($role !== 'admin') {
+            $rentals->where('customer_id', $id);
         }
 
-        $data = $rentals->with('vehicle.supplier', 'vehicle.branch', 'status', 'customer')->orderBy('id', 'desc')->get();
+        $data = $rentals->with('supplier', 'vehicle.supplierUser', 'vehicle.branch', 'status', 'customer', 'rentalRates.question')
+                        ->orderBy('id', 'desc')
+                        ->paginate($request->get('per_page', 20));
 
-        return response()->json(
-            [
-                'rentals' => $data,
-                'rental_statuses' => RentalStatus::query()->get()
-            ]
-        );
+        return response()->json($data);
     }
 
     public function book(BookCarRequest $request)
@@ -211,11 +233,16 @@ class BookingsController extends Controller
             $item = new Rental();
             $item->customer_id = auth()->user()->id;
             $item->supplier_id = $vehicleWithPrice->supplier;
-            $item->payment_method_id = count($supplierPaymentMethod->paymentMethods ) ? $supplierPaymentMethod->paymentMethods[0]->id : null;
+            
+            $paymentMethodId = null;
+            if ($supplierPaymentMethod && $supplierPaymentMethod->paymentMethods && count($supplierPaymentMethod->paymentMethods)) {
+                $paymentMethodId = $supplierPaymentMethod->paymentMethods[0]->id;
+            }
+            $item->payment_method_id = $paymentMethodId;
 
-            $item->order_status = $vehicle->instant_confirmation >= 1 ? RentalStatuses::CONFIRMED : RentalStatuses::PENDING;
+            $item->order_status = ($vehicle && $vehicle->instant_confirmation >= 1) ? RentalStatuses::CONFIRMED : RentalStatuses::PENDING;
 
-            $prefix = $vehicle->branch->country ? strtoupper($vehicle->branch->country[0]) . strtoupper($vehicle->branch->country[1]) : null;
+            $prefix = ($vehicle && $vehicle->branch && $vehicle->branch->country) ? strtoupper($vehicle->branch->country[0]) . strtoupper($vehicle->branch->country[1]) : 'AE';
             $count = Rental::query()->count();
             $suffix_count = $count;
             if ($count < 1000) {
@@ -245,13 +272,24 @@ class BookingsController extends Controller
             $item->save();
 
             DB::commit();
-            if ($request->old_rental_id) {
-                event(new UpdateBooking($oldRental, $item));
+
+            // Safely send notifications & events (never abort booking if mail server has issues)
+            try {
+                // Send WhatsApp Notification to site owners via BeOn API
+                $this->sendWhatsAppBookingNotification($item);
+                if ($request->old_rental_id) {
+                    event(new UpdateBooking($oldRental, $item));
+                }
+                if ($vehicle && $vehicle->instant_confirmation) {
+                    event(new NewRental($item->id));
+                } else {
+                    event(new NewRentalRequest($item->id));
+                }
+            } catch (\Throwable $notifEx) {
+                \Illuminate\Support\Facades\Log::warning("Booking notification warning: " . $notifEx->getMessage(), [
+                    'rental_id' => $item->id,
+                ]);
             }
-            if ($vehicle->instant_confirmation)
-                event(new NewRental($item->id));
-            else
-                event(new NewRentalRequest($item->id));
 
             return response()->json([
                 'data' => $item,
@@ -357,13 +395,16 @@ class BookingsController extends Controller
             if (is_int((int)$id) && $id > 0) {
                 $rental = Rental::query()->with('supplier', 'vehicle.branch', 'vehicle.vehicle_specifications', 'vehicle.included', 'vehicle.locationType', 'vehicle.vehicle_category', 'customer')->find($id);
 
-                ob_clean();
+                $tempDir = public_path('tmp');
+                if (!file_exists($tempDir)) {
+                    @mkdir($tempDir, 0777, true);
+                }
 
                 $mpdf = new Mpdf([
                     'mode' => 'utf-8',
                     'format' => [280, 280],
                     'font' => 'frutiger',
-                    'tempDir' => public_path() . '/tmp',
+                    'tempDir' => $tempDir,
                     'orientation' => 'L',
 
                 ]);
@@ -374,11 +415,15 @@ class BookingsController extends Controller
                 $mpdf->autoLangToFont = true;
                 $html = view('rental-invoice.supplier', ['rental' => $rental])->render();
                 $mpdf->WriteHTML($html);
-                $mpdf->Output('invoice.pdf', 'D');
-                return response()->json([
-                    'status' => 1,
-                    'msg' => 'Download started'
-                ], StatusCodes::SUCCESS);
+                $pdfContent = $mpdf->Output('', 'S');
+                return response($pdfContent, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="invoice.pdf"',
+                    'Content-Length' => strlen($pdfContent),
+                    'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
+                ]);
             } else {
                 return response()->json([
                     'status' => 0,
@@ -408,6 +453,87 @@ class BookingsController extends Controller
                 "status" => 0,
                 "message" => $e->getMessage(),
             ], StatusCodes::SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Send WhatsApp Booking Notification to site owners via UltraMsg WhatsApp API Gateway.
+     */
+    private function sendWhatsAppBookingNotification($rental)
+    {
+        try {
+            $rental->load(['customer', 'vehicle.supplierUser', 'vehicle.branch']);
+
+            $customerName = $rental->customer ? $rental->customer->name : 'N/A';
+            $customerPhone = $rental->customer ? $rental->customer->phone_num : 'N/A';
+            
+            $vehicle = $rental->vehicle;
+            $vehicleName = $vehicle ? $vehicle->name : 'N/A';
+            
+            $supplierName = ($vehicle && $vehicle->supplierUser) 
+                ? ($vehicle->supplierUser->company ?: $vehicle->supplierUser->name) 
+                : 'N/A';
+                
+            $country = ($vehicle && $vehicle->branch) ? $vehicle->branch->country : 'N/A';
+            $branchAddress = ($vehicle && $vehicle->branch) ? $vehicle->branch->address : '';
+            
+            $locationDetails = $country;
+            if (!empty($branchAddress)) {
+                $locationDetails .= " (" . $branchAddress . ")";
+            }
+
+            $startDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : 'N/A';
+            $startTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : 'N/A';
+            $endDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : 'N/A';
+            $endTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : 'N/A';
+            
+            $duration = $rental->number_of_days ? $rental->number_of_days : 'N/A';
+            $price = $rental->price ? $rental->price : 'N/A';
+            $currency = $rental->currency ? $rental->currency : '';
+
+            $token = env('ULTRAMSG_TOKEN') ?: env('WHATSAPP_TOKEN');
+            $instanceId = env('ULTRAMSG_INSTANCE_ID') ?: env('WHATSAPP_PHONE_NUMBER_ID');
+
+            if (empty($token) || empty($instanceId)) {
+                Log::warning('UltraMsg notification skipped: ULTRAMSG_TOKEN or ULTRAMSG_INSTANCE_ID is not configured in .env');
+                return;
+            }
+
+            $url = "https://api.ultramsg.com/{$instanceId}/messages/chat";
+            $numbersString = env('ULTRAMSG_NOTIFY_NUMBERS') ?: env('WHATSAPP_NOTIFY_NUMBERS') ?: '96560480382,201067320128';
+            $numbers = array_filter(array_map('trim', explode(',', $numbersString)));
+
+            $message = "🔔 *حجز سيارة جديد على Autours*\n\n"
+                     . "👤 *اسم العميل:* " . $customerName . "\n"
+                     . "📞 *رقم العميل:* " . $customerPhone . "\n"
+                     . "🚗 *السيارة المحجوزة:* " . $vehicleName . "\n"
+                     . "🏢 *الشركة الموردة:* " . $supplierName . "\n"
+                     . "📍 *موقع/بلد الحجز:* " . $locationDetails . "\n"
+                     . "📅 *تاريخ ووقت الاستلام:* " . $startDate . " " . $startTime . "\n"
+                     . "📅 *تاريخ ووقت التسليم:* " . $endDate . " " . $endTime . "\n"
+                     . "⏱️ *مدة الحجز:* " . $duration . " يوم/أيام\n"
+                     . "💰 *القيمة الإجمالية:* " . $price . " " . $currency;
+
+            foreach ($numbers as $number) {
+                // Ensure international format (numbers only)
+                $cleanNumber = preg_replace('/[^0-9]/', '', $number);
+
+                $payload = [
+                    'token' => $token,
+                    'to' => $cleanNumber,
+                    'body' => $message
+                ];
+
+                $response = Http::withoutVerifying()->post($url, $payload);
+
+                if ($response->failed()) {
+                    Log::error("Failed to send UltraMsg notification to " . $cleanNumber . ": " . $response->body());
+                } else {
+                    Log::info("UltraMsg notification sent successfully to " . $cleanNumber);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending UltraMsg booking notification: ' . $e->getMessage());
         }
     }
 }

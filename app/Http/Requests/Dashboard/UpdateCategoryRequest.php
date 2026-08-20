@@ -23,8 +23,9 @@ class UpdateCategoryRequest extends FormRequest
     {
         return [
             'id' => 'required|integer|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'name' => ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('categories', 'name')->ignore($this->id)],
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'description' => 'nullable|string|max:2500',
         ];
     }
 }

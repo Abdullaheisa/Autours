@@ -30,10 +30,10 @@ class ExternalAuthController extends Controller
             ], StatusCodes::UNAUTHORIZED);
         }
 
-        if (!in_array($user->role, ['supplier', 'active_supplier'], true)) {
+        if (!in_array($user->role, ['admin', 'supplier', 'active_supplier', 'customer', 'under_review'], true)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Only suppliers can access this API.',
+                'message' => 'Your account role cannot access this API.',
             ], StatusCodes::FORBIDDEN);
         }
 
@@ -172,6 +172,7 @@ class ExternalAuthController extends Controller
     public function getIncluded(): JsonResponse
     {
         $included = \App\Models\Included::query()
+            ->where('is_promo', 0)
             ->orderBy('what_is_included')
             ->get(['id', 'what_is_included', 'description']);
 
@@ -223,8 +224,9 @@ class ExternalAuthController extends Controller
     public function getLocationTypes(): JsonResponse
     {
         $locationTypes = \App\Models\LocationType::query()
-            ->orderBy('type')
-            ->get(['id', 'type', 'icon']);
+            ->orderBy('name')
+            ->select(['id', 'name as type', 'icon'])
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -244,7 +246,7 @@ class ExternalAuthController extends Controller
         $branches = \App\Models\Branch::query()
             ->where('company_id', $user->id)
             ->orderBy('location')
-            ->get(['id', 'location', 'location_address', 'city', 'country']);
+            ->get(['id', 'name', 'location', 'adresse', 'city', 'country']);
 
         return response()->json([
             'status' => true,

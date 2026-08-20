@@ -36,7 +36,10 @@ class User extends Authenticatable
         'fuel_policy_id',
         'password_reset_key',
         'integration',
-        'webhook_url'
+        'webhook_url',
+        'default_pricing_mode',
+        'default_custom_price_tiers',
+        'vehicles_hidden'
     ];
 
     /**
@@ -56,17 +59,18 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
         'integration' => 'boolean',
+        'default_custom_price_tiers' => 'array',
+        'vehicles_hidden' => 'boolean',
     ];
 
     public function vehicles() {
-        return $this->hasMany(Vehicle::class, 'id', 'supplier');
+        return $this->hasMany(Vehicle::class, 'supplier', 'id');
     }
 
     public function branches()
     {
-        return $this->hasMany(Branch::class, 'id', 'company_id');
+        return $this->hasMany(Branch::class, 'company_id', 'id');
     }
     public function fuelPolicy()
     {
@@ -76,6 +80,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Rental::class, 'supplier_id', 'id');
 
+    }
+
+    public function customerRentals()
+    {
+        return $this->hasMany(Rental::class, 'customer_id', 'id');
     }
 
     public function parent()

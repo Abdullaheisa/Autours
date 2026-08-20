@@ -35,6 +35,7 @@ class CategoriesController extends Controller
 
     public function createCategories(CreateCategoryRequest $request)
     {
+        \Log::info('Categories payload:', $request->all());
         $item = new Category();
 
         if ($request->hasFile('photo')) {
@@ -43,10 +44,16 @@ class CategoriesController extends Controller
             $image->move(public_path('img/categories'), $image_name);
 
             $item->photo = $image_name;
+        } else {
+            $item->photo = ''; // default value to avoid constraint violation
         }
 
         if ($request->has('name')) {
             $item->name = $request->name;
+        }
+
+        if ($request->has('description')) {
+            $item->description = $request->description;
         }
 
         $item->save();
@@ -66,6 +73,10 @@ class CategoriesController extends Controller
 
         if ($request->has('name')) {
             $item->name = $request->name;
+        }
+
+        if ($request->has('description')) {
+            $item->description = $request->description;
         }
 
         $item->save();

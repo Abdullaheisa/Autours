@@ -1,0 +1,15 @@
+{
+  "name": "Autours",
+  "short_name": "Autours",
+  "description": "Premium Car Rental Marketplace",
+  "icons": [
+    {
+      "src": "/images/favicon512*256.png",
+      "sizes": "512x256",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#f9d602",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

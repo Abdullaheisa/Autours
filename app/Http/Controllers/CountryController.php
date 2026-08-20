@@ -26,9 +26,14 @@ class CountryController extends Controller
 
     public function index(Request $request)
     {
-
-      return Branch::query()->distinct('country')->get()->unique('country')->pluck('country');
-
+        return Branch::query()
+            ->whereHas('company', function ($query) {
+                $query->where('role', 'active_supplier');
+            })
+            ->distinct('country')
+            ->get()
+            ->unique('country')
+            ->pluck('country');
     }
 
 }

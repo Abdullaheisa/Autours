@@ -49,6 +49,45 @@ class BackgroundSettingsController extends Controller
     }
 
     /**
+     * Store a new background setting (Banner).
+     */
+    public function store(Request $request)
+    {
+        try {
+            $setting = new BackgroundSetting();
+            $setting->section_key = 'banner_' . time();
+            $setting->section_name = 'Custom Banner ' . time();
+            $setting->is_active = true;
+
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = $setting->section_key . '-' . time() . '.' . $file->getClientOriginalExtension();
+                $destinationPath = public_path('images/background');
+
+                if (!File::exists($destinationPath)) {
+                    File::makeDirectory($destinationPath, 0755, true);
+                }
+
+                $file->move($destinationPath, $filename);
+                $setting->image_path = '/images/background/' . $filename;
+            }
+
+            $setting->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Banner added successfully',
+                'data' => $setting
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], StatusCodes::SERVER_ERROR);
+        }
+    }
+
+    /**
      * Update the specified background setting.
      */
     public function update(Request $request, $id)
@@ -119,6 +158,32 @@ class BackgroundSettingsController extends Controller
                 'status' => true,
                 'message' => 'Background reset to default',
                 'data' => $setting
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], StatusCodes::SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Delete a background setting (Banner).
+     */
+    public function destroy($id)
+    {
+        try {
+            $setting = BackgroundSetting::findOrFail($id);
+            if ($setting->image_path && File::exists(public_path($setting->image_path))) {
+                if ($setting->image_path !== $setting->default_image_path) {
+                    File::delete(public_path($setting->image_path));
+                }
+            }
+            $setting->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Banner deleted successfully'
             ]);
         } catch (\Exception $e) {
             return response()->json([

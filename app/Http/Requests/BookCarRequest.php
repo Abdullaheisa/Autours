@@ -26,7 +26,7 @@ class BookCarRequest extends FormRequest
             'date_from' => 'required|date_format:Y-m-d',
             'date_to' => 'required|date_format:Y-m-d|after:date_from',
             'currency' => 'required|string|exists:currencies,name',
-            'pickupLoc' => 'required|string|exists:branches,location',
+            'pickupLoc' => 'required',
             'time_from' => 'required|date_format:H:i',
             'time_to' => 'required|date_format:H:i',
             'old_rental_id' => 'nullable|integer|exists:rentals,id'

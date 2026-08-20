@@ -9,6 +9,11 @@ class Included extends Model
 {
     protected $table = 'included';
     public $timestamps = true;
-    protected $fillable = ['id','what_is_included','description'];
+    protected $fillable = ['id','what_is_included','description','supplier_id','status'];
     use HasFactory;
+
+    public function supplier()
+    {
+        return $this->belongsTo(User::class, 'supplier_id');
+    }
 }

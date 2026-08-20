@@ -1,0 +1,1001 @@
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
+import { Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check, Edit3, ShieldAlert } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import SectionLayout from "@/components/shared/SectionLayout";
+import Pagination from "@/components/ui/Pagination";
+import { promoApi, profitApi } from "@/services/api";
+import { apiClient } from "@/services/api/axiosClient";
+import { getVehicleImageUrl } from "@/utils/getImageUrl";
+import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+
+export default function PromosSection() {
+  const [promos, setPromos] = useState<any[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Modal States
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
+  const [currentPromo, setCurrentPromo] = useState<any | null>(null);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [allFilteredVehicles, setAllFilteredVehicles] = useState<any[]>([]);
+  const [selectedVehicleIds, setSelectedVehicleIds] = useState<number[]>([]);
+  const [activePromoVehicles, setActivePromoVehicles] = useState<any[]>([]);
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [selectedPage, setSelectedPage] = useState(1);
+  const selectedPerPage = 20;
+
+  useEffect(() => {
+    setSelectedPage(1);
+  }, [showSelectedOnly]);
+
+  // Modal Search & Filter States
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
+  const [modalSupplierFilter, setModalSupplierFilter] = useState("All");
+  const [modalCountryFilter, setModalCountryFilter] = useState("All");
+  const [modalBranchFilter, setModalBranchFilter] = useState("All");
+  const [modalCurrentPage, setModalCurrentPage] = useState(1);
+  const [modalTotalPages, setModalTotalPages] = useState(1);
+  const [modalTotalCount, setModalTotalCount] = useState(0);
+  const [modalCountries, setModalCountries] = useState<any[]>([]);
+  const [modalBranches, setModalBranches] = useState<any[]>([]);
+  const [modalSuppliers, setModalSuppliers] = useState<any[]>([]);
+
+  // Form State
+  const [formName, setFormName] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (isAssignModalOpen || isAddEditModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAssignModalOpen, isAddEditModalOpen]);
+
+  const loadPromos = async () => {
+    setIsLoading(true);
+    try {
+      const res: any = await promoApi.getDefinitions();
+      setPromos(Array.isArray(res) ? res : res?.data || []);
+    } catch (err: any) {
+      console.warn("Failed to load promotions:", err.message);
+      toast.error("Failed to load promotions definitions.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPromos();
+  }, []);
+
+  const filteredPromos = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return promos.filter(
+      (p) =>
+        (p.what_is_included || p.name || "").toLowerCase().includes(query) ||
+        (p.description || "").toLowerCase().includes(query)
+    );
+  }, [promos, searchQuery]);
+
+  const totalPages = Math.ceil(filteredPromos.length / itemsPerPage);
+  const paginatedPromos = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredPromos.slice(start, start + itemsPerPage);
+  }, [filteredPromos, currentPage]);
+
+  const fetchModalVehiclesPage = async (
+    page: number,
+    country: string,
+    branch: string,
+    supplier: string,
+    search: string
+  ) => {
+    setIsLoadingVehicles(true);
+    try {
+      const params: any = {
+        paginate: "true",
+        page,
+        per_page: 20,
+      };
+      if (country && country !== "All") params.country = country;
+      if (branch && branch !== "All") params.branch_id = branch;
+      if (supplier && supplier !== "All") params.supplier = supplier;
+      if (search) params.search = search;
+
+      const res: any = await apiClient.get("/get/vehicles", { params });
+      
+      const list = res?.data?.data || res?.data || res || [];
+      const total = res?.total || res?.data?.total || list.length;
+      const lastPage = res?.last_page || res?.data?.last_page || 1;
+      const currentPageNum = res?.current_page || res?.data?.current_page || 1;
+
+      setVehicles(list);
+      setModalTotalCount(total);
+      setModalTotalPages(lastPage);
+      setModalCurrentPage(currentPageNum);
+    } catch (err) {
+      toast.error("Failed to load fleet vehicles.");
+    } finally {
+      setIsLoadingVehicles(false);
+    }
+  };
+
+  const fetchAllMatchingVehicles = async (
+    country: string,
+    branch: string,
+    supplier: string,
+    search: string
+  ) => {
+    try {
+      const params: any = {
+        paginate: "true",
+        per_page: 10000,
+        compact: "true",
+      };
+      if (country && country !== "All") params.country = country;
+      if (branch && branch !== "All") params.branch_id = branch;
+      if (supplier && supplier !== "All") params.supplier = supplier;
+      if (search) params.search = search;
+
+      const res: any = await apiClient.get("/get/vehicles", { params });
+      const list = res?.data || res || [];
+      const dataArray = Array.isArray(list) ? list : [];
+      setAllFilteredVehicles(dataArray);
+    } catch (err) {
+      console.warn("Failed to fetch all matching vehicles", err);
+    }
+  };
+
+  const loadBranchesForCountry = async (country: string) => {
+    try {
+      const bRes: any = await profitApi.getBranches(undefined, country === "All" ? undefined : country);
+      const bData = Array.isArray(bRes?.data) ? bRes.data : Array.isArray(bRes) ? bRes : [];
+      setModalBranches(bData);
+    } catch (err) {
+      console.error("Failed to load branches list", err);
+    }
+  };
+
+  // Open modal to assign promo to vehicles
+  const handleOpenAssignModal = async (promo: any) => {
+    setModalSearchQuery("");
+    setModalSupplierFilter("All");
+    setModalCountryFilter("All");
+    setModalBranchFilter("All");
+    setModalCurrentPage(1);
+    setShowSelectedOnly(false);
+    setVehicles([]);
+    setModalCountries([]);
+    setModalBranches([]);
+    setModalSuppliers([]);
+    setCurrentPromo(promo);
+    setIsAssignModalOpen(true);
+    setIsLoadingVehicles(true);
+    try {
+      // 1. Fetch metadata lists
+      const cRes: any = await profitApi.getCountries();
+      const cData = Array.isArray(cRes?.data) ? cRes.data : Array.isArray(cRes) ? cRes : [];
+      setModalCountries(cData);
+
+      const sRes: any = await profitApi.getSuppliers();
+      const sData = Array.isArray(sRes?.data) ? sRes.data : Array.isArray(sRes) ? sRes : [];
+      setModalSuppliers(sData.map((item: any) => ({ id: String(item.id), name: item.name })));
+
+      // 2. Fetch active vehicle IDs mapped to this promo
+      let activeVehicleIds: number[] = [];
+      const mappedRes: any = await apiClient.get(`/api/supplier/promo?included_id=${promo.id}`);
+      const rawIds = Array.isArray(mappedRes) ? mappedRes : (mappedRes?.data || []);
+      activeVehicleIds = Array.isArray(rawIds) ? rawIds : [];
+      const normalizedActiveIds = activeVehicleIds.map((id: any) => Number(id));
+      setSelectedVehicleIds(normalizedActiveIds);
+
+      // Fetch full details of these active vehicles so they are cached
+      let activeVehiclesList: any[] = [];
+      if (normalizedActiveIds.length > 0) {
+        try {
+          const detailRes: any = await apiClient.get("/get/vehicles", {
+            params: { ids: normalizedActiveIds.join(",") }
+          });
+          const detailList = detailRes?.data || detailRes || [];
+          activeVehiclesList = Array.isArray(detailList) ? detailList : [];
+        } catch (err) {
+          console.warn("Failed to load active vehicles details", err);
+        }
+      }
+      setActivePromoVehicles(activeVehiclesList);
+
+      // 3. Initial page load
+      await fetchModalVehiclesPage(1, "All", "All", "All", "");
+      await fetchAllMatchingVehicles("All", "All", "All", "");
+    } catch (err) {
+      toast.error("Failed to load fleet data.");
+    } finally {
+      setIsLoadingVehicles(false);
+    }
+  };
+
+  // Reactive effect to fetch page 1 whenever filters change inside the modal
+  useEffect(() => {
+    if (isAssignModalOpen) {
+      fetchModalVehiclesPage(1, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+      fetchAllMatchingVehicles(modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+    }
+  }, [modalSearchQuery, modalSupplierFilter, modalCountryFilter, modalBranchFilter, isAssignModalOpen]);
+
+  const handleSaveAssignments = async () => {
+    if (!currentPromo) return;
+    setIsSubmitting(true);
+    try {
+      const res: any = await promoApi.create({
+        included_id: currentPromo.id,
+        selected_vehicles: selectedVehicleIds.join(",")
+      });
+      if (res?.status || res?.data) {
+        toast.success(`Updated promotions for "${currentPromo.what_is_included}"!`);
+        setIsAssignModalOpen(false);
+        loadPromos();
+      } else {
+        toast.error("Failed to update promotions.");
+      }
+    } catch (err: any) {
+      toast.error("Failed to save promo assignments.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Add/Edit Promo Definitions
+  const handleOpenAddModal = () => {
+    setIsEditing(false);
+    setFormName("");
+    setFormDescription("");
+    setIsAddEditModalOpen(true);
+  };
+
+  const handleOpenEditModal = (promo: any) => {
+    setIsEditing(true);
+    setCurrentPromo(promo);
+    setFormName(promo.what_is_included || promo.name || "");
+    setFormDescription(promo.description || "");
+    setIsAddEditModalOpen(true);
+  };
+
+  const handleSavePromoDefinition = async () => {
+    if (!formName.trim()) {
+      toast.error("Promo name is required.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      if (isEditing && currentPromo) {
+        const res: any = await promoApi.update({
+          id: currentPromo.id,
+          included: formName.trim(),
+          description: formDescription.trim(),
+        });
+        if (res?.data || res?.status) {
+          toast.success("Promo updated successfully!");
+          setIsAddEditModalOpen(false);
+          loadPromos();
+        }
+      } else {
+        const res: any = await promoApi.suggest({
+          included: formName.trim(),
+          description: formDescription.trim(),
+        });
+        if (res?.data || res?.status) {
+          toast.success("Promo created successfully!");
+          setIsAddEditModalOpen(false);
+          loadPromos();
+        }
+      }
+    } catch (err: any) {
+      toast.error("Failed to save promo badge.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePromoDefinition = async (id: number, name: string) => {
+    if (!confirm(`Are you sure you want to permanently delete the promo "${name}"? This will remove it from all vehicles.`)) {
+      return;
+    }
+    try {
+      await promoApi.deleteDefinition(id);
+      toast.success(`Deleted promo "${name}" successfully.`);
+      loadPromos();
+    } catch (err: any) {
+      toast.error("Failed to delete promo.");
+    }
+  };
+
+  const handleUpdateStatus = async (id: number, status: "approved" | "rejected") => {
+    try {
+      await promoApi.updateStatus({ id, status });
+      toast.success(`Promo request ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
+      loadPromos();
+    } catch (err: any) {
+      toast.error("Failed to update status.");
+    }
+  };
+
+  // Get the full list of all currently selected vehicle objects
+  const fullSelectedList = useMemo(() => {
+    const allLoadedMap = new Map<number, any>();
+    activePromoVehicles.forEach(v => allLoadedMap.set(Number(v.id), v));
+    allFilteredVehicles.forEach(v => allLoadedMap.set(Number(v.id), v));
+    vehicles.forEach(v => allLoadedMap.set(Number(v.id), v));
+
+    return Array.from(allLoadedMap.values()).filter(v => selectedVehicleIds.includes(Number(v.id)));
+  }, [activePromoVehicles, allFilteredVehicles, vehicles, selectedVehicleIds]);
+
+  // Group vehicles by company/supplier
+  const groupedVehicles = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    let listToGroup = [];
+    if (showSelectedOnly) {
+      const start = (selectedPage - 1) * selectedPerPage;
+      listToGroup = fullSelectedList.slice(start, start + selectedPerPage);
+    } else {
+      listToGroup = vehicles;
+    }
+
+    listToGroup.forEach((v) => {
+      const supplierName = v.supplierUser?.company || v.supplierUser?.name || v.supplier?.company || v.supplier?.name || "Independent Suppliers";
+      if (!groups[supplierName]) {
+        groups[supplierName] = [];
+      }
+      groups[supplierName].push(v);
+    });
+    return groups;
+  }, [vehicles, fullSelectedList, showSelectedOnly, selectedPage]);
+
+  const toggleVehicleSelection = (id: number) => {
+    setSelectedVehicleIds(prev => {
+      const numId = Number(id);
+      return prev.includes(numId) ? prev.filter(vId => vId !== numId) : [...prev, numId];
+    });
+  };
+
+  // Global page selection helpers
+  const allFilteredVehicleIds = useMemo(() => {
+    return allFilteredVehicles.map(v => Number(v.id));
+  }, [allFilteredVehicles]);
+
+  const supplierIdsMap = useMemo(() => {
+    const map: Record<string, number[]> = {};
+    allFilteredVehicles.forEach((v) => {
+      const supplierName = v.supplierUser?.company || v.supplierUser?.name || v.supplier?.company || v.supplier?.name || "Independent Suppliers";
+      if (!map[supplierName]) {
+        map[supplierName] = [];
+      }
+      map[supplierName].push(Number(v.id));
+    });
+    return map;
+  }, [allFilteredVehicles]);
+
+  const isAllPageSelected = useMemo(() => {
+    if (allFilteredVehicleIds.length === 0) return false;
+    return allFilteredVehicleIds.every(id => selectedVehicleIds.includes(id));
+  }, [allFilteredVehicleIds, selectedVehicleIds]);
+
+  const toggleSelectAllPage = () => {
+    if (isAllPageSelected) {
+      setSelectedVehicleIds(prev => prev.filter(id => !allFilteredVehicleIds.includes(id)));
+    } else {
+      setSelectedVehicleIds(prev => {
+        const next = [...prev];
+        allFilteredVehicleIds.forEach(id => {
+          if (!next.includes(id)) next.push(id);
+        });
+        return next;
+      });
+    }
+  };
+
+  // Group selection helpers
+  const isAllGroupSelected = (supplierName: string) => {
+    const listIds = supplierIdsMap[supplierName] || [];
+    if (listIds.length === 0) return false;
+    return listIds.every(id => selectedVehicleIds.includes(id));
+  };
+
+  const toggleGroupSelection = (supplierName: string) => {
+    const listIds = supplierIdsMap[supplierName] || [];
+    const allSelected = isAllGroupSelected(supplierName);
+    if (allSelected) {
+      setSelectedVehicleIds(prev => prev.filter(id => !listIds.includes(id)));
+    } else {
+      setSelectedVehicleIds(prev => {
+        const next = [...prev];
+        listIds.forEach(id => {
+          if (!next.includes(id)) next.push(id);
+        });
+        return next;
+      });
+    }
+  };
+
+  const resolveImageUrl = (v: any) => {
+    let img = v.image || v.photo || v.car_photo || v.cover_image;
+    if (Array.isArray(img)) img = img[0];
+    if (img && typeof img === 'object') img = img.photo || img.url || img.path || img.image || '';
+    if (!img || typeof img !== 'string') return undefined;
+    return getVehicleImageUrl(img);
+  };
+
+  return (
+    <SectionLayout>
+      <PageHeader
+        title="Promotions Manager"
+        description="Create dynamic promotional badges and assign them to any vehicle in the fleet"
+        showAction={true}
+        actionLabel="Add New Promo"
+        onAction={handleOpenAddModal}
+      />
+
+      {/* Search Input */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 flex items-center gap-4 mt-6">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+          <input
+            type="text"
+            placeholder="Search promos by name or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+          />
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
+          <Loader2 size={32} className="animate-spin text-primary" />
+          <span className="text-sm font-medium">Loading promotional badges...</span>
+        </div>
+      ) : filteredPromos.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-12 text-center">
+          <Zap size={48} className="text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-900 mb-2">No Promos Defined</h3>
+          <p className="text-sm text-gray-500 max-w-sm mx-auto mb-4">
+            Get started by defining your first promotional badge, which suppliers can also use for their cars.
+          </p>
+          <button
+            onClick={handleOpenAddModal}
+            className="bg-primary hover:bg-primary-600 text-gray-900 px-6 py-2.5 font-bold rounded-xl text-sm transition-all"
+          >
+            Create Promo Badge
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden mb-10">
+          {/* Horizontal scroll wrapper - scrollbar appears at top via column-reverse */}
+          <div
+            className="overflow-x-auto"
+            style={{ display: 'flex', flexDirection: 'column-reverse' }}
+          >
+          <table className="w-full min-w-[700px]">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-150">
+                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Promo Badge</th>
+                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Description</th>
+                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[140px]">Source</th>
+                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[140px]">Status</th>
+                <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[200px]">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {paginatedPromos.map((promo) => {
+                const isPending = promo.status === "pending";
+                const isRejected = promo.status === "rejected";
+                const isSuggested = promo.supplier_id !== null;
+                const supplierName = promo.supplier?.company || promo.supplier?.name || "Supplier Suggestion";
+
+                return (
+                  <tr key={promo.id} className="hover:bg-gray-50/30 transition-all group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${promo.status === 'approved' ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-400"}`}>
+                          <Zap size={16} fill={promo.status === 'approved' ? "currentColor" : "none"} />
+                        </div>
+                        <span className="text-sm font-bold text-gray-900 leading-snug">{promo.what_is_included || promo.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs text-gray-500 leading-relaxed block max-w-md">{promo.description || "No description provided."}</span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {isSuggested ? (
+                        <div className="inline-flex flex-col text-center">
+                          <span className="text-xs font-bold text-gray-700">{supplierName}</span>
+                          <span className="text-[10px] text-primary-600 font-medium">Supplier suggestion</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-semibold text-gray-400">Administrator</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                        promo.status === 'approved'
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                          : isPending
+                            ? "bg-amber-50 text-amber-600 border-amber-100 animate-pulse"
+                            : "bg-red-50 text-red-600 border-red-100"
+                      }`}>
+                        {promo.status === 'approved' ? "Approved" : isPending ? "Pending Review" : "Rejected"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {isPending ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(promo.id, 'approved')}
+                              className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] uppercase rounded-lg transition-colors shadow-sm"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(promo.id, 'rejected')}
+                              className="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold text-[10px] uppercase rounded-lg transition-colors shadow-sm"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            {promo.status === 'approved' && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenAssignModal(promo)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 hover:bg-primary text-black font-bold text-xs rounded-xl transition-all border border-primary/20"
+                                title="Assign to vehicles"
+                              >
+                                <Zap size={12} fill="currentColor" />
+                                <span>Assign</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(promo)}
+                              className="p-2 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-colors border border-transparent"
+                              title="Edit promo"
+                            >
+                              <Edit3 size={15} />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePromoDefinition(promo.id, promo.what_is_included || promo.name)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent"
+                          title="Delete promo"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          </div>
+
+          {filteredPromos.length > 0 && totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-150 px-6 py-4 bg-gray-50/30">
+              <span className="text-xs font-bold text-gray-500">
+                Showing {Math.min(filteredPromos.length, (currentPage - 1) * itemsPerPage + 1)} to{" "}
+                {Math.min(filteredPromos.length, currentPage * itemsPerPage)} of {filteredPromos.length} promos
+              </span>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Promos Target Selection Modal */}
+      <AnimatePresence>
+        {isAssignModalOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAssignModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden p-6 z-10 mx-2 max-h-[85vh] flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-gray-150">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg font-bold text-gray-900">Promote Active: {currentPromo?.what_is_included || currentPromo?.name}</h3>
+                    <span className="text-[10px] px-2.5 py-0.5 bg-primary text-gray-900 rounded-full font-black border border-primary-600/10 shrink-0">
+                      {selectedVehicleIds.length} Selected
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">Toggle which fleet vehicles should display this promo badge next to the car box & logo</p>
+                </div>
+                <button
+                  onClick={() => setIsAssignModalOpen(false)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Search and Filters inside Modal */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 py-3 border-b border-gray-150 bg-gray-50/20 px-1.5">
+                {/* Search */}
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary" size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search by name..."
+                    value={modalSearchQuery}
+                    onChange={(e) => setModalSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-800 font-semibold"
+                  />
+                </div>
+
+                {/* Country */}
+                <div>
+                  <select
+                    value={modalCountryFilter}
+                    onChange={(e) => {
+                      const newCountry = e.target.value;
+                      setModalCountryFilter(newCountry);
+                      setModalBranchFilter("All");
+                      loadBranchesForCountry(newCountry);
+                    }}
+                    className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer outline-none font-semibold"
+                  >
+                    <option value="All">All Countries</option>
+                    {modalCountries.map((c: any, idx: number) => (
+                      <option key={idx} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Branch */}
+                <div>
+                  <select
+                    value={modalBranchFilter}
+                    onChange={(e) => setModalBranchFilter(e.target.value)}
+                    disabled={modalCountryFilter === "All"}
+                    className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                  >
+                    <option value="All">All Branches</option>
+                    {modalBranches.map((b: any, idx: number) => (
+                      <option key={idx} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Supplier */}
+                <div>
+                  <select
+                    value={modalSupplierFilter}
+                    onChange={(e) => setModalSupplierFilter(e.target.value)}
+                    className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer outline-none font-semibold"
+                  >
+                    <option value="All">All Suppliers</option>
+                    {modalSuppliers.map((sup: any, idx: number) => (
+                      <option key={idx} value={sup.id}>
+                        {sup.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Selected Only Toggle */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+                    className={`w-full py-2 px-3 border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                      showSelectedOnly
+                        ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-250 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Check size={12} className={showSelectedOnly ? "block" : "hidden"} />
+                    <span>Selected Only ({selectedVehicleIds.length})</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto py-4 space-y-6 no-scrollbar">
+                {isLoadingVehicles ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-400">
+                    <Loader2 size={24} className="animate-spin text-primary" />
+                    <span className="text-xs font-semibold">Loading active fleet...</span>
+                  </div>
+                ) : vehicles.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-sm text-gray-500">No active vehicles found in system.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Global Page Select All / Clear */}
+                    <div className="flex items-center justify-between bg-gray-50 border border-gray-150 p-3 rounded-xl">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-700">
+                          {showSelectedOnly ? "Deselect All Selected Cars" : "Select All Matching Cars"}
+                        </span>
+                        <span className="text-[10px] text-gray-400 mt-0.5">
+                          {showSelectedOnly 
+                            ? `Remove selection for all ${fullSelectedList.length} cars currently selected`
+                            : `Toggle selection for all ${allFilteredVehicleIds.length} cars matching filters across all pages`}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={showSelectedOnly 
+                          ? () => setSelectedVehicleIds(prev => prev.filter(id => !fullSelectedList.map(v => Number(v.id)).includes(id))) 
+                          : toggleSelectAllPage
+                        }
+                        className={`text-xs font-black px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 ${
+                          showSelectedOnly || isAllPageSelected
+                            ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                            : "bg-primary text-gray-900 hover:bg-primary/95 border border-primary/20"
+                        }`}
+                      >
+                        {showSelectedOnly 
+                          ? "Deselect All" 
+                          : (isAllPageSelected ? "Clear Selection" : "Select All Cars")
+                        }
+                      </button>
+                    </div>
+
+                    {Object.entries(groupedVehicles).map(([supplier, list]) => (
+                      <div key={supplier} className="space-y-3">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-gray-500 uppercase tracking-wider">{supplier}</span>
+                            <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-bold">{list.length} cars on page</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleGroupSelection(supplier)}
+                            className={`text-[10px] font-black px-3 py-1 rounded-lg border transition-all active:scale-95 ${
+                              isAllGroupSelected(supplier)
+                                ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                                : "bg-gray-50 text-gray-700 border-gray-250 hover:bg-gray-100"
+                            }`}
+                          >
+                            {isAllGroupSelected(supplier) ? "Deselect Group" : "Select Group Cars"}
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {list.map((v) => {
+                            const isSelected = selectedVehicleIds.includes(Number(v.id));
+                            return (
+                              <div
+                                key={v.id}
+                                onClick={() => toggleVehicleSelection(Number(v.id))}
+                                className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all hover:bg-gray-50/50 ${
+                                  isSelected ? "border-primary bg-primary/5" : "border-gray-200 bg-white"
+                                }`}
+                              >
+                                <div className="w-12 h-8 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
+                                  {resolveImageUrl(v) ? (
+                                    <img src={resolveImageUrl(v)} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-400 font-bold bg-gray-100">CAR</div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-gray-900 truncate leading-snug">{v.name}</p>
+                                  <p className="text-[10px] text-gray-400 truncate mt-0.5">{v.pickup_loc?.name || v.branch?.name || "All Branches"}</p>
+                                </div>
+                                <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
+                                  isSelected ? "bg-primary border-primary text-black" : "bg-white border-gray-300"
+                                }`}>
+                                  {isSelected && <Check size={12} strokeWidth={3} />}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Pagination Info & Controls inside Modal */}
+                    {!isLoadingVehicles && (
+                      showSelectedOnly ? (
+                        // Local pagination for selected list
+                        (() => {
+                          const selectedTotalPages = Math.ceil(fullSelectedList.length / selectedPerPage);
+                          if (fullSelectedList.length > 0 && selectedTotalPages > 1) {
+                            return (
+                              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-4 pb-2 bg-white sticky bottom-0 z-10">
+                                <span className="text-xs font-bold text-gray-500">
+                                  Showing {Math.min(fullSelectedList.length, (selectedPage - 1) * selectedPerPage + 1)} to{" "}
+                                  {Math.min(fullSelectedList.length, selectedPage * selectedPerPage)} of {fullSelectedList.length} selected cars
+                                </span>
+                                <Pagination
+                                  currentPage={selectedPage}
+                                  totalPages={selectedTotalPages}
+                                  onPageChange={setSelectedPage}
+                                />
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()
+                      ) : (
+                        // Server-side pagination for entire fleet
+                        modalTotalPages > 1 && vehicles.length > 0 && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-4 pb-2 bg-white sticky bottom-0 z-10">
+                            <span className="text-xs font-bold text-gray-500">
+                              Showing {Math.min(modalTotalCount, (modalCurrentPage - 1) * 20 + 1)} to{" "}
+                              {Math.min(modalTotalCount, modalCurrentPage * 20)} of {modalTotalCount} cars
+                            </span>
+                            <Pagination
+                              currentPage={modalCurrentPage}
+                              totalPages={modalTotalPages}
+                              onPageChange={(page) => {
+                                setModalCurrentPage(page);
+                                fetchModalVehiclesPage(page, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+                              }}
+                            />
+                          </div>
+                        )
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="pt-4 border-t border-gray-150 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAssignModalOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-colors uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAssignments}
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 bg-primary hover:bg-primary/95 disabled:opacity-50 disabled:pointer-events-none text-black font-black rounded-xl text-sm transition-colors uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Fleet Assignments</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add / Edit Promo Definition Modal */}
+      <AnimatePresence>
+        {isAddEditModalOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAddEditModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-6 z-10 mx-2 flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-gray-150">
+                <h3 className="text-lg font-bold text-gray-900">{isEditing ? "Edit Promo Badge" : "Create Promo Badge"}</h3>
+                <button
+                  onClick={() => setIsAddEditModalOpen(false)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="py-4 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Promo Badge Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Super Offer, Best Price"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-250 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Description / Details</label>
+                  <textarea
+                    placeholder="Brief description of the promotion details..."
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-250 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="pt-4 border-t border-gray-150 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddEditModalOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-colors uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSavePromoDefinition}
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 bg-primary hover:bg-primary/95 disabled:opacity-50 disabled:pointer-events-none text-black font-black rounded-xl text-sm transition-colors uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Promo</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </SectionLayout>
+  );
+}

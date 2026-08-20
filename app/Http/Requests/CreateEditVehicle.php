@@ -32,6 +32,9 @@ class CreateEditVehicle extends FormRequest
             'specifications' => 'required',
             'included' => 'required|string',
             'instant_confirmation' => 'required',
+            'pricing_mode' => 'nullable|string|in:standard,granular,dynamic',
+            'granular_prices' => 'nullable',
+            'custom_price_tiers' => 'nullable',
         ];
     }
 }

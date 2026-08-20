@@ -11,6 +11,39 @@ class Vehicle extends Model
     use HasFactory;
     use SoftDeletes;
 
+    use \App\Console\Commands\Traits\NormalizesVehicleNames;
+
+    public function setNameAttribute($value)
+    {
+        if ($value !== null) {
+            // Remove "or similar" suffix from supplier names
+            $value = trim(preg_replace('/(?i)\s*-?\s*\(?or similar\)?\s*/', '', $value));
+            // Apply consistent title-case and transmission normalization
+            $value = $this->normalizeVehicleName($value);
+        }
+        $this->attributes['name'] = $value;
+    }
+
+    public function getNameAttribute($value)
+    {
+        if (empty($value)) return $value;
+
+        if (stripos($value, 'Automatic') === false && stripos($value, 'Manual') === false) {
+            if ($this->relationLoaded('specifications')) {
+                $specs = $this->getRelation('specifications');
+                if ($specs) {
+                    $transSpec = $specs->firstWhere('name', 'Transmission');
+                    if ($transSpec && $transSpec->value) {
+                        $transStr = strtolower($transSpec->value) === 'automatic' ? 'Automatic' : 'Manual';
+                        return trim($value) . ' ' . $transStr;
+                    }
+                }
+            }
+        }
+        return $value;
+    }
+
+
     protected $fillable = [
         'photo',
         'name',
@@ -23,11 +56,24 @@ class Vehicle extends Model
         'category',
         'specifications',
         'description',
-        'fuel_policy_id'
+        'fuel_policy_id',
+        'negotiation_status',
+        'negotiation_notes',
+        'negotiation_priority',
+        'instant_confirmation',
+        'pricing_mode',
+        'granular_prices',
+        'custom_price_tiers'
     ];
 
     protected $casts = [
-        'specifications' => 'array'
+        'specifications' => 'array',
+        'granular_prices' => 'array',
+        'custom_price_tiers' => 'array'
+    ];
+
+    protected $appends = [
+        'rental_terms'
     ];
 
     public function category() {
@@ -37,12 +83,18 @@ class Vehicle extends Model
         return $this->belongsTo(Category::class, 'category', 'id');
     }
 
-    public function supplier() {
+    public function supplierUser() {
         return $this->belongsTo(User::class, 'supplier', 'id');
     }
 
     public function branch() {
         return $this->belongsTo(Branch::class, 'pickup_loc', 'id');
+    }
+
+    public function branches() {
+        return $this->belongsToMany(Branch::class, 'branch_vehicle')
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 
     public function rentals(){
@@ -62,9 +114,37 @@ class Vehicle extends Model
         return $this->belongsToMany(Included::class, 'vehicle_included','vehicle_id','included_id');
     }
 
-    public function rental_terms()
+    public function getRentalTermsAttribute()
     {
-        $this->rental_terms =  SupplierRentalTerm::query()->where('supplier_id', $this->supplier)->join('rental_terms','rental_terms.id', '=','supplier_rental_terms.rental_term_id')->select(['title','description'])->get();
+        $supplierId = $this->attributes['supplier'] ?? ($this->getAttributes()['supplier'] ?? null);
+        if (!$supplierId && $this->relationLoaded('supplierUser')) {
+            $supplierId = $this->supplierUser ? $this->supplierUser->id : null;
+        }
+        
+        if (!$supplierId) {
+            return [];
+        }
+
+        // جلب الفرع والدولة المحددة للسيارة
+        $branch = $this->branch;
+        $country = $branch ? trim($branch->country) : null;
+
+        $query = SupplierRentalTerm::query()
+            ->where('supplier_rental_terms.supplier_id', $supplierId)
+            ->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id');
+
+        if ($country) {
+            $normalizedCountry = \App\Services\CountryCurrencyResolver::normalizeCountryName($country);
+            $query->where(function($q) use ($country, $normalizedCountry) {
+                $q->whereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($country)])
+                  ->orWhereRaw('LOWER(supplier_rental_terms.country) = ?', [strtolower($normalizedCountry)])
+                  ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($country)])
+                  ->orWhereRaw('LOWER(rental_terms.country) = ?', [strtolower($normalizedCountry)]);
+            });
+        }
+
+        return $query->select(['rental_terms.title', 'rental_terms.description'])
+            ->get();
     }
     public function specifications()
     {
@@ -77,5 +157,22 @@ class Vehicle extends Model
     public function fuelPolicy()
     {
         return $this->belongsTo(FuelPolicy::class,'fuel_policy_id','id');
+    }
+
+    public function vehiclePhoto()
+    {
+        return $this->belongsTo(VehiclesPhotos::class, 'photo', 'id');
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (array_key_exists('supplier_user', $array)) {
+            $array['supplier'] = $array['supplier_user'];
+            unset($array['supplier_user']);
+        } elseif ($this->relationLoaded('supplierUser')) {
+            $array['supplier'] = $this->supplierUser ? $this->supplierUser->toArray() : null;
+        }
+        return $array;
     }
 }

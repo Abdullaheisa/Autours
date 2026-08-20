@@ -1,0 +1,150 @@
+'use client';
+
+import { useSelector } from 'react-redux';
+import { CheckCircle2, Calendar, Clock, Pencil, SlidersHorizontal } from 'lucide-react';
+import { RootState } from '@/store';
+
+interface SearchSummaryProps {
+  onEditClick?: () => void;
+  hideEditButton?: boolean;
+  forceMobileLayout?: boolean;
+}
+
+export default function SearchSummary({ onEditClick, hideEditButton, forceMobileLayout }: SearchSummaryProps) {
+  const { searchParams, count, daysNumber } = useSelector((state: RootState) => state.search);
+  const currencyCode = useSelector((state: RootState) => state.currency.code);
+  const locationText = searchParams.locationLabel || searchParams.location || '';
+
+  const formatDisplayDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-sm">
+      {/* Desktop Sidebar Header - lg and above only */}
+      {!forceMobileLayout && (
+        <div className="hidden lg:flex items-center justify-between bg-yellow-50 px-5 py-3.5 border-b border-yellow-100">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal size={15} className="text-yellow-700" />
+            <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-gray-800">Your Search Details</h3>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile/Tablet Horizontal Bar */}
+      <div className={`${forceMobileLayout ? 'block' : 'lg:hidden'} relative`}>
+        <div className={`flex flex-col sm:flex-row sm:items-center bg-yellow-50 ${!hideEditButton ? 'pr-12' : ''}`}>
+          {/* Pickup Info */}
+          <div className="flex-1 px-4 py-3 sm:border-r border-yellow-200">
+            <p className="text-xs font-bold text-gray-800 truncate">
+              {locationText || 'Select Location'}
+            </p>
+            <p className="text-[10px] text-gray-500 mt-0.5">
+              {searchParams.dateFrom ? formatDisplayDate(searchParams.dateFrom) : '--'}
+              {' '}
+              {searchParams.startTime || '10:00'}
+            </p>
+          </div>
+
+          {/* Arrow connector */}
+          <div className="hidden sm:flex items-center justify-center px-2">
+            <div className="w-6 h-6 rounded-full bg-yellow-200 flex items-center justify-center">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-yellow-700">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Return Info */}
+          <div className="flex-1 px-4 py-3 border-t sm:border-t-0 border-yellow-200">
+            <p className="text-xs font-bold text-gray-800 truncate">
+              {locationText || 'Select Location'}
+            </p>
+            <p className="text-[10px] text-gray-500 mt-0.5">
+              {searchParams.dateTo ? formatDisplayDate(searchParams.dateTo) : '--'}
+              {' '}
+              {searchParams.endTime || '10:00'}
+            </p>
+          </div>
+        </div>
+
+        {/* Edit Button - opens side drawer */}
+        {!hideEditButton && (
+          <button
+            onClick={onEditClick}
+            className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-gray-900 transition-colors"
+            aria-label="Modify search"
+          >
+            <Pencil size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Desktop Content - lg and above only */}
+      {!forceMobileLayout && (
+        <div className="hidden lg:block p-5 space-y-5">
+        {/* Pick-up */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-medium uppercase tracking-wider text-gray-400">Pick-up Location</h4>
+          <div className="flex items-start gap-2 text-base font-normal text-gray-800">
+            <CheckCircle2 size={18} className="text-primary shrink-0 mt-0.5" />
+            <p className="leading-snug">{locationText || 'Not selected'}</p>
+          </div>
+          {searchParams.dateFrom && (
+            <div className="flex items-center gap-x-3 gap-y-1 text-sm font-normal text-gray-600 pl-6 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <Calendar size={15} />
+                {searchParams.dateFrom}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock size={15} />
+                {searchParams.startTime || '10:00'}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="h-px bg-gray-100" />
+
+        {/* Drop-off */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-medium uppercase tracking-wider text-gray-400">Drop-off Location</h4>
+          <div className="flex items-start gap-2 text-base font-normal text-gray-800">
+            <CheckCircle2 size={18} className="text-primary shrink-0 mt-0.5" />
+            <p className="leading-snug">{locationText || 'Not selected'}</p>
+          </div>
+          {searchParams.dateTo && (
+            <div className="flex items-center gap-x-3 gap-y-1 text-sm font-normal text-gray-600 pl-6 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <Calendar size={15} />
+                {searchParams.dateTo}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock size={15} />
+                {searchParams.endTime || '10:00'}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Booking summary */}
+        {daysNumber > 0 && (
+          <>
+            <div className="h-px bg-gray-100" />
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-normal text-gray-600">Duration</span>
+              <span className="text-sm font-medium text-gray-900">{daysNumber} {daysNumber === 1 ? 'Day' : 'Days'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-normal text-gray-600">Currency</span>
+              <span className="text-sm font-medium text-gray-900">{currencyCode}</span>
+            </div>
+          </>
+        )}
+      </div>
+    )}
+    </div>
+  );
+}

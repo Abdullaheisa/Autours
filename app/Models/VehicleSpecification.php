@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class VehicleSpecification extends Model
 {
     public $timestamps = true;
+
+    protected $fillable = [
+        'vehicle_id',
+        'name',
+        'value',
+        'icon',
+    ];
 }

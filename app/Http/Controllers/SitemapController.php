@@ -10,6 +10,15 @@ class SitemapController extends Controller
 {
     public function index()
     {
+        $path = public_path('sitemap.xml');
+
+        if (file_exists($path)) {
+            return response()->file($path, [
+                'Content-Type' => 'application/xml; charset=UTF-8',
+            ]);
+        }
+
+        // Fallback: generate on-the-fly if the file doesn't exist yet
         $xml = Cache::remember('sitemap.xml', now()->addMinutes(30), function () {
             return $this->buildXml();
         });
