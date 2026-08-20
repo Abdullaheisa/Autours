@@ -464,15 +464,26 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::post('/send-email',[SubscriberController::class,'sendEmail']);
 
 // API Documentation Routes
-Route::get('/docs', function () {
-    return response()->file(public_path('docs/index.php'));
-})->name('api.docs');
+Route::middleware(function ($request, $next) {
+    $user = env('SWAGGER_USER', 'admin');
+    $pass = env('SWAGGER_PASS', 'admin');
 
-Route::get('/docs/swagger.json', function () {
-    return response()->file(public_path('docs/swagger.json'), [
-        'Content-Type' => 'application/json'
-    ]);
-})->name('api.docs.json');
+    if ($request->getUser() !== $user || $request->getPassword() !== $pass) {
+        return response('Unauthorized.', 401, ['WWW-Authenticate' => 'Basic realm="API Documentation"']);
+    }
+
+    return $next($request);
+})->group(function () {
+    Route::get('/docs', function () {
+        return response()->file(public_path('docs/index.php'));
+    })->name('api.docs');
+
+    Route::get('/docs/swagger.json', function () {
+        return response()->file(public_path('docs/swagger.json'), [
+            'Content-Type' => 'application/json'
+        ]);
+    })->name('api.docs.json');
+});
 
 // Platform Statistics Routes
 Route::get('/stats', [\App\Http\Controllers\StatsController::class, 'index']);
