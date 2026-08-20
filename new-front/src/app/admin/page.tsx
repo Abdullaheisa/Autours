@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Sidebar, Header } from "@/app/admin/components";
-import { DashboardOverviewPage, CompaniesPage, BlogsPage, BookingsCalendarPage, SupplierIntelligencePage } from "@/app/admin/pages";
+import { DashboardOverviewPage, CompaniesPage, BlogsPage, CityPagesPage, BookingsCalendarPage, SupplierIntelligencePage } from "@/app/admin/pages";
 import { features } from "@/config/features";
 
 // Other sections still imported directly until page components are created
@@ -33,6 +33,7 @@ const pageTitles: Record<string, string> = {
   profile: "My Profile",
   companies: "My Companies",
   blogs: "Blog Management",
+  "city-pages": "City Pages",
   profit: "Profit Margin",
   vehicles: "Vehicles Photos",
   bulk: "Vehicles Bulk Upload",
@@ -125,6 +126,7 @@ export default function AdminDashboard() {
       case "profile":     return <ProfileSection />;
       case "companies":   return <CompaniesPage />;
       case "blogs":       return <BlogsPage />;
+      case "city-pages":  return <CityPagesPage />;
       case "profit":      return <ProfitMarginSection />;
       case "vehicles":    return <VehiclesPhotosSection />;
       case "bulk":        return <VehiclesBulkUploadSection />;

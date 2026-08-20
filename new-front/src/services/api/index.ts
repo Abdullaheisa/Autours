@@ -24,6 +24,19 @@ export const blogApi = {
   uploadImage: (formData: FormData) => apiClient.post("/api/blogs/upload-image", formData),
 };
 
+// City Page API - uses /api/city-pages endpoints
+export const cityPageApi = {
+  getAll: () => apiClient.get("/api/city-pages?per_page=1000"),
+  getPublished: () => apiClient.get("/api/city-pages/published"),
+  getById: (id: number) => apiClient.get(`/api/city-pages/${id}`),
+  getBySlug: (slug: string) => apiClient.get(`/api/city-pages/slug/${slug}`),
+  create: (data: unknown) => apiClient.post("/api/city-pages", data),
+  update: (id: number, data: unknown) => apiClient.post(`/api/city-pages/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/api/city-pages/${id}`),
+  togglePublish: (id: number) => apiClient.patch(`/api/city-pages/${id}/toggle-publish`, {}),
+};
+
+
 // Blog Category API
 export const blogCategoryApi = {
   getAll: () => apiClient.get("/api/blog-categories"),
