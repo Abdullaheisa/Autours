@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
-import { cityPagesData, CityPageData } from '@/data/cityPages';
+import { CityPageData } from '@/data/cityPages';
 import CityPageContent from './components/CityPageContent';
 import { features } from '@/config/features';
 
+import { SERVER_API_BASE } from '@/config/api';
+
 async function fetchCityFromApi(slug: string): Promise<CityPageData | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-    const res = await fetch(`${baseUrl}/api/city-pages/slug/${slug}`, {
-      next: { revalidate: 60 }, // cache for 60 seconds
+    const res = await fetch(`${SERVER_API_BASE}/city-pages/slug/${slug}`, {
+      cache: 'no-store', // Always fetch the latest data immediately
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -48,9 +49,7 @@ export async function generateMetadata(props: { params: Promise<{ city: string }
   const params = await props.params;
   const slug = params.city.toLowerCase();
 
-  // Try API first, then static fallback
-  const apiData = await fetchCityFromApi(slug);
-  const data = apiData || cityPagesData[slug];
+  const data = await fetchCityFromApi(slug);
   if (!data) return { title: 'City Not Found' };
 
   return {
@@ -68,9 +67,7 @@ export default async function CityPage(props: { params: Promise<{ city: string }
   const params = await props.params;
   const slug = params.city.toLowerCase();
 
-  // Try API first, then static fallback
-  const apiData = await fetchCityFromApi(slug);
-  const data = apiData || cityPagesData[slug];
+  const data = await fetchCityFromApi(slug);
 
   if (!data) {
     notFound();
