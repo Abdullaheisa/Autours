@@ -464,16 +464,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::post('/send-email',[SubscriberController::class,'sendEmail']);
 
 // API Documentation Routes
-Route::middleware(function ($request, $next) {
-    $user = env('SWAGGER_USER', 'admin');
-    $pass = env('SWAGGER_PASS', 'admin');
-
-    if ($request->getUser() !== $user || $request->getPassword() !== $pass) {
-        return response('Unauthorized.', 401, ['WWW-Authenticate' => 'Basic realm="API Documentation"']);
-    }
-
-    return $next($request);
-})->group(function () {
+Route::middleware([\App\Http\Middleware\SwaggerAuth::class])->group(function () {
     Route::get('/docs', function () {
         return response()->file(public_path('docs/index.php'));
     })->name('api.docs');
