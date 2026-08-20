@@ -8,6 +8,9 @@ const PORT = 9000;
 // The secret password required to trigger the webhook
 const SECRET_TOKEN = 'autours_deploy_secure2026kgyjfvjhbiuohin651615';
 
+// A separate secret token for the /deploy endpoint
+const DEPLOY_SECRET_TOKEN = 'deploy_secret_token_1231846135'; // Update this to a secure value
+
 const server = http.createServer((req, res) => {
     // Parse the URL to read query parameters
     const parsedUrl = url.parse(req.url, true);
@@ -15,10 +18,10 @@ const server = http.createServer((req, res) => {
     // Trigger deployment on /deploy for ANY method (GET or POST)
     if (parsedUrl.pathname === '/deploy') {
         
-        // SECURITY CHECK: Verify the secret token
-        if (parsedUrl.query.secret !== SECRET_TOKEN) {
+        // SECURITY CHECK: Verify the deploy secret token
+        if (parsedUrl.query.secret !== DEPLOY_SECRET_TOKEN) {
             res.writeHead(403, { 'Content-Type': 'text/plain' });
-            res.end('403 Forbidden: Invalid or missing secret token.\n');
+            res.end('403 Forbidden: Invalid or missing deploy secret token.\n');
             console.log(`[${new Date().toISOString()}] Blocked unauthorized deploy attempt from IP: ${req.socket.remoteAddress}`);
             return;
         }
