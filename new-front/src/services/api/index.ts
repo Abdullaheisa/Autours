@@ -420,13 +420,6 @@ export const vehicleApi = {
 
   getLocationsByCity: async (city: string): Promise<LocationBranch[]> => {
     try {
-      const cityKey = city.toLowerCase().trim();
-      const cacheKey = `autours_locations_city_${cityKey}`;
-      if (typeof window !== 'undefined') {
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) return JSON.parse(cached);
-      }
-
       const data = await apiClient.get<any[]>(`/get/locations/city/${city}`);
       const mapped = (data || []).map((loc: any) => ({
         id: loc.id,
@@ -443,9 +436,6 @@ export const vehicleApi = {
         company: loc.company || null,
       }));
 
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
-      }
       return mapped;
     } catch (err) {
       console.error('[LOCATIONS BY CITY ERROR]', err);
