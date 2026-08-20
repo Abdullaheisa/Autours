@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -19,15 +20,24 @@ export async function generateStaticParams() {
   return [];
 }
 
+const getBrandData = cache(async (brandSlug: string) => {
+  try {
+    const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`, { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    return null;
+  }
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { brand: brandSlug, country: countrySlug } = await params;
-  const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`);
-  if (!res.ok) return { title: 'Not Found' };
-  const brand = await res.json();
-  const country = brand.countries.find((c: any) => c.countrySlug === countrySlug);
+  const brand = await getBrandData(brandSlug);
+  if (!brand) return { title: 'Not Found' };
+  const country = brand.countries?.find((c: any) => c.countrySlug === countrySlug);
   if (!country) return { title: 'Not Found' };
 
-  const totalBranches = country.airportBranches.length + country.cityBranches.length;
+  const totalBranches = (country.airportBranches?.length || 0) + (country.cityBranches?.length || 0);
 
   return {
     title: `${brand.name} Car Rental in ${country.countryName} | Autours`,
@@ -38,10 +48,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BrandCountryPage({ params }: PageProps) {
   const { brand: brandSlug, country: countrySlug } = await params;
-  const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`, { next: { revalidate: 60 } });
-  if (!res.ok) notFound();
-  const brand = await res.json();
-  const country = brand.countries.find((c: any) => c.countrySlug === countrySlug);
+  const brand = await getBrandData(brandSlug);
+  if (!brand) notFound();
+  const country = brand.countries?.find((c: any) => c.countrySlug === countrySlug);
 
   if (!country) notFound();
 

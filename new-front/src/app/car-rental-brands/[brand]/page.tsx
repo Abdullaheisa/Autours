@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
@@ -21,24 +22,32 @@ export async function generateStaticParams() {
   return [];
 }
 
+const getBrandData = cache(async (brandSlug: string) => {
+  try {
+    const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`, { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    return null;
+  }
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { brand: brandSlug } = await params;
-  const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`);
-  if (!res.ok) return { title: 'Brand Not Found' };
-  const brand = await res.json();
+  const brand = await getBrandData(brandSlug);
+  if (!brand) return { title: 'Brand Not Found' };
 
   return {
     title: `${brand.displayName} Destinations | Autours`,
-    description: `Find all ${brand.name} car rental locations across ${brand.countries.length} countries. Book ${brand.name} at airports and city centers with Autours.`,
+    description: `Find all ${brand.name} car rental locations across ${brand.countries?.length || 0} countries. Book ${brand.name} at airports and city centers with Autours.`,
     alternates: { canonical: `/car-rental-brands/${brand.id}` },
   };
 }
 
 export default async function BrandDetailPage({ params }: PageProps) {
   const { brand: brandSlug } = await params;
-  const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands/${brandSlug}`, { next: { revalidate: 60 } });
-  if (!res.ok) notFound();
-  const brand = await res.json();
+  const brand = await getBrandData(brandSlug);
+  if (!brand) notFound();
   if (brand.logo) {
     if (brand.logo.includes('default.png')) {
       brand.logo = '/img/logo.png';

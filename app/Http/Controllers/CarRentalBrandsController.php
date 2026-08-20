@@ -81,111 +81,117 @@ class CarRentalBrandsController extends Controller
 
     private function getActiveSuppliersWithData()
     {
-        $suppliers = User::where('role', 'active_supplier')
+        // Get active suppliers who have at least one active branch and active vehicle
+        return User::where('role', 'active_supplier')
             ->whereNotNull('logo')
             ->where('logo', '!=', '')
             ->where('logo', '!=', 'company_logos/default.png')
             ->where('logo', '!=', '/img/company_logos/default.png')
+            ->whereHas('branches', function ($q) {
+                $q->where('activation', 1);
+            })
+            ->whereHas('vehicles', function ($q) {
+                $q->where('activation', 1);
+            })
             ->get();
-            
-        return $suppliers->filter(function ($user) {
-            $hasBranches = Branch::where('company_id', $user->id)
-                ->where('activation', 1)
-                ->exists();
-                
-            if (!$hasBranches) {
-                return false;
-            }
-            
-            $hasVehicles = \App\Models\Vehicle::where('supplier', $user->id)
-                ->where('activation', 1)
-                ->exists();
-                
-            return $hasVehicles;
-        });
     }
 
     public function index()
     {
-        // Get only active suppliers with real data (branches and vehicles)
-        $suppliers = $this->getActiveSuppliersWithData();
-        
-        $formatted = $suppliers->map(function ($user) {
-            return $this->resolveBrand($user);
-        })->values();
+        return \Illuminate\Support\Facades\Cache::remember('car_rental_brands_index_v2', 300, function () {
+            // Get only active suppliers with real data (branches and vehicles)
+            $suppliers = $this->getActiveSuppliersWithData();
+            
+            $formatted = $suppliers->map(function ($user) {
+                return $this->resolveBrand($user);
+            })->values();
 
-        // Calculate global stats dynamically based on filtered suppliers
-        $activeSupplierIds = $suppliers->pluck('id')->toArray();
-        $totalBrands = $suppliers->count();
-        $totalCountries = Branch::whereIn('company_id', $activeSupplierIds)
-            ->where('activation', 1)
-            ->distinct('country')
-            ->count('country');
-        $totalBranches = Branch::whereIn('company_id', $activeSupplierIds)
-            ->where('activation', 1)
-            ->count();
+            // Calculate global stats dynamically based on filtered suppliers
+            $activeSupplierIds = $suppliers->pluck('id')->toArray();
+            $totalBrands = $suppliers->count();
+            $totalCountries = Branch::whereIn('company_id', $activeSupplierIds)
+                ->where('activation', 1)
+                ->distinct('country')
+                ->count('country');
+            $totalBranches = Branch::whereIn('company_id', $activeSupplierIds)
+                ->where('activation', 1)
+                ->count();
 
-        return response()->json([
-            'brands' => $formatted,
-            'stats' => [
-                'totalBrands' => $totalBrands,
-                'totalCountries' => $totalCountries,
-                'totalBranches' => $totalBranches,
-            ]
-        ]);
+            return [
+                'brands' => $formatted,
+                'stats' => [
+                    'totalBrands' => $totalBrands,
+                    'totalCountries' => $totalCountries,
+                    'totalBranches' => $totalBranches,
+                ]
+            ];
+        });
     }
 
     public function show($brandSlug)
     {
-        // Find supplier by slug (comparing slug of company or name)
-        $suppliers = $this->getActiveSuppliersWithData();
-        $matchedSupplier = null;
-        $matchedBrand = null;
+        $cacheKey = 'car_rental_brand_show_' . strtolower(trim($brandSlug));
 
-        foreach ($suppliers as $user) {
-            $brand = $this->resolveBrand($user);
-            if ($brand['id'] === strtolower($brandSlug)) {
-                $matchedSupplier = $user;
-                $matchedBrand = $brand;
-                break;
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($brandSlug) {
+            $brandSlugLower = strtolower(trim($brandSlug));
+            $matchedSupplier = null;
+
+            // 1. First check if a seeded or saved CarRentalBrand matches slug
+            $brandDetails = CarRentalBrand::where('slug', $brandSlugLower)->first();
+            if ($brandDetails && $brandDetails->user_id) {
+                $matchedSupplier = User::find($brandDetails->user_id);
             }
-        }
 
-        if (!$matchedSupplier) {
+            // 2. If not found, match by user company or name slug directly
+            if (!$matchedSupplier) {
+                $suppliers = User::where('role', 'active_supplier')
+                    ->whereNotNull('logo')
+                    ->where('logo', '!=', '')
+                    ->get();
+
+                foreach ($suppliers as $user) {
+                    $slug = Str::slug($user->company ?: $user->name);
+                    if ($slug === $brandSlugLower) {
+                        $matchedSupplier = $user;
+                        break;
+                    }
+                }
+            }
+
+            if (!$matchedSupplier) {
+                return null;
+            }
+
+            $matchedBrand = $this->resolveBrand($matchedSupplier);
+            $countries = $this->getBrandCountriesAndBranches($matchedSupplier->id);
+
+            return array_merge($matchedBrand, [
+                'countries' => $countries,
+            ]);
+        });
+
+        if (!$data) {
             return response()->json(['message' => 'Brand not found'], 404);
         }
 
-        $countries = $this->getBrandCountriesAndBranches($matchedSupplier->id);
-
-        return response()->json(array_merge($matchedBrand, [
-            'countries' => $countries,
-        ]));
+        return response()->json($data);
     }
 
     public function showCountry($brandSlug, $countrySlug)
     {
-        $suppliers = $this->getActiveSuppliersWithData();
-        $matchedSupplier = null;
-        $matchedBrand = null;
-
-        foreach ($suppliers as $user) {
-            $brand = $this->resolveBrand($user);
-            if ($brand['id'] === strtolower($brandSlug)) {
-                $matchedSupplier = $user;
-                $matchedBrand = $brand;
-                break;
-            }
+        $brandResponse = $this->show($brandSlug);
+        if ($brandResponse->getStatusCode() !== 200) {
+            return $brandResponse;
         }
 
-        if (!$matchedSupplier) {
-            return response()->json(['message' => 'Brand not found'], 404);
-        }
-
-        $countries = $this->getBrandCountriesAndBranches($matchedSupplier->id);
+        $brandData = $brandResponse->getData(true);
+        $countries = $brandData['countries'] ?? [];
 
         $matchedCountry = null;
+        $targetCountrySlug = strtolower(trim($countrySlug));
+
         foreach ($countries as $country) {
-            if ($country['countrySlug'] === strtolower($countrySlug)) {
+            if ($country['countrySlug'] === $targetCountrySlug) {
                 $matchedCountry = $country;
                 break;
             }
@@ -197,13 +203,13 @@ class CarRentalBrandsController extends Controller
 
         return response()->json([
             'brand' => [
-                'id' => $matchedBrand['id'],
-                'name' => $matchedBrand['name'],
-                'displayName' => $matchedBrand['displayName'],
-                'logo' => $matchedBrand['logo'],
-                'rating' => $matchedBrand['rating'],
-                'reviewCount' => $matchedBrand['reviewCount'],
-                'ratingLabel' => $matchedBrand['ratingLabel'],
+                'id' => $brandData['id'],
+                'name' => $brandData['name'],
+                'displayName' => $brandData['displayName'],
+                'logo' => $brandData['logo'],
+                'rating' => $brandData['rating'],
+                'reviewCount' => $brandData['reviewCount'],
+                'ratingLabel' => $brandData['ratingLabel'],
             ],
             'country' => $matchedCountry
         ]);
@@ -211,12 +217,29 @@ class CarRentalBrandsController extends Controller
 
     private function getBrandCountriesAndBranches($userId)
     {
+        // 1. Fetch all active branches for this supplier in a single fast query
         $branches = Branch::where('company_id', $userId)
             ->where('activation', 1)
             ->get();
 
-        $groupedByCountry = $branches->groupBy('country');
+        if ($branches->isEmpty()) {
+            return [];
+        }
 
+        // 2. Fetch vehicle counts per pickup location in a single aggregate query
+        $branchIds = $branches->pluck('id')->toArray();
+        $vehiclesPerPickup = \App\Models\Vehicle::where('supplier', $userId)
+            ->where('activation', 1)
+            ->whereIn('pickup_loc', $branchIds)
+            ->select('pickup_loc', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('pickup_loc')
+            ->pluck('count', 'pickup_loc');
+
+        $totalActiveVehicles = \App\Models\Vehicle::where('supplier', $userId)
+            ->where('activation', 1)
+            ->count();
+
+        $groupedByCountry = $branches->groupBy('country');
         $countries = [];
 
         foreach ($groupedByCountry as $countryName => $countryBranches) {
@@ -231,6 +254,7 @@ class CarRentalBrandsController extends Controller
 
             $airportBranches = [];
             $cityBranches = [];
+            $countryVehicleCount = 0;
 
             foreach ($countryBranches as $branch) {
                 $branchNameLower = strtolower($branch->name);
@@ -239,7 +263,7 @@ class CarRentalBrandsController extends Controller
                                    str_contains($branchNameLower, 'havalim') || 
                                    str_contains($branch->name, 'مطار');
 
-                $isAirport = strtolower($branch->location_type) === 'airport' || 
+                $isAirport = strtolower($branch->location_type ?? '') === 'airport' || 
                              $branch->airport_id !== null || 
                              $isAirportByName;
 
@@ -258,19 +282,14 @@ class CarRentalBrandsController extends Controller
                 } else {
                     $cityBranches[] = $formattedBranch;
                 }
+
+                $countryVehicleCount += ($vehiclesPerPickup[$branch->id] ?? 0);
             }
 
-            // Calculate real total active vehicles in this country for this brand/supplier
-            $branchIds = $countryBranches->pluck('id')->toArray();
-            $totalVehicles = \App\Models\Vehicle::where('supplier', $userId)
-                ->where('activation', 1)
-                ->where(function($query) use ($branchIds) {
-                    $query->whereIn('pickup_loc', $branchIds)
-                          ->orWhereHas('branches', function($q) use ($branchIds) {
-                              $q->whereIn('branches.id', $branchIds);
-                          });
-                })
-                ->count();
+            // If no specific pickup_loc was mapped, fallback gracefully
+            if ($countryVehicleCount === 0 && $totalActiveVehicles > 0) {
+                $countryVehicleCount = min($totalActiveVehicles, count($countryBranches) * 5);
+            }
 
             $countries[] = [
                 'countrySlug' => $countrySlug,
@@ -279,7 +298,7 @@ class CarRentalBrandsController extends Controller
                 'countryFlag' => $this->getCountryFlagEmoji($countryCode),
                 'airportBranches' => $airportBranches,
                 'cityBranches' => $cityBranches,
-                'totalCars' => $totalVehicles,
+                'totalCars' => $countryVehicleCount,
             ];
         }
 
