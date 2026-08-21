@@ -282,4 +282,35 @@ class KolaycarApiService
 
         return $response;
     }
+
+    /**
+     * Get reservation details via the Kolaycar GET_RESERVATION_V2 API.
+     *
+     * @param string $reservationNo The Kolaycar reservation number
+     * @return array Response data containing RESERVATIONINFO
+     */
+    public function getReservation(string $reservationNo): array
+    {
+        $params = [
+            'RESERVATIONNO' => $reservationNo,
+            'TOKEN'         => '',
+            'PARAM1'        => '',
+            'PARAM2'        => '',
+            'PARAM3'        => '',
+            'PARAM4'        => '',
+            'PARAM5'        => '',
+            'PARAM6'        => '',
+        ];
+
+        $response = $this->sendSoapRequest('GET_RESERVATION_V2', $params);
+
+        if (!empty($response)) {
+            Log::info('Kolaycar API: Reservation details fetched', [
+                'reservation_no' => $reservationNo,
+                'return_code'    => $response['RETURNCODE'] ?? null,
+            ]);
+        }
+
+        return $response;
+    }
 }
