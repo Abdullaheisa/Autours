@@ -261,8 +261,9 @@ class KolaycarApiService
     {
         $params = [
             'RESERVATIONNO' => $reservationNo,
+            'COMMENT'       => 'Cancelled by Autours',
             'TOKEN'         => '',
-            'PARAM1'        => '',
+            'PARAM1'        => '', // Can be a status ID from constants (e.g. 1 -> I gave up)
             'PARAM2'        => '',
             'PARAM3'        => '',
             'PARAM4'        => '',
@@ -270,7 +271,7 @@ class KolaycarApiService
             'PARAM6'        => '',
         ];
 
-        $response = $this->sendSoapRequest('CANCEL_RESERVATION', $params);
+        $response = $this->sendSoapRequest('POST_RESERVATION_CANCEL', $params);
 
         if (!empty($response)) {
             Log::info('Kolaycar API: Reservation cancelled', [
