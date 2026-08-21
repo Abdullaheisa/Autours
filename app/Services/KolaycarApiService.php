@@ -172,4 +172,113 @@ class KolaycarApiService
 
         return $this->sendSoapRequest('GET_VEHICLES_V2', $params);
     }
+
+    /**
+     * Create a reservation via the Kolaycar POST_RESERVATION API.
+     *
+     * @param array $reservationData Expected keys:
+     *   - PICKUPLOCATIONID (int)   Pickup location ID (branch station_id)
+     *   - RETURNLOCATIONID (int)   Return location ID (branch station_id)
+     *   - PICKUPDATE (string)      Format: d.m.Y (e.g. 20.09.2022)
+     *   - RETURNDATE (string)      Format: d.m.Y
+     *   - PICKUPTIME (string)      Format: H:i (e.g. 09:00)
+     *   - RETURNTIME (string)      Format: H:i
+     *   - VENDORID (int)           Vendor ID (optional, 0 if unknown)
+     *   - VEHICLEID (int)          Vehicle/CarGroup ID from GET_VEHICLES
+     *   - CUSTOMERNAME (string)    Customer first name
+     *   - CUSTOMERSURNAME (string) Customer last name
+     *   - CUSTOMERTELEPHONE (string)
+     *   - CUSTOMEREMAIL (string)
+     *   - CUSTOMERNOTE (string)    Booking reference / note
+     * @return array Response data including RESERVATIONNO on success
+     */
+    public function postReservation(array $reservationData): array
+    {
+        $params = array_merge([
+            // Required but can be empty/default
+            'EXTRAIDLIST'               => '',
+            'CUSTOMERINSTUTIONTYPENO'   => '',
+            'CUSTOMERPERSONALNUMBER'    => '',
+            'CUSTOMEREXPLANATION'       => '',
+            'COMPANYTITLE'              => '',
+            'COMPANYADDRESS'            => '',
+            'COMPANYTAXOFFICE'          => '',
+            'COMPANYTAXNO'              => '',
+            'FLIGHTNOARRIVAL'           => '',
+            'FLIGHTNODEPARTURE'         => '',
+            'CUSTOMERIP'                => '',
+            'PAIDAMOUNT'                => '',
+            'SENDMAIL'                  => 'false',
+            'UPDATERESNO'               => '',
+            'CREDITCARDPAYMENTTYPEACTIVE' => 'false',
+            'ADVANCEPAYMENTTYPEACTIVE'  => 'false',
+            'BANKID'                    => '',
+            'BANKVENDORID'              => '',
+            'CREDITCARDHOLDER'          => '',
+            'CREDITCARDNO'              => '',
+            'EXPIREDYEAR'               => '',
+            'EXPIREDMONTH'              => '',
+            'SECURITYCODE'              => '',
+            'INSTALLMENTCOUNT'          => '',
+            'THREEDPAYMENTACTIVE'       => 'false',
+            'PARAM1VALUE'               => '',
+            'PARAM2VALUE'               => '',
+            'PARAM3VALUE'               => '',
+            'PARAM4VALUE'               => '',
+            'PARAM5VALUE'               => '',
+            'PARAM6VALUE'               => '',
+            'PARAM7VALUE'               => '100',
+            'PARAM8VALUE'               => '',
+            'PARAM9VALUE'               => '',
+            'PARAM10VALUE'              => '',
+            'PARAM11VALUE'              => '',
+            'PARAM12VALUE'              => '',
+            'PARAM13VALUE'              => '',
+            'PARAM14VALUE'              => '',
+        ], $reservationData);
+
+        $response = $this->sendSoapRequest('POST_RESERVATION', $params);
+
+        $resNo = $response['RESERVATION'][0]['RESERVATIONNO'] ?? $response['RESERVATIONNO'] ?? null;
+
+        if (!empty($response)) {
+            Log::info('Kolaycar API: Reservation created successfully', [
+                'reservation_no' => $resNo,
+                'return_code'    => $response['RETURNCODE'] ?? null,
+            ]);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Cancel a reservation via the Kolaycar CANCEL_RESERVATION API.
+     *
+     * @param string $reservationNo The Kolaycar reservation number to cancel
+     * @return array Response data
+     */
+    public function cancelReservation(string $reservationNo): array
+    {
+        $params = [
+            'RESERVATIONNO' => $reservationNo,
+            'TOKEN'         => '',
+            'PARAM1'        => '',
+            'PARAM2'        => '',
+            'PARAM3'        => '',
+            'PARAM4'        => '',
+            'PARAM5'        => '',
+            'PARAM6'        => '',
+        ];
+
+        $response = $this->sendSoapRequest('CANCEL_RESERVATION', $params);
+
+        if (!empty($response)) {
+            Log::info('Kolaycar API: Reservation cancelled', [
+                'reservation_no' => $reservationNo,
+                'return_code'    => $response['RETURNCODE'] ?? null,
+            ]);
+        }
+
+        return $response;
+    }
 }
