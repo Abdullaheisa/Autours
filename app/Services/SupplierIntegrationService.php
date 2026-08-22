@@ -187,7 +187,7 @@ class SupplierIntegrationService
             'RETURNDATE'        => $returnDate,
             'PICKUPTIME'        => $pickupTime,
             'RETURNTIME'        => $returnTime,
-            'VENDORID'          => '',
+            'VENDORID'          => $this->extractExternalVendorId($vehicle->description) ?? '0',
             'VEHICLEID'         => $kolaycarVehicleId,
             'CUSTOMERNAME'      => $nameParts['first'],
             'CUSTOMERSURNAME'   => $nameParts['last'],
@@ -282,6 +282,26 @@ class SupplierIntegrationService
 
         // Match any tag pattern like [SomePrefix-ID:123]
         if (preg_match('/\[[\w-]+-ID:(\d+)\]/', $description, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract external vendor ID from the description tag.
+     * Looks for patterns like [Kolaycar-ID:123:Vendor:456]
+     *
+     * @param string|null $description
+     * @return string|null
+     */
+    private function extractExternalVendorId(?string $description): ?string
+    {
+        if (empty($description)) {
+            return null;
+        }
+
+        if (preg_match('/Vendor:(\d+)/', $description, $matches)) {
             return $matches[1];
         }
 

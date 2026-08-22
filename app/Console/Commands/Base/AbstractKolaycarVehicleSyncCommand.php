@@ -174,6 +174,8 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
                 $vehicleId = $carData['CARGROUPID'] ?? $carData['ID'] ?? $carData['VEHICLEID'] ?? null;
                 $descriptionTag = "[{$tagPrefix}:{$vehicleId}]";
 
+                $vendorId = $carData['VENDORID'] ?? '0';
+
                 $vehicle = Vehicle::where('pickup_loc', $branch->id)
                     ->where('description', 'LIKE', "%{$descriptionTag}%")
                     ->first();
@@ -181,6 +183,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
                 if ($vehicle) {
                     $vehicle->update([
                         'name' => $normalizedName,
+                        'description' => $descriptionTag . ' Vendor:' . $vendorId . ' ' . $vehicleName,
                         'category' => $categoryId,
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
@@ -207,7 +210,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
 
                     $vehicle = Vehicle::create([
                         'name' => $normalizedName,
-                        'description' => $descriptionTag . ' ' . $vehicleName,
+                        'description' => $descriptionTag . ' Vendor:' . $vendorId . ' ' . $vehicleName,
                         'photo' => $localPhotoUrl,
                         'supplier' => $supplierUserId,
                         'activation' => true,
