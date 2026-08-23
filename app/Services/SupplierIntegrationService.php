@@ -180,6 +180,19 @@ class SupplierIntegrationService
             ? Carbon::parse($rental->end_time)->format('H:i')
             : '10:00';
 
+        // Dynamically fetch and cache the Kolaycar VENDORID for this supplier
+        $vendorId = \Illuminate\Support\Facades\Cache::remember("kolaycar_vendor_id_{$supplier->id}", now()->addDays(30), function () use ($service) {
+            $locations = $service->getLocations();
+            foreach ($locations['LOCATIONS'] ?? [] as $loc) {
+                foreach ($loc['VENDORS'] ?? [] as $v) {
+                    if (!empty($v['VENDORID'])) {
+                        return (string)$v['VENDORID'];
+                    }
+                }
+            }
+            return '0';
+        });
+
         $reservationData = [
             'PICKUPLOCATIONID'  => $pickupLocationId,
             'RETURNLOCATIONID'  => $returnLocationId,
@@ -187,7 +200,7 @@ class SupplierIntegrationService
             'RETURNDATE'        => $returnDate,
             'PICKUPTIME'        => $pickupTime,
             'RETURNTIME'        => $returnTime,
-            'VENDORID'          => $this->extractExternalVendorId($vehicle->description) ?? '0',
+            'VENDORID'          => $vendorId,
             'VEHICLEID'         => $kolaycarVehicleId,
             'CUSTOMERNAME'      => $nameParts['first'],
             'CUSTOMERSURNAME'   => $nameParts['last'],
@@ -199,31 +212,35 @@ class SupplierIntegrationService
 
         $response = $service->postReservation($reservationData);
 
-        $reservationNo = $response['RESERVATION'][0]['RESERVATIONNO'] ?? $response['RESERVATIONNO'] ?? null;
-
-        if (!empty($response) && !empty($reservationNo)) {
-            // Store the Kolaycar reservation number on the rental
-            $rental->update([
-                'external_reservation_no' => (string) $reservationNo,
-            ]);
-
-            Log::info('Kolaycar reservation created successfully', [
-                'rental_id'      => $rental->id,
-                'order_number'   => $rental->order_number,
-                'reservation_no' => $reservationNo,
-                'supplier_id'    => $supplier->id,
-            ]);
-
-            return true;
+        if (isset($response['RETURNCODE']) && (string) $response['RETURNCODE'] !== '0') {
+            $msg = $response['MESSAGE'] ?? 'Kolaycar API error';
+            throw new \Exception($msg);
         }
 
-        Log::error('Kolaycar reservation creation failed', [
-            'rental_id'   => $rental->id,
-            'supplier_id' => $supplier->id,
-            'response'    => $response,
+        $reservationNo = $response['RESERVATION'][0]['RESERVATIONNO'] ?? $response['RESERVATIONNO'] ?? null;
+
+        if (empty($response) || empty($reservationNo)) {
+            Log::error('Kolaycar reservation creation failed', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+                'response'    => $response,
+            ]);
+            throw new \Exception("Supplier booking failed: No reservation number returned.");
+        }
+
+        // Store the Kolaycar reservation number on the rental
+        $rental->update([
+            'external_reservation_no' => (string) $reservationNo,
         ]);
 
-        return false;
+        Log::info('Kolaycar reservation created successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+        ]);
+
+        return true;
     }
 
     /**
@@ -429,6 +446,31 @@ class SupplierIntegrationService
     public function sendNewRental(Rental $rental): bool
     {
         return $this->sendRentalToSupplier($rental, 'new_rental');
+    }
+
+    /**
+     * Send rental directly to Kolaycar synchronously and let exceptions bubble up.
+     *
+     * @param Rental $rental
+     * @return void
+     * @throws \Exception
+     */
+    public function sendNewRentalSynchronous(Rental $rental): void
+    {
+        $supplier = $this->getSupplier($rental);
+
+        if (!$supplier || !$this->shouldSendToSupplier($supplier)) {
+            return;
+        }
+        
+        if (!empty($rental->external_reservation_no)) {
+             return;
+        }
+
+        if ($supplier->integration_type === 'kolaycar') {
+            $service = new KolaycarApiService($supplier->api_key, $supplier->api_password);
+            $this->createKolaycarReservation($service, $rental, $supplier);
+        }
     }
 
     /**

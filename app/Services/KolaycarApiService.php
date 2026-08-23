@@ -102,13 +102,13 @@ class KolaycarApiService
                 return [];
             }
 
-            // Return empty array if RETURNCODE is not '0'
+            // Return the data array even if there is an error, so callers can read the MESSAGE
             if (isset($data['RETURNCODE']) && (string) $data['RETURNCODE'] !== '0') {
                 Log::error('Kolaycar API: API returned error', [
                     'returncode' => $data['RETURNCODE'] ?? 'unknown',
                     'message' => $data['MESSAGE'] ?? 'No message provided'
                 ]);
-                return [];
+                return $data;
             }
 
             return $data;
