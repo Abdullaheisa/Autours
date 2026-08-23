@@ -191,6 +191,7 @@ class CityPageController extends Controller
                 'errors' => $e->errors(),
             ], StatusCodes::BAD_REQUEST);
         } catch (\Exception $e) {
+            \Log::error('CityPage Create Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create city page',
