@@ -195,9 +195,23 @@ export default function RentalsSection() {
     if (confirm("Are you sure you want to delete this rental?")) {
       try {
         await rentalApi.delete({ id });
-        fetchRentals();
+        fetchRentals(currentPage);
       } catch (e) {
         console.error("Failed to delete rental", e);
+      }
+    }
+  };
+
+  const handleCancelBooking = async (id: number) => {
+    if (confirm("Are you sure you want to CANCEL this booking? This will cancel the reservation with the supplier if applicable.")) {
+      try {
+        const reqStr = btoa(JSON.stringify({ rental_id: id }));
+        await rentalApi.updateStatus(`request=${reqStr}&status=5`); // 5 = REJECTED (triggers cancellation)
+        toast.success("Booking cancelled successfully!");
+        fetchRentals(currentPage);
+      } catch (e) {
+        console.error("Failed to cancel rental", e);
+        toast.error("Failed to cancel booking.");
       }
     }
   };
@@ -412,6 +426,13 @@ export default function RentalsSection() {
                               title="View Full Booking Details"
                             >
                               <Eye size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleCancelBooking(rental.id)}
+                              className="p-2 text-orange-500 hover:bg-orange-50 rounded-xl transition-colors cursor-pointer"
+                              title="Cancel / Reject Booking"
+                            >
+                              <XCircle size={16} />
                             </button>
                             <button 
                               onClick={() => handleDelete(rental.id)}

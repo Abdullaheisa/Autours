@@ -192,6 +192,11 @@ export default function CustomerBookings() {
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{v.name} <span className="text-sm font-normal text-gray-500">or similar</span></h3>
                     <p className="text-gray-500 text-sm mt-1">Order #{rental.order_number}</p>
+                    {rental.external_reservation_no && (
+                      <p className="text-emerald-600 text-xs font-semibold mt-1">
+                        Supplier Ref: {rental.external_reservation_no}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary-600">
