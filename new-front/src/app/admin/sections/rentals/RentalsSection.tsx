@@ -86,6 +86,7 @@ export default function RentalsSection() {
         return {
           id: r.id,
           order_number: r.order_number,
+          external_reservation_no: r.external_reservation_no,
           customer: r.customer?.name || "Customer",
           customer_id: r.customer_id || r.customer?.id,
           customer_email: r.customer?.email || "—",
@@ -361,6 +362,11 @@ export default function RentalsSection() {
                             <div>
                               <p className="text-sm font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{rental.customer}</p>
                               <p className="text-xs text-gray-500">{rental.order_number || `ID: ${rental.id}`}</p>
+                              {rental.external_reservation_no && (
+                                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5 px-1.5 py-0.5 bg-emerald-50 rounded w-max border border-emerald-100">
+                                  Ref: {rental.external_reservation_no}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>

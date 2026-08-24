@@ -272,6 +272,13 @@ export default function BookingDetailsModal({
               <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
                 <span>Booked on: {rental.created_at ? new Date(rental.created_at).toLocaleString() : rental.start_date || "—"}</span>
               </p>
+              {(rental.external_reservation_no || rental.raw?.external_reservation_no) && (
+                <p className="text-xs font-semibold text-emerald-600 mt-1 flex items-center gap-1.5">
+                  <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100">
+                    Supplier Ref: {rental.external_reservation_no || rental.raw?.external_reservation_no}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
 
