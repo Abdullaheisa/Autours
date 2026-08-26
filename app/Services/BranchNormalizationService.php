@@ -158,15 +158,33 @@ class BranchNormalizationService
      */
     private function validateIataMatch(Airport $airport, string $branchName, string $branchCountry): bool
     {
-        if ($this->isAirportBranch($branchName)) {
-            return true; // Clearly an airport branch
-        }
-        
         $cleanAirportCountry = $this->cleanString($airport->country);
         $cleanBranchCountry = $this->cleanString($branchCountry);
         
+        // If the country is provided and matches exactly, the IATA code is highly likely to be legitimate
         if (!empty($cleanBranchCountry) && $cleanAirportCountry === $cleanBranchCountry) {
-            return true; // Same country, so the 3-letter code is likely legit
+            return true;
+        }
+
+        // If the country doesn't match perfectly, but we know it's an airport branch
+        if ($this->isAirportBranch($branchName)) {
+            $cleanCity = $this->cleanString($airport->city);
+            $cleanBranchName = $this->cleanString($branchName);
+            
+            // Allow if the branch name contains the airport's city
+            if (!empty($cleanCity) && str_contains($cleanBranchName, $cleanCity)) {
+                return true;
+            }
+            
+            // Allow if the branch name contains the airport's country
+            if (!empty($cleanAirportCountry) && str_contains($cleanBranchName, $cleanAirportCountry)) {
+                return true;
+            }
+            
+            // Allow as a fallback only if the branch country was completely unknown
+            if (empty($cleanBranchCountry)) {
+                return true;
+            }
         }
 
         return false;
