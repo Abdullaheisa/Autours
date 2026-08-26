@@ -145,6 +145,12 @@ class SyncRoutesVehicles extends Command
                                 'seats'      => $rate['Seats'] ?? null,
                                 'FreeMiles'  => $rate['FreeMiles'] ?? null,
                                 'MileageUnit'=> $rate['MileageUnit'] ?? 'KM',
+                                'Deposit'    => $rate['Deposit'] ?? null,
+                                'CDW_Excess' => $rate['CDW_Excess'] ?? null,
+                                'TP_Excess'  => $rate['TP_Excess'] ?? null,
+                                'TaxDesc'    => $rate['TaxDesc'] ?? null,
+                                'Tax1Desc'   => $rate['Tax1Desc'] ?? null,
+                                'Tax2Desc'   => $rate['Tax2Desc'] ?? null,
                             ];
                         } elseif ($days === 7) {
                             $stationPrices[$branch->id][$classCode]['week_price'] = $dayPrice;
@@ -204,6 +210,36 @@ class SyncRoutesVehicles extends Command
                 $vehicleInclusions = [];
                 $taxesIncluded = Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
                 $vehicleInclusions[] = $taxesIncluded->id;
+                
+                if (!empty($model['Deposit'])) {
+                    $inc = Included::firstOrCreate(['what_is_included' => "Security Deposit: {$model['Deposit']}"]);
+                    $vehicleInclusions[] = $inc->id;
+                }
+                
+                if (!empty($model['CDW_Excess'])) {
+                    $inc = Included::firstOrCreate(['what_is_included' => "Collision Damage Waiver (Excess: {$model['CDW_Excess']})"]);
+                    $vehicleInclusions[] = $inc->id;
+                }
+                
+                if (!empty($model['TP_Excess'])) {
+                    $inc = Included::firstOrCreate(['what_is_included' => "Theft Protection (Excess: {$model['TP_Excess']})"]);
+                    $vehicleInclusions[] = $inc->id;
+                }
+                
+                if (!empty($model['TaxDesc'])) {
+                    $inc = Included::firstOrCreate(['what_is_included' => (string) $model['TaxDesc']]);
+                    $vehicleInclusions[] = $inc->id;
+                }
+                
+                if (!empty($model['Tax1Desc'])) {
+                    $inc = Included::firstOrCreate(['what_is_included' => (string) $model['Tax1Desc']]);
+                    $vehicleInclusions[] = $inc->id;
+                }
+                
+                if (!empty($model['Tax2Desc'])) {
+                    $inc = Included::firstOrCreate(['what_is_included' => (string) $model['Tax2Desc']]);
+                    $vehicleInclusions[] = $inc->id;
+                }
                 
                 if (isset($model['FreeMiles']) && $model['FreeMiles'] !== '' && strtolower((string)$model['FreeMiles']) !== 'unlimited') {
                     // Extract numeric part if it contains text
