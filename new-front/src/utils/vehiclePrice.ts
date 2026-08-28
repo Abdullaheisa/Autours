@@ -1,5 +1,6 @@
 import type { Currency, Vehicle } from '@/types';
 import { convertFromUsd } from '@/utils/currency';
+import { fallbackRates } from '@/store/slices/currencySlice';
 
 /**
  * Total rental price for display.
@@ -9,7 +10,7 @@ import { convertFromUsd } from '@/utils/currency';
 export function getVehicleDisplayPrice(
   vehicle: Vehicle | null | undefined,
   currencyCode: Currency,
-  allRates: Record<string, number>,
+  allRates: Record<string, number> = {},
   daysNumber: number = 1,
   fetchedCurrency?: string
 ): number {
@@ -17,11 +18,12 @@ export function getVehicleDisplayPrice(
 
   const finalPrice = Number(vehicle.final_price);
   if (finalPrice > 0) {
-    const priceCurrency = fetchedCurrency || vehicle.baseCurrency || 'AED';
-    if (priceCurrency !== currencyCode) {
-      const rateToBase = allRates[priceCurrency] || 1;
+    const priceCurrency = (fetchedCurrency || vehicle.baseCurrency || 'AED').toUpperCase();
+    const targetCode = (currencyCode || 'AED').toUpperCase();
+    if (priceCurrency !== targetCode) {
+      const rateToBase = allRates[priceCurrency] || fallbackRates[priceCurrency] || 1;
       const usdValue = finalPrice / rateToBase;
-      return Math.round(convertFromUsd(usdValue, currencyCode, allRates));
+      return Math.round(convertFromUsd(usdValue, targetCode, allRates));
     }
     return Math.round(finalPrice);
   }

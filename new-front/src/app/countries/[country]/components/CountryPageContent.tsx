@@ -79,8 +79,22 @@ export default function CountryPageContent({ data }: Props) {
     if (country.includes('bahrain')) return 'BHD';
     if (country.includes('jordan')) return 'JOD';
     if (country.includes('morocco')) return 'MAD';
+    if (country.includes('lebanon')) return 'LBP';
+    if (country.includes('iraq')) return 'IQD';
+    if (country.includes('algeria')) return 'DZD';
+    if (country.includes('tunisia')) return 'TND';
+    if (country.includes('libya')) return 'LYD';
+    if (country.includes('sudan')) return 'SDG';
+    if (country.includes('yemen')) return 'YER';
+    if (country.includes('syria')) return 'SYP';
+    if (country.includes('mauritania')) return 'MRU';
     if (country.includes('turkey') || country.includes('türkiye')) return 'TRY';
     if (country.includes('georgia')) return 'GEL';
+    if (country.includes('azerbaijan')) return 'AZN';
+    if (country.includes('bosnia')) return 'BAM';
+    if (country.includes('greece') || country.includes('cyprus') || country.includes('germany') || country.includes('france') || country.includes('italy') || country.includes('spain')) return 'EUR';
+    if (country.includes('united kingdom') || country.includes('uk') || country.includes('britain')) return 'GBP';
+    if (country.includes('united states') || country.includes('usa') || country.includes('america')) return 'USD';
     return 'AED';
   };
 
