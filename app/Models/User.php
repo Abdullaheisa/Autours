@@ -37,6 +37,9 @@ class User extends Authenticatable
         'password_reset_key',
         'integration',
         'webhook_url',
+        'integration_type',
+        'api_key',
+        'api_password',
         'default_pricing_mode',
         'default_custom_price_tiers',
         'vehicles_hidden'

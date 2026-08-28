@@ -23,7 +23,8 @@ class Rental extends Model
         'end_time',
         'comment',
         'rate',
-        'payment_method_id'
+        'payment_method_id',
+        'external_reservation_no'
     ];
 
     protected $casts = [

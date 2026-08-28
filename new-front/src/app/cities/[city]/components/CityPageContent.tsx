@@ -81,8 +81,22 @@ export default function CityPageContent({ data }: Props) {
     if (c.includes('bahrain'))   return 'BHD';
     if (c.includes('jordan'))    return 'JOD';
     if (c.includes('morocco'))   return 'MAD';
+    if (c.includes('lebanon'))   return 'LBP';
+    if (c.includes('iraq'))      return 'IQD';
+    if (c.includes('algeria'))   return 'DZD';
+    if (c.includes('tunisia'))   return 'TND';
+    if (c.includes('libya'))     return 'LYD';
+    if (c.includes('sudan'))     return 'SDG';
+    if (c.includes('yemen'))     return 'YER';
+    if (c.includes('syria'))     return 'SYP';
+    if (c.includes('mauritania')) return 'MRU';
     if (c.includes('turkey') || c.includes('türkiye')) return 'TRY';
     if (c.includes('georgia'))   return 'GEL';
+    if (c.includes('azerbaijan')) return 'AZN';
+    if (c.includes('bosnia'))    return 'BAM';
+    if (c.includes('greece') || c.includes('cyprus') || c.includes('germany') || c.includes('france') || c.includes('italy') || c.includes('spain')) return 'EUR';
+    if (c.includes('united kingdom') || c.includes('uk') || c.includes('britain')) return 'GBP';
+    if (c.includes('united states') || c.includes('usa') || c.includes('america')) return 'USD';
     return 'AED';
   };
 

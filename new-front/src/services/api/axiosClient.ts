@@ -79,7 +79,11 @@ axiosClient.interceptors.response.use(
     // and do NOT redirect to login. Simply return Promise.reject(error);.
     // The frontend MUST NOT aggressively log the user out when a dashboard API fails.
     if (error.response?.status === 401) {
-      // Intentionally bypassed forced logout to prevent aggressive instant logout loop on dashboard API failures.
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     } else if (error.response?.status >= 500) {
       toast.error('Server error. Please try again later.');
     }

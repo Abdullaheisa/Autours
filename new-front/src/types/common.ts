@@ -1,6 +1,16 @@
 export type Status = "active" | "inactive" | "pending" | "suspended" | "published" | "draft" | "scheduled";
 
-export type Currency = 'USD' | 'EUR' | 'AED' | 'SAR' | 'EGP' | 'QAR' | 'KWD' | 'OMR' | 'BHD' | 'MAD' | 'JOD' | 'GBP' | 'TRY' | 'GEL';
+export type KnownCurrency = 
+  | 'USD' | 'EUR' | 'GBP'
+  | 'AED' | 'SAR' | 'QAR' | 'KWD' | 'OMR' | 'BHD' | 'EGP' | 'JOD' | 'MAD'
+  | 'LBP' | 'IQD' | 'DZD' | 'TND' | 'LYD' | 'SDG' | 'YER' | 'SYP' | 'MRU'
+  | 'TRY' | 'GEL' | 'AZN' | 'BAM' | 'CHF' | 'SEK' | 'NOK' | 'DKK' | 'PLN'
+  | 'CZK' | 'HUF' | 'RON' | 'BGN' | 'RSD' | 'ALL' | 'MKD' | 'MDL' | 'UAH'
+  | 'RUB' | 'AMD' | 'CAD' | 'AUD' | 'NZD' | 'JPY' | 'CNY' | 'INR' | 'PKR'
+  | 'IDR' | 'MYR' | 'SGD' | 'THB' | 'PHP' | 'KRW' | 'HKD' | 'BRL' | 'MXN'
+  | 'ARS' | 'CLP' | 'COP' | 'ZAR' | 'KES' | 'MUR' | 'UZS';
+
+export type Currency = KnownCurrency | (string & {});
 
 
 

@@ -58,9 +58,22 @@ export default function StatsSection() {
 
   const handleScroll = () => {
     if (!scrollRef.current) return;
-    const { scrollLeft, clientWidth } = scrollRef.current;
-    const index = Math.round(scrollLeft / (clientWidth * 0.75));
+    const { scrollLeft, clientWidth, scrollWidth } = scrollRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll <= 0) {
+      setActiveSlide(0);
+      return;
+    }
+    const index = Math.round((scrollLeft / maxScroll) * 5);
     setActiveSlide(Math.min(Math.max(index, 0), 5));
+  };
+
+  const scrollToSlide = (index: number) => {
+    if (!scrollRef.current) return;
+    const cards = scrollRef.current.children;
+    if (cards[index]) {
+      (cards[index] as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
   };
 
   const statItems = [
@@ -105,45 +118,35 @@ export default function StatsSection() {
   return (
     <section 
       ref={containerRef}
-      className="relative py-14 sm:py-20 overflow-hidden bg-slate-950 border-y border-white/10"
+      className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-slate-950 border-y border-white/10"
     >
       {/* Background Banner Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-100"
-        style={{ backgroundImage: "url('/img/Banner.webp')" }}
+        style={{ backgroundImage: "url('/img/Banner1.webp')" }}
       />
 
-      {/* Balanced Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/55" />
+      {/* Light Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/65" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-9 md:mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400/25 text-amber-300 text-[11px] md:text-xs font-black tracking-wider uppercase mb-2.5 border border-amber-400/40 shadow-sm"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span>GLOBAL CAR RENTAL NETWORK</span>
-          </motion.div>
-          
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14 md:mb-16">
           <motion.h2
             initial={{ opacity: 0, y: 14 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.08 }}
-            className="text-xl sm:text-2xl md:text-3xl lg:text-[2.25rem] font-extrabold text-white tracking-tight leading-snug mb-2.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
+            transition={{ duration: 0.5 }}
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3"
           >
-            Worldwide Car Rental Network &amp; Global Coverage
+            Global Coverage
           </motion.h2>
 
           <motion.p
             initial={{ opacity: 0, y: 14 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="text-gray-100 text-xs sm:text-sm md:text-base font-medium max-w-2xl mx-auto leading-relaxed drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
+            transition={{ duration: 0.5, delay: 0.08 }}
+            className="text-gray-100 text-xs sm:text-sm md:text-base font-medium max-w-2xl mx-auto leading-relaxed"
           >
             Compare and book top car rental deals from trusted international and local suppliers across thousands of airports, city centers, and global pickup locations.
           </motion.p>
@@ -154,7 +157,7 @@ export default function StatsSection() {
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex md:grid md:grid-cols-6 gap-3 sm:gap-4 justify-center items-stretch overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0"
+            className="flex md:grid md:grid-cols-6 gap-3 sm:gap-4 justify-start md:justify-center items-stretch overflow-x-auto md:overflow-visible snap-x snap-mandatory pt-3 pb-4 md:py-3 scrollbar-none -mx-4 px-6 sm:px-8 md:mx-0 md:px-0 scroll-pl-6"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {statItems.map((item, idx) => (
@@ -163,28 +166,31 @@ export default function StatsSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: 0.04 * idx, ease: [0.16, 1, 0.3, 1] }}
-                className="snap-center shrink-0 w-[145px] sm:w-[160px] md:w-auto flex flex-col items-center justify-between group"
+                className="snap-start shrink-0 w-[145px] sm:w-[160px] md:w-auto flex flex-col group py-1"
               >
-                {/* Glass Card Box */}
-                <div className="w-full flex-1 bg-white/[0.10] hover:bg-white/[0.18] backdrop-blur-[2px] border border-white/25 hover:border-amber-400/60 py-5 px-3 sm:py-6 sm:px-4 rounded-2xl sm:rounded-3xl shadow-lg shadow-black/20 hover:shadow-2xl transition-all duration-300 flex flex-col items-center justify-center text-center group-hover:-translate-y-1 min-h-[115px] sm:min-h-[125px]">
-                  {/* Number & Suffix */}
-                  <div className="flex items-baseline justify-center text-3xl sm:text-4xl lg:text-[2.6rem] font-black text-white tracking-tight leading-none mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                    <AnimatedCounter value={item.count} start={isInView} />
-                    <span className="text-amber-400 font-extrabold text-lg sm:text-xl lg:text-2xl ml-1 align-top drop-shadow-sm">
-                      {item.suffix}
-                    </span>
+                {/* Glass Card Box with inner bottom accent bar */}
+                <div className="relative w-full flex-1 bg-white/[0.10] hover:bg-white/[0.18] backdrop-blur-[2px] border border-white/20 hover:border-amber-400/80 rounded-xl overflow-hidden shadow-lg shadow-black/20 hover:shadow-2xl transition-all duration-300 flex flex-col items-center justify-between text-center group-hover:-translate-y-1.5 min-h-[115px] sm:min-h-[125px]">
+                  {/* Card Content */}
+                  <div className="w-full flex-1 flex flex-col items-center justify-center py-4 px-3 sm:py-5 sm:px-4">
+                    {/* Number & Suffix */}
+                    <div className="flex items-baseline justify-center text-3xl sm:text-4xl lg:text-[2.6rem] font-black text-white tracking-tight leading-none mb-2">
+                      <AnimatedCounter value={item.count} start={isInView} />
+                      <span className="text-amber-400 font-extrabold text-lg sm:text-xl lg:text-2xl ml-1 align-top">
+                        {item.suffix}
+                      </span>
+                    </div>
+
+                    {/* Title / Label */}
+                    <h3 className="text-xs sm:text-[13px] md:text-sm font-bold text-gray-100 group-hover:text-white leading-tight line-clamp-2">
+                      {item.title}
+                    </h3>
                   </div>
 
-                  {/* Title / Label */}
-                  <h3 className="text-xs sm:text-[13px] md:text-sm font-bold text-gray-100 group-hover:text-white leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] line-clamp-2">
-                    {item.title}
-                  </h3>
-                </div>
-
-                {/* Yellow / Orange Line OUTSIDE the Box */}
-                <div className="relative w-full h-1 bg-white/15 rounded-full overflow-hidden mt-2.5 group-hover:shadow-[0_0_12px_rgba(251,191,36,0.95)] transition-all duration-500 shrink-0">
-                  <div className="w-full h-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 rounded-full transition-transform duration-500 group-hover:scale-x-105" />
-                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                  {/* Yellow / Orange Accent Line INSIDE the Box at the bottom */}
+                  <div className="w-full h-1 bg-white/10 relative overflow-hidden shrink-0 group-hover:h-1.5 transition-all duration-300">
+                    <div className="w-full h-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 transition-transform duration-500 group-hover:scale-x-105" />
+                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -193,10 +199,13 @@ export default function StatsSection() {
           {/* Mobile Pagination Dots */}
           <div className="flex md:hidden justify-center items-center gap-1.5 mt-3.5">
             {statItems.map((_, i) => (
-              <div
+              <button
                 key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  activeSlide === i ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/30'
+                type="button"
+                aria-label={`Go to slide ${i + 1}`}
+                onClick={() => scrollToSlide(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  activeSlide === i ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/30 hover:bg-white/50'
                 }`}
               />
             ))}

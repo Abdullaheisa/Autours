@@ -102,7 +102,7 @@ export default function CompaniesSection() {
     try {
       setLoading(true);
       const res: any = await companyApi.getAll();
-      const rawData = Array.isArray(res) ? res : (res?.data || []);
+      const rawData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : Object.values(res?.data || res || {}));
 
       const mapped = rawData.map((user: any) => {
         const role = user.role || 'supplier';

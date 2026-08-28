@@ -271,6 +271,10 @@ class BookingsController extends Controller
             }
             $item->save();
 
+            // Synchronously send reservation to integrated suppliers to catch validation errors (e.g. Kolaycar)
+            $integrationService = app(\App\Services\SupplierIntegrationService::class);
+            $integrationService->sendNewRentalSynchronous($item);
+
             DB::commit();
 
             // Safely send notifications & events (never abort booking if mail server has issues)

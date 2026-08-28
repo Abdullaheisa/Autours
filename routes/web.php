@@ -464,15 +464,17 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::post('/send-email',[SubscriberController::class,'sendEmail']);
 
 // API Documentation Routes
-Route::get('/docs', function () {
-    return response()->file(public_path('docs/index.php'));
-})->name('api.docs');
+Route::middleware([\App\Http\Middleware\SwaggerAuth::class])->group(function () {
+    Route::get('/docs', function () {
+        return response()->file(public_path('docs/index.php'));
+    })->name('api.docs');
 
-Route::get('/docs/swagger.json', function () {
-    return response()->file(public_path('docs/swagger.json'), [
-        'Content-Type' => 'application/json'
-    ]);
-})->name('api.docs.json');
+    Route::get('/docs/swagger.json', function () {
+        return response()->file(public_path('docs/swagger.json'), [
+            'Content-Type' => 'application/json'
+        ]);
+    })->name('api.docs.json');
+});
 
 // Platform Statistics Routes
 Route::get('/stats', [\App\Http\Controllers\StatsController::class, 'index']);

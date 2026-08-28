@@ -24,6 +24,19 @@ export const blogApi = {
   uploadImage: (formData: FormData) => apiClient.post("/api/blogs/upload-image", formData),
 };
 
+// City Page API - uses /api/city-pages endpoints
+export const cityPageApi = {
+  getAll: () => apiClient.get("/api/city-pages?per_page=1000"),
+  getPublished: () => apiClient.get("/api/city-pages/published"),
+  getById: (id: number) => apiClient.get(`/api/city-pages/${id}`),
+  getBySlug: (slug: string) => apiClient.get(`/api/city-pages/slug/${slug}`),
+  create: (data: unknown) => apiClient.post("/api/city-pages", data),
+  update: (id: number, data: unknown) => apiClient.post(`/api/city-pages/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/api/city-pages/${id}`),
+  togglePublish: (id: number) => apiClient.patch(`/api/city-pages/${id}/toggle-publish`, {}),
+};
+
+
 // Blog Category API
 export const blogCategoryApi = {
   getAll: () => apiClient.get("/api/blog-categories"),
@@ -407,13 +420,6 @@ export const vehicleApi = {
 
   getLocationsByCity: async (city: string): Promise<LocationBranch[]> => {
     try {
-      const cityKey = city.toLowerCase().trim();
-      const cacheKey = `autours_locations_city_${cityKey}`;
-      if (typeof window !== 'undefined') {
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) return JSON.parse(cached);
-      }
-
       const data = await apiClient.get<any[]>(`/get/locations/city/${city}`);
       const mapped = (data || []).map((loc: any) => ({
         id: loc.id,
@@ -430,9 +436,6 @@ export const vehicleApi = {
         company: loc.company || null,
       }));
 
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
-      }
       return mapped;
     } catch (err) {
       console.error('[LOCATIONS BY CITY ERROR]', err);

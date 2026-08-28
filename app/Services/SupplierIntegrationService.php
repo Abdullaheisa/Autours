@@ -4,13 +4,14 @@ namespace App\Services;
 
 use App\Models\Rental;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SupplierIntegrationService
 {
     /**
-     * Send rental data to supplier's webhook if integration is enabled.
+     * Send rental data to supplier's API or webhook based on integration type.
      *
      * @param Rental $rental
      * @param string $eventType
@@ -18,7 +19,7 @@ class SupplierIntegrationService
      */
     public function sendRentalToSupplier(Rental $rental, string $eventType = 'new_rental'): bool
     {
-        $rental->load(['vehicle', 'customer', 'supplier', 'paymentMethod']);
+        $rental->load(['vehicle', 'vehicle.branch', 'customer', 'supplier', 'paymentMethod']);
 
         $supplier = $this->getSupplier($rental);
 
@@ -26,9 +27,18 @@ class SupplierIntegrationService
             return false;
         }
 
-        $payload = $this->buildPayload($rental, $eventType);
+        // Route to the appropriate integration based on type
+        if ($supplier->integration_type === 'kolaycar') {
+            return $this->sendViaKolaycar($rental, $supplier, $eventType);
+        }
 
-        return $this->sendWebhook($supplier, $payload, $eventType);
+        // Default: webhook integration
+        if (!empty($supplier->webhook_url)) {
+            $payload = $this->buildPayload($rental, $eventType);
+            return $this->sendWebhook($supplier, $payload, $eventType);
+        }
+
+        return false;
     }
 
     /**
@@ -60,11 +70,279 @@ class SupplierIntegrationService
      */
     private function shouldSendToSupplier(User $supplier): bool
     {
+        // For Kolaycar suppliers, we only need integration enabled + credentials
+        if ($supplier->integration_type === 'kolaycar') {
+            return $supplier->integration === true
+                && !empty($supplier->api_key)
+                && !empty($supplier->api_password);
+        }
+
+        // For webhook suppliers, we need integration enabled + webhook URL
         return $supplier->integration === true && !empty($supplier->webhook_url);
     }
 
     /**
-     * Build the payload to send to the supplier.
+     * Send reservation to Kolaycar API.
+     *
+     * @param Rental $rental
+     * @param User $supplier
+     * @param string $eventType
+     * @return bool
+     */
+    private function sendViaKolaycar(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new KolaycarApiService($supplier->api_key, $supplier->api_password);
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createKolaycarReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelKolaycarReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    // For updates: cancel old reservation and create new one
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelKolaycarReservation($service, $rental, $supplier);
+                    }
+                    return $this->createKolaycarReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Kolaycar integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Kolaycar integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the Kolaycar API.
+     *
+     * @param KolaycarApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function createKolaycarReservation(KolaycarApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('Kolaycar integration: Missing vehicle or customer', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        // Extract the Kolaycar vehicle ID from the vehicle description tag
+        // Format: [Kolaycar-ID:123] or [Allmeet-ID:456] etc.
+        $kolaycarVehicleId = $this->extractExternalVehicleId($vehicle->description);
+
+        if (!$kolaycarVehicleId) {
+            Log::warning('Kolaycar integration: Could not extract vehicle ID from description', [
+                'rental_id'   => $rental->id,
+                'vehicle_id'  => $vehicle->id,
+                'description' => $vehicle->description,
+            ]);
+            return false;
+        }
+
+        // Get the pickup/return location IDs from the branch station_id
+        $pickupLocationId = $branch ? $branch->station_id : '';
+        $returnLocationId = $pickupLocationId; // Same location for now
+
+        // Parse customer name into first/last
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+
+        // Format dates to Kolaycar format (d.m.Y)
+        $pickupDate = $rental->start_date
+            ? Carbon::parse($rental->start_date)->format('d.m.Y')
+            : '';
+        $returnDate = $rental->end_date
+            ? Carbon::parse($rental->end_date)->format('d.m.Y')
+            : '';
+        $pickupTime = $rental->start_time
+            ? Carbon::parse($rental->start_time)->format('H:i')
+            : '10:00';
+        $returnTime = $rental->end_time
+            ? Carbon::parse($rental->end_time)->format('H:i')
+            : '10:00';
+
+        // Dynamically fetch and cache the Kolaycar VENDORID for this supplier
+        $vendorId = \Illuminate\Support\Facades\Cache::remember("kolaycar_vendor_id_{$supplier->id}", now()->addDays(30), function () use ($service) {
+            $locations = $service->getLocations();
+            foreach ($locations['LOCATIONS'] ?? [] as $loc) {
+                foreach ($loc['VENDORS'] ?? [] as $v) {
+                    if (!empty($v['VENDORID'])) {
+                        return (string)$v['VENDORID'];
+                    }
+                }
+            }
+            return '0';
+        });
+
+        $reservationData = [
+            'PICKUPLOCATIONID'  => $pickupLocationId,
+            'RETURNLOCATIONID'  => $returnLocationId,
+            'PICKUPDATE'        => $pickupDate,
+            'RETURNDATE'        => $returnDate,
+            'PICKUPTIME'        => $pickupTime,
+            'RETURNTIME'        => $returnTime,
+            'VENDORID'          => $vendorId,
+            'VEHICLEID'         => $kolaycarVehicleId,
+            'CUSTOMERNAME'      => $nameParts['first'],
+            'CUSTOMERSURNAME'   => $nameParts['last'],
+            'CUSTOMERTELEPHONE' => $customer->phone_num ?? '',
+            'CUSTOMEREMAIL'     => $customer->email ?? '',
+            'CUSTOMERNOTE'      => 'Autours Booking #' . ($rental->order_number ?? $rental->id),
+            'PARAM8VALUE'       => $rental->order_number ?? '', // Reference Code
+        ];
+
+        $response = $service->postReservation($reservationData);
+
+        if (isset($response['RETURNCODE']) && (string) $response['RETURNCODE'] !== '0') {
+            $msg = $response['MESSAGE'] ?? 'Kolaycar API error';
+            throw new \Exception($msg);
+        }
+
+        $reservationNo = $response['RESERVATION'][0]['RESERVATIONNO'] ?? $response['RESERVATIONNO'] ?? null;
+
+        if (empty($response) || empty($reservationNo)) {
+            Log::error('Kolaycar reservation creation failed', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+                'response'    => $response,
+            ]);
+            throw new \Exception("Supplier booking failed: No reservation number returned.");
+        }
+
+        // Store the Kolaycar reservation number on the rental
+        $rental->update([
+            'external_reservation_no' => (string) $reservationNo,
+        ]);
+
+        Log::info('Kolaycar reservation created successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Cancel a reservation on the Kolaycar API.
+     *
+     * @param KolaycarApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function cancelKolaycarReservation(KolaycarApiService $service, Rental $rental, User $supplier): bool
+    {
+        $reservationNo = $rental->external_reservation_no;
+
+        if (empty($reservationNo)) {
+            Log::warning('Kolaycar cancellation: No external reservation number found', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+            ]);
+            return false;
+        }
+
+        $response = $service->cancelReservation($reservationNo);
+
+        if (!empty($response)) {
+            Log::info('Kolaycar reservation cancelled successfully', [
+                'rental_id'      => $rental->id,
+                'reservation_no' => $reservationNo,
+                'supplier_id'    => $supplier->id,
+            ]);
+            return true;
+        }
+
+        Log::error('Kolaycar reservation cancellation failed', [
+            'rental_id'      => $rental->id,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+            'response'       => $response,
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Extract external vehicle ID from the description tag.
+     * Looks for patterns like [Kolaycar-ID:123], [Allmeet-ID:456], etc.
+     *
+     * @param string|null $description
+     * @return string|null
+     */
+    private function extractExternalVehicleId(?string $description): ?string
+    {
+        if (empty($description)) {
+            return null;
+        }
+
+        // Match any tag pattern like [SomePrefix-ID:123]
+        if (preg_match('/\[[\w-]+-ID:(\d+)\]/', $description, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract external vendor ID from the description tag.
+     * Looks for patterns like [Kolaycar-ID:123:Vendor:456]
+     *
+     * @param string|null $description
+     * @return string|null
+     */
+    private function extractExternalVendorId(?string $description): ?string
+    {
+        if (empty($description)) {
+            return null;
+        }
+
+        if (preg_match('/Vendor:(\d+)/', $description, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Split a full customer name into first and last name.
+     *
+     * @param string $fullName
+     * @return array{first: string, last: string}
+     */
+    private function splitCustomerName(string $fullName): array
+    {
+        $parts = preg_split('/\s+/', trim($fullName), 2);
+
+        return [
+            'first' => $parts[0] ?? '',
+            'last'  => $parts[1] ?? '',
+        ];
+    }
+
+    /**
+     * Build the payload to send to the supplier via webhook.
      *
      * @param Rental $rental
      * @param string $eventType
@@ -171,6 +449,31 @@ class SupplierIntegrationService
     }
 
     /**
+     * Send rental directly to Kolaycar synchronously and let exceptions bubble up.
+     *
+     * @param Rental $rental
+     * @return void
+     * @throws \Exception
+     */
+    public function sendNewRentalSynchronous(Rental $rental): void
+    {
+        $supplier = $this->getSupplier($rental);
+
+        if (!$supplier || !$this->shouldSendToSupplier($supplier)) {
+            return;
+        }
+        
+        if (!empty($rental->external_reservation_no)) {
+             return;
+        }
+
+        if ($supplier->integration_type === 'kolaycar') {
+            $service = new KolaycarApiService($supplier->api_key, $supplier->api_password);
+            $this->createKolaycarReservation($service, $rental, $supplier);
+        }
+    }
+
+    /**
      * Send rental update notification to supplier.
      *
      * @param Rental $rental
@@ -203,4 +506,3 @@ class SupplierIntegrationService
         return $this->sendRentalToSupplier($rental, 'rental_request');
     }
 }
-

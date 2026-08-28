@@ -229,6 +229,12 @@ XML;
                     'TotalCharge' => isset($rate->TotalPricing->TotalCharges) ? (string)$rate->TotalPricing->TotalCharges : null,
                     'FreeMiles' => isset($rate->FreeMiles) ? (string)$rate->FreeMiles : null,
                     'MileageUnit' => isset($rate->MileageUnit) ? (string)$rate->MileageUnit : 'KM',
+                    'Deposit' => isset($rate->Deposit) ? (string)$rate->Deposit : null,
+                    'CDW_Excess' => isset($rate->CDW_Excess) ? (string)$rate->CDW_Excess : null,
+                    'TP_Excess' => isset($rate->TP_Excess) ? (string)$rate->TP_Excess : null,
+                    'TaxDesc' => isset($rate->TaxDesc) ? (string)$rate->TaxDesc : null,
+                    'Tax1Desc' => isset($rate->Tax1Desc) ? (string)$rate->Tax1Desc : null,
+                    'Tax2Desc' => isset($rate->Tax2Desc) ? (string)$rate->Tax2Desc : null,
                 ];
             }
         }

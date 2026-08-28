@@ -86,6 +86,7 @@ export default function RentalsSection() {
         return {
           id: r.id,
           order_number: r.order_number,
+          external_reservation_no: r.external_reservation_no,
           customer: r.customer?.name || "Customer",
           customer_id: r.customer_id || r.customer?.id,
           customer_email: r.customer?.email || "—",
@@ -194,9 +195,23 @@ export default function RentalsSection() {
     if (confirm("Are you sure you want to delete this rental?")) {
       try {
         await rentalApi.delete({ id });
-        fetchRentals();
+        fetchRentals(currentPage);
       } catch (e) {
         console.error("Failed to delete rental", e);
+      }
+    }
+  };
+
+  const handleCancelBooking = async (id: number) => {
+    if (confirm("Are you sure you want to CANCEL this booking? This will cancel the reservation with the supplier if applicable.")) {
+      try {
+        const reqStr = btoa(JSON.stringify({ rental_id: id }));
+        await rentalApi.updateStatus(`request=${reqStr}&status=5`); // 5 = REJECTED (triggers cancellation)
+        toast.success("Booking cancelled successfully!");
+        fetchRentals(currentPage);
+      } catch (e) {
+        console.error("Failed to cancel rental", e);
+        toast.error("Failed to cancel booking.");
       }
     }
   };
@@ -361,6 +376,11 @@ export default function RentalsSection() {
                             <div>
                               <p className="text-sm font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{rental.customer}</p>
                               <p className="text-xs text-gray-500">{rental.order_number || `ID: ${rental.id}`}</p>
+                              {rental.external_reservation_no && (
+                                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5 px-1.5 py-0.5 bg-emerald-50 rounded w-max border border-emerald-100">
+                                  Ref: {rental.external_reservation_no}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -406,6 +426,13 @@ export default function RentalsSection() {
                               title="View Full Booking Details"
                             >
                               <Eye size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleCancelBooking(rental.id)}
+                              className="p-2 text-orange-500 hover:bg-orange-50 rounded-xl transition-colors cursor-pointer"
+                              title="Cancel / Reject Booking"
+                            >
+                              <XCircle size={16} />
                             </button>
                             <button 
                               onClick={() => handleDelete(rental.id)}

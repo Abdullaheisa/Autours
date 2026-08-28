@@ -401,4 +401,20 @@ Route::get('/invoice/booking/{id}', [\App\Http\Controllers\BookingsController::c
 // Platform Public Statistics API
 Route::get('/stats', [\App\Http\Controllers\StatsController::class, 'index']);
 
+// City Pages
+Route::prefix('city-pages')->group(function () {
+    // Public routes
+    Route::get('/', [\App\Http\Controllers\CityPageController::class, 'index'])->name('city-pages.index');
+    Route::get('/published', [\App\Http\Controllers\CityPageController::class, 'published'])->name('city-pages.published');
+    Route::get('/slug/{slug}', [\App\Http\Controllers\CityPageController::class, 'showBySlug'])->name('city-pages.show-by-slug');
+    Route::get('/{cityPage}', [\App\Http\Controllers\CityPageController::class, 'show'])->name('city-pages.show');
+
+    // Protected routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [\App\Http\Controllers\CityPageController::class, 'store'])->name('city-pages.store');
+        Route::post('/{cityPage}', [\App\Http\Controllers\CityPageController::class, 'update'])->name('city-pages.update');
+        Route::delete('/{cityPage}', [\App\Http\Controllers\CityPageController::class, 'destroy'])->name('city-pages.destroy');
+        Route::patch('/{cityPage}/toggle-publish', [\App\Http\Controllers\CityPageController::class, 'togglePublish'])->name('city-pages.toggle-publish');
+    });
+});
 

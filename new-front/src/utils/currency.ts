@@ -1,5 +1,5 @@
 import type { Currency } from '@/types';
-
+import { fallbackRates } from '@/store/slices/currencySlice';
 
 /**
  * Formats a price as: [amount] [currency_code]
@@ -12,8 +12,9 @@ export const formatPrice = (
 ): string => {
   try {
     // Determine decimal places based on currency
-    const isThreeDecimal = currency === 'KWD' || currency === 'BHD' || currency === 'OMR';
-    const maxFrac = isThreeDecimal ? 3 : 2;
+    const isThreeDecimal = currency === 'KWD' || currency === 'BHD' || currency === 'OMR' || currency === 'TND' || currency === 'LYD' || currency === 'JOD';
+    const isZeroDecimal = currency === 'JPY' || currency === 'KRW' || currency === 'IDR' || currency === 'CLP' || currency === 'IQD' || currency === 'LBP' || currency === 'SYP' || currency === 'VND';
+    const maxFrac = isThreeDecimal ? 3 : (isZeroDecimal ? 0 : 2);
 
     // Format the number only (no currency symbol, no trailing .000 zeros for whole numbers)
     const numFormatter = new Intl.NumberFormat(locale, {
@@ -36,9 +37,10 @@ export const formatPrice = (
 export const convertFromUsd = (
   amountInUsd: number,
   targetCurrency: Currency,
-  rates: Record<string, number>
+  rates: Record<string, number> = {}
 ): number => {
-  const rate = rates[targetCurrency] || 1;
+  const code = (targetCurrency || 'USD').toUpperCase();
+  const rate = rates[code] || fallbackRates[code] || 1;
   return amountInUsd * rate;
 };
 
@@ -49,8 +51,9 @@ export const convertFromUsd = (
 export const normalizeToUsd = (
   amount: number,
   fromCurrency: Currency,
-  rates: Record<string, number>
+  rates: Record<string, number> = {}
 ): number => {
-  const rate = rates[fromCurrency] || 1;
+  const code = (fromCurrency || 'USD').toUpperCase();
+  const rate = rates[code] || fallbackRates[code] || 1;
   return amount / rate;
 };
