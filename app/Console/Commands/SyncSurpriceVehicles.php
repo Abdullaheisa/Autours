@@ -432,9 +432,6 @@ class SyncSurpriceVehicles extends Command
         foreach ($missingBranchVehicles as $mbv) {
             $mbv->update([
                 'activation' => false,
-                'price' => 0,
-                'week_price' => 0,
-                'month_price' => 0,
             ]);
             $deleted++;
         }
