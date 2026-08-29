@@ -520,7 +520,7 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
         $pickupTimeArg = $pickup->format('H:i');
         $dropoffTimeArg = $dropoff->format('H:i');
 
-        return $service->getVehicles(
+        $result = $service->getVehicles(
             (int)$branch->station_id,
             $pickupDateArg,
             $pickupTimeArg,
@@ -529,5 +529,7 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
             30,
             $branch->currency ?? 'GBP'
         );
+
+        return $result['vehicles'] ?? [];
     }
 }

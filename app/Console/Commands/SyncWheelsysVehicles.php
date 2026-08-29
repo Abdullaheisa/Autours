@@ -241,7 +241,7 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
         $missingVehicles = $allExistingVehicles->whereNotIn('id', $seenVehicleIds);
         foreach ($missingVehicles as $mv) {
             if ($mv->activation) {
-                $mv->update(['activation' => 0, 'price' => 0, 'week_price' => 0, 'month_price' => 0]);
+                $mv->update(['activation' => 0]);
                 $this->deactivatedCount++;
             }
         }

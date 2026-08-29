@@ -128,9 +128,10 @@ class SyncRenteonBranches extends Command
 
         $deleted = 0;
         foreach ($orphanedBranches as $ob) {
+            $ob->vehicles()->delete();
             $ob->delete();
             $deleted++;
-            $this->warn("Deleted orphaned branch: {$ob->name}");
+            $this->warn("Deleted orphaned branch: {$ob->name} and its vehicles.");
         }
 
         $this->newLine();
