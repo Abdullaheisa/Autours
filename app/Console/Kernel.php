@@ -42,7 +42,7 @@ class Kernel extends ConsoleKernel
 
          // Sync Renteon branches and full vehicles daily, prices every 2 hours
          $schedule->command('renteon:sync-branches')->dailyAt('05:00');
-         $schedule->command('renteon:sync-vehicles')->dailyAt('05:15')->withoutOverlapping();
+         $schedule->command('renteon:sync-vehicles --full')->dailyAt('05:15')->withoutOverlapping();
          $schedule->command('renteon:sync-vehicles --prices-only')->everyTwoHours()->withoutOverlapping();
 
          // Sync Xdrive branches and full vehicles daily, prices every 2 hours
