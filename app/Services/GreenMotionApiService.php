@@ -39,10 +39,7 @@ class GreenMotionApiService
             $body .= "  <request type=\"{$method}\" />\n";
         } else {
             $body .= "  <request type=\"{$method}\">\n";
-            foreach ($params as $key => $value) {
-                // simple key value generation
-                $body .= "    <{$key}>" . htmlspecialchars((string)$value) . "</{$key}>\n";
-            }
+            $body .= $this->arrayToXml($params, 4);
             $body .= "  </request>\n";
         }
         $body .= "</gm_webservice>";
@@ -65,8 +62,24 @@ class GreenMotionApiService
         return $this->parseResponse($response->body());
     }
 
+    private function arrayToXml(array $data, int $indent = 4): string
+    {
+        $xml = '';
+        $spacing = str_repeat(' ', $indent);
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $xml .= "{$spacing}<{$key}>\n" . $this->arrayToXml($value, $indent + 2) . "{$spacing}</{$key}>\n";
+            } else {
+                $xml .= "{$spacing}<{$key}>" . htmlspecialchars((string)$value) . "</{$key}>\n";
+            }
+        }
+        return $xml;
+    }
+
     /**
      * Parse the XML response and return as an array.
+     *
+     * @throws \Exception
      */
     private function parseResponse(string $xmlContent): array
     {
@@ -105,7 +118,7 @@ class GreenMotionApiService
                 $errorMsg = (string) $xml->response->errors->message;
                 $errorCode = (string) $xml->response->errors->error_code;
                 Log::error("Green Motion API returned error: [{$errorCode}] {$errorMsg}");
-                return [];
+                throw new \Exception("Green Motion API error: [{$errorCode}] {$errorMsg}");
             }
 
             if (!isset($xml->response)) {
@@ -119,7 +132,7 @@ class GreenMotionApiService
             return $array ?? [];
         } catch (\Exception $e) {
             Log::error('Green Motion API: Exception parsing response', ['error' => $e->getMessage()]);
-            return [];
+            throw $e;
         }
     }
 
@@ -217,6 +230,37 @@ class GreenMotionApiService
             $vehicles = [$vehicles];
         }
         
-        return $vehicles;
+        $quoteid = $response['quoteid'] ?? null;
+
+        return [
+            'vehicles' => $vehicles,
+            'quoteid' => $quoteid,
+        ];
+    }
+
+    /**
+     * Make a reservation.
+     *
+     * @param array $params The reservation data required by the API.
+     */
+    public function makeReservation(array $params): array
+    {
+        return $this->sendRequest('MakeReservation', $params);
+    }
+
+    /**
+     * Cancel a reservation.
+     *
+     * @param int $locationId
+     * @param string $bookingRef
+     * @param string $reason
+     */
+    public function cancelReservation(int $locationId, string $bookingRef, string $reason = 'Cancelled by customer'): array
+    {
+        return $this->sendRequest('CancelReservation', [
+            'location_id' => $locationId,
+            'booking_ref' => $bookingRef,
+            'cancellationreason' => $reason,
+        ]);
     }
 }
