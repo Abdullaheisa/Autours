@@ -260,7 +260,7 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                     foreach ($carData['RENTALCONDITIONS'] ?? [] as $condition) {
                         $condValue = $condition['RENTALCONDITIONNAME'] ?? '';
                         $condName = is_array($condValue) 
-                            ? trim((string)($condValue['rentalConditionName'] ?? $condValue['name'] ?? json_encode($condValue)))
+                            ? trim((string)($condValue['conditionName'] ?? $condValue['rentalConditionName'] ?? $condValue['name'] ?? json_encode($condValue)))
                             : trim((string)$condValue);
                             
                         if (!empty($condName)) {
