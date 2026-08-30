@@ -151,11 +151,11 @@ export default function Sidebar({ activeItem, onItemClick, isOpen = false, onClo
       `}>
         <div className="p-6 border-b border-gray-100">
           <div className={`flex ${isCollapsed ? "lg:justify-center lg:items-center" : "flex-col items-center text-center"} gap-3`}>
-            <div className={`${isCollapsed ? "w-10 h-10" : "w-[150px] h-[45px]"} rounded-md overflow-hidden shadow-lg shadow-primary/20 shrink-0 relative bg-gray-50 flex items-center justify-center border border-gray-100 transition-all duration-300`}>
+            <div className={`${isCollapsed ? "w-10 h-10" : "w-[200px] h-[64px]"} rounded-lg overflow-hidden shadow-sm shrink-0 relative bg-white flex items-center justify-center border border-gray-200 transition-all duration-300 p-1`}>
               {avatarUrl ? (
-                <Image src={avatarUrl} alt={user?.name || "User"} width={isCollapsed ? 40 : 150} height={isCollapsed ? 40 : 45} className="w-full h-full object-cover" />
+                <Image src={avatarUrl} alt={user?.name || "User"} width={isCollapsed ? 40 : 200} height={isCollapsed ? 40 : 64} className="w-full h-full object-contain" />
               ) : (
-                <div className={`w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold ${isCollapsed ? "text-sm" : "text-base"}`}>
+                <div className={`w-full h-full bg-primary flex items-center justify-center text-gray-900 font-bold rounded ${isCollapsed ? "text-sm" : "text-base"}`}>
                   {initials}
                 </div>
               )}

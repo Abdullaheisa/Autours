@@ -9,9 +9,19 @@ interface ImageUploaderProps {
   onChange: (value: string | null) => void;
   onFileChange?: (file: File | null) => void;
   className?: string;
+  aspectRatio?: string;
+  objectFit?: "contain" | "cover";
 }
 
-export default function ImageUploader({ label, value, onChange, onFileChange, className = "" }: ImageUploaderProps) {
+export default function ImageUploader({
+  label,
+  value,
+  onChange,
+  onFileChange,
+  className = "",
+  aspectRatio = "aspect-video",
+  objectFit = "contain",
+}: ImageUploaderProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(value || null);
 
   useEffect(() => {
@@ -42,14 +52,18 @@ export default function ImageUploader({ label, value, onChange, onFileChange, cl
     <div className={`space-y-2 ${className}`}>
       {label && <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">{label}</label>}
       <div className="relative group">
-        <div className={`aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all ${previewImage ? 'border-solid border-primary-500' : 'border-gray-300 hover:border-primary-400'}`}>
+        <div className={`${aspectRatio} rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all bg-gray-50/50 ${previewImage ? 'border-solid border-primary-500 bg-white' : 'border-gray-300 hover:border-primary-400'}`}>
           {previewImage ? (
             <>
-              <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+              <img
+                src={previewImage}
+                alt="Preview"
+                className={`w-full h-full ${objectFit === "cover" ? "object-cover" : "object-contain p-3"}`}
+              />
               <button 
                 type="button"
                 onClick={handleClear}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
               >
                 <X size={14} />
               </button>
@@ -64,7 +78,7 @@ export default function ImageUploader({ label, value, onChange, onFileChange, cl
             type="file" 
             accept="image/*" 
             onChange={handleImageChange}
-            className="absolute inset-0 opacity-0 cursor-pointer"
+            className="absolute inset-0 opacity-0 cursor-pointer z-0"
           />
         </div>
       </div>

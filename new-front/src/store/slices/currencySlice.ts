@@ -22,6 +22,7 @@ export const currencySymbols: Record<string, string> = {
 
   // Arab Countries & GCC & MENA
   AED: 'AED',
+  AFN: 'AFN',
   SAR: 'SAR',
   QAR: 'QAR',
   KWD: 'KWD',
@@ -96,6 +97,7 @@ export const fallbackRates: Record<string, number> = {
 
   // Arab Countries & GCC & MENA
   AED: 3.67,
+  AFN: 70.5,
   SAR: 3.75,
   QAR: 3.64,
   KWD: 0.31,

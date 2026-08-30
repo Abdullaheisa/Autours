@@ -13,90 +13,85 @@ export interface CurrencyItem {
   symbol: string;
   name: string;
   flag: string;
-  category: 'arab' | 'major' | 'europe' | 'asia_world';
 }
 
-export const currencies: CurrencyItem[] = [
-  // ── Popular & GCC / Arab Countries ──────────────────────
-  { code: 'AED', symbol: 'AED', name: 'UAE Dirham', flag: 'ae', category: 'arab' },
-  { code: 'SAR', symbol: 'SAR', name: 'Saudi Riyal', flag: 'sa', category: 'arab' },
-  { code: 'QAR', symbol: 'QAR', name: 'Qatari Riyal', flag: 'qa', category: 'arab' },
-  { code: 'KWD', symbol: 'KWD', name: 'Kuwaiti Dinar', flag: 'kw', category: 'arab' },
-  { code: 'OMR', symbol: 'OMR', name: 'Omani Rial', flag: 'om', category: 'arab' },
-  { code: 'BHD', symbol: 'BHD', name: 'Bahraini Dinar', flag: 'bh', category: 'arab' },
-  { code: 'EGP', symbol: 'EGP', name: 'Egyptian Pound', flag: 'eg', category: 'arab' },
-  { code: 'JOD', symbol: 'JOD', name: 'Jordanian Dinar', flag: 'jo', category: 'arab' },
-  { code: 'MAD', symbol: 'MAD', name: 'Moroccan Dirham', flag: 'ma', category: 'arab' },
-  { code: 'LBP', symbol: 'LBP', name: 'Lebanese Pound', flag: 'lb', category: 'arab' },
-  { code: 'IQD', symbol: 'IQD', name: 'Iraqi Dinar', flag: 'iq', category: 'arab' },
-  { code: 'DZD', symbol: 'DZD', name: 'Algerian Dinar', flag: 'dz', category: 'arab' },
-  { code: 'TND', symbol: 'TND', name: 'Tunisian Dinar', flag: 'tn', category: 'arab' },
-  { code: 'LYD', symbol: 'LYD', name: 'Libyan Dinar', flag: 'ly', category: 'arab' },
-  { code: 'SDG', symbol: 'SDG', name: 'Sudanese Pound', flag: 'sd', category: 'arab' },
-  { code: 'YER', symbol: 'YER', name: 'Yemeni Rial', flag: 'ye', category: 'arab' },
-  { code: 'SYP', symbol: 'SYP', name: 'Syrian Pound', flag: 'sy', category: 'arab' },
-  { code: 'MRU', symbol: 'MRU', name: 'Mauritanian Ouguiya', flag: 'mr', category: 'arab' },
-
-  // ── Global Major ───────────────────────────────────────
-  { code: 'USD', symbol: '$', name: 'US Dollar', flag: 'us', category: 'major' },
-  { code: 'EUR', symbol: '€', name: 'Euro', flag: 'eu', category: 'major' },
-  { code: 'GBP', symbol: '£', name: 'British Pound', flag: 'gb', category: 'major' },
-  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', flag: 'ch', category: 'major' },
-  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', flag: 'ca', category: 'major' },
-  { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', flag: 'au', category: 'major' },
-  { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar', flag: 'nz', category: 'major' },
-
-  // ── Key Destinations & Europe ───────────────────────────
-  { code: 'TRY', symbol: 'TRY', name: 'Turkish Lira', flag: 'tr', category: 'europe' },
-  { code: 'GEL', symbol: 'GEL', name: 'Georgian Lari', flag: 'ge', category: 'europe' },
-  { code: 'AZN', symbol: 'AZN', name: 'Azerbaijani Manat', flag: 'az', category: 'europe' },
-  { code: 'BAM', symbol: 'BAM', name: 'Bosnian Mark', flag: 'ba', category: 'europe' },
-  { code: 'SEK', symbol: 'SEK', name: 'Swedish Krona', flag: 'se', category: 'europe' },
-  { code: 'NOK', symbol: 'NOK', name: 'Norwegian Krone', flag: 'no', category: 'europe' },
-  { code: 'DKK', symbol: 'DKK', name: 'Danish Krone', flag: 'dk', category: 'europe' },
-  { code: 'PLN', symbol: 'PLN', name: 'Polish Zloty', flag: 'pl', category: 'europe' },
-  { code: 'CZK', symbol: 'CZK', name: 'Czech Koruna', flag: 'cz', category: 'europe' },
-  { code: 'HUF', symbol: 'HUF', name: 'Hungarian Forint', flag: 'hu', category: 'europe' },
-  { code: 'RON', symbol: 'RON', name: 'Romanian Leu', flag: 'ro', category: 'europe' },
-  { code: 'BGN', symbol: 'BGN', name: 'Bulgarian Lev', flag: 'bg', category: 'europe' },
-  { code: 'RSD', symbol: 'RSD', name: 'Serbian Dinar', flag: 'rs', category: 'europe' },
-  { code: 'ALL', symbol: 'ALL', name: 'Albanian Lek', flag: 'al', category: 'europe' },
-  { code: 'MKD', symbol: 'MKD', name: 'Macedonian Denar', flag: 'mk', category: 'europe' },
-  { code: 'MDL', symbol: 'MDL', name: 'Moldovan Leu', flag: 'md', category: 'europe' },
-  { code: 'UAH', symbol: 'UAH', name: 'Ukrainian Hryvnia', flag: 'ua', category: 'europe' },
-  { code: 'RUB', symbol: 'RUB', name: 'Russian Ruble', flag: 'ru', category: 'europe' },
-  { code: 'AMD', symbol: 'AMD', name: 'Armenian Dram', flag: 'am', category: 'europe' },
-
-  // ── Asia & Africa & Latin America ───────────────────────
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', flag: 'jp', category: 'asia_world' },
-  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', flag: 'cn', category: 'asia_world' },
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee', flag: 'in', category: 'asia_world' },
-  { code: 'PKR', symbol: 'PKR', name: 'Pakistani Rupee', flag: 'pk', category: 'asia_world' },
-  { code: 'MYR', symbol: 'MYR', name: 'Malaysian Ringgit', flag: 'my', category: 'asia_world' },
-  { code: 'IDR', symbol: 'IDR', name: 'Indonesian Rupiah', flag: 'id', category: 'asia_world' },
-  { code: 'SGD', symbol: 'SG$', name: 'Singapore Dollar', flag: 'sg', category: 'asia_world' },
-  { code: 'THB', symbol: '฿', name: 'Thai Baht', flag: 'th', category: 'asia_world' },
-  { code: 'PHP', symbol: '₱', name: 'Philippine Peso', flag: 'ph', category: 'asia_world' },
-  { code: 'KRW', symbol: '₩', name: 'South Korean Won', flag: 'kr', category: 'asia_world' },
-  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar', flag: 'hk', category: 'asia_world' },
-  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', flag: 'br', category: 'asia_world' },
-  { code: 'MXN', symbol: 'Mex$', name: 'Mexican Peso', flag: 'mx', category: 'asia_world' },
-  { code: 'ARS', symbol: 'ARS', name: 'Argentine Peso', flag: 'ar', category: 'asia_world' },
-  { code: 'CLP', symbol: 'CLP', name: 'Chilean Peso', flag: 'cl', category: 'asia_world' },
-  { code: 'COP', symbol: 'COP', name: 'Colombian Peso', flag: 'co', category: 'asia_world' },
-  { code: 'ZAR', symbol: 'ZAR', name: 'South African Rand', flag: 'za', category: 'asia_world' },
-  { code: 'KES', symbol: 'KES', name: 'Kenyan Shilling', flag: 'ke', category: 'asia_world' },
-  { code: 'MUR', symbol: 'MUR', name: 'Mauritian Rupee', flag: 'mu', category: 'asia_world' },
-  { code: 'UZS', symbol: 'UZS', name: 'Uzbekistani Som', flag: 'uz', category: 'asia_world' },
+// ── Top currencies (AUD, CAD, EUR, GBP, USD) ──────────────────────────────────
+export const topCurrencies: CurrencyItem[] = [
+  { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', flag: 'au' },
+  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', flag: 'ca' },
+  { code: 'EUR', symbol: '€', name: 'Euro', flag: 'eu' },
+  { code: 'GBP', symbol: '£', name: 'British Pound', flag: 'gb' },
+  { code: 'USD', symbol: '$', name: 'US Dollar', flag: 'us' },
 ];
 
-const CATEGORIES = [
-  { id: 'all', label: 'All' },
-  { id: 'arab', label: 'Arab & GCC' },
-  { id: 'major', label: 'Global' },
-  { id: 'europe', label: 'Europe' },
-  { id: 'asia_world', label: 'Asia & More' },
-] as const;
+// ── All currencies sorted alphabetically (A-Z) ──────────────────────────────────
+export const currencies: CurrencyItem[] = [
+  { code: 'AED', symbol: 'AED', name: 'UAE Dirham', flag: 'ae' },
+  { code: 'AFN', symbol: 'AFN', name: 'Afghan Afghani', flag: 'af' },
+  { code: 'ALL', symbol: 'ALL', name: 'Albanian Lek', flag: 'al' },
+  { code: 'AMD', symbol: 'AMD', name: 'Armenian Dram', flag: 'am' },
+  { code: 'ARS', symbol: 'ARS', name: 'Argentine Peso', flag: 'ar' },
+  { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', flag: 'au' },
+  { code: 'AZN', symbol: 'AZN', name: 'Azerbaijani Manat', flag: 'az' },
+  { code: 'BAM', symbol: 'BAM', name: 'Bosnian Mark', flag: 'ba' },
+  { code: 'BGN', symbol: 'BGN', name: 'Bulgarian Lev', flag: 'bg' },
+  { code: 'BHD', symbol: 'BHD', name: 'Bahraini Dinar', flag: 'bh' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', flag: 'br' },
+  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', flag: 'ca' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', flag: 'ch' },
+  { code: 'CLP', symbol: 'CLP', name: 'Chilean Peso', flag: 'cl' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', flag: 'cn' },
+  { code: 'COP', symbol: 'COP', name: 'Colombian Peso', flag: 'co' },
+  { code: 'CZK', symbol: 'CZK', name: 'Czech Koruna', flag: 'cz' },
+  { code: 'DKK', symbol: 'DKK', name: 'Danish Krone', flag: 'dk' },
+  { code: 'DZD', symbol: 'DZD', name: 'Algerian Dinar', flag: 'dz' },
+  { code: 'EGP', symbol: 'EGP', name: 'Egyptian Pound', flag: 'eg' },
+  { code: 'EUR', symbol: '€', name: 'Euro', flag: 'eu' },
+  { code: 'GBP', symbol: '£', name: 'British Pound', flag: 'gb' },
+  { code: 'GEL', symbol: 'GEL', name: 'Georgian Lari', flag: 'ge' },
+  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar', flag: 'hk' },
+  { code: 'HUF', symbol: 'HUF', name: 'Hungarian Forint', flag: 'hu' },
+  { code: 'IDR', symbol: 'IDR', name: 'Indonesian Rupiah', flag: 'id' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee', flag: 'in' },
+  { code: 'IQD', symbol: 'IQD', name: 'Iraqi Dinar', flag: 'iq' },
+  { code: 'JOD', symbol: 'JOD', name: 'Jordanian Dinar', flag: 'jo' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', flag: 'jp' },
+  { code: 'KES', symbol: 'KES', name: 'Kenyan Shilling', flag: 'ke' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won', flag: 'kr' },
+  { code: 'KWD', symbol: 'KWD', name: 'Kuwaiti Dinar', flag: 'kw' },
+  { code: 'LBP', symbol: 'LBP', name: 'Lebanese Pound', flag: 'lb' },
+  { code: 'LYD', symbol: 'LYD', name: 'Libyan Dinar', flag: 'ly' },
+  { code: 'MAD', symbol: 'MAD', name: 'Moroccan Dirham', flag: 'ma' },
+  { code: 'MDL', symbol: 'MDL', name: 'Moldovan Leu', flag: 'md' },
+  { code: 'MKD', symbol: 'MKD', name: 'Macedonian Denar', flag: 'mk' },
+  { code: 'MRU', symbol: 'MRU', name: 'Mauritanian Ouguiya', flag: 'mr' },
+  { code: 'MUR', symbol: 'MUR', name: 'Mauritian Rupee', flag: 'mu' },
+  { code: 'MXN', symbol: 'Mex$', name: 'Mexican Peso', flag: 'mx' },
+  { code: 'MYR', symbol: 'MYR', name: 'Malaysian Ringgit', flag: 'my' },
+  { code: 'NOK', symbol: 'NOK', name: 'Norwegian Krone', flag: 'no' },
+  { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar', flag: 'nz' },
+  { code: 'OMR', symbol: 'OMR', name: 'Omani Rial', flag: 'om' },
+  { code: 'PHP', symbol: '₱', name: 'Philippine Peso', flag: 'ph' },
+  { code: 'PKR', symbol: 'PKR', name: 'Pakistani Rupee', flag: 'pk' },
+  { code: 'PLN', symbol: 'PLN', name: 'Polish Zloty', flag: 'pl' },
+  { code: 'QAR', symbol: 'QAR', name: 'Qatari Riyal', flag: 'qa' },
+  { code: 'RON', symbol: 'RON', name: 'Romanian Leu', flag: 'ro' },
+  { code: 'RSD', symbol: 'RSD', name: 'Serbian Dinar', flag: 'rs' },
+  { code: 'RUB', symbol: 'RUB', name: 'Russian Ruble', flag: 'ru' },
+  { code: 'SAR', symbol: 'SAR', name: 'Saudi Riyal', flag: 'sa' },
+  { code: 'SDG', symbol: 'SDG', name: 'Sudanese Pound', flag: 'sd' },
+  { code: 'SEK', symbol: 'SEK', name: 'Swedish Krona', flag: 'se' },
+  { code: 'SGD', symbol: 'SG$', name: 'Singapore Dollar', flag: 'sg' },
+  { code: 'SYP', symbol: 'SYP', name: 'Syrian Pound', flag: 'sy' },
+  { code: 'THB', symbol: '฿', name: 'Thai Baht', flag: 'th' },
+  { code: 'TND', symbol: 'TND', name: 'Tunisian Dinar', flag: 'tn' },
+  { code: 'TRY', symbol: 'TRY', name: 'Turkish Lira', flag: 'tr' },
+  { code: 'UAH', symbol: 'UAH', name: 'Ukrainian Hryvnia', flag: 'ua' },
+  { code: 'USD', symbol: '$', name: 'US Dollar', flag: 'us' },
+  { code: 'UZS', symbol: 'UZS', name: 'Uzbekistani Som', flag: 'uz' },
+  { code: 'YER', symbol: 'YER', name: 'Yemeni Rial', flag: 'ye' },
+  { code: 'ZAR', symbol: 'ZAR', name: 'South African Rand', flag: 'za' },
+];
 
 interface CurrencySelectorProps {
   variant?: 'desktop' | 'mobile' | 'mobile-dropdown';
@@ -114,7 +109,6 @@ export default function CurrencySelector({
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fix hydration mismatch by only showing dynamic data after mount
@@ -142,20 +136,13 @@ export default function CurrencySelector({
   };
 
   const filteredCurrencies = useMemo(() => {
-    let list = currencies;
-    if (selectedCategory !== 'all') {
-      list = list.filter(c => c.category === selectedCategory);
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase().trim();
-      list = list.filter(c => 
-        c.code.toLowerCase().includes(q) || 
-        c.name.toLowerCase().includes(q) ||
-        c.symbol.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [search, selectedCategory]);
+    if (!search.trim()) return [];
+    const q = search.toLowerCase().trim();
+    return currencies.filter(c => 
+      c.code.toLowerCase().includes(q) || 
+      c.name.toLowerCase().includes(q)
+    );
+  }, [search]);
 
   // Base currency for initial server render to match Redux initialState
   const displayCode = mounted ? currentCode : 'AED';
@@ -175,86 +162,177 @@ export default function CurrencySelector({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Currency</p>
-          <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{currencies.length} Available</span>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-md bg-[#f9d602] flex items-center justify-center shadow-xs">
+              <Globe size={12} className="text-gray-950 stroke-[2.5]" />
+            </div>
+            <p className="text-xs font-black text-gray-900 uppercase tracking-wider">Select Currency</p>
+          </div>
+          <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200/60">
+            {currencies.length} Available
+          </span>
         </div>
 
         {/* Mobile Search */}
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search currency or country..."
-            className="w-full pl-9 pr-8 py-2 bg-gray-50 text-gray-900 placeholder:text-gray-400 rounded-xl text-xs font-bold border border-gray-200 focus:outline-none focus:border-amber-400 focus:bg-white"
+            placeholder="Search currency, country, or code..."
+            className="w-full pl-10 pr-8 py-2.5 bg-gray-50 text-gray-900 placeholder:text-gray-400 rounded-xl text-xs font-bold border border-gray-200 focus:outline-none focus:border-[#f9d602] focus:ring-2 focus:ring-[#f9d602]/25 focus:bg-white transition-all shadow-xs"
           />
           {search && (
             <button 
               type="button" 
               onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
             >
-              <X size={12} />
+              <X size={13} />
             </button>
           )}
         </div>
 
-        {/* Category Pills */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold whitespace-nowrap transition-all ${
-                selectedCategory === cat.id
-                  ? 'bg-gray-900 text-white shadow-xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-          {filteredCurrencies.map((curr) => (
-            <button
-              key={curr.code}
-              type="button"
-              onClick={() => handleCurrencySelect(curr.code)}
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border-2 transition-all text-left ${
-                mounted && currentCode === curr.code
-                  ? 'border-amber-400 bg-amber-400/10 text-gray-900 shadow-xs'
-                  : 'border-gray-100 text-gray-600 hover:border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
-                <Image
-                  src={`https://flagcdn.com/w80/${curr.flag}.png`} 
-                  alt={curr.name}
-                  width={24}
-                  height={18}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col items-start min-w-0 flex-1">
-                <div className="flex items-center gap-1 w-full">
-                  <span className="text-xs font-black truncate">{curr.code}</span>
-                  <span className="text-[9px] font-bold text-gray-400">{curr.symbol}</span>
-                </div>
-                <span className="text-[9px] font-medium text-gray-400 truncate w-full">{curr.name}</span>
-              </div>
-              {mounted && currentCode === curr.code && (
-                <div className="w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center shrink-0">
-                  <Check size={10} className="text-black stroke-[3]" />
-                </div>
+        <div className="max-h-[350px] overflow-y-auto pr-1 custom-scrollbar space-y-3">
+          {search.trim() ? (
+            /* Search Results */
+            <div className="grid grid-cols-2 gap-2">
+              {filteredCurrencies.map((curr) => {
+                const isSelected = mounted && currentCode === curr.code;
+                return (
+                  <button
+                    key={curr.code}
+                    type="button"
+                    onClick={() => handleCurrencySelect(curr.code)}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-150 text-left group ${
+                      isSelected
+                        ? 'border-[#f9d602] bg-[#f9d602]/15 shadow-xs ring-1 ring-[#f9d602]'
+                        : 'border-gray-100 bg-white hover:border-[#f9d602]/40 hover:bg-[#f9d602]/10'
+                    }`}
+                  >
+                    <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                      <Image
+                        src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                        alt={curr.name}
+                        width={24}
+                        height={18}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start min-w-0 flex-1">
+                      <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] leading-none shrink-0 group-hover:border-black transition-colors">
+                        {curr.code}
+                      </span>
+                      <span className="text-[10px] font-medium text-gray-500 truncate w-full mt-1">{curr.name}</span>
+                    </div>
+                    {isSelected && (
+                      <div className="w-4 h-4 rounded-full bg-[#f9d602] text-black flex items-center justify-center shrink-0 shadow-xs">
+                        <Check size={10} className="stroke-[3]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+              {filteredCurrencies.length === 0 && (
+                <p className="col-span-2 text-center text-xs text-gray-400 py-6">No currencies found</p>
               )}
-            </button>
-          ))}
-          {filteredCurrencies.length === 0 && (
-            <p className="col-span-2 text-center text-xs text-gray-400 py-4">No currencies found</p>
+            </div>
+          ) : (
+            /* Grouped View: Top Currencies then All Currencies */
+            <>
+              {/* TOP CURRENCIES */}
+              <div>
+                <div className="flex items-center gap-1.5 px-1 mb-2">
+                  <Sparkles size={12} className="text-[#f9d602]" />
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Top Currencies</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {topCurrencies.map((curr) => {
+                    const isSelected = mounted && currentCode === curr.code;
+                    return (
+                      <button
+                        key={`mob-top-${curr.code}`}
+                        type="button"
+                        onClick={() => handleCurrencySelect(curr.code)}
+                        className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-150 text-left group ${
+                          isSelected
+                            ? 'border-[#f9d602] bg-[#f9d602]/15 shadow-xs ring-1 ring-[#f9d602]'
+                            : 'border-gray-100 bg-white hover:border-[#f9d602]/40 hover:bg-[#f9d602]/10'
+                        }`}
+                      >
+                        <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                          <Image
+                            src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                            alt={curr.name}
+                            width={24}
+                            height={18}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex flex-col items-start min-w-0 flex-1">
+                          <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] leading-none shrink-0 group-hover:border-black transition-colors">
+                            {curr.code}
+                          </span>
+                          <span className="text-[10px] font-medium text-gray-500 truncate w-full mt-1">{curr.name}</span>
+                        </div>
+                        {isSelected && (
+                          <div className="w-4 h-4 rounded-full bg-[#f9d602] text-black flex items-center justify-center shrink-0 shadow-xs">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ALL CURRENCIES */}
+              <div>
+                <div className="flex items-center gap-1.5 px-1 mb-2 pt-2 border-t border-gray-100">
+                  <Globe size={11} className="text-gray-400" />
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">All Currencies</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {currencies.map((curr) => {
+                    const isSelected = mounted && currentCode === curr.code;
+                    return (
+                      <button
+                        key={`mob-all-${curr.code}`}
+                        type="button"
+                        onClick={() => handleCurrencySelect(curr.code)}
+                        className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-150 text-left group ${
+                          isSelected
+                            ? 'border-[#f9d602] bg-[#f9d602]/15 shadow-xs ring-1 ring-[#f9d602]'
+                            : 'border-gray-100 bg-white hover:border-[#f9d602]/40 hover:bg-[#f9d602]/10'
+                        }`}
+                      >
+                        <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                          <Image
+                            src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                            alt={curr.name}
+                            width={24}
+                            height={18}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex flex-col items-start min-w-0 flex-1">
+                          <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] leading-none shrink-0 group-hover:border-black transition-colors">
+                            {curr.code}
+                          </span>
+                          <span className="text-[10px] font-medium text-gray-500 truncate w-full mt-1">{curr.name}</span>
+                        </div>
+                        {isSelected && (
+                          <div className="w-4 h-4 rounded-full bg-[#f9d602] text-black flex items-center justify-center shrink-0 shadow-xs">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -294,16 +372,20 @@ export default function CurrencySelector({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ type: 'spring', damping: 24, stiffness: 350 }}
-            className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2.5 z-[100] overflow-hidden"
+            className="absolute right-0 mt-2 w-76 sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-3 z-[100] overflow-hidden"
           >
             {/* Header & Search */}
-            <div className="px-3.5 pb-2.5 mb-2 border-b border-gray-100 space-y-2">
+            <div className="px-3.5 pb-2.5 mb-1.5 border-b border-gray-100 space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Globe size={13} className="text-amber-500" />
-                  <span className="text-[10px] font-black text-gray-800 uppercase tracking-wider">Select Currency</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-md bg-[#f9d602] flex items-center justify-center shadow-xs">
+                    <Globe size={12} className="text-gray-950 stroke-[2.5]" />
+                  </div>
+                  <span className="text-xs font-black text-gray-900 uppercase tracking-wider">Select Currency</span>
                 </div>
-                <span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{currencies.length} Available</span>
+                <span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200/60">
+                  {currencies.length} Available
+                </span>
               </div>
               
               {/* Search Box */}
@@ -313,80 +395,174 @@ export default function CurrencySelector({
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search currency, country, or symbol..."
+                  placeholder="Search currency, country, code..."
                   autoFocus
-                  className="w-full pl-8 pr-7 py-1.5 bg-gray-50 text-gray-900 placeholder:text-gray-400 rounded-xl text-xs font-bold border border-gray-200 focus:outline-none focus:border-amber-400 focus:bg-white transition-all"
+                  className="w-full pl-8 pr-7 py-2 bg-gray-50 text-gray-900 placeholder:text-gray-400 rounded-xl text-xs font-semibold border border-gray-200 focus:outline-none focus:border-[#f9d602] focus:ring-2 focus:ring-[#f9d602]/25 focus:bg-white transition-all shadow-xs"
                 />
                 {search && (
                   <button 
                     type="button" 
                     onClick={() => setSearch('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
                   >
                     <X size={12} />
                   </button>
                 )}
               </div>
-
-              {/* Category Filter Pills */}
-              <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none pt-0.5">
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-2 py-0.5 rounded-md text-[9px] font-bold whitespace-nowrap transition-all ${
-                      selectedCategory === cat.id
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
             </div>
             
             {/* Currencies List */}
-            <div className="max-h-[300px] overflow-y-auto custom-scrollbar px-1.5 space-y-0.5">
-              {filteredCurrencies.map((curr) => (
-                <button
-                  key={curr.code}
-                  type="button"
-                  onClick={() => handleCurrencySelect(curr.code)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all group ${
-                    mounted && currentCode === curr.code 
-                      ? 'bg-amber-400/15 text-gray-900 font-bold border border-amber-400/40' 
-                      : 'hover:bg-gray-50 text-gray-700 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200/80 shrink-0 bg-white flex items-center justify-center">
-                      <Image
-                        src={`https://flagcdn.com/w80/${curr.flag}.png`} 
-                        alt={curr.name}
-                        width={24}
-                        height={18}
-                        className="w-full h-full object-cover"
-                      />
+            <div className="max-h-[310px] overflow-y-auto custom-scrollbar px-1.5 space-y-2">
+              {search.trim() ? (
+                /* Search Results */
+                <div className="space-y-0.5">
+                  {filteredCurrencies.map((curr) => {
+                    const isSelected = mounted && currentCode === curr.code;
+                    return (
+                      <button
+                        key={curr.code}
+                        type="button"
+                        onClick={() => handleCurrencySelect(curr.code)}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 group ${
+                          isSelected 
+                            ? 'bg-[#f9d602]/15 border border-[#f9d602] shadow-xs' 
+                            : 'hover:bg-[#f9d602]/10 border border-transparent hover:border-[#f9d602]/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                            <Image
+                              src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                              alt={curr.name}
+                              width={24}
+                              height={18}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex items-baseline gap-2 min-w-0">
+                            <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] tracking-tight shrink-0 group-hover:border-black transition-colors">
+                              {curr.code}
+                            </span>
+                            <span className="text-xs font-medium text-gray-600 truncate group-hover:text-gray-900 transition-colors max-w-[145px]">
+                              {curr.name}
+                            </span>
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div className="w-4.5 h-4.5 bg-[#f9d602] rounded-full flex items-center justify-center shrink-0 shadow-xs">
+                            <Check size={10} className="text-black stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {filteredCurrencies.length === 0 && (
+                    <p className="text-center text-xs text-gray-400 py-6">No currencies found</p>
+                  )}
+                </div>
+              ) : (
+                /* Grouped: Top Currencies (AUD, CAD, EUR, GBP, USD) then All Currencies */
+                <>
+                  {/* TOP CURRENCIES */}
+                  <div>
+                    <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <Sparkles size={11} className="text-[#f9d602]" />
+                      <span>Top currencies</span>
                     </div>
-                    <div className="flex flex-col items-start min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-xs font-black ${mounted && currentCode === curr.code ? 'text-gray-900' : 'text-gray-800'}`}>{curr.code}</span>
-                        <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.2 rounded">{curr.symbol}</span>
-                      </div>
-                      <span className="text-[10px] font-medium text-gray-400 truncate max-w-[170px]">{curr.name}</span>
+                    <div className="space-y-0.5 mt-0.5">
+                      {topCurrencies.map((curr) => {
+                        const isSelected = mounted && currentCode === curr.code;
+                        return (
+                          <button
+                            key={`top-${curr.code}`}
+                            type="button"
+                            onClick={() => handleCurrencySelect(curr.code)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 group ${
+                              isSelected 
+                                ? 'bg-[#f9d602]/15 border border-[#f9d602] shadow-xs' 
+                                : 'hover:bg-[#f9d602]/10 border border-transparent hover:border-[#f9d602]/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                                <Image
+                                  src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                                  alt={curr.name}
+                                  width={24}
+                                  height={18}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex items-baseline gap-2 min-w-0">
+                                <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] tracking-tight shrink-0 group-hover:border-black transition-colors">
+                                  {curr.code}
+                                </span>
+                                <span className="text-xs font-medium text-gray-600 truncate group-hover:text-gray-900 transition-colors max-w-[145px]">
+                                  {curr.name}
+                                </span>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-4.5 h-4.5 bg-[#f9d602] rounded-full flex items-center justify-center shrink-0 shadow-xs">
+                                <Check size={10} className="text-black stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  {mounted && currentCode === curr.code && (
-                    <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center shrink-0 shadow-xs">
-                      <Check size={9} className="text-black stroke-[3]" />
+
+                  {/* ALL CURRENCIES */}
+                  <div>
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-gray-100 pt-2">
+                      <Globe size={11} className="text-gray-400" />
+                      <span>All currencies</span>
                     </div>
-                  )}
-                </button>
-              ))}
-              {filteredCurrencies.length === 0 && (
-                <p className="text-center text-xs text-gray-400 py-6">No currencies found</p>
+                    <div className="space-y-0.5 mt-0.5">
+                      {currencies.map((curr) => {
+                        const isSelected = mounted && currentCode === curr.code;
+                        return (
+                          <button
+                            key={`all-${curr.code}`}
+                            type="button"
+                            onClick={() => handleCurrencySelect(curr.code)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 group ${
+                              isSelected 
+                                ? 'bg-[#f9d602]/15 border border-[#f9d602] shadow-xs' 
+                                : 'hover:bg-[#f9d602]/10 border border-transparent hover:border-[#f9d602]/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-6 h-4.5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                                <Image
+                                  src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                                  alt={curr.name}
+                                  width={24}
+                                  height={18}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex items-baseline gap-2 min-w-0">
+                                <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] tracking-tight shrink-0 group-hover:border-black transition-colors">
+                                  {curr.code}
+                                </span>
+                                <span className="text-xs font-medium text-gray-600 truncate group-hover:text-gray-900 transition-colors max-w-[145px]">
+                                  {curr.name}
+                                </span>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-4.5 h-4.5 bg-[#f9d602] rounded-full flex items-center justify-center shrink-0 shadow-xs">
+                                <Check size={10} className="text-black stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </motion.div>
@@ -408,7 +584,6 @@ function MobileDropdownCurrency({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currentCurrency = currencies.find(c => c.code === currentCode) || currencies[0];
 
@@ -424,20 +599,13 @@ function MobileDropdownCurrency({
   }, []);
 
   const filteredCurrencies = useMemo(() => {
-    let list = currencies;
-    if (selectedCategory !== 'all') {
-      list = list.filter(c => c.category === selectedCategory);
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase().trim();
-      list = list.filter(c => 
-        c.code.toLowerCase().includes(q) || 
-        c.name.toLowerCase().includes(q) ||
-        c.symbol.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [search, selectedCategory]);
+    if (!search.trim()) return [];
+    const q = search.toLowerCase().trim();
+    return currencies.filter(c => 
+      c.code.toLowerCase().includes(q) || 
+      c.name.toLowerCase().includes(q)
+    );
+  }, [search]);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -458,12 +626,9 @@ function MobileDropdownCurrency({
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="flex flex-col items-start">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-black text-gray-900">{currentCurrency.code}</span>
-              <span className="text-xs font-bold text-gray-400">{currentCurrency.symbol}</span>
-            </div>
-            <span className="text-xs font-medium text-gray-400">{currentCurrency.name}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] leading-none shrink-0">{currentCurrency.code}</span>
+            <span className="text-xs font-medium text-gray-500">{currentCurrency.name}</span>
           </div>
         </div>
         <ChevronDown 
@@ -481,10 +646,17 @@ function MobileDropdownCurrency({
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             className="fixed left-4 right-4 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 py-3 z-[9999] overflow-hidden max-w-md mx-auto"
           >
-            <div className="px-3.5 pb-2.5 mb-2 border-b border-gray-100 space-y-2">
+            <div className="px-3.5 pb-2.5 mb-2 border-b border-gray-100 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-gray-800 uppercase tracking-wider">Choose Currency</span>
-                <span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{currencies.length} Available</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-md bg-[#f9d602] flex items-center justify-center shadow-xs">
+                    <Globe size={12} className="text-gray-950 stroke-[2.5]" />
+                  </div>
+                  <span className="text-xs font-black text-gray-900 uppercase tracking-wider">Select Currency</span>
+                </div>
+                <span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200/60">
+                  {currencies.length} Available
+                </span>
               </div>
 
               {/* Search Box */}
@@ -494,81 +666,179 @@ function MobileDropdownCurrency({
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search currency, country, or symbol..."
+                  placeholder="Search currency, country, code..."
                   autoFocus
-                  className="w-full pl-8 pr-7 py-2 bg-gray-50 text-gray-900 placeholder:text-gray-400 rounded-xl text-xs font-bold border border-gray-200 focus:outline-none focus:border-amber-400 focus:bg-white"
+                  className="w-full pl-8 pr-7 py-2 bg-gray-50 text-gray-900 placeholder:text-gray-400 rounded-xl text-xs font-semibold border border-gray-200 focus:outline-none focus:border-[#f9d602] focus:ring-2 focus:ring-[#f9d602]/25 focus:bg-white transition-all shadow-xs"
                 />
                 {search && (
                   <button 
                     type="button" 
                     onClick={() => setSearch('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
                   >
                     <X size={12} />
                   </button>
                 )}
               </div>
-
-              {/* Category Filter Pills */}
-              <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-2 py-0.5 rounded-md text-[9px] font-bold whitespace-nowrap transition-all ${
-                      selectedCategory === cat.id
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
             </div>
 
-            <div className="max-h-[280px] overflow-y-auto scrollbar-mobile px-1.5 space-y-0.5">
-              {filteredCurrencies.map((curr) => (
-                <button
-                  key={curr.code}
-                  type="button"
-                  onClick={() => {
-                    onSelect(curr.code);
-                    setIsOpen(false);
-                    setSearch('');
-                  }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-colors group ${
-                    mounted && currentCode === curr.code ? 'bg-amber-400/15 border border-amber-400/40' : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-7 h-5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
-                      <Image
-                        src={`https://flagcdn.com/w80/${curr.flag}.png`} 
-                        alt={curr.name}
-                        width={28}
-                        height={20}
-                        className="w-full h-full object-cover"
-                      />
+            <div className="max-h-[290px] overflow-y-auto scrollbar-mobile px-1.5 space-y-2">
+              {search.trim() ? (
+                /* Search Results */
+                <div className="space-y-0.5">
+                  {filteredCurrencies.map((curr) => {
+                    const isSelected = mounted && currentCode === curr.code;
+                    return (
+                      <button
+                        key={curr.code}
+                        type="button"
+                        onClick={() => {
+                          onSelect(curr.code);
+                          setIsOpen(false);
+                          setSearch('');
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150 group ${
+                          isSelected ? 'bg-[#f9d602]/15 border border-[#f9d602] shadow-xs' : 'hover:bg-[#f9d602]/10 hover:border-[#f9d602]/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-7 h-5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                            <Image
+                              src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                              alt={curr.name}
+                              width={28}
+                              height={20}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex items-baseline gap-2 min-w-0">
+                            <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] leading-none shrink-0 group-hover:border-black transition-colors">
+                              {curr.code}
+                            </span>
+                            <span className="text-[10px] font-medium text-gray-500 truncate max-w-[180px] group-hover:text-gray-900 transition-colors">
+                              {curr.name}
+                            </span>
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div className="w-4.5 h-4.5 bg-[#f9d602] rounded-full flex items-center justify-center shrink-0 shadow-xs">
+                            <Check size={10} className="text-black stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {filteredCurrencies.length === 0 && (
+                    <p className="text-center text-xs text-gray-400 py-6">No currencies found</p>
+                  )}
+                </div>
+              ) : (
+                /* Grouped: Top then All */
+                <>
+                  {/* TOP CURRENCIES */}
+                  <div>
+                    <div className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <Sparkles size={11} className="text-[#f9d602]" />
+                      <span>Top currencies</span>
                     </div>
-                    <div className="flex flex-col items-start min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-xs font-black ${mounted && currentCode === curr.code ? 'text-gray-900' : 'text-gray-700'}`}>{curr.code}</span>
-                        <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.2 rounded">{curr.symbol}</span>
-                      </div>
-                      <span className="text-[10px] font-medium text-gray-400 truncate max-w-[200px]">{curr.name}</span>
+                    <div className="space-y-0.5 mt-0.5">
+                      {topCurrencies.map((curr) => {
+                        const isSelected = mounted && currentCode === curr.code;
+                        return (
+                          <button
+                            key={`mob-drop-top-${curr.code}`}
+                            type="button"
+                            onClick={() => {
+                              onSelect(curr.code);
+                              setIsOpen(false);
+                              setSearch('');
+                            }}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150 group ${
+                              isSelected ? 'bg-[#f9d602]/15 border border-[#f9d602] shadow-xs' : 'hover:bg-[#f9d602]/10 hover:border-[#f9d602]/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-7 h-5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                                <Image
+                                  src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                                  alt={curr.name}
+                                  width={28}
+                                  height={20}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex items-baseline gap-2 min-w-0">
+                                <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] leading-none shrink-0 group-hover:border-black transition-colors">
+                                  {curr.code}
+                                </span>
+                                <span className="text-[10px] font-medium text-gray-500 truncate max-w-[180px] group-hover:text-gray-900 transition-colors">
+                                  {curr.name}
+                                </span>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-4.5 h-4.5 bg-[#f9d602] rounded-full flex items-center justify-center shrink-0 shadow-xs">
+                                <Check size={10} className="text-black stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  {mounted && currentCode === curr.code && (
-                    <div className="w-4.5 h-4.5 bg-amber-400 rounded-full flex items-center justify-center shrink-0 shadow-xs">
-                      <Check size={10} className="text-black stroke-[3]" />
+
+                  {/* ALL CURRENCIES */}
+                  <div>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-gray-100 pt-2">
+                      <Globe size={11} className="text-gray-400" />
+                      <span>All currencies</span>
                     </div>
-                  )}
-                </button>
-              ))}
-              {filteredCurrencies.length === 0 && (
-                <p className="text-center text-xs text-gray-400 py-6">No currencies found</p>
+                    <div className="space-y-0.5 mt-0.5">
+                      {currencies.map((curr) => {
+                        const isSelected = mounted && currentCode === curr.code;
+                        return (
+                          <button
+                            key={`mob-drop-all-${curr.code}`}
+                            type="button"
+                            onClick={() => {
+                              onSelect(curr.code);
+                              setIsOpen(false);
+                              setSearch('');
+                            }}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150 group ${
+                              isSelected ? 'bg-[#f9d602]/15 border border-[#f9d602] shadow-xs' : 'hover:bg-[#f9d602]/10 hover:border-[#f9d602]/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-7 h-5 rounded overflow-hidden shadow-xs border border-gray-200 shrink-0 bg-white flex items-center justify-center">
+                                <Image
+                                  src={`https://flagcdn.com/w80/${curr.flag}.png`} 
+                                  alt={curr.name}
+                                  width={28}
+                                  height={20}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex items-baseline gap-2 min-w-0">
+                                <span className="text-xs font-black text-gray-900 border-b-2 border-[#f9d602] pb-[1px] leading-none shrink-0 group-hover:border-black transition-colors">
+                                  {curr.code}
+                                </span>
+                                <span className="text-[10px] font-medium text-gray-500 truncate max-w-[180px] group-hover:text-gray-900 transition-colors">
+                                  {curr.name}
+                                </span>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-4.5 h-4.5 bg-[#f9d602] rounded-full flex items-center justify-center shrink-0 shadow-xs">
+                                <Check size={10} className="text-black stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </motion.div>

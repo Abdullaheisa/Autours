@@ -40,7 +40,7 @@ export default function StatsSection() {
             return;
           }
         }
-        
+
         const serverRes = await fetch(`${SERVER_API_BASE}/stats`, { cache: 'no-store' }).catch(() => null);
         if (serverRes && serverRes.ok) {
           const json = await serverRes.json();
@@ -116,12 +116,12 @@ export default function StatsSection() {
   ];
 
   return (
-    <section 
+    <section
       ref={containerRef}
       className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-slate-950 border-y border-white/10"
     >
       {/* Background Banner Image */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-100"
         style={{ backgroundImage: "url('/img/Banner1.webp')" }}
       />
@@ -130,7 +130,7 @@ export default function StatsSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/65" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14 md:mb-16">
           <motion.h2
@@ -204,9 +204,8 @@ export default function StatsSection() {
                 type="button"
                 aria-label={`Go to slide ${i + 1}`}
                 onClick={() => scrollToSlide(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  activeSlide === i ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/30 hover:bg-white/50'
-                }`}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${activeSlide === i ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/30 hover:bg-white/50'
+                  }`}
               />
             ))}
           </div>
@@ -230,7 +229,7 @@ function AnimatedCounter({ value, start }: { value: number; start: boolean }) {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Quartic ease-out for gradual, elegant deceleration
       const easedProgress = 1 - Math.pow(1 - progress, 4);
       setDisplayValue(Math.floor(easedProgress * value));

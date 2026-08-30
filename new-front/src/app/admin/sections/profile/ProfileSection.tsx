@@ -125,12 +125,12 @@ export default function ProfileSection() {
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="text-center">
-            <div className="relative w-[150px] h-[45px] mx-auto mb-4 group border border-gray-150 rounded-lg overflow-visible bg-white">
+            <div className="relative w-[200px] h-[60px] mx-auto mb-4 group border border-gray-200 rounded-lg overflow-visible bg-white p-1.5 flex items-center justify-center">
               {formData.logo ? (
                 <img
                   src={formData.logo.startsWith("http") || formData.logo.startsWith("data:") ? formData.logo : `${getBackendBaseUrl()}/img/${formData.logo}`}
                   alt="Profile"
-                  className="w-full h-full rounded-lg object-cover shadow-sm bg-white"
+                  className="w-full h-full rounded-lg object-contain bg-white"
                 />
               ) : (
                 <div className="w-full h-full bg-primary-600 rounded-lg flex items-center justify-center text-white text-base font-bold shadow-sm">

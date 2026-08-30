@@ -264,6 +264,8 @@ export default function CompanyProfileSection() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Company Logo</h3>
               <ImageUploader
+                aspectRatio="aspect-[2/1]"
+                objectFit="contain"
                 value={logo && !logo.startsWith('blob:') && !logo.startsWith('data:') ? (logo.startsWith('http') ? logo : `${getBackendBaseUrl()}/img/${logo}`) : logo}
                 onChange={(url) => {
                   setLogo(url);
@@ -275,12 +277,12 @@ export default function CompanyProfileSection() {
               {logo && typeof logo === 'string' && !logo.startsWith('blob:') && !logo.startsWith('data:') && (
                 <div className="mt-4">
                   <p className="text-xs text-gray-500 mb-2">Current Logo:</p>
-                  <div className="w-[150px] h-[45px] relative rounded-lg border border-gray-200 overflow-hidden bg-white p-1 flex items-center justify-center">
+                  <div className="w-[200px] h-[65px] relative rounded-lg border border-gray-200 overflow-hidden bg-white p-1 flex items-center justify-center">
                     <img src={logo.startsWith('http') ? logo : `${getBackendBaseUrl()}/img/${logo}`} alt="Current Logo" className="w-full h-full object-contain" />
                   </div>
                 </div>
               )}
-              <p className="text-xs text-gray-400 mt-3 text-center">Click or drag to upload your company logo</p>
+              <p className="text-xs text-gray-400 mt-3 text-center">Recommended ratio: ~2:1 or 3:1 (e.g. 300×100px or 300×150px)</p>
             </div>
           </div>
 
