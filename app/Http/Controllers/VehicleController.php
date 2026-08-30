@@ -468,6 +468,13 @@ class VehicleController extends Controller
             $fuzzyLocation = str_replace(' ', '%', $location);
             $airport = \App\Models\Airport::where('airport_name', 'LIKE', '%' . $fuzzyLocation . '%')->first();
             
+            if (is_numeric($location)) {
+                $locationBranch = \App\Models\Branch::find($location);
+                if ($locationBranch && $locationBranch->airport_id) {
+                    $airport = $locationBranch->airport;
+                }
+            }
+
             $vehicles->whereHas('branch', function ($q) use ($location, $fuzzyLocation, $airport) {
                 $q->where(function ($sub) use ($location, $fuzzyLocation, $airport) {
                     if (is_numeric($location)) {
