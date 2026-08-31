@@ -91,6 +91,12 @@ class SyncXdriveVehicles extends Command
                 ]
             );
 
+            // Ensure integration is properly configured
+            $supplierUser->update([
+                'integration_type' => 'xdrive',
+                'integration' => true,
+            ]);
+
             $supplierUserId = $supplierUser->id;
             $this->info("Supplier user resolved: ID {$supplierUser->id} ({$supplierUser->email})");
         }

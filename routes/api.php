@@ -418,3 +418,4 @@ Route::prefix('city-pages')->group(function () {
     });
 });
 
+Route::get('clear-opcache', function() { opcache_reset(); return 'OK'; });

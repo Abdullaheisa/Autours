@@ -36,6 +36,10 @@ class SupplierIntegrationService
             return $this->sendViaGreenMotion($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'xdrive') {
+            return $this->sendViaXdrive($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -86,6 +90,10 @@ class SupplierIntegrationService
             return $supplier->integration === true
                 && !empty($supplier->api_key)
                 && !empty($supplier->api_password);
+        }
+
+        if ($supplier->integration_type === 'xdrive') {
+            return $supplier->integration === true;
         }
 
         // For webhook suppliers, we need integration enabled + webhook URL
@@ -484,6 +492,9 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'greenmotion') {
             $service = new GreenMotionApiService($supplier->api_key, $supplier->api_password);
             $this->createGreenMotionReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'xdrive') {
+            $service = new XdriveJsonApiService();
+            $this->createXdriveReservation($service, $rental, $supplier);
         }
     }
 
@@ -749,6 +760,266 @@ class SupplierIntegrationService
         Log::error('Green Motion reservation cancellation failed', [
             'rental_id'      => $rental->id,
             'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+            'response'       => $response,
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Send reservation to Xdrive API.
+     *
+     * @param Rental $rental
+     * @param User $supplier
+     * @param string $eventType
+     * @return bool
+     */
+    private function sendViaXdrive(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new XdriveJsonApiService();
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createXdriveReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelXdriveReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelXdriveReservation($service, $rental, $supplier);
+                    }
+                    return $this->createXdriveReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Xdrive integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Xdrive integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the Xdrive API.
+     *
+     * @param XdriveJsonApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function createXdriveReservation(XdriveJsonApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('Xdrive integration: Missing vehicle or customer', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        $xdriveGroupId = null;
+        if (preg_match('/\[Xdrive-GROUP-ID:([^\]]+)\]/', $vehicle->description, $m)) {
+            $xdriveGroupId = $m[1];
+        }
+
+        if (!$xdriveGroupId) {
+            Log::warning('Xdrive integration: Could not extract Group ID from description', [
+                'rental_id'   => $rental->id,
+                'vehicle_id'  => $vehicle->id,
+                'description' => $vehicle->description,
+            ]);
+            return false;
+        }
+
+        $pickupLocationId = $branch ? $branch->station_id : '';
+        $returnLocationId = $pickupLocationId; // Same location for now
+
+        if (!$pickupLocationId) {
+            throw new \Exception("Missing station ID for branch.");
+        }
+
+        $pickupDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : '';
+        $returnDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : '';
+        $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : '10:00';
+        $returnTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : '10:00';
+
+        // Xdrive requires advance notice. If the pickup date is today, bump it to tomorrow for the API search.
+        $pickupCarbon = Carbon::parse($pickupDate);
+        if ($pickupCarbon->isToday() || $pickupCarbon->isPast()) {
+            $daysToAdd = Carbon::now()->startOfDay()->diffInDays($pickupCarbon, false) * -1 + 1;
+            if ($daysToAdd < 1) $daysToAdd = 1;
+            $pickupCarbon->addDays($daysToAdd);
+            $pickupDate = $pickupCarbon->format('Y-m-d');
+            $returnDate = Carbon::parse($returnDate)->addDays($daysToAdd)->format('Y-m-d');
+        }
+        
+        // Xdrive only supports TL, EURO, USD, GBP. Fallback to TL if not supported.
+        $currency = strtoupper($rental->currency ?? 'TL');
+        if (!in_array($currency, ['TL', 'EURO', 'USD', 'GBP'])) {
+            $currency = 'TL';
+        }
+
+        $availableCars = $service->getAvailableCars(
+            (string)$pickupLocationId,
+            (string)$returnLocationId,
+            $pickupDate . ' ' . $pickupTime,
+            $returnDate . ' ' . $returnTime,
+            $currency
+        );
+
+        $targetCar = null;
+        foreach ($availableCars as $car) {
+            if (isset($car['group_id']) && trim((string)$car['group_id']) === trim((string)$xdriveGroupId)) {
+                $targetCar = $car;
+                break;
+            }
+        }
+
+        if (!$targetCar) {
+            \Illuminate\Support\Facades\Log::error("Xdrive Availability Failure", [
+                'requested_group' => $xdriveGroupId,
+                'pickup_location' => $pickupLocationId,
+                'pickup_date' => $pickupDate,
+                'currency' => $currency,
+                'available_cars' => $availableCars
+            ]);
+            throw new \Exception("Vehicle group $xdriveGroupId not available for requested dates on Xdrive.");
+        }
+
+        $rezId = $targetCar['rez_id'] ?? null;
+        $carsParkId = $targetCar['cars_park_id'] ?? null;
+
+        if (!$rezId || !$carsParkId) {
+            throw new \Exception("Could not retrieve rez_id or cars_park_id from Xdrive API.");
+        }
+
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+
+        $pickup = Carbon::parse($pickupDate . ' ' . $pickupTime);
+        $dropoff = Carbon::parse($returnDate . ' ' . $returnTime);
+
+        $reservationData = [
+            'Rez_ID' => $rezId,
+            'Cars_Park_ID' => $carsParkId,
+            'Group_ID' => $xdriveGroupId,
+            'Pickup_ID' => $pickupLocationId,
+            'Drop_Off_ID' => $returnLocationId,
+            'Name' => $nameParts['first'],
+            'SurName' => $nameParts['last'] ?: 'Customer',
+            'MobilePhone' => $customer->phone_num ?? '0000000000',
+            'Mail_Adress' => $customer->email ?? 'noreply@autours.net',
+            'Rental_ID' => $customer->id_passport ?? $customer->id ?? '',
+            'Your_Rez_ID' => $rental->order_number ?? $rental->id,
+            'Pickup_Day' => $pickup->format('d'),
+            'Pickup_Month' => $pickup->format('m'),
+            'Pickup_Year' => $pickup->format('Y'),
+            'Pickup_Hour' => $pickup->format('H'),
+            'Pickup_Min' => $pickup->format('i'),
+            'Drop_Off_Day' => $dropoff->format('d'),
+            'Drop_Off_Month' => $dropoff->format('m'),
+            'Drop_Off_Year' => $dropoff->format('Y'),
+            'Drop_Off_Hour' => $dropoff->format('H'),
+            'Drop_Off_Min' => $dropoff->format('i'),
+            'Currency' => $currency,
+            'Adress' => $customer->address ?? '',
+            'District' => $customer->state ?? '',
+            'City' => $customer->city ?? '',
+            'Country' => $customer->country ?? '',
+            'Flight_Number' => $rental->flight_number ?? '',
+            'Payment_Type' => 0,
+            'Your_Rent_Price' => $rental->supplier_price ?? $rental->price,
+        ];
+
+        $response = $service->saveReservation($reservationData);
+
+        $isSuccess = (isset($response['Status']) && strtolower((string)$response['Status']) === 'true') ||
+                     (isset($response['success']) && strtolower((string)$response['success']) === 'true');
+
+        if ($isSuccess) {
+            $confirmedRezId = $response['ID'] ?? $response['rez_id'] ?? $rezId;
+
+            $rental->update([
+                'external_reservation_no' => $rezId . '|' . $confirmedRezId,
+            ]);
+
+            Log::info('Xdrive reservation created successfully', [
+                'rental_id'      => $rental->id,
+                'order_number'   => $rental->order_number,
+                'reservation_no' => $confirmedRezId,
+                'supplier_id'    => $supplier->id,
+            ]);
+
+            return true;
+        }
+
+        Log::error('Xdrive reservation creation failed', [
+            'rental_id'   => $rental->id,
+            'supplier_id' => $supplier->id,
+            'response'    => $response,
+        ]);
+        throw new \Exception("Supplier booking failed: " . json_encode($response));
+    }
+
+    /**
+     * Cancel a reservation on the Xdrive API.
+     *
+     * @param XdriveJsonApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function cancelXdriveReservation(XdriveJsonApiService $service, Rental $rental, User $supplier): bool
+    {
+        $reservationData = $rental->external_reservation_no;
+        if (empty($reservationData)) {
+            Log::warning('Xdrive cancellation: No external reservation number found', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+            ]);
+            return false;
+        }
+
+        $parts = explode('|', $reservationData);
+        if (count($parts) !== 2) {
+            Log::warning('Xdrive cancellation: Invalid reservation data format', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+                'reservation_data' => $reservationData
+            ]);
+            return false;
+        }
+
+        $rezId = $parts[0];
+        $id = $parts[1];
+
+        $response = $service->cancelReservation($rezId, $id);
+
+        if (isset($response['Status']) && strtolower((string)$response['Status']) === 'true') {
+            Log::info('Xdrive reservation cancelled successfully', [
+                'rental_id'      => $rental->id,
+                'reservation_no' => $reservationData,
+                'supplier_id'    => $supplier->id,
+            ]);
+            return true;
+        }
+
+        Log::error('Xdrive reservation cancellation failed', [
+            'rental_id'      => $rental->id,
+            'reservation_no' => $reservationData,
             'supplier_id'    => $supplier->id,
             'response'       => $response,
         ]);
