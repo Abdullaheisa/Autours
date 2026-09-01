@@ -161,6 +161,7 @@ export function CompanyVehicleCards({ vehicles }: { vehicles?: any[] }) {
         category: v.category?.name || v.category || "Car",
         image: v.photo ? getVehicleImageUrl(v.photo) : (v.image || "/images/car-placeholder.png"),
         price: v.final_price || v.price || 45,
+        currency: v.currency || v.branch?.currency || 'USD',
         available: v.activation ? "Available" : "Unavailable",
       }));
     }
@@ -197,7 +198,7 @@ export function CompanyVehicleCards({ vehicles }: { vehicles?: any[] }) {
             <div className="mt-4 flex items-center justify-between">
               <span className="text-primary-600 font-bold text-sm">
                 {(() => {
-                  const curr = (vehicle.currency || vehicle.branch?.currency || 'USD').toUpperCase();
+                  const curr = (vehicle.currency || 'USD').toUpperCase();
                   const prefix = curr === 'USD' ? '$' : curr === 'EUR' ? '€' : curr === 'GBP' ? '£' : `${curr} `;
                   return `${prefix}${vehicle.price}/day`;
                 })()}
