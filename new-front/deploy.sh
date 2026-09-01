@@ -11,6 +11,9 @@ sudo -u yomna22 git pull
 echo "Building the frontend..."
 sudo npm run build
 
+echo "Running database migrations..."
+(cd /var/www/app && php artisan migrate)
+
 echo "Restarting PM2 processes..."
 sudo pm2 restart nextjs
 
