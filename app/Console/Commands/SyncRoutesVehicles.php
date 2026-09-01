@@ -36,7 +36,7 @@ class SyncRoutesVehicles extends Command
     protected $signature = 'routes:sync-vehicles
                             {--pickup-date= : Pickup date (yyyy-MM-dd), defaults to day-after-tomorrow}
                             {--prices-only : Only refresh per-branch prices, do not re-create vehicles}
-                            {--rate-codes=Domestic : Comma-separated list of rate codes to sync}
+                            {--rate-codes=Domestic,WebLink : Comma-separated list of rate codes to sync}
                             {--concurrency=10 : Number of concurrent API requests per batch}';
 
     /**
@@ -106,65 +106,76 @@ class SyncRoutesVehicles extends Command
         // ------------------------------------------------------------------
         $concurrency = (int) $this->option('concurrency');
         $pricesOnly  = $this->option('prices-only');
+        
+        $rateCodesStr = $this->option('rate-codes');
+        $rateCodes = array_filter(array_map('trim', explode(',', $rateCodesStr ?: 'Domestic,WebLink')));
+        if (empty($rateCodes)) {
+            $rateCodes = ['Domestic', 'WebLink'];
+        }
 
         // Global inclusions have been removed to handle them dynamically per vehicle.
 
         // Collect per-branch, per-classCode merged prices
         $stationPrices = [];
-        $classModels   = []; // classCode => rate data (model name, seats, image)
+        $classModels   = []; // cacheKey => rate data (model name, seats, image)
 
         $this->info("Fetching availability for {$allBranches->count()} branch(es)...");
 
-        foreach ([$dropoffDate3, $dropoffDate7, $dropoffDate30] as $idx => $dropDate) {
-            $days = [3, 7, 30][$idx];
-            $this->info("Fetching {$days}-day prices...");
+        foreach ($rateCodes as $rateCode) {
+            foreach ([$dropoffDate3, $dropoffDate7, $dropoffDate30] as $idx => $dropDate) {
+                $days = [3, 7, 30][$idx];
+                $this->info("Fetching {$days}-day prices for {$rateCode}...");
 
-            $progress = $this->output->createProgressBar($allBranches->count());
-            $progress->start();
+                $progress = $this->output->createProgressBar($allBranches->count());
+                $progress->start();
 
-            foreach ($allBranches->chunk($concurrency) as $chunk) {
-                foreach ($chunk as $branch) {
-                    $rates = $service->getRates($branch->station_id, $pickupDateCarbon, $dropDate) ?: [];
+                foreach ($allBranches->chunk($concurrency) as $chunk) {
+                    foreach ($chunk as $branch) {
+                        $rates = $service->getRates($branch->station_id, $pickupDateCarbon, $dropDate, $rateCode) ?: [];
 
-                    foreach ($rates as $rate) {
-                        $classCode = $rate['ClassCode'] ?? null;
-                        if (!$classCode) continue;
+                        foreach ($rates as $rate) {
+                            $classCode = $rate['ClassCode'] ?? null;
+                            if (!$classCode) continue;
 
-                        $priceStr = (string) ($rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0);
-                        $price = (float) str_replace(',', '', $priceStr);
-                        if ($price <= 0) continue;
+                            $priceStr = (string) ($rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0);
+                            $price = (float) str_replace(',', '', $priceStr);
+                            if ($price <= 0) continue;
 
-                        $dayPrice = round($price / $days, 2);
+                            $dayPrice = round($price / $days, 2);
+                            $cacheKey = $classCode . '_' . $rateCode;
 
-                        if ($days === 3) {
-                            $stationPrices[$branch->id][$classCode]['day_value'] = $dayPrice;
-                            $classModels[$classCode] = [
-                                'model'      => $rate['ModelDesc'] ?? '',
-                                'classDesc'  => $rate['ClassDesc'] ?? '',
-                                'classImage' => $rate['ClassImage'] ?? null,
-                                'seats'      => $rate['Seats'] ?? null,
-                                'FreeMiles'  => $rate['FreeMiles'] ?? null,
-                                'MileageUnit'=> $rate['MileageUnit'] ?? 'KM',
-                                'Deposit'    => $rate['Deposit'] ?? null,
-                                'CDW_Excess' => $rate['CDW_Excess'] ?? null,
-                                'TP_Excess'  => $rate['TP_Excess'] ?? null,
-                                'TaxDesc'    => $rate['TaxDesc'] ?? null,
-                                'Tax1Desc'   => $rate['Tax1Desc'] ?? null,
-                                'Tax2Desc'   => $rate['Tax2Desc'] ?? null,
-                            ];
-                        } elseif ($days === 7) {
-                            $stationPrices[$branch->id][$classCode]['week_price'] = $dayPrice;
-                        } elseif ($days === 30) {
-                            $stationPrices[$branch->id][$classCode]['month_price'] = $dayPrice;
+                            if ($days === 3) {
+                                $stationPrices[$branch->id][$cacheKey]['day_value'] = $dayPrice;
+                                $classModels[$cacheKey] = [
+                                    'rateCode'   => $rateCode,
+                                    'classCode'  => $classCode,
+                                    'model'      => $rate['ModelDesc'] ?? '',
+                                    'classDesc'  => $rate['ClassDesc'] ?? '',
+                                    'classImage' => $rate['ClassImage'] ?? null,
+                                    'seats'      => $rate['Seats'] ?? null,
+                                    'FreeMiles'  => $rate['FreeMiles'] ?? null,
+                                    'MileageUnit'=> $rate['MileageUnit'] ?? 'KM',
+                                    'Deposit'    => $rate['Deposit'] ?? null,
+                                    'CDW_Excess' => $rate['CDW_Excess'] ?? null,
+                                    'TP_Excess'  => $rate['TP_Excess'] ?? null,
+                                    'TaxDesc'    => $rate['TaxDesc'] ?? null,
+                                    'Tax1Desc'   => $rate['Tax1Desc'] ?? null,
+                                    'Tax2Desc'   => $rate['Tax2Desc'] ?? null,
+                                ];
+                            } elseif ($days === 7) {
+                                $stationPrices[$branch->id][$cacheKey]['week_price'] = $dayPrice;
+                            } elseif ($days === 30) {
+                                $stationPrices[$branch->id][$cacheKey]['month_price'] = $dayPrice;
+                            }
                         }
+
+                        $progress->advance();
                     }
-
-                    $progress->advance();
                 }
-            }
 
-            $progress->finish();
-            $this->newLine();
+                $progress->finish();
+                $this->newLine();
+            }
         }
 
         // ------------------------------------------------------------------
@@ -176,29 +187,28 @@ class SyncRoutesVehicles extends Command
         $syncedVehicleIds = [];
 
         foreach ($stationPrices as $branchId => $classes) {
-            foreach ($classes as $classCode => $priceData) {
+            foreach ($classes as $cacheKey => $priceData) {
                 $dayPrice = $priceData['day_value'] ?? 0;
                 if ($dayPrice <= 0) continue;
 
                 $weekPrice  = $priceData['week_price'] ?? $dayPrice;
                 $monthPrice = $priceData['month_price'] ?? $dayPrice;
 
-                $model = $classModels[$classCode] ?? null;
-                if (!$model || empty($model['model'])) continue;
+                $model = $classModels[$cacheKey] ?? null;
+                if (!$model || (empty($model['model']) && empty($model['classDesc']))) continue;
 
-                $normalizedModel = $this->normalizeVehicleName($model['model']);
-                $categoryId = $this->resolveCategoryFromSipp($classCode);
+                $rateCode = $model['rateCode'];
+                $classCode = $model['classCode'];
+                $isInclusive = strcasecmp(trim($rateCode), 'WebLink') === 0;
 
-                // Add Transmission
-                $transmissionRaw = SippDecoder::getTransmissionAndDrive($classCode[2] ?? '');
-                $isAuto = str_contains(strtolower($transmissionRaw), 'automatic');
-                $isManual = str_contains(strtolower($transmissionRaw), 'manual');
-
-                if ($isAuto && !preg_match('/\b(Automatic|Auto|Aut)\b/i', $normalizedModel)) {
-                    $normalizedModel .= ' Automatic';
-                } elseif ($isManual && !preg_match('/\b(Manual|Man)\b/i', $normalizedModel)) {
-                    $normalizedModel .= ' Manual';
+                $normalizedModel = !empty($model['model']) ? trim((string)$model['model']) : trim((string)$model['classDesc']);
+                if ($isInclusive) {
+                    $normalizedModel .= ' (Inclusive)';
+                } else {
+                    $normalizedModel .= ' (Non-Inclusive)';
                 }
+
+                $categoryId = $this->resolveCategoryFromSipp($classCode);
 
                 // Check if vehicle already exists
                 $existingVehicle = Vehicle::where('supplier', $supplierUser->id)
@@ -216,14 +226,16 @@ class SyncRoutesVehicles extends Command
                     $vehicleInclusions[] = $inc->id;
                 }
                 
-                if (!empty($model['CDW_Excess'])) {
-                    $inc = Included::firstOrCreate(['what_is_included' => "Collision Damage Waiver (Excess: {$model['CDW_Excess']})"]);
-                    $vehicleInclusions[] = $inc->id;
-                }
-                
-                if (!empty($model['TP_Excess'])) {
-                    $inc = Included::firstOrCreate(['what_is_included' => "Theft Protection (Excess: {$model['TP_Excess']})"]);
-                    $vehicleInclusions[] = $inc->id;
+                if ($isInclusive) {
+                    if (!empty($model['CDW_Excess'])) {
+                        $inc = Included::firstOrCreate(['what_is_included' => "Collision Damage Waiver (Excess: {$model['CDW_Excess']})"]);
+                        $vehicleInclusions[] = $inc->id;
+                    }
+                    
+                    if (!empty($model['TP_Excess'])) {
+                        $inc = Included::firstOrCreate(['what_is_included' => "Theft Protection (Excess: {$model['TP_Excess']})"]);
+                        $vehicleInclusions[] = $inc->id;
+                    }
                 }
                 
                 if (!empty($model['TaxDesc'])) {
@@ -255,7 +267,7 @@ class SyncRoutesVehicles extends Command
 
                     $mileageIncluded = Included::firstOrCreate(['what_is_included' => "Mileage Limit: {$numericLimit} km"]);
                 } else {
-                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
+                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Limited Mileage']);
                 }
                 $vehicleInclusions[] = $mileageIncluded->id;
 
@@ -274,7 +286,7 @@ class SyncRoutesVehicles extends Command
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
                 } elseif (!$pricesOnly) {
-                    $photoFilename = $this->resolveLocalPhoto($normalizedModel);
+                    $photoFilename = !empty($model['classImage']) ? $model['classImage'] : $this->resolveLocalPhoto($normalizedModel);
 
                     $vehicle = Vehicle::create([
                         'name'                 => $normalizedModel,
