@@ -24,7 +24,9 @@ class Rental extends Model
         'comment',
         'rate',
         'payment_method_id',
-        'external_reservation_no'
+        'external_reservation_no',
+        'driver_age',
+        'residence_country'
     ];
 
     protected $casts = [

@@ -390,13 +390,20 @@ export default function BookingDetailsModal({
                   )}
                 </div>
 
-                {/* Country / City */}
-                <div className="flex items-center bg-white px-3 py-2 rounded-xl border border-gray-200/70 text-gray-600">
-                  <Globe size={14} className="text-gray-400 shrink-0 mr-2" />
-                  <span className="text-gray-500 mr-1.5">Location:</span>
-                  <span className="text-gray-900 font-medium truncate">
-                    {[rental.customer_city, rental.customer_country].filter(Boolean).join(", ") || rental.country || "—"}
-                  </span>
+                {/* Country / City & Driver Info */}
+                <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-200/70 text-gray-600">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Globe size={14} className="text-gray-400 shrink-0" />
+                    <span className="text-gray-500">Residence:</span>
+                    <span className="text-gray-900 font-medium truncate">
+                      {rental.residence_country || rental.raw?.residence_country || [rental.customer_city, rental.customer_country].filter(Boolean).join(", ") || rental.country || "—"}
+                    </span>
+                  </div>
+                  {(rental.driver_age || rental.raw?.driver_age) && (
+                    <span className="px-2 py-0.5 bg-amber-50 text-amber-800 font-bold rounded-md text-[10px] border border-amber-200 shrink-0 ml-1">
+                      Age: {rental.driver_age || rental.raw?.driver_age}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

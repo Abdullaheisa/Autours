@@ -50,7 +50,9 @@ export default function CompanyRentalsSection() {
         bookingNumber: r.order_number || `BK-${r.id}`,
         vehicle: r.vehicle?.name || "Unknown Vehicle",
         customerName: r.customer?.name || "Unknown Customer",
-        country: r.customer?.country || "UAE",
+        country: r.residence_country || r.customer?.country || "UAE",
+        driver_age: r.driver_age || null,
+        residence_country: r.residence_country || r.customer?.country || null,
         duration: r.number_of_days || (r.start_date && r.end_date ? Math.ceil(Math.abs(new Date(r.end_date).getTime() - new Date(r.start_date).getTime()) / (1000 * 60 * 60 * 24)) : 1),
         period: r.start_date && r.end_date ? `${r.start_date} - ${r.end_date}` : (r.start_date || "N/A"),
         startedAt: r.start_date || r.created_at || "N/A",
@@ -251,7 +253,14 @@ export default function CompanyRentalsSection() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-gray-900">{rental.customerName}</span>
-                          <span className="text-[10px] text-gray-400 font-medium">{rental.country}</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-gray-400 font-medium">{rental.country}</span>
+                            {rental.driver_age && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                Age: {rental.driver_age}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">

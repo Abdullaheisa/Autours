@@ -263,6 +263,8 @@ class BookingsController extends Controller
             $item->start_time = Carbon::parse($request->time_from);
             $item->end_time = Carbon::parse($request->time_to);
             $item->currency = $request->currency;
+            $item->driver_age = $request->input('driver_age', $request->input('age', null));
+            $item->residence_country = $request->input('residence_country', $request->input('country', null));
             $item->number_of_days = $diffInDays;
             if ($request->old_rental_id) {
                 $OldRental = Rental::query()->find($request->old_rental_id);

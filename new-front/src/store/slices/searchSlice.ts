@@ -14,6 +14,9 @@ export interface SearchParams {
   dateTo: string | null;
   startTime: string;
   endTime: string;
+  driverAge?: number;
+  driverAge25to70?: boolean;
+  residenceCountry?: string;
 }
 
 export interface FilterParams {
@@ -63,6 +66,9 @@ const initialState: SearchState = {
     dateTo: null,
     startTime: '10:00',
     endTime: '10:00',
+    driverAge: 26,
+    driverAge25to70: true,
+    residenceCountry: 'United Arab Emirates',
   },
   filterParams: {
     priceRange: null,

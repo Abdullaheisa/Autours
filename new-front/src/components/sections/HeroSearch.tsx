@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
   Search, MapPin, Calendar, Clock, CheckCircle2,
-  Plane, Building, AlertCircle
+  Plane, Building, AlertCircle, Check, X, ChevronDown,
+  Sparkles, Minus, Plus, Globe, SlidersHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { assets } from '@/config/assets';
 import { RootState, AppDispatch } from '@/store';
@@ -18,6 +19,7 @@ import { vehicleApi } from '@/services/api/vehicleApi';
 import { referenceApi } from '@/services/api';
 import { LocationBranch } from '@/types';
 import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
+import { worldCountries, WorldCountry } from '@/data/worldCountries';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
@@ -31,11 +33,17 @@ const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) =>
   `${i.toString().padStart(2, '0')}:00`
 );
 
+const DEFAULT_COUNTRY: WorldCountry = {
+  name: "United Arab Emirates",
+  code: "+971",
+  iso: "AE"
+};
+
 const TRUST_BADGES = [
   'Free Cancellation',
-  'No Credit card fees',
-  'No hidden fees',
-  'Free amendment',
+  'No Credit Card Fees',
+  'No Hidden Fees',
+  'Best Price Guarantee',
 ];
 
 interface HeroSearchProps {
@@ -47,7 +55,7 @@ interface HeroSearchProps {
 
 export default function HeroSearch({
   title = "Car Rentals - ",
-  titleHighlight = "Search, Book & Enjoy.",
+  titleHighlight = "Search, Compare, Book & Enjoy.",
   bottomText = "Looking for a vehicle? You're at the right place!",
   badge
 }: HeroSearchProps = {}) {
@@ -56,7 +64,17 @@ export default function HeroSearch({
   const currencyCode = useSelector((state: RootState) => state.currency.code);
   const { isSearching, searchParams } = useSelector((state: RootState) => state.search);
 
+  // Form State
   const [location, setLocation] = useState('');
+  const [driverAge25to70, setDriverAge25to70] = useState(true);
+  const [driverAge, setDriverAge] = useState(26);
+  const [showDriverDetails, setShowDriverDetails] = useState(false);
+
+  // Country Selection State
+  const [selectedCountry, setSelectedCountry] = useState<WorldCountry>(DEFAULT_COUNTRY);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+
   const [locations, setLocations] = useState<LocationBranch[]>([]);
   const [showLocations, setShowLocations] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -94,8 +112,6 @@ export default function HeroSearch({
       const pickupParam = params.get('pickup') || params.get('pickup_loc') || params.get('location') || params.get('search');
       if (pickupParam) {
         const decoded = decodeURIComponent(pickupParam).toLowerCase().trim();
-
-        // Try to find matching location
         const matched = locations.find((loc) => {
           return (
             loc.name?.toLowerCase().trim() === decoded ||
@@ -113,7 +129,6 @@ export default function HeroSearch({
             locationLabel: display,
           }));
         } else {
-          // Fallback to raw text
           setLocation(decodeURIComponent(pickupParam));
         }
       }
@@ -124,6 +139,12 @@ export default function HeroSearch({
   const calendarRef = useRef<HTMLDivElement>(null);
   const startRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const countryRef = useRef<HTMLDivElement>(null);
+
+  const filteredCountries = worldCountries.filter((c) =>
+    c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
+    c.iso.toLowerCase().includes(countrySearch.toLowerCase())
+  );
 
   const filteredLocations = locations.filter((loc) => {
     const q = location.toLowerCase();
@@ -161,10 +182,13 @@ export default function HeroSearch({
       if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) setShowCalendar(false);
       if (startRef.current && !startRef.current.contains(event.target as Node)) setShowStartTime(false);
       if (endRef.current && !endRef.current.contains(event.target as Node)) setShowEndTime(false);
+      if (countryRef.current && !countryRef.current.contains(event.target as Node)) setShowCountryDropdown(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const rentalDays = startDate && endDate ? Math.max(1, differenceInDays(endDate, startDate)) : null;
 
   const validateForm = (): boolean => {
     const newErrors: { location?: string; dates?: string } = {};
@@ -187,6 +211,7 @@ export default function HeroSearch({
     );
     const pickup = matched ? getLocationPickupValue(matched) : location.trim();
     const label = location.trim();
+    const finalAge = driverAge25to70 ? 30 : driverAge;
 
     dispatch(setSearchParams({
       location: pickup,
@@ -195,6 +220,9 @@ export default function HeroSearch({
       dateTo,
       startTime,
       endTime,
+      driverAge: finalAge,
+      driverAge25to70,
+      residenceCountry: selectedCountry.name,
     }));
 
     const params = new URLSearchParams();
@@ -205,14 +233,21 @@ export default function HeroSearch({
     params.set('st', startTime);
     params.set('et', endTime);
     params.set('currency', currencyCode);
+    params.set('country', selectedCountry.iso);
+    params.set('countryName', selectedCountry.name);
+    params.set('residence_country', selectedCountry.name);
+    params.set('driver_age', String(finalAge));
+    if (!driverAge25to70) {
+      params.set('age', String(driverAge));
+    }
 
     router.push(`/search?${params.toString()}`);
   };
 
   return (
-    <section className="relative h-auto sm:h-[calc(100vh-80px)] min-h-[580px] sm:min-h-[620px] md:min-h-[660px] flex flex-col items-center justify-start pt-16 pb-12 sm:justify-center sm:pt-0 sm:pb-0 sm:overflow-hidden" aria-label="Car Rental Search">
-      {/* 🚀 السر كله هنا: تحويل الخلفية لـ next/image مضغوطة بالكامل */}
-      <div className="absolute inset-0 z-0 overflow-hidden bg-gray-900">
+    <section className="relative h-auto min-h-[620px] lg:min-h-[680px] flex flex-col items-center justify-center pt-8 sm:pt-10 md:pt-12 pb-10 sm:pb-12 md:pb-14 px-4 sm:px-6 overflow-visible" aria-label="Car Rental Search">
+      {/* Background Image Container */}
+      <div className="absolute inset-0 z-0 overflow-hidden bg-gray-950">
         <Image
           src={heroBg}
           alt="Autours Car Rental Search"
@@ -220,32 +255,41 @@ export default function HeroSearch({
           priority
           fetchPriority="high"
           sizes="100vw"
-          quality={75}
-          className="object-cover transition-transform duration-[10s] hover:scale-105"
-          style={{ filter: 'brightness(0.65) contrast(1.05)' }}
+          quality={80}
+          className="object-cover"
+          style={{ filter: 'brightness(0.60) contrast(1.05)' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/15 to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/10 to-black/50" />
       </div>
 
-      <div className="relative z-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-0 sm:px-4 w-full flex flex-col items-center">
-        <div className="text-center mb-4 sm:mb-6 md:mb-8 flex flex-col items-center justify-center gap-2.5 sm:gap-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-2xl tracking-tight">
-            {title} <span className="text-primary">{titleHighlight}</span>
+      <div className="relative z-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto w-full flex flex-col items-center">
+        
+        {/* Main Headline (Separated further upwards from search box) */}
+        <div className="text-center mb-6 sm:mb-8 md:mb-10 flex flex-col items-center justify-center gap-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] font-black text-white leading-tight drop-shadow-2xl tracking-tight">
+            {title}<span className="text-[#f9d602]">{titleHighlight}</span>
           </h1>
           {badge && (
-            <div className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full bg-[#f4c400]/20 border border-[#f4c400]/30 text-[#f4c400] font-black text-xs uppercase tracking-wider backdrop-blur-sm shadow-xl">
+            <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-[#f9d602]/20 border border-[#f9d602]/40 text-[#f9d602] font-black text-xs uppercase tracking-wider backdrop-blur-md shadow-lg">
               {badge}
             </div>
           )}
         </div>
 
-        <div className="bg-white/35 backdrop-blur-sm pt-6 pb-5 px-4 sm:pt-8 sm:pb-7 sm:px-4 md:pt-10 md:pb-8 md:px-5 lg:py-16 lg:px-6 rounded-none sm:rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.45)] border-y border-white/20 sm:border border-white/20 w-full max-w-full sm:max-w-[94%] lg:max-w-[90%] xl:max-w-[68rem] 2xl:max-w-[72rem] 3xl:max-w-[88rem]">
-          <form onSubmit={handleSearch} className="space-y-4 md:space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 md:gap-2 lg:gap-3 items-start">
-
-              {/* Location Input */}
-              <div className="sm:col-span-1 md:col-span-5 relative" ref={locationsRef}>
-                <div className="relative group">
+        {/* Search Box Glass Container */}
+        <div className="relative z-30 bg-black/40 backdrop-blur-[2px] py-5 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.5)] border border-white/20 w-full max-w-full lg:max-w-[96%] xl:max-w-[88rem]">
+          <form onSubmit={handleSearch} className="space-y-3.5 sm:space-y-4 lg:space-y-5">
+            
+            {/* Main Inputs Row (Location, Combined Dates [Pickup + Return], Pickup Time, Return Time) */}
+            <div className="grid grid-cols-12 gap-2.5 sm:gap-3 items-center">
+              
+              {/* 1. Pick-up Location (12 cols on mobile/tablet, 4 cols on desktop) */}
+              <div className="col-span-12 lg:col-span-4 relative z-30" ref={locationsRef}>
+                <div className={`h-14 sm:h-16 lg:h-17 bg-white rounded-2xl border-2 transition-all px-3.5 sm:px-4 flex items-center justify-between shadow-xs group ${
+                  errors.location 
+                    ? 'border-red-400 ring-4 ring-red-400/20' 
+                    : 'border-white hover:border-[#f9d602] focus-within:border-[#f9d602] focus-within:ring-4 focus-within:ring-[#f9d602]/25'
+                }`}>
                   <input
                     type="text"
                     value={location}
@@ -256,240 +300,588 @@ export default function HeroSearch({
                     }}
                     onFocus={() => location.length > 0 && setShowLocations(true)}
                     placeholder="Enter your Location"
-                    className={`w-full h-12 md:h-14 lg:h-16 pl-5 md:pl-5 lg:pl-6 pr-12 bg-white/95 border rounded-xl md:rounded-[1.25rem] text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all placeholder:font-bold placeholder:text-gray-500 ${errors.location ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
-                      }`}
+                    className="w-full pr-3 text-xs sm:text-sm md:text-base font-extrabold text-gray-900 placeholder:text-gray-400 placeholder:font-medium outline-none bg-transparent"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Search size={18} aria-hidden="true" />
-                  </div>
-
-                  {showLocations && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[280px] overflow-y-auto z-[60]">
-                      {filteredLocations.length > 0 ? (
-                        filteredLocations.map((loc) => (
-                          <button
-                            key={loc.id}
-                            type="button"
-                            onClick={() => {
-                              const display = getLocationDisplayLabel(loc);
-                              const pickup = getLocationPickupValue(loc);
-                              setLocation(display);
-                              dispatch(setSearchParams({
-                                location: pickup,
-                                locationLabel: display,
-                              }));
-                              setShowLocations(false);
-                              if (errors.location) setErrors(prev => ({ ...prev, location: undefined }));
-                            }}
-
-                            className="w-full px-5 py-3.5 text-left hover:bg-primary/5 transition-all flex items-center gap-4 border-b border-gray-200 last:border-b-0"
-                          >
-                            {/* مربع الأيقونة - ضفنا shrink-0 علشان الأيقونة متتصغرش لو النص طويل */}
-                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 shrink-0">
-                              {loc.location_type?.toLowerCase().includes('airport') ? <Plane size={18} /> : <Building size={18} />}
-                            </div>
-
-                            {/* النصوص */}
-                            <div className="flex flex-col min-w-0 text-left">
-                              <div className="flex items-center flex-wrap gap-1.5">
-                                <span className="text-xs font-medium text-gray-900 line-clamp-2 leading-relaxed">
-                                  {getLocationDisplayLabel(loc).replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`), '')}
-                                </span>
-                                {loc.abriviation && (
-                                  <span className="text-[9px] font-black text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
-                                    {loc.abriviation}
-                                  </span>
-                                )}
-                              </div>
-                              {loc.country && (
-                                <span className="text-[10px] font-medium text-gray-500 mt-0.5">
-                                  {loc.country}
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-5 py-8 text-center">
-                          <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300 mx-auto mb-3">
-                            <MapPin size={24} />
-                          </div>
-                          <p className="text-sm font-black text-gray-500">No locations available</p>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Try a different search term</p>
-                        </div>
-                      )}
-                    </div>
+                  {location ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocation('');
+                        setShowLocations(false);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
+                    >
+                      <X size={16} />
+                    </button>
+                  ) : (
+                    <Search size={18} className="text-gray-400 shrink-0" />
                   )}
                 </div>
-                <AnimatePresence>
-                  {errors.location && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      className="text-xs font-black text-red-500 flex items-center gap-1 pl-1 mt-1"
-                    >
-                      <AlertCircle size={12} />
-                      {errors.location}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </div>
 
-              {/* Date Range Picker */}
-              <div className="sm:col-span-1 md:col-span-4 relative" ref={calendarRef}>
-                <div className={`flex items-center h-12 md:h-14 lg:h-16 bg-white/95 border rounded-xl md:rounded-[1.25rem] overflow-hidden focus-within:ring-4 focus-within:ring-primary/20 transition-all ${errors.dates ? 'border-red-400 bg-red-50/50' : 'border-gray-200'
-                  }`}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCalendar(!showCalendar);
-                      if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
-                    }}
-                    className="flex-1 px-3.5 md:px-3 lg:px-3.5 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group border-r border-gray-200"
-                  >
-                    <Calendar size={16} className="text-gray-500 group-hover:text-primary transition-colors shrink-0" />
-                    <div className="flex flex-col items-start leading-tight min-w-0">
-                      <span className="text-[12px] md:text-[11px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500">Pickup</span>
-                      <span className="text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 truncate">{startDate ? format(startDate, 'dd/MM/yyyy') : 'Select Date'}</span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCalendar(!showCalendar);
-                      if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
-                    }}
-                    className="flex-1 px-3.5 md:px-3 lg:px-3.5 h-full flex items-center gap-1.5 md:gap-1 lg:gap-2 hover:bg-white transition-all group"
-                  >
-                    <div className="flex flex-col items-start leading-tight min-w-0">
-                      <span className="text-[12px] md:text-[11px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500">Return</span>
-                      <span className="text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 truncate">{endDate ? format(endDate, 'dd/MM/yyyy') : 'Select Date'}</span>
-                    </div>
-                  </button>
-                </div>
-
-                <AnimatePresence>
-                  {errors.dates && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      className="text-xs font-black text-red-500 flex items-center gap-1 pl-1 mt-1"
-                    >
-                      <AlertCircle size={12} />
-                      {errors.dates}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-
-                {showCalendar && (
-                  <>
-                    <div
-                      className="fixed inset-0 bg-black/40 z-[55] lg:hidden"
-                      onClick={() => setShowCalendar(false)}
-                    />
-                    <div className="fixed lg:absolute top-[5%] lg:top-full left-1/2 -translate-x-1/2 mt-3 z-[60] w-[95vw] lg:w-fit flex justify-center">
-                      <div className="scale-[0.78] sm:scale-90 md:scale-95 origin-top">
-                        <CalendarRangePicker
-                          startDate={startDate}
-                          endDate={endDate}
-                          onSelect={(s, e) => {
-                            setStartDate(s);
-                            setEndDate(e);
-                            if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
+                {/* Location Dropdown */}
+                {showLocations && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[280px] overflow-y-auto z-[100]">
+                    {filteredLocations.length > 0 ? (
+                      filteredLocations.map((loc) => (
+                        <button
+                          key={loc.id}
+                          type="button"
+                          onClick={() => {
+                            const display = getLocationDisplayLabel(loc);
+                            const pickup = getLocationPickupValue(loc);
+                            setLocation(display);
+                            dispatch(setSearchParams({
+                              location: pickup,
+                              locationLabel: display,
+                            }));
+                            setShowLocations(false);
+                            if (errors.location) setErrors(prev => ({ ...prev, location: undefined }));
                           }}
-                          onClose={() => setShowCalendar(false)}
-                        />
+                          className="w-full px-4 py-3 text-left hover:bg-[#f9d602]/10 transition-all flex items-center gap-3 border-b border-gray-100 last:border-b-0 group cursor-pointer"
+                        >
+                          <div className="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center text-gray-500 group-hover:bg-[#f9d602] group-hover:text-gray-950 transition-colors shrink-0">
+                            {loc.location_type?.toLowerCase().includes('airport') ? <Plane size={15} /> : <Building size={15} />}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-bold text-gray-900 truncate">
+                              {getLocationDisplayLabel(loc)}
+                            </span>
+                            {loc.country && (
+                              <span className="text-[10px] font-medium text-gray-400">
+                                {loc.country}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-xs text-gray-400 font-bold">
+                        No matching locations found
                       </div>
-                    </div>
-                  </>
+                    )}
+                  </div>
+                )}
+
+                {errors.location && (
+                  <p className="text-xs font-black text-red-400 flex items-center gap-1 pl-1 mt-1.5 drop-shadow-sm">
+                    <AlertCircle size={12} />
+                    {errors.location}
+                  </p>
                 )}
               </div>
 
-              {/* Time Pickers */}
-              <div className="grid grid-cols-2 gap-2 md:gap-1.5 lg:gap-3 sm:col-span-2 md:col-span-3">
-                <div className="relative" ref={startRef}>
+              {/* 2. Combined Dates Box (12 cols on mobile/tablet, 4 cols on desktop) */}
+              <div className="col-span-12 lg:col-span-4 relative z-30" ref={calendarRef}>
+                <div className={`h-14 sm:h-16 lg:h-17 bg-white rounded-2xl border-2 transition-all flex items-center shadow-xs overflow-hidden ${
+                  errors.dates 
+                    ? 'border-red-400 ring-4 ring-red-400/20' 
+                    : 'border-white hover:border-[#f9d602]'
+                }`}>
+                  {/* Pickup Date Half */}
                   <button
                     type="button"
-                    onClick={() => setShowStartTime(!showStartTime)}
-                    className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-6 lg:pl-4 lg:pr-6 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
+                    onClick={() => {
+                      setShowCalendar(!showCalendar);
+                      setShowStartTime(false);
+                      setShowEndTime(false);
+                      if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
+                    }}
+                    className="flex-1 h-full px-3 sm:px-4 flex items-center gap-2 text-left hover:bg-gray-50 transition-colors cursor-pointer"
                   >
-                    <div className="flex flex-col items-start leading-tight">
-                      <span className="text-[12px] md:text-[11px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500">Pickup</span>
-                      <span>{startTime}</span>
+                    <Calendar size={17} className="text-gray-400 shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-gray-400 leading-tight">
+                        Pickup
+                      </span>
+                      <span className="text-xs sm:text-sm font-extrabold text-gray-900 truncate">
+                        {startDate ? format(startDate, 'dd/MM/yyyy') : 'Select Date'}
+                      </span>
                     </div>
-                    <Clock size={14} className="absolute right-2.5 md:right-2 lg:right-2 top-1/2 -translate-y-1/2 text-gray-500 shrink-0" />
                   </button>
-                  {showStartTime && (
-                    <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
-                      {TIME_OPTIONS.map((time) => (
-                        <button key={time} type="button" onClick={() => { setStartTime(time); setShowStartTime(false); }} className={`w-full px-4 py-3 text-left text-xs font-medium hover:bg-primary/10 transition-all ${startTime === time ? 'bg-primary/10 text-gray-900' : ''}`}>{time}</button>
-                      ))}
+
+                  {/* Subtle Divider */}
+                  <div className="w-[1px] h-7 sm:h-8 bg-gray-200 shrink-0" />
+
+                  {/* Return Date Half */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCalendar(!showCalendar);
+                      setShowStartTime(false);
+                      setShowEndTime(false);
+                      if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
+                    }}
+                    className="flex-1 h-full px-3 sm:px-4 flex items-center gap-2 text-left hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-gray-400 leading-tight">
+                        Return
+                      </span>
+                      <span className="text-xs sm:text-sm font-extrabold text-gray-900 truncate">
+                        {endDate ? format(endDate, 'dd/MM/yyyy') : 'Select Date'}
+                      </span>
                     </div>
-                  )}
+                  </button>
                 </div>
 
-                <div className="relative" ref={endRef}>
-                  <button
-                    type="button"
-                    onClick={() => setShowEndTime(!showEndTime)}
-                    className="w-full h-12 md:h-14 lg:h-16 pl-3.5 pr-8 md:pl-2.5 md:pr-6 lg:pl-4 lg:pr-6 bg-white/95 border border-gray-250 rounded-xl md:rounded-[1.25rem] flex items-center justify-start relative text-[14px] md:text-[13px] lg:text-base font-semibold text-gray-900 hover:bg-white hover:border-primary transition-all"
-                  >
-                    <div className="flex flex-col items-start leading-tight">
-                      <span className="text-[12px] md:text-[11px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500">Return</span>
-                      <span>{endTime}</span>
+                {/* Calendar Range Picker Modal */}
+                {showCalendar && (
+                  <>
+                    <div
+                      className="fixed inset-0 bg-black/50 z-[140] lg:hidden"
+                      onClick={() => setShowCalendar(false)}
+                    />
+                    <div className="fixed lg:absolute top-[10%] lg:top-full left-1/2 -translate-x-1/2 lg:left-0 lg:translate-x-0 mt-2 z-[150] w-[95vw] lg:w-fit flex justify-center animate-fadeIn">
+                      <CalendarRangePicker
+                        startDate={startDate}
+                        endDate={endDate}
+                        onSelect={(s, e) => {
+                          setStartDate(s);
+                          setEndDate(e);
+                          if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
+                        }}
+                        onClose={() => setShowCalendar(false)}
+                      />
                     </div>
-                    <Clock size={14} className="absolute right-2.5 md:right-2 lg:right-2 top-1/2 -translate-y-1/2 text-gray-500 shrink-0" />
-                  </button>
-                  {showEndTime && (
-                    <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[200px] overflow-y-auto z-[60]">
-                      {TIME_OPTIONS.map((time) => (
-                        <button key={time} type="button" onClick={() => { setEndTime(time); setShowEndTime(false); }} className={`w-full px-4 py-3 text-left text-xs font-medium hover:bg-primary/10 transition-all ${endTime === time ? 'bg-primary/10 text-gray-900' : ''}`}>{time}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
+
+                {errors.dates && (
+                  <p className="text-xs font-black text-red-400 flex items-center gap-1 pl-1 mt-1.5 drop-shadow-sm">
+                    <AlertCircle size={12} />
+                    {errors.dates}
+                  </p>
+                )}
               </div>
-            </div>
 
-            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-5 pt-5 sm:pt-6 border-t border-white/10">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3 w-full sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start lg:gap-x-5 lg:gap-y-3 lg:w-auto">
-                {TRUST_BADGES.map((text, i) => (
-                  <div key={i} className="flex items-center gap-2 min-w-0">
-                    <CheckCircle2 className="text-primary shrink-0 w-4 h-4 sm:w-5 sm:h-5 xl:w-6 xl:h-6" />
-                    <span className="text-xs xs:text-[13px] sm:text-[14px] md:text-[15px] lg:text-base xl:text-[17px] 2xl:text-[18px] font-bold text-white capitalize tracking-wide leading-tight sm:whitespace-nowrap truncate sm:overflow-visible">
-                      {text}
+              {/* 3. Pick-up Time (6 cols on mobile/tablet side-by-side with Return Time, 2 cols on desktop) */}
+              <div className="col-span-6 lg:col-span-2 relative z-25" ref={startRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowStartTime(!showStartTime);
+                    setShowEndTime(false);
+                    setShowCalendar(false);
+                  }}
+                  className="h-14 sm:h-16 lg:h-17 w-full bg-white rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all px-3 sm:px-4 flex items-center justify-between shadow-xs text-left cursor-pointer"
+                >
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-gray-400 leading-tight">
+                      Pickup
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-gray-900">
+                      {startTime}
                     </span>
                   </div>
-                ))}
+                  <Clock size={16} className="text-gray-400 shrink-0" />
+                </button>
+
+                {showStartTime && (
+                  <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[220px] overflow-y-auto z-[150] w-32 py-1 animate-fadeIn">
+                    {TIME_OPTIONS.map((time) => (
+                      <button
+                        key={`st-${time}`}
+                        type="button"
+                        onClick={() => {
+                          setStartTime(time);
+                          setShowStartTime(false);
+                        }}
+                        className={`w-full px-3.5 py-2 text-left text-xs font-extrabold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
+                          startTime === time ? 'bg-[#f9d602] text-gray-950 font-black' : 'text-gray-700'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
+              {/* 4. Return Time (6 cols on mobile/tablet side-by-side with Pickup Time, 2 cols on desktop) */}
+              <div className="col-span-6 lg:col-span-2 relative z-20" ref={endRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEndTime(!showEndTime);
+                    setShowStartTime(false);
+                    setShowCalendar(false);
+                  }}
+                  className="h-14 sm:h-16 lg:h-17 w-full bg-white rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all px-3 sm:px-4 flex items-center justify-between shadow-xs text-left cursor-pointer"
+                >
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-gray-400 leading-tight">
+                      Return
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-gray-900">
+                      {endTime}
+                    </span>
+                  </div>
+                  <Clock size={16} className="text-gray-400 shrink-0" />
+                </button>
+
+                {showEndTime && (
+                  <div className="absolute top-full right-0 lg:left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[220px] overflow-y-auto z-[150] w-32 py-1 animate-fadeIn">
+                    {TIME_OPTIONS.map((time) => (
+                      <button
+                        key={`et-${time}`}
+                        type="button"
+                        onClick={() => {
+                          setEndTime(time);
+                          setShowEndTime(false);
+                        }}
+                        className={`w-full px-3.5 py-2 text-left text-xs font-extrabold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
+                          endTime === time ? 'bg-[#f9d602] text-gray-950 font-black' : 'text-gray-700'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Mobile / Tablet Accordion Button for Driver Age & Country of Residence */}
+            <div className="block lg:hidden">
+              <button
+                type="button"
+                onClick={() => setShowDriverDetails(!showDriverDetails)}
+                className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20 text-white text-xs font-bold transition-all border border-white/15 cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-2 min-w-0 truncate">
+                  <SlidersHorizontal size={13} className="text-[#f9d602] shrink-0" />
+                  <span className="truncate text-white font-extrabold text-[11px] sm:text-xs">
+                    {driverAge25to70 ? 'Driver age: 30 - 65' : `Driver age: ${driverAge} yrs`} • {selectedCountry.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-[11px] font-black text-[#f9d602] shrink-0 pl-1">
+                  <span>{showDriverDetails ? 'Hide' : 'Options'}</span>
+                  <ChevronDown size={13} className={`transition-transform duration-200 ${showDriverDetails ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+
+              {/* Mobile Expanded Driver Details */}
+              <AnimatePresence>
+                {showDriverDetails && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-3 pb-1 space-y-3">
+                      {/* Driver Age Toggle */}
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+                          <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            driverAge25to70 
+                              ? 'bg-[#f9d602] border-[#f9d602] text-gray-950 shadow-md shadow-yellow-500/20' 
+                              : 'bg-white/10 border-white/50 group-hover:border-[#f9d602] group-hover:bg-white/20'
+                          }`}>
+                            {driverAge25to70 && <Check size={13} strokeWidth={3.5} />}
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={driverAge25to70}
+                            onChange={(e) => setDriverAge25to70(e.target.checked)}
+                            className="sr-only"
+                          />
+                          <span className="text-xs font-extrabold text-white">
+                            Driver aged between 30 - 65
+                          </span>
+                        </label>
+
+                        {!driverAge25to70 && (
+                          <div className="flex items-center bg-white rounded-xl p-1 shadow-md border border-white/60">
+                            <span className="text-[10px] font-extrabold text-gray-500 px-1.5 uppercase tracking-wider">
+                              Age
+                            </span>
+                            <div className="flex items-center gap-1 bg-gray-100 px-1 py-0.5 rounded-lg">
+                              <button
+                                type="button"
+                                onClick={() => setDriverAge(prev => Math.max(18, prev - 1))}
+                                className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+                              >
+                                <Minus size={11} strokeWidth={3} />
+                              </button>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={driverAge}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/\D/g, '');
+                                  if (val === '') setDriverAge(18);
+                                  else setDriverAge(Math.min(99, Math.max(18, Number(val))));
+                                }}
+                                className="w-7 text-center text-xs font-black text-gray-950 bg-transparent outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setDriverAge(prev => Math.min(99, prev + 1))}
+                                className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+                              >
+                                <Plus size={11} strokeWidth={3} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Country of Residence */}
+                      <div className="relative">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-extrabold text-white/90 flex items-center gap-1.5">
+                            <Globe size={13} className="text-[#f9d602]" />
+                            Country of residence:
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                            className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-950 px-3 py-1.5 rounded-xl text-xs font-black shadow-md border border-white/80 transition-all cursor-pointer"
+                          >
+                            <img
+                              src={`https://flagcdn.com/w40/${selectedCountry.iso.toLowerCase()}.png`}
+                              alt={selectedCountry.name}
+                              className="w-4.5 h-3 object-cover rounded-xs shadow-2xs shrink-0"
+                            />
+                            <span className="truncate max-w-[130px] text-gray-950 font-black">
+                              {selectedCountry.name}
+                            </span>
+                            <ChevronDown size={12} className="text-gray-500" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Mobile / Tablet Full-Width Search Button */}
+            <div className="block lg:hidden pt-1">
               <motion.button
                 type="submit"
                 disabled={isSearching}
-                whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}
-                whileTap={{ scale: 0.97 }}
-                className="h-14 sm:h-16 w-full lg:w-auto px-6 sm:px-10 bg-primary hover:bg-gray-900 text-gray-900 hover:text-primary font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-500 rounded-[1.25rem] shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0 group overflow-hidden relative"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full h-12 sm:h-13 bg-[#f9d602] hover:bg-yellow-400 text-gray-950 font-black text-sm uppercase tracking-wider transition-all duration-200 rounded-2xl shadow-xl shadow-yellow-500/25 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed border-2 border-yellow-300 active:scale-95 cursor-pointer"
               >
-                <span className="absolute inset-0 bg-gray-900 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
                 {isSearching ? (
-                  <div className="relative z-10 w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Search size={18} className="relative z-10 group-hover:text-primary transition-colors duration-500" />
-                    <span className="relative z-10 group-hover:text-primary transition-colors duration-500">SEARCH CARS</span>
+                    <Search size={18} className="stroke-[3]" />
+                    <span>Search Cars</span>
                   </>
                 )}
               </motion.button>
             </div>
+
+            {/* Desktop Sub-row (UNDER the main inputs): Driver Age, Country of Residence, Rental Duration, & SEARCH BUTTON */}
+            <div className="hidden lg:flex flex-wrap items-center justify-between gap-3.5 pt-3.5 border-t border-white/15">
+              
+              {/* Left Section: Age & Country of Residence */}
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                
+                {/* 1. Driver Age Checkbox */}
+                <label className="flex items-center gap-3 cursor-pointer select-none group">
+                  <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                    driverAge25to70 
+                      ? 'bg-[#f9d602] border-[#f9d602] text-gray-950 shadow-md shadow-yellow-500/20' 
+                      : 'bg-white/10 border-white/50 group-hover:border-[#f9d602] group-hover:bg-white/20'
+                  }`}>
+                    {driverAge25to70 && <Check size={13} strokeWidth={3.5} />}
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={driverAge25to70}
+                    onChange={(e) => setDriverAge25to70(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span className="text-xs sm:text-sm font-extrabold text-white drop-shadow-sm group-hover:text-[#f9d602] transition-colors">
+                    Driver aged between 30 - 65
+                  </span>
+                </label>
+
+                {/* Driver Age Custom Stepper Box if unchecked */}
+                {!driverAge25to70 && (
+                  <div className="flex items-center bg-white rounded-xl p-1 shadow-md border border-white/60 animate-fadeIn">
+                    <span className="text-[10px] font-extrabold text-gray-500 px-1.5 uppercase tracking-wider">
+                      Age
+                    </span>
+                    <div className="flex items-center gap-1 bg-gray-100 px-1 py-0.5 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setDriverAge(prev => Math.max(18, prev - 1))}
+                        className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+                      >
+                        <Minus size={11} strokeWidth={3} />
+                      </button>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={driverAge}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          if (val === '') setDriverAge(18);
+                          else setDriverAge(Math.min(99, Math.max(18, Number(val))));
+                        }}
+                        className="w-7 text-center text-xs font-black text-gray-950 bg-transparent outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDriverAge(prev => Math.min(99, prev + 1))}
+                        className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+                      >
+                        <Plus size={11} strokeWidth={3} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Country of Residence (I live in) Selector */}
+                <div className="relative" ref={countryRef}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm font-extrabold text-white/90 drop-shadow-sm flex items-center gap-1.5">
+                      <Globe size={14} className="text-[#f9d602]" />
+                      Country of residence:
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                      className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-950 px-3 py-1.5 rounded-xl text-xs font-black shadow-md border border-white/80 transition-all group cursor-pointer"
+                      title="Select your country of residence"
+                    >
+                      <img
+                        src={`https://flagcdn.com/w40/${selectedCountry.iso.toLowerCase()}.png`}
+                        alt={selectedCountry.name}
+                        className="w-4.5 h-3 object-cover rounded-xs shadow-2xs shrink-0"
+                      />
+                      <span className="truncate max-w-[120px] sm:max-w-[160px] text-gray-950 font-black">
+                        {selectedCountry.name}
+                      </span>
+                      <ChevronDown size={12} className="text-gray-500 group-hover:text-gray-950 transition-colors" />
+                    </button>
+                  </div>
+
+                  {/* Searchable Country Dropdown (Opens above on bottom row) */}
+                  {showCountryDropdown && (
+                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-2xl shadow-2xl border border-gray-100 w-72 sm:w-80 max-h-[320px] flex flex-col z-[160] overflow-hidden animate-fadeIn">
+                      {/* Search Header */}
+                      <div className="p-2.5 border-b border-gray-100 bg-gray-50/90">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5 px-0.5">
+                          Where do you currently live?
+                        </p>
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            value={countrySearch}
+                            onChange={(e) => setCountrySearch(e.target.value)}
+                            placeholder="Search your country..."
+                            className="w-full pl-8 pr-3 py-1.5 text-xs font-bold text-gray-900 bg-white rounded-xl border border-gray-200 outline-none focus:border-[#f9d602]"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+
+                      {/* Country Options */}
+                      <div className="overflow-y-auto max-h-[240px] p-1.5 space-y-0.5">
+                        {filteredCountries.length > 0 ? (
+                          filteredCountries.map((c) => (
+                            <button
+                              key={c.iso}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCountry(c);
+                                setShowCountryDropdown(false);
+                                setCountrySearch('');
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs font-extrabold flex items-center justify-between rounded-xl transition-all cursor-pointer ${
+                                selectedCountry.iso === c.iso
+                                  ? 'bg-[#f9d602] text-gray-950 font-black'
+                                  : 'text-gray-700 hover:bg-gray-100'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <img
+                                  src={`https://flagcdn.com/w40/${c.iso.toLowerCase()}.png`}
+                                  alt={c.name}
+                                  className="w-5 h-3.5 object-cover rounded-xs shadow-2xs shrink-0"
+                                />
+                                <span className="truncate">{c.name}</span>
+                              </div>
+                              {selectedCountry.iso === c.iso && (
+                                <Check size={14} strokeWidth={3} className="text-gray-950 shrink-0" />
+                              )}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-xs text-gray-400 font-bold">
+                            No matching countries
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Right Section: Rental Duration Pill & SEARCH BUTTON */}
+              <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+                {rentalDays && (
+                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#f9d602]/15 text-[#f9d602] rounded-xl text-xs font-black border border-[#f9d602]/40 shadow-xs">
+                    <Sparkles size={12} />
+                    <span>{rentalDays} {rentalDays === 1 ? 'Day' : 'Days'} Rental</span>
+                  </div>
+                )}
+
+                {/* Desktop SEARCH BUTTON */}
+                <motion.button
+                  type="submit"
+                  disabled={isSearching}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="h-11 sm:h-12 px-6 sm:px-8 bg-[#f9d602] hover:bg-yellow-400 text-gray-950 font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 rounded-xl sm:rounded-2xl shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed border border-yellow-300 active:scale-95 shrink-0 cursor-pointer"
+                >
+                  {isSearching ? (
+                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Search size={16} className="stroke-[3]" />
+                      <span>Search</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+
+            </div>
+
+            {/* Bottom Trust Badges */}
+            <div className="pt-3 border-t border-white/15 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-8 sm:gap-y-2">
+              {TRUST_BADGES.map((text, i) => (
+                <div key={i} className="flex items-center gap-1.5 sm:gap-2 text-white/95 drop-shadow-sm">
+                  <CheckCircle2 size={15} className="text-[#f9d602] shrink-0 stroke-[2.5]" />
+                  <span className="text-[11px] sm:text-xs md:text-sm font-extrabold tracking-tight sm:tracking-wide truncate">
+                    {text}
+                  </span>
+                </div>
+              ))}
+            </div>
+
           </form>
         </div>
 
-        <p className="mt-6 sm:mt-8 mb-2 pb-6 relative z-[-1] text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white text-center drop-shadow-lg tracking-tight">
+        {/* Bottom Sub-title (Separated further downwards from search box) */}
+        <p className="mt-7 sm:mt-9 md:mt-12 text-sm sm:text-base md:text-xl lg:text-2xl font-black text-white text-center drop-shadow-lg tracking-tight relative z-0 pointer-events-none px-4">
           {bottomText}
         </p>
+
       </div>
     </section>
   );

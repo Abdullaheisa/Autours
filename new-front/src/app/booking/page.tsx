@@ -390,6 +390,8 @@ function BookingContent() {
       // Step 2: Book vehicle
       const backendCurrency = SUPPORTED_BACKEND_CURRENCIES.includes(currencyCode) ? currencyCode : 'AED';
       const actualVehicleToBook = searchParams.get('bookId') || selectedVehicle.id;
+      const driverAge = searchParams.get('driver_age') || searchParams.get('age') || (searchStateParams.driverAge ? String(searchStateParams.driverAge) : '30');
+      const residenceCountry = searchParams.get('residence_country') || searchParams.get('countryName') || searchStateParams.residenceCountry || 'United Arab Emirates';
 
       await toast.promise(
         bookingApi.create({
@@ -402,6 +404,8 @@ function BookingContent() {
           currency: backendCurrency,
           vehicle: actualVehicleToBook,
           price: selectedVehicle.final_price,
+          driver_age: driverAge,
+          residence_country: residenceCountry,
         }),
         {
           loading: 'Processing your booking...',

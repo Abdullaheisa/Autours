@@ -191,12 +191,24 @@ export default function CustomerBookings() {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{v.name} <span className="text-sm font-normal text-gray-500">or similar</span></h3>
-                    <p className="text-gray-500 text-sm mt-1">Order #{rental.order_number}</p>
-                    {rental.external_reservation_no && (
-                      <p className="text-emerald-600 text-xs font-semibold mt-1">
-                        Supplier Ref: {rental.external_reservation_no}
-                      </p>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                      <span className="text-gray-500 text-xs font-semibold">Order #{rental.order_number}</span>
+                      {rental.residence_country && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">
+                          🌍 {rental.residence_country}
+                        </span>
+                      )}
+                      {rental.driver_age && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                          Driver Age: {rental.driver_age}
+                        </span>
+                      )}
+                      {rental.external_reservation_no && (
+                        <span className="text-emerald-600 text-xs font-semibold">
+                          Supplier Ref: {rental.external_reservation_no}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary-600">
@@ -214,7 +226,9 @@ export default function CustomerBookings() {
                       <p className="text-xs text-gray-500 mt-0.5">
                         {v.branch ? getLocationDisplayLabel(v.branch) : `${v.branch?.address || ''}, ${v.branch?.city || ''}`}
                       </p>
-                      <p className="text-xs font-medium text-gray-700 mt-1">{rental.start_date}</p>
+                      <p className="text-xs font-medium text-gray-700 mt-1">
+                        {rental.start_date} {rental.start_time ? `(${rental.start_time})` : ''}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -224,7 +238,9 @@ export default function CustomerBookings() {
                       <p className="text-xs text-gray-500 mt-0.5">
                         {v.branch ? getLocationDisplayLabel(v.branch) : `${v.branch?.address || ''}, ${v.branch?.city || ''}`}
                       </p>
-                      <p className="text-xs font-medium text-gray-700 mt-1">{rental.end_date}</p>
+                      <p className="text-xs font-medium text-gray-700 mt-1">
+                        {rental.end_date} {rental.end_time ? `(${rental.end_time})` : ''}
+                      </p>
                     </div>
                   </div>
                 </div>

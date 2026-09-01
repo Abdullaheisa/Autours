@@ -31,7 +31,10 @@ export default function CreateRentalModal({ isOpen, onClose }: CreateRentalModal
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
 
-  const currencies = ["USD", "AED", "SAR", "EGP", "QAR", "KWD", "BHD", "OMR", "JOD"];
+  const currencies = [
+    "USD", "EUR", "GBP", "AED", "SAR", "MAD", "TRY", "EGP", "QAR", "KWD", "BHD", "OMR", "JOD",
+    "CAD", "AUD", "CHF"
+  ];
 
   useEffect(() => {
     if (isOpen) {

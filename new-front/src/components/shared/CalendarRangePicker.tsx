@@ -46,7 +46,7 @@ export default function CalendarRangePicker({
   }, [tempStart, tempEnd, onSelect, onClose, today, allowPastDates]);
 
   const getDayClasses = (dayDate: Date, isPast: boolean) => {
-    let classes = 'h-7 w-full flex items-center justify-center text-xs font-bold transition-all duration-150 relative z-10 ';
+    let classes = 'h-8 sm:h-9 w-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all duration-150 relative z-10 ';
 
     if (isPast) {
       classes += 'text-gray-300 cursor-not-allowed';
@@ -54,7 +54,7 @@ export default function CalendarRangePicker({
     }
 
     if (tempStart && isSameDay(dayDate, tempStart) || (tempEnd && isSameDay(dayDate, tempEnd))) {
-      classes += 'bg-[#f9d602] text-gray-950 rounded-lg font-black shadow-xs';
+      classes += 'bg-[#f9d602] text-gray-950 rounded-xl font-black shadow-xs';
       return classes;
     }
 
@@ -69,11 +69,11 @@ export default function CalendarRangePicker({
     }
 
     if (isToday(dayDate)) {
-      classes += 'text-[#d4a000] font-black ring-1.5 ring-[#f9d602] rounded-lg';
+      classes += 'text-[#d4a000] font-black ring-2 ring-[#f9d602] rounded-xl';
       return classes;
     }
 
-    classes += 'text-gray-700 hover:bg-[#f9d602]/20 hover:rounded-lg cursor-pointer';
+    classes += 'text-gray-700 hover:bg-[#f9d602]/20 hover:rounded-xl cursor-pointer';
     return classes;
   };
 
@@ -87,7 +87,7 @@ export default function CalendarRangePicker({
 
     const days = [];
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-7" />);
+      days.push(<div key={`empty-${i}`} className="h-8 sm:h-9" />);
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -111,49 +111,49 @@ export default function CalendarRangePicker({
     return (
       <div className="flex-1 min-w-0">
         {/* Month Header */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2.5">
           {isPrimary ? (
             <>
               <button
                 type="button"
                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-500 transition-all"
+                className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-xl text-gray-600 transition-all cursor-pointer"
               >
-                <ChevronLeft size={15} strokeWidth={2.5} />
+                <ChevronLeft size={17} strokeWidth={2.5} />
               </button>
-              <span className="font-black text-gray-900 text-xs tracking-tight">
+              <span className="font-black text-gray-900 text-sm sm:text-base tracking-tight">
                 {monthName} {monthYear}
               </span>
-              <div className="w-6 sm:hidden" />
+              <div className="w-7 sm:hidden" />
             </>
           ) : (
             <>
-              <div className="w-6 hidden sm:block" />
-              <span className="font-black text-gray-900 text-xs tracking-tight">
+              <div className="w-7 hidden sm:block" />
+              <span className="font-black text-gray-900 text-sm sm:text-base tracking-tight">
                 {monthName} {monthYear}
               </span>
               <button
                 type="button"
                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-500 transition-all"
+                className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-xl text-gray-600 transition-all cursor-pointer"
               >
-                <ChevronRight size={15} strokeWidth={2.5} />
+                <ChevronRight size={17} strokeWidth={2.5} />
               </button>
             </>
           )}
         </div>
 
         {/* Weekday Headers */}
-        <div className="grid grid-cols-7 gap-0.5 text-center mb-1">
+        <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-            <div key={i} className="text-[10px] font-bold text-gray-400 h-5 flex items-center justify-center">
+            <div key={i} className="text-[11px] sm:text-xs font-black text-gray-400 h-6 flex items-center justify-center">
               {d}
             </div>
           ))}
         </div>
 
         {/* Days Grid */}
-        <div className="grid grid-cols-7 gap-0.5" onMouseLeave={() => setHoverDate(null)}>
+        <div className="grid grid-cols-7 gap-1" onMouseLeave={() => setHoverDate(null)}>
           {days}
         </div>
       </div>
@@ -161,10 +161,10 @@ export default function CalendarRangePicker({
   };
 
   return (
-    <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden
-                    ${singleMonth ? 'w-[260px] sm:w-[280px]' : 'w-[270px] sm:w-[500px]'}`}>
-      <div className="p-3 sm:p-3.5">
-        <div className={`flex gap-4 ${singleMonth ? '' : 'flex-col sm:flex-row'}`}>
+    <div className={`bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden
+                    ${singleMonth ? 'w-[290px] sm:w-[320px]' : 'w-[300px] sm:w-[560px]'}`}>
+      <div className="p-4 sm:p-5">
+        <div className={`flex gap-5 ${singleMonth ? '' : 'flex-col sm:flex-row'}`}>
           {renderMonth(currentMonth, true)}
           {!singleMonth && (
             <>

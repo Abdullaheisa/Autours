@@ -58,7 +58,10 @@ const defaultForm: BranchFormData = {
   airport_id: null,
 };
 
-const CURRENCIES = ["USD", "AED", "SAR", "EGP", "QAR", "KWD", "BHD", "OMR", "JOD"];
+const CURRENCIES = [
+  "USD", "EUR", "GBP", "AED", "SAR", "MAD", "TRY", "EGP", "QAR", "KWD", "BHD", "OMR", "JOD",
+  "CAD", "AUD", "CHF", "JPY", "CNY", "INR", "MYR", "SGD", "THB", "KRW"
+];
 
 // ─── Searchable Dropdown ──────────────────────────────────────────────
 function SearchableDropdown({

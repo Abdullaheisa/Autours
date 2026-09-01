@@ -195,7 +195,13 @@ export function CompanyVehicleCards({ vehicles }: { vehicles?: any[] }) {
           <div className="p-4">
             <h4 className="font-bold text-gray-900 truncate">{vehicle.name}</h4>
             <div className="mt-4 flex items-center justify-between">
-              <span className="text-primary-600 font-bold text-sm">${vehicle.price}/day</span>
+              <span className="text-primary-600 font-bold text-sm">
+                {(() => {
+                  const curr = (vehicle.currency || vehicle.branch?.currency || 'USD').toUpperCase();
+                  const prefix = curr === 'USD' ? '$' : curr === 'EUR' ? '€' : curr === 'GBP' ? '£' : `${curr} `;
+                  return `${prefix}${vehicle.price}/day`;
+                })()}
+              </span>
               <span className={`text-[10px] font-bold uppercase ${vehicle.available === "Available" ? "text-emerald-600" : "text-gray-500"}`}>{vehicle.available}</span>
             </div>
           </div>

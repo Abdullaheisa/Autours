@@ -81,6 +81,12 @@
             <td class="border-color" style=" width: 47%; text-align: left;background-color: #faefac">
                 <h3 style="background: #ffd719">Customer Name</h3>
                 <p>{{(isset($rental) && $rental->customer) ? $rental->customer->name : ''}}</p>
+                @if(isset($rental) && ($rental->residence_country || $rental->driver_age))
+                <p style="font-size: 11px; margin-top: 4px; color: #444;">
+                    @if($rental->residence_country) <strong>Country of Residence:</strong> {{$rental->residence_country}} @endif
+                    @if($rental->driver_age) &nbsp;&nbsp; <strong>Driver Age:</strong> {{$rental->driver_age}} @endif
+                </p>
+                @endif
             </td>
             <td style=" width: 5%; background-color: #ffffff"></td>
             <td class="border-color" style=" width: 47%; background-color: #faefac">

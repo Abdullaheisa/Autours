@@ -246,7 +246,7 @@ class ExternalAuthController extends Controller
         $branches = \App\Models\Branch::query()
             ->where('company_id', $user->id)
             ->orderBy('location')
-            ->get(['id', 'name', 'location', 'adresse', 'city', 'country']);
+            ->get(['id', 'name', 'location', 'adresse', 'city', 'country', 'currency', 'activation']);
 
         return response()->json([
             'status' => true,

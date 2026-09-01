@@ -121,14 +121,23 @@ class UserController extends Controller
         $user->update($updateData);
 
         // Synchronize description, logo, and brand name to CarRentalBrand
-        if ($user->role === 'active_supplier' || $user->role === 'company' || \App\Models\CarRentalBrand::where('user_id', $user->id)->exists() || $request->has('description')) {
+        if ($user->role === 'active_supplier' || $user->role === 'company' || $user->role === 'supplier' || \App\Models\CarRentalBrand::where('user_id', $user->id)->exists() || $request->has('description')) {
+            $brand = \App\Models\CarRentalBrand::where('user_id', $user->id)->first();
+            $brandDesc = $request->has('description') ? $request->input('description') : ($brand ? $brand->description : '');
+
+            $slugBase = $user->company ?: $user->name ?: ('company-' . $user->id);
+            $slug = \Illuminate\Support\Str::slug($slugBase);
+            if (empty($slug)) {
+                $slug = 'company-' . $user->id;
+            }
+
             \App\Models\CarRentalBrand::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'description' => $user->description ?: '',
-                    'name' => $user->company ?: $user->name,
-                    'slug' => \Illuminate\Support\Str::slug($user->company ?: $user->name),
-                    'display_name' => ($user->company ?: $user->name) . ' Car Rental',
+                    'description' => $brandDesc !== null ? $brandDesc : '',
+                    'name' => $user->company ?: $user->name ?: 'Company',
+                    'slug' => $slug,
+                    'display_name' => ($user->company ?: $user->name ?: 'Company') . ' Car Rental',
                     'logo' => $user->logo ?: '/img/company_logos/default.png',
                 ]
             );

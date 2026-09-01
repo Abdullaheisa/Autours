@@ -443,6 +443,70 @@ export default function MyVehiclesSection({
     return true;
   };
 
+  // ─── Helper: get branch / vehicle currency ───────────────────
+  const getVehicleCurrency = (v: any): string => {
+    // 1. Direct currency on vehicle
+    if (v.currency) return v.currency;
+
+    // 2. Embedded branch object currency
+    if (v.branch && typeof v.branch === "object" && v.branch.currency) {
+      return v.branch.currency;
+    }
+    if (v.pickup_loc && typeof v.pickup_loc === "object" && v.pickup_loc.currency) {
+      return v.pickup_loc.currency;
+    }
+
+    // 3. Fallback: look up in loaded branches list
+    const rawId =
+      (typeof v.pickup_loc === "number" || typeof v.pickup_loc === "string" ? String(v.pickup_loc) : null) ||
+      (typeof v.branch === "number" || typeof v.branch === "string" ? String(v.branch) : null) ||
+      (v.branch_id ? String(v.branch_id) : null);
+    if (rawId) {
+      const found = branches.find((b: any) => String(b.id) === rawId);
+      if (found?.currency) return found.currency;
+    }
+
+    // 4. Default to first branch currency or USD
+    return branches[0]?.currency || "USD";
+  };
+
+  // ─── Helper: format vehicle price with currency ──────────────
+  const renderVehiclePrice = (v: any) => {
+    if (v.price === undefined || v.price === null || v.price === "") {
+      return <span className="text-xs text-gray-300 italic font-medium">N/A</span>;
+    }
+    const num = typeof v.price === "number" ? v.price : parseFloat(v.price);
+    if (isNaN(num)) {
+      return <span className="text-xs text-gray-300 italic font-medium">N/A</span>;
+    }
+    const currency = (getVehicleCurrency(v) || "USD").toUpperCase();
+    const formattedNum = num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    if (currency === "USD") {
+      return <span className="text-sm font-bold text-gray-700">${formattedNum}</span>;
+    }
+    if (currency === "EUR") {
+      return <span className="text-sm font-bold text-gray-700">€{formattedNum}</span>;
+    }
+    if (currency === "GBP") {
+      return <span className="text-sm font-bold text-gray-700">£{formattedNum}</span>;
+    }
+
+    return (
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+          {currency}
+        </span>
+        <span className="text-sm font-bold text-gray-700">
+          {formattedNum}
+        </span>
+      </div>
+    );
+  };
+
   // Server handles filtering — items are already filtered.
   // We keep a thin client-side pass only as a safety net for instant UI feedback.
   const filteredVehicles = items; // server already filtered
@@ -737,8 +801,8 @@ export default function MyVehiclesSection({
                           );
                         })()}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 font-bold">
-                        {vehicle.price ? `$${vehicle.price}` : "N/A"}
+                      <td className="px-6 py-4">
+                        {renderVehiclePrice(vehicle)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center">

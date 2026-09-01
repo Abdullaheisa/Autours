@@ -24,9 +24,22 @@ export default function PriceListSection() {
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
 
+  const [branches, setBranches] = useState<any[]>([]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [localSearch, searchQuery]);
+
+  // Fetch branches once on mount
+  useEffect(() => {
+    supplierApi
+      .getBranches()
+      .then((res: any) => {
+        const data = res?.data?.data || res?.data || [];
+        if (Array.isArray(data)) setBranches(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchVehicles = async (page: number = 1) => {
     setIsLoading(true);
@@ -100,6 +113,52 @@ export default function PriceListSection() {
     }
   };
 
+  // ─── Helper: get branch / vehicle currency ───────────────────
+  const getVehicleCurrency = (v: any): string => {
+    // 1. Direct currency on vehicle
+    if (v.currency) return v.currency;
+
+    // 2. Embedded branch object currency
+    if (v.branch && typeof v.branch === "object" && v.branch.currency) {
+      return v.branch.currency;
+    }
+    if (v.pickup_loc && typeof v.pickup_loc === "object" && v.pickup_loc.currency) {
+      return v.pickup_loc.currency;
+    }
+
+    // 3. Fallback: look up in loaded branches list
+    const rawId =
+      (typeof v.pickup_loc === "number" || typeof v.pickup_loc === "string" ? String(v.pickup_loc) : null) ||
+      (typeof v.branch === "number" || typeof v.branch === "string" ? String(v.branch) : null) ||
+      (v.branch_id ? String(v.branch_id) : null);
+    if (rawId) {
+      const found = branches.find((b: any) => String(b.id) === rawId);
+      if (found?.currency) return found.currency;
+    }
+
+    // 4. Default to first branch currency or USD
+    return branches[0]?.currency || "USD";
+  };
+
+  // ─── Helper: get branch label from vehicle ───────────────────
+  const getVehicleBranchLabel = (v: any): string => {
+    if (v.pickup_loc && typeof v.pickup_loc === "object") {
+      return v.pickup_loc.name || v.pickup_loc.location || v.pickup_loc.adresse || v.pickup_loc.address || "";
+    }
+    if (v.branch && typeof v.branch === "object") {
+      return v.branch.name || v.branch.location || v.branch.adresse || v.branch.address || "";
+    }
+    const rawId =
+      (typeof v.pickup_loc === "number" || typeof v.pickup_loc === "string" ? String(v.pickup_loc) : null) ||
+      (typeof v.branch === "number" || typeof v.branch === "string" ? String(v.branch) : null) ||
+      (v.branch_id ? String(v.branch_id) : null);
+    if (rawId) {
+      const found = branches.find((b: any) => String(b.id) === rawId);
+      if (found) return found.name || found.location || found.adresse || `Branch #${rawId}`;
+    }
+    return "All Branches";
+  };
+
   const handlePriceChange = (id: number, field: string, value: string) => {
     setPrices(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
   };
@@ -114,13 +173,13 @@ export default function PriceListSection() {
         month_price: parseFloat(p.month_price) || 0
       });
       if (res?.status || res?.data) {
-        toast.success("Pricing tiers updated successfully!");
+        toast.success("Prices updated successfully!");
       } else {
-        toast.error("Failed to update pricing tiers.");
+        toast.error("Failed to update prices.");
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.response?.data?.message || err.message || "Failed to update pricing.");
+      toast.error(err.response?.data?.message || err.message || "Failed to update prices.");
     } finally {
       setSavingId(null);
     }
@@ -138,7 +197,7 @@ export default function PriceListSection() {
     <SectionLayout>
       <PageHeader 
         title="Price List" 
-        description="Monitor and manage your vehicle pricing tiers across all branches"
+        description="Quickly manage and update base rates, weekly rates, and monthly rates across your fleet."
         showAction={false} 
       />
 
@@ -147,7 +206,7 @@ export default function PriceListSection() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
           <input 
             type="text" 
-            placeholder="Search by vehicle name or brand..." 
+            placeholder="Search price list by vehicle name or category..." 
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none" 
@@ -172,15 +231,15 @@ export default function PriceListSection() {
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
           <div className="overflow-x-auto" style={{ transform: "rotateX(180deg)" }}>
             <div style={{ transform: "rotateX(180deg)" }}>
-              <table className="w-full min-w-[1000px]">
+              <table className="w-full min-w-[950px]">
                 <thead>
                   <tr className="bg-gray-50/50 border-b border-gray-100">
-                    <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Vehicle & Status</th>
-                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[160px]">Daily Rate (1-2 Days)</th>
-                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[160px]">Weekly Rate (3-7 Days)</th>
-                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[160px]">Monthly Rate (8-30 Days)</th>
-                    <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Location</th>
-                    <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5 w-[150px]">Actions</th>
+                    <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Vehicle</th>
+                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Daily Rate</th>
+                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Weekly (3-7 Days)</th>
+                    <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Monthly (8-30 Days)</th>
+                    <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Branch</th>
+                    <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-wider px-6 py-5">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -225,7 +284,7 @@ export default function PriceListSection() {
                               onChange={(e) => handlePriceChange(vehicle.id, 'price', e.target.value)} 
                               className="w-24 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
                             />
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">AED</span>
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{getVehicleCurrency(vehicle)}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -237,7 +296,7 @@ export default function PriceListSection() {
                               onChange={(e) => handlePriceChange(vehicle.id, 'week_price', e.target.value)} 
                               className="w-24 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
                             />
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">AED</span>
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{getVehicleCurrency(vehicle)}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -249,13 +308,13 @@ export default function PriceListSection() {
                               onChange={(e) => handlePriceChange(vehicle.id, 'month_price', e.target.value)} 
                               className="w-24 h-9 text-center bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
                             />
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">AED</span>
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{getVehicleCurrency(vehicle)}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-gray-900">
-                              {typeof vehicle.pickup_loc === 'object' ? (vehicle.pickup_loc?.adresse || vehicle.pickup_loc?.name) : vehicle.pickup_loc || "All Branches"}
+                              {getVehicleBranchLabel(vehicle)}
                             </span>
                           </div>
                         </td>

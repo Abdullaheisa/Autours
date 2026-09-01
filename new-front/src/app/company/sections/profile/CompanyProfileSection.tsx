@@ -60,7 +60,7 @@ export default function CompanyProfileSection() {
           country: data.country || "",
           city: data.city || "",
           address: data.address || "",
-          language: data.language || "English",
+          language: Array.isArray(data.language) ? (data.language[0] || "English") : (data.language || "English"),
           description: data.description || "",
         });
         setLogo(data.logo || null);

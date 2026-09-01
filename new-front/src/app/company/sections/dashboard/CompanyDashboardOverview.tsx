@@ -135,7 +135,11 @@ export default function CompanyDashboardOverview() {
                     </div>
                   </div>
                   <span className="text-sm font-bold text-emerald-600">
-                    +${parseFloat(rental.price || 0).toFixed(2)}
+                    +{(() => {
+                      const curr = (rental.currency || "USD").toUpperCase();
+                      const prefix = curr === "USD" ? "$" : curr === "EUR" ? "€" : curr === "GBP" ? "£" : `${curr} `;
+                      return `${prefix}${parseFloat(rental.price || 0).toFixed(2)}`;
+                    })()}
                   </span>
                 </div>
               ))
