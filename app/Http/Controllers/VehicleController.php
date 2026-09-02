@@ -208,9 +208,17 @@ class VehicleController extends Controller
                     $existing = $groupedKeys[$key];
                     if ($vehicle->branch) {
                         $existingBranches = $existing->getAttributes()['available_branches'] ?? [];
-                        $existingBranchIds = array_column($existingBranches, 'id');
                         
-                        if (!in_array($vehicle->branch->id, $existingBranchIds)) {
+                        $branchName = trim($vehicle->branch->name);
+                        $alreadyExists = false;
+                        foreach ($existingBranches as $eb) {
+                            if (trim($eb['name']) === $branchName) {
+                                $alreadyExists = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!$alreadyExists) {
                             $existingBranches[] = $vehicle->branch->toArray();
                             $existing->setAttribute('available_branches', $existingBranches);
                             
