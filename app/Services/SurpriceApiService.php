@@ -227,11 +227,15 @@ class SurpriceApiService
             ->post(self::BASE_URL . '/v1/reservation', $params);
 
         if (! $response->successful()) {
+            $status = $response->status();
+            $body = $response->json();
+            $errorMsg = $body['message'] ?? $body['error']['message'] ?? (is_string($body['error'] ?? null) ? $body['error'] : "API Error ($status)");
+            
             Log::error('Surprice API: Failed to create reservation', [
-                'status' => $response->status(),
+                'status' => $status,
                 'body' => $response->body(),
             ]);
-            return [];
+            throw new \Exception($errorMsg);
         }
 
         return $response->json() ?? [];
