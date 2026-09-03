@@ -22,6 +22,7 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost', port: '8000', pathname: '/**' },
       { protocol: 'https', hostname: 'flagcdn.com', pathname: '/**' },
       { protocol: 'https', hostname: 'cdn.kolaycar.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'routesrez.com', pathname: '/**' },
     ],
   },
   // 🚀 إضافة الـ Rewrites لحل مشكلة الـ CORS

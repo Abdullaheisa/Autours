@@ -137,7 +137,7 @@ class SyncRoutesVehicles extends Command
                             $classCode = $rate['ClassCode'] ?? null;
                             if (!$classCode) continue;
 
-                            $priceStr = (string) ($rate['TotalCharge'] ?? $rate['RateAmount'] ?? 0);
+                            $priceStr = (string) ($rate['RateAmount'] ?? $rate['TotalCharge'] ?? 0);
                             $price = (float) str_replace(',', '', $priceStr);
                             if ($price <= 0) continue;
 
@@ -202,11 +202,6 @@ class SyncRoutesVehicles extends Command
                 $isInclusive = strcasecmp(trim($rateCode), 'WebLink') === 0;
 
                 $normalizedModel = !empty($model['model']) ? trim((string)$model['model']) : trim((string)$model['classDesc']);
-                if ($isInclusive) {
-                    $normalizedModel .= ' (Inclusive)';
-                } else {
-                    $normalizedModel .= ' (Non-Inclusive)';
-                }
 
                 $categoryId = $this->resolveCategoryFromSipp($classCode);
 
@@ -272,14 +267,20 @@ class SyncRoutesVehicles extends Command
                 $vehicleInclusions[] = $mileageIncluded->id;
 
                 if ($existingVehicle) {
-                    $existingVehicle->update([
+                    $updateData = [
                         'category'             => $categoryId,
                         'price'                => $dayPrice,
                         'week_price'           => $weekPrice,
                         'month_price'          => $monthPrice,
                         'activation'           => true,
                         'instant_confirmation' => 1,
-                    ]);
+                    ];
+
+                    if (!empty($model['classImage'])) {
+                        $updateData['photo'] = $model['classImage'];
+                    }
+
+                    $existingVehicle->update($updateData);
                     // Update Inclusions for existing vehicle
                     $existingVehicle->included()->syncWithoutDetaching($vehicleInclusions);
 
