@@ -150,6 +150,98 @@ XML;
         return $this->xmlToArray($response);
     }
 
+    /**
+     * Request Reservation Details.
+     */
+    public function requestReservation(string $confirmNum): array
+    {
+        $payload = <<<XML
+    <ConfirmNum>{$confirmNum}</ConfirmNum>
+XML;
+
+        $xml = $this->getBaseXml('REQREZ', 'Reservation Details', $payload);
+        $response = $this->sendRequest($xml);
+
+        if (!$response) {
+            return [];
+        }
+
+        return $this->xmlToArray($response);
+    }
+
+    /**
+     * Add Reservation.
+     */
+    public function addReservation(array $data): array
+    {
+        $payload = "\n    <SupplierName>" . ($data['SupplierName'] ?? 'NorthCarRental') . "</SupplierName>\n";
+        $payload .= "    <RentalLocationID>" . ($data['RentalLocationID'] ?? '') . "</RentalLocationID>\n";
+        $payload .= "    <ReturnLocationID>" . ($data['ReturnLocationID'] ?? '') . "</ReturnLocationID>\n";
+        $payload .= "    <PickupDateTime>" . ($data['PickupDateTime'] ?? '') . "</PickupDateTime>\n";
+        $payload .= "    <ReturnDateTime>" . ($data['ReturnDateTime'] ?? '') . "</ReturnDateTime>\n";
+        $payload .= "    <RateID>" . ($data['RateID'] ?? '') . "</RateID>\n";
+        $payload .= "    <ClassCode>" . ($data['ClassCode'] ?? '') . "</ClassCode>\n";
+        $payload .= "    <RenterFirst>" . ($data['RenterFirst'] ?? '') . "</RenterFirst>\n";
+        $payload .= "    <RenterLast>" . ($data['RenterLast'] ?? '') . "</RenterLast>\n";
+        $payload .= "    <EmailAddress>" . ($data['EmailAddress'] ?? '') . "</EmailAddress>\n";
+        $payload .= "    <RenterHomePhone>" . ($data['RenterHomePhone'] ?? '') . "</RenterHomePhone>\n";
+        $payload .= "    <RenterAddress1>" . ($data['RenterAddress1'] ?? '') . "</RenterAddress1>\n";
+        $payload .= "    <RenterCity>" . ($data['RenterCity'] ?? '') . "</RenterCity>\n";
+        $payload .= "    <RenterCountry>" . ($data['RenterCountry'] ?? '') . "</RenterCountry>\n";
+        $payload .= "    <CurrencyCode>" . ($data['CurrencyCode'] ?? '') . "</CurrencyCode>\n";
+
+        if (isset($data['TotalPricing']) && is_array($data['TotalPricing'])) {
+            $payload .= "    <TotalPricing>\n";
+            $payload .= "        <RentalDays>" . ($data['TotalPricing']['RentalDays'] ?? '') . "</RentalDays>\n";
+            $payload .= "        <RateCharge>" . ($data['TotalPricing']['RateCharge'] ?? '') . "</RateCharge>\n";
+            $payload .= "        <TotalExtras>" . ($data['TotalPricing']['TotalExtras'] ?? '0.00') . "</TotalExtras>\n";
+            $payload .= "        <TotalCharges>" . ($data['TotalPricing']['TotalCharges'] ?? '') . "</TotalCharges>\n";
+            
+            if (isset($data['TotalPricing']['DailyExtra'])) {
+                $extras = isset($data['TotalPricing']['DailyExtra']['ExtraCode']) ? [$data['TotalPricing']['DailyExtra']] : $data['TotalPricing']['DailyExtra'];
+                
+                foreach ($extras as $extra) {
+                    $payload .= "        <DailyExtra>\n";
+                    $payload .= "          <ExtraCode>" . ($extra['ExtraCode'] ?? '') . "</ExtraCode>\n";
+                    $payload .= "          <ExtraDesc>" . ($extra['ExtraDesc'] ?? '') . "</ExtraDesc>\n";
+                    $payload .= "          <ExtraAmount>" . ($extra['ExtraAmount'] ?? '') . "</ExtraAmount>\n";
+                    $payload .= "          <ExtraAutoApply>" . ($extra['ExtraAutoApply'] ?? 'FALSE') . "</ExtraAutoApply>\n";
+                    $payload .= "          <ExtraOnRequest>" . ($extra['ExtraOnRequest'] ?? 'FALSE') . "</ExtraOnRequest>\n";
+                    $payload .= "        </DailyExtra>\n";
+                }
+            }
+            $payload .= "    </TotalPricing>\n";
+        }
+
+        $xml = $this->getBaseXml('ADDREZ', 'Add Reservation', $payload);
+        $response = $this->sendRequest($xml);
+
+        if (!$response) {
+            return [];
+        }
+
+        return $this->xmlToArray($response);
+    }
+
+    /**
+     * Cancel Reservation.
+     */
+    public function cancelReservation(string $confirmNum): array
+    {
+        $payload = <<<XML
+    <ConfirmNum>{$confirmNum}</ConfirmNum>
+XML;
+
+        $xml = $this->getBaseXml('CANREZ', 'Cancel Reservation', $payload);
+        $response = $this->sendRequest($xml);
+
+        if (!$response) {
+            return [];
+        }
+
+        return $this->xmlToArray($response);
+    }
+
     public function setTimeout(int $seconds): void
     {
         $this->requestTimeout = max(1, $seconds);
@@ -188,59 +280,52 @@ XML;
 
     private function sendRequest(string $xmlBody): ?\SimpleXMLElement
     {
-        try {
-            $response = Http::timeout($this->requestTimeout)
-                ->withHeaders(['Content-Type' => 'application/xml'])
-                ->withOptions(['verify' => false])
-                ->send('POST', $this->baseUrl, [
-                    'body' => $xmlBody
-                ]);
+        $response = Http::timeout($this->requestTimeout)
+            ->withHeaders(['Content-Type' => 'application/xml'])
+            ->withOptions(['verify' => false])
+            ->send('POST', $this->baseUrl, [
+                'body' => $xmlBody
+            ]);
 
-            if (!$response->successful()) {
-                Log::error('Northcar API: Request failed', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-                return null;
-            }
+        if (!$response->successful()) {
+            Log::error('Northcar API: Request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception("Northcar API Error: HTTP " . $response->status());
+        }
 
-            $body = $response->body();
-            
-            // The API wraps responses in <PRE>...</PRE>. Remove it if present.
-            $body = preg_replace('/^.*?<PRE>/is', '', $body);
-            $body = preg_replace('/<\/PRE>.*?$/is', '', $body);
-            $body = trim($body);
+        $body = $response->body();
+        
+        $body = preg_replace('/^.*?<PRE>/is', '', $body);
+        $body = preg_replace('/<\/PRE>.*?$/is', '', $body);
+        $body = trim($body);
 
-            // Sometimes the XML is malformed or has multiple roots if <PRE> is removed but there's no single root.
-            // But looking at the response, it's just <TRNXML> or elements like <DateTimeStamp> alongside <TRNXML>.
-            // Let's wrap it in a dummy root if it doesn't start with <TRNXML>.
-            if (!str_starts_with($body, '<TRNXML') && !str_starts_with($body, '<?xml')) {
-                $body = "<ROOT>{$body}</ROOT>";
-            } else if (str_contains($body, '<DateTimeStamp') && !str_starts_with($body, '<ROOT>')) {
-                // If it has multiple sibling tags like the location response did, wrap it
-                // Location Response had <TRNXML .../> and <DateTimeStamp> as siblings
-                $body = "<ROOT>{$body}</ROOT>";
-            }
+        if (!str_starts_with($body, '<TRNXML') && !str_starts_with($body, '<?xml')) {
+            $body = "<ROOT>{$body}</ROOT>";
+        } else if (str_contains($body, '<DateTimeStamp') && !str_starts_with($body, '<ROOT>')) {
+            $body = "<ROOT>{$body}</ROOT>";
+        }
 
-            libxml_use_internal_errors(true);
-            $xml = simplexml_load_string($body);
+        libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($body);
 
-            if ($xml === false) {
-                Log::error('Autours API: Failed to parse XML', [
-                    'errors' => libxml_get_errors(),
-                    'body' => $body
-                ]);
-                return null;
-            }
-
-            return $xml;
-
-        } catch (\Exception $e) {
-            Log::error('Autours API: Exception during request', [
-                'error' => $e->getMessage(),
+        if ($xml === false) {
+            Log::error('Autours API: Failed to parse XML', [
+                'errors' => libxml_get_errors(),
+                'body' => $body
             ]);
             return null;
         }
+
+        $messageId = (string) ($xml->Message->MessageID ?? $xml->TRNXML->Message->MessageID ?? '');
+        if ($messageId === 'RSPERR') {
+            $errorDesc = (string) ($xml->Message->MessageDescription ?? $xml->TRNXML->Message->MessageDescription ?? 'Unknown API Error');
+            Log::error('Northcar API: RSPERR returned', ['description' => $errorDesc, 'body' => $body]);
+            throw new \Exception("Northcar API Error: " . $errorDesc);
+        }
+
+        return $xml;
     }
 
     /**

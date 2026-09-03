@@ -40,6 +40,10 @@ class SupplierIntegrationService
             return $this->sendViaXdrive($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'northcar') {
+            return $this->sendViaNorthcar($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -93,6 +97,10 @@ class SupplierIntegrationService
         }
 
         if ($supplier->integration_type === 'xdrive') {
+            return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'northcar') {
             return $supplier->integration === true;
         }
 
@@ -495,6 +503,9 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'xdrive') {
             $service = new XdriveJsonApiService();
             $this->createXdriveReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'northcar') {
+            $service = new NorthcarApiService();
+            $this->createNorthcarReservation($service, $rental, $supplier);
         }
     }
 
@@ -1025,5 +1036,194 @@ class SupplierIntegrationService
         ]);
 
         return false;
+    }
+
+    /**
+     * Send reservation to Northcar API.
+     *
+     * @param Rental $rental
+     * @param User $supplier
+     * @param string $eventType
+     * @return bool
+     */
+    private function sendViaNorthcar(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new NorthcarApiService();
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createNorthcarReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelNorthcarReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelNorthcarReservation($service, $rental, $supplier);
+                    }
+                    return $this->createNorthcarReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Northcar integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Northcar integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the Northcar API.
+     *
+     * @param NorthcarApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function createNorthcarReservation(NorthcarApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('Northcar integration: Missing vehicle or customer', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        $pickupLocationId = $branch ? $branch->station_id : '';
+        $returnLocationId = $pickupLocationId;
+
+        if (!$pickupLocationId) {
+            throw new \Exception("Missing station ID for branch.");
+        }
+
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+        $pickupDate = Carbon::parse($rental->start_date)->format('Y-m-d');
+        $pickupTime = Carbon::parse($rental->start_time)->format('H:i:s');
+        $pickupDateStr = Carbon::parse($pickupDate . ' ' . $pickupTime)->format('mdY h:i A');
+
+        $returnDate = Carbon::parse($rental->end_date)->format('Y-m-d');
+        $returnTime = Carbon::parse($rental->end_time)->format('H:i:s');
+        $returnDateStr = Carbon::parse($returnDate . ' ' . $returnTime)->format('mdY h:i A');
+
+        $rateId = '';
+        if (preg_match('/\[Northcar-RateID:([^\]]+)\]/', $vehicle->description ?? '', $m)) {
+            $rateId = $m[1];
+        }
+
+        $classCode = '';
+        if (preg_match('/\[Northcar-ClassCode:([^\]]+)\]/i', $vehicle->description ?? '', $m)) {
+            $classCode = $m[1];
+        } elseif (preg_match('/\[NORTHCAR-GROUP-ID:([^\]]+)\]/i', $vehicle->description ?? '', $m)) {
+            $classCode = $m[1];
+        }
+
+        $reservationData = [
+            'SupplierName' => $supplier->name ?? 'NorthCarRental',
+            'RentalLocationID' => $pickupLocationId,
+            'ReturnLocationID' => $returnLocationId,
+            'PickupDateTime' => $pickupDateStr,
+            'ReturnDateTime' => $returnDateStr,
+            'RateID' => $rateId,
+            'ClassCode' => $classCode,
+            'RenterFirst' => $nameParts['first'],
+            'RenterLast' => $nameParts['last'] ?: 'Customer',
+            'EmailAddress' => $customer->email ?? 'noreply@autours.net',
+            'RenterHomePhone' => $customer->phone_num ?? '00000000',
+            'RenterAddress1' => $customer->address ?? 'Unknown',
+            'RenterCity' => $customer->city ?? 'Unknown',
+            'RenterCountry' => $customer->country ?? 'GB',
+            'CurrencyCode' => $rental->currency ?? 'GBP',
+            'TotalPricing' => [
+                'RentalDays' => $rental->num_of_days ?? 1,
+                'RateCharge' => number_format((float)($rental->supplier_price ?? $rental->price), 2, '.', ''),
+                'TotalExtras' => '0.00',
+                'TotalCharges' => number_format((float)($rental->supplier_price ?? $rental->price), 2, '.', ''),
+            ]
+        ];
+
+        $response = $service->addReservation($reservationData);
+
+        $reservationNo = $response['Payload']['ConfirmNum'] ?? $response['TRNXML']['Payload']['ConfirmNum'] ?? $response['ConfirmNum'] ?? null;
+        if (isset($response['Payload']) && is_array($response['Payload']) && isset($response['Payload'][0]['ConfirmNum'])) {
+            $reservationNo = $response['Payload'][0]['ConfirmNum'];
+        } elseif (isset($response['TRNXML']['Payload']) && is_array($response['TRNXML']['Payload']) && isset($response['TRNXML']['Payload'][0]['ConfirmNum'])) {
+            $reservationNo = $response['TRNXML']['Payload'][0]['ConfirmNum'];
+        }
+
+        if (empty($reservationNo)) {
+            Log::error('Northcar reservation creation failed (no ConfirmNum)', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+                'response'    => $response,
+            ]);
+            throw new \Exception("Supplier booking failed: No booking reference returned.");
+        }
+
+        $rental->update([
+            'external_reservation_no' => (string) $reservationNo,
+        ]);
+
+        Log::info('Northcar reservation created successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Cancel a reservation on the Northcar API.
+     *
+     * @param NorthcarApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function cancelNorthcarReservation(NorthcarApiService $service, Rental $rental, User $supplier): bool
+    {
+        $reservationNo = $rental->external_reservation_no;
+
+        if (empty($reservationNo)) {
+            Log::warning('Northcar cancellation: No external reservation number found', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+            ]);
+            return false;
+        }
+
+        $response = $service->cancelReservation($reservationNo);
+        $messageId = $response['Message']['MessageID'] ?? '';
+
+        if ($messageId === 'RSPERR') {
+            Log::error('Northcar reservation cancellation failed', [
+                'rental_id'      => $rental->id,
+                'reservation_no' => $reservationNo,
+                'supplier_id'    => $supplier->id,
+                'response'       => $response,
+            ]);
+            return false;
+        }
+
+        Log::info('Northcar reservation cancelled successfully', [
+            'rental_id'      => $rental->id,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+        ]);
+        return true;
     }
 }

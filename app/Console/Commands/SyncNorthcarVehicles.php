@@ -58,7 +58,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
 
         $this->loadSpecificationDefinitions();
 
-        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addMonth()->format('m/d/Y');
+        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addDay()->format('m/d/Y');
         
         // Append 10:00 AM to ensure we query during standard business hours, otherwise it defaults to 12:00 AM (midnight) which returns no rates for closed offices.
         $baseDate = Carbon::parse($pickupDate . ' 10:00 AM');
@@ -70,21 +70,87 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
 
         $this->info("Using pickup: {$pickupDateTime}");
         $pricesOnly = $this->hasOption('prices-only') && $this->option('prices-only');
+        
+        $syncedPoliciesForCountries = [];
 
         foreach ($allBranches as $branch) {
             $this->info("Fetching rates for branch: {$branch->station_id}");
+            $rates1 = [];
+            $rates7 = [];
+            $rates30 = [];
 
-            // 1 Day
-            $data1 = $service->getAvailability($branch->station_id, $branch->station_id, $pickupDateTime, $dropoffDateTime1);
-            $rates1 = $this->extractRates($data1);
+            try {
+                // 1 Day
+                $data1 = $service->getAvailability($branch->station_id, $branch->station_id, $pickupDateTime, $dropoffDateTime1);
+                $rates1 = $this->extractRates($data1);
+                
+                $country = $branch->country ?? 'Canada';
+                if (!isset($syncedPoliciesForCountries[$country]) && !empty($rates1)) {
+                    $firstClassCode = array_key_first($rates1);
+                    $this->info("Fetching policies for {$country} using branch {$branch->station_id} and class {$firstClassCode}...");
+                    
+                    try {
+                        $policyData = $service->getPolicy($branch->station_id, (string)$firstClassCode);
+                        
+                        if (!empty($policyData['Policy'])) {
+                            $policies = isset($policyData['Policy']['PolicyType']) 
+                                ? [$policyData['Policy']] 
+                                : $policyData['Policy'];
 
-            // 7 Days
-            $data7 = $service->getAvailability($branch->station_id, $branch->station_id, $pickupDateTime, $dropoffDateTime7);
-            $rates7 = $this->extractRates($data7);
+                            $policiesAdded = 0;
+                            foreach ($policies as $policy) {
+                                $categoryType = $policy['PolicyType'] ?? 'General';
+                                $categoryName = is_array($categoryType) ? 'General' : (string) $categoryType;
+                                
+                                $policyText = $policy['PolicyText'] ?? '';
+                                $description = is_array($policyText) ? '' : (string) $policyText;
+                                
+                                $description = strip_tags($description);
+                                $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                                $description = trim(preg_replace("/\n+/", "\n", $description));
 
-            // 30 Days
-            $data30 = $service->getAvailability($branch->station_id, $branch->station_id, $pickupDateTime, $dropoffDateTime30);
-            $rates30 = $this->extractRates($data30);
+                                if (!empty($description)) {
+                                    $term = \App\Models\RentalTerms::updateOrCreate(
+                                        [
+                                            'title' => $categoryName,
+                                            'created_by' => $supplierUser->id,
+                                            'country' => $country,
+                                        ],
+                                        [
+                                            'description' => $description,
+                                            'status' => 'approved',
+                                        ]
+                                    );
+
+                                    \App\Models\SupplierRentalTerm::firstOrCreate([
+                                        'rental_term_id' => $term->id,
+                                        'supplier_id' => $supplierUser->id,
+                                        'country' => $country,
+                                    ]);
+
+                                    $policiesAdded++;
+                                }
+                            }
+                            $this->info("Successfully saved {$policiesAdded} policies for {$country}.");
+                            $syncedPoliciesForCountries[$country] = true;
+                        } else {
+                            $this->warn("No policies returned for {$country}.");
+                        }
+                    } catch (\Exception $e) {
+                        $this->warn("Could not fetch policies for {$country}: " . $e->getMessage());
+                    }
+                }
+
+                // 7 Days
+                $data7 = $service->getAvailability($branch->station_id, $branch->station_id, $pickupDateTime, $dropoffDateTime7);
+                $rates7 = $this->extractRates($data7);
+
+                // 30 Days
+                $data30 = $service->getAvailability($branch->station_id, $branch->station_id, $pickupDateTime, $dropoffDateTime30);
+                $rates30 = $this->extractRates($data30);
+            } catch (\Exception $e) {
+                $this->warn("Could not fetch rates for branch {$branch->station_id}: " . $e->getMessage());
+            }
 
             if (empty($rates1)) {
                 $this->warn("No rates found for branch {$branch->station_id}. Deleting branch.");
@@ -138,6 +204,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
                         'activation' => true,
                         'instant_confirmation' => 1,
                     ]);
+                    $this->syncVehicleInclusions($vehicle, $rateInfo['RawData'] ?? []);
                     $this->updatedCount++;
                 } else {
                     if ($pricesOnly) continue;
@@ -170,6 +237,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
                     ]);
 
                     $this->syncVehicleSpecifications($vehicle, $classCode, $rateInfo['RawData'] ?? []);
+                    $this->syncVehicleInclusions($vehicle, $rateInfo['RawData'] ?? []);
                     $this->createdCount++;
                 }
             }
@@ -301,12 +369,64 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
             ];
         }
 
-        if (! empty($records)) {
-            VehicleSpecification::query()->insert($records);
+        if (!empty($records)) {
+            VehicleSpecification::insert($records);
         }
     }
 
-    private function resolveCategoryFromSipp(string $sipp): int
+    private function syncVehicleInclusions(Vehicle $vehicle, array $rawData = []): void
+    {
+        $includedIds = [];
+
+        // 1. Taxes
+        if (!empty($rawData['TotalPricing']['Taxes']['TaxDesc'])) {
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => (string) $rawData['TotalPricing']['Taxes']['TaxDesc']]);
+            $includedIds[] = $inc->id;
+        }
+        
+        for ($i = 1; $i <= 5; $i++) {
+            $taxKey = "Tax{$i}Desc";
+            if (!empty($rawData['TotalPricing']['Taxes'][$taxKey])) {
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => (string) $rawData['TotalPricing']['Taxes'][$taxKey]]);
+                $includedIds[] = $inc->id;
+            }
+        }
+
+        // 2. Mileage
+        if (isset($rawData['FreeMiles']) && is_string($rawData['FreeMiles']) && $rawData['FreeMiles'] !== '' && strtolower((string)$rawData['FreeMiles']) !== 'unlimited') {
+            preg_match('/(\d+)/', (string)$rawData['FreeMiles'], $matches);
+            $numericLimit = $matches[1] ?? $rawData['FreeMiles'];
+            
+            if (is_numeric($numericLimit)) {
+                $unit = strtoupper($rawData['MileageUnit'] ?? 'KM');
+                if (str_starts_with($unit, 'MI')) {
+                    $numericLimit = (int) round((float)$numericLimit * 1.60934);
+                }
+            }
+            $mileageIncluded = \App\Models\Included::firstOrCreate(['what_is_included' => "Mileage Limit: {$numericLimit} km"]);
+        } else {
+            $mileageIncluded = \App\Models\Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
+        }
+        $includedIds[] = $mileageIncluded->id;
+
+        // 3. Inclusive Coverages
+        if (($rawData['RateSource'] ?? '') === 'Inclusive') {
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Collision Damage Waiver']);
+            $includedIds[] = $inc->id;
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Third Party Liability']);
+            $includedIds[] = $inc->id;
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Theft Protection']);
+            $includedIds[] = $inc->id;
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
+            $includedIds[] = $inc->id;
+        }
+
+        if (!empty($includedIds)) {
+            $vehicle->included()->syncWithoutDetaching($includedIds);
+        }
+    }
+
+    private function resolveCategoryFromSipp(string $sipp): ?int
     {
         $categoryName = SippDecoder::getLocalCategoryName($sipp);
         
