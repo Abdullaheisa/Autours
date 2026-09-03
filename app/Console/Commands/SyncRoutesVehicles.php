@@ -141,6 +141,18 @@ class SyncRoutesVehicles extends Command
                             $price = (float) str_replace(',', '', $priceStr);
                             if ($price <= 0) continue;
 
+                            $currencyCode = strtoupper($rate['CurrencyCode'] ?? 'USD');
+                            if ($currencyCode !== 'USD') {
+                                static $exchangeRatesCache = [];
+                                if (!array_key_exists($currencyCode, $exchangeRatesCache)) {
+                                    $exchangeRate = \App\Models\CurrencyRate::where('currency_from', $currencyCode)
+                                        ->where('currency_to', 'USD')
+                                        ->first();
+                                    $exchangeRatesCache[$currencyCode] = $exchangeRate && $exchangeRate->rate > 0 ? (float) $exchangeRate->rate : 1.0;
+                                }
+                                $price = $price * $exchangeRatesCache[$currencyCode];
+                            }
+
                             $dayPrice = round($price / $days, 2);
                             $cacheKey = $classCode . '_' . $rateCode;
 
