@@ -1118,16 +1118,33 @@ class SupplierIntegrationService
         $returnTime = Carbon::parse($rental->end_time)->format('H:i:s');
         $returnDateStr = Carbon::parse($returnDate . ' ' . $returnTime)->format('mdY h:i A');
 
-        $rateId = '';
-        if (preg_match('/\[Northcar-RateID:([^\]]+)\]/', $vehicle->description ?? '', $m)) {
-            $rateId = $m[1];
-        }
-
         $classCode = '';
         if (preg_match('/\[Northcar-ClassCode:([^\]]+)\]/i', $vehicle->description ?? '', $m)) {
             $classCode = $m[1];
         } elseif (preg_match('/\[NORTHCAR-GROUP-ID:([^\]]+)\]/i', $vehicle->description ?? '', $m)) {
             $classCode = $m[1];
+        }
+
+        // Fetch real-time availability to get the exact RateID for these dates
+        $availability = $service->getAvailability($pickupLocationId, $returnLocationId, $pickupDateStr, $returnDateStr);
+        $payload = $availability['Payload'] ?? null;
+        $vehicles = $payload['Vehicles']['Vehicle'] ?? $payload['Vehicle'] ?? $payload['RateProduct'] ?? null;
+        
+        $rateId = '';
+        if ($vehicles) {
+            if (isset($vehicles['ClassCode'])) {
+                $vehicles = [$vehicles];
+            }
+            foreach ($vehicles as $v) {
+                if (($v['ClassCode'] ?? '') === $classCode) {
+                    $rateId = $v['RateId'] ?? '';
+                    break;
+                }
+            }
+        }
+
+        if (empty($rateId)) {
+            throw new \Exception("Northcar API Error: Vehicle class {$classCode} is no longer available for these dates.");
         }
 
         $reservationData = [
