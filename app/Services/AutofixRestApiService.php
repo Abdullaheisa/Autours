@@ -89,7 +89,7 @@ class AutofixRestApiService
                 'returnDate' => $returnDate,
                 'pickupTime' => $pickupTime,
                 'returnTime' => $returnTime,
-                'currencyCode' => 'EUR',
+                'currencyCode' => 'TRY',
                 'languageCode' => 'EN'
             ]);
 
