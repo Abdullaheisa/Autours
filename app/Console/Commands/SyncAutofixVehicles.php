@@ -372,7 +372,8 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
             $pickupDateArg,
             $dropoffDateArg,
             $pickupTimeArg,
-            $dropoffTimeArg
+            $dropoffTimeArg,
+            $branch->currency ?? 'TRY'
         );
 
         $mapped = [];

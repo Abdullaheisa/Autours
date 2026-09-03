@@ -75,7 +75,8 @@ class AutofixRestApiService
         string $pickupDate, // dd.mm.yyyy
         string $returnDate, // dd.mm.yyyy
         string $pickupTime, // hh:mm
-        string $returnTime // hh:mm
+        string $returnTime, // hh:mm
+        string $currencyCode = 'TRY'
     ): array {
         if (!$this->authenticate()) {
             return [];
@@ -89,7 +90,7 @@ class AutofixRestApiService
                 'returnDate' => $returnDate,
                 'pickupTime' => $pickupTime,
                 'returnTime' => $returnTime,
-                'currencyCode' => 'TRY',
+                'currencyCode' => $currencyCode,
                 'languageCode' => 'EN'
             ]);
 
