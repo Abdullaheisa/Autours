@@ -55,6 +55,10 @@ class SupplierIntegrationService
         if ($supplier->integration_type === 'nissa') {
             return $this->sendViaNissa($rental, $supplier, $eventType);
         }
+        
+        if ($supplier->integration_type === 'emr') {
+            return $this->sendViaEmr($rental, $supplier, $eventType);
+        }
 
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
@@ -125,6 +129,10 @@ class SupplierIntegrationService
         }
 
         if ($supplier->integration_type === 'nissa') {
+            return $supplier->integration === true;
+        }
+        
+        if ($supplier->integration_type === 'emr') {
             return $supplier->integration === true;
         }
 
@@ -391,6 +399,14 @@ class SupplierIntegrationService
             'last'  => $parts[1] ?? '',
         ];
     }
+    
+    /**
+     * Helper to split name (generic)
+     */
+    private function splitName(string $name): array
+    {
+        return $this->splitCustomerName($name);
+    }
 
     /**
      * Build the payload to send to the supplier via webhook.
@@ -539,6 +555,8 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'nissa') {
             $service = new NissaJsonApiService();
             $this->createNissaReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'emr') {
+            $this->createEmrReservation($rental);
         }
     }
 
@@ -1813,9 +1831,15 @@ class SupplierIntegrationService
 
         $nameParts = $this->splitCustomerName($customer->name ?? '');
 
-        $pickupDateStr = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d H:i') : '';
-        $returnDateStr = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d H:i') : '';
+        $pickupDateStr = ($rental->start_date && $rental->start_time) ? Carbon::parse($rental->start_date)->format('Y-m-d') . ' ' . Carbon::parse($rental->start_time)->format('H:i') : '';
+        $returnDateStr = ($rental->end_date && $rental->end_time) ? Carbon::parse($rental->end_date)->format('Y-m-d') . ' ' . Carbon::parse($rental->end_time)->format('H:i') : '';
+        
         $currency = $rental->currency ?? 'TL';
+        if ($currency === 'TRY') $currency = 'TL';
+        if ($currency === 'EUR') $currency = 'EURO';
+        if (!in_array($currency, ['TL', 'EURO', 'USD', 'GBP'])) {
+            $currency = 'TL';
+        }
 
         // 1. Get availability to fetch Rez_ID and Cars_Park_ID
         $cars = $service->getAvailableCars(
@@ -1942,6 +1966,195 @@ class SupplierIntegrationService
 
         Log::error('Nissa reservation cancellation failed', [
             'rental_id' => $rental->id,
+            'reservation_no' => $externalNo,
+            'supplier_id' => $rental->supplier,
+            'response' => $response,
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Dispatch event to EMR (Turev Rent API).
+     */
+    private function sendViaEmr(\App\Models\Rental $rental, \App\Models\User $supplier, string $eventType): bool
+    {
+        if ($eventType === 'new_rental' || $eventType === 'rental_request') {
+            return $this->createEmrReservation($rental);
+        } elseif ($eventType === 'rental_cancelled') {
+            return $this->cancelEmrReservation($rental);
+        }
+
+        Log::info("EMR integration ignores event '{$eventType}' for rental {$rental->id}.");
+        return true;
+    }
+
+    /**
+     * Create an EMR Reservation.
+     */
+    private function createEmrReservation(\App\Models\Rental $rental): bool
+    {
+        $vehicle = $rental->vehicle;
+        if (!$vehicle) {
+            throw new \Exception("Rental {$rental->id} has no vehicle.");
+        }
+
+        $customer = $rental->customer;
+        if (!$customer) {
+            throw new \Exception("Rental {$rental->id} has no customer.");
+        }
+
+        $service = new \App\Services\EmrJsonApiService();
+        $stationId = $vehicle->branch->station_id ?? $vehicle->pickup_loc;
+
+        // Extract [EMR-GROUP-ID:XYZ]
+        $emrGroupId = '';
+        if (preg_match('/\[EMR-GROUP-ID:([^\]]+)\]/', (string)$vehicle->description, $m)) {
+            $emrGroupId = $m[1];
+        }
+
+        if (empty($emrGroupId)) {
+            throw new \Exception("Vehicle {$vehicle->id} does not have an [EMR-GROUP-ID:XYZ] in description.");
+        }
+
+        // We must fetch available cars first to get a live Rez_ID and Cars_Park_ID for this group
+        $pickupDateStr = ($rental->start_date && $rental->start_time) ? Carbon::parse($rental->start_date)->format('Y-m-d') . ' ' . Carbon::parse($rental->start_time)->format('H:i') : '';
+        $returnDateStr = ($rental->end_date && $rental->end_time) ? Carbon::parse($rental->end_date)->format('Y-m-d') . ' ' . Carbon::parse($rental->end_time)->format('H:i') : '';
+        
+        $currency = $rental->currency ?? 'TL';
+        if ($currency === 'TRY') $currency = 'TL';
+        if ($currency === 'EUR') $currency = 'EURO';
+        if (!in_array($currency, ['TL', 'EURO', 'USD', 'GBP'])) {
+            $currency = 'TL';
+        }
+
+        $availableCars = $service->getAvailableCars((string)$stationId, (string)$stationId, $pickupDateStr, $returnDateStr, $currency);
+        
+        $matchedCar = null;
+        foreach ($availableCars as $car) {
+            if ((string)($car['group_id'] ?? '') === $emrGroupId) {
+                $matchedCar = $car;
+                break;
+            }
+        }
+
+        if (!$matchedCar) {
+            throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates. Please select another vehicle.");
+        }
+
+        $rezId = $matchedCar['rez_id'] ?? '';
+        $carsParkId = $matchedCar['cars_park_id'] ?? '';
+
+        if (empty($rezId) || empty($carsParkId)) {
+            throw new \Exception("EMR availability check succeeded but returned missing Rez_ID or Cars_Park_ID for group {$emrGroupId}.");
+        }
+
+        // Format dates for JsonRez_Save
+        $pickupDateObj = Carbon::parse($pickupDateStr);
+        $returnDateObj = Carbon::parse($returnDateStr);
+        
+        $nameParts = $this->splitName($customer->name ?? 'Customer');
+
+        $reservationData = [
+            'Rez_ID' => $rezId,
+            'Cars_Park_ID' => $carsParkId,
+            'Group_ID' => $emrGroupId,
+            'Pickup_ID' => $stationId,
+            'Drop_Off_ID' => $stationId,
+            'Name' => $nameParts['first'] ?: 'Customer',
+            'SurName' => $nameParts['last'] ?: 'Customer',
+            'MobilePhone' => $customer->phone_num ?? '0000000000',
+            'Mail_Adress' => $customer->email ?? 'noreply@autours.net',
+            'Rental_ID' => $rental->order_number ?? (string) $rental->id,
+            'Pickup_Day' => $pickupDateObj->format('d'),
+            'Pickup_Month' => $pickupDateObj->format('m'),
+            'Pickup_Year' => $pickupDateObj->format('Y'),
+            'Drop_Off_Day' => $returnDateObj->format('d'),
+            'Drop_Off_Month' => $returnDateObj->format('m'),
+            'Drop_Off_Year' => $returnDateObj->format('Y'),
+            'Pickup_Hour' => $pickupDateObj->format('H'),
+            'Pickup_Min' => $pickupDateObj->format('i'),
+            'Drop_Off_Hour' => $returnDateObj->format('H'),
+            'Drop_Off_Min' => $returnDateObj->format('i'),
+            'Adress' => $customer->address ?? 'Unknown Address',
+            'District' => $customer->city ?? 'Unknown',
+            'City' => $customer->city ?? 'Unknown',
+            'Country' => $customer->country ?? 'TR',
+            'Currency' => $currency,
+        ];
+
+        $response = $service->saveReservation($reservationData);
+
+        $status = $response['Status'] ?? $response['status'] ?? $response['success'] ?? '';
+
+        if (strtolower((string)$status) === 'true') {
+            $id = $response['ID'] ?? $response['id'] ?? $response['rez_kayit_no'] ?? '';
+            $newRezId = $response['rez_id'] ?? $response['Rez_ID'] ?? $response['Rez_Id'] ?? '';
+            
+            if (empty($id)) {
+                throw new \Exception("EMR booking succeeded but returned no ID. Response: " . json_encode($response));
+            }
+
+            // Save as ID|Rez_ID
+            $externalNo = $id . '|' . $newRezId;
+            $rental->update([
+                'external_reservation_no' => $externalNo,
+            ]);
+
+            Log::info('EMR reservation created successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+            ]);
+
+            return true;
+        }
+
+        Log::error('EMR booking failed', ['response' => $response, 'rental_id' => $rental->id]);
+        throw new \Exception("EMR booking failed: " . json_encode($response));
+    }
+
+    /**
+     * Cancel an EMR reservation.
+     */
+    private function cancelEmrReservation(\App\Models\Rental $rental): bool
+    {
+        $externalNo = $rental->external_reservation_no;
+        if (empty($externalNo)) {
+            Log::info("Rental {$rental->id} has no external EMR reservation number to cancel.");
+            return true; // Nothing to do
+        }
+
+        // Format is ID|Rez_ID
+        $parts = explode('|', $externalNo);
+        $id = $parts[0] ?? '';
+        $rezId = $parts[1] ?? '';
+
+        if (empty($id) || empty($rezId)) {
+            Log::error("EMR reservation cancellation failed: external_reservation_no format is invalid. Expected ID|Rez_ID.", [
+                'rental_id' => $rental->id,
+                'external_reservation_no' => $externalNo,
+            ]);
+            return false;
+        }
+
+        $service = new \App\Services\EmrJsonApiService();
+        $response = $service->cancelReservation($rezId, $id);
+
+        $status = $response['Status'] ?? $response['status'] ?? $response['success'] ?? '';
+
+        if (strtolower((string)$status) === 'true') {
+            Log::info('EMR reservation cancelled successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+            ]);
+
+            return true;
+        }
+
+        Log::error('EMR reservation cancellation failed', [
+            'rental_id' => $rental->id,
+            'reservation_no' => $externalNo,
+            'supplier_id' => $rental->supplier,
             'response' => $response,
         ]);
 
