@@ -52,6 +52,10 @@ class SupplierIntegrationService
             return $this->sendViaWheelsys($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'nissa') {
+            return $this->sendViaNissa($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -117,6 +121,10 @@ class SupplierIntegrationService
         }
 
         if ($supplier->integration_type === 'wheelsys') {
+            return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'nissa') {
             return $supplier->integration === true;
         }
 
@@ -528,6 +536,9 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'wheelsys') {
             $service = new WheelsysApiService();
             $this->createWheelsysReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'nissa') {
+            $service = new NissaJsonApiService();
+            $this->createNissaReservation($service, $rental, $supplier);
         }
     }
 
@@ -1728,6 +1739,211 @@ class SupplierIntegrationService
             ]);
             return true;
         }
+
+        return false;
+    }
+
+    /**
+     * Send reservation to Nissa API.
+     */
+    private function sendViaNissa(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new NissaJsonApiService();
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createNissaReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelNissaReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelNissaReservation($service, $rental, $supplier);
+                    }
+                    return $this->createNissaReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Nissa integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Nissa integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the Nissa API.
+     */
+    private function createNissaReservation(NissaJsonApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('Nissa integration: Missing vehicle or customer', ['rental_id' => $rental->id]);
+            return false;
+        }
+
+        // [Nissa-GROUP-ID:155]
+        if (preg_match('/\[Nissa-GROUP-ID:([^\]]+)\]/', $vehicle->description, $m)) {
+            $nissaGroupId = $m[1];
+        } else {
+            Log::warning('Nissa integration: Could not extract group ID from description', [
+                'rental_id' => $rental->id,
+                'description' => $vehicle->description,
+            ]);
+            return false;
+        }
+
+        $stationId = $branch ? $branch->station_id : '';
+        if (!$stationId) {
+            throw new \Exception("Missing station ID for branch.");
+        }
+
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+
+        $pickupDateStr = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d H:i') : '';
+        $returnDateStr = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d H:i') : '';
+        $currency = $rental->currency ?? 'TL';
+
+        // 1. Get availability to fetch Rez_ID and Cars_Park_ID
+        $cars = $service->getAvailableCars(
+            $stationId,
+            $stationId,
+            $pickupDateStr,
+            $returnDateStr,
+            $currency
+        );
+
+        $targetCar = null;
+        foreach ($cars as $car) {
+            if (isset($car['group_id']) && (string)$car['group_id'] === $nissaGroupId) {
+                $targetCar = $car;
+                break;
+            }
+        }
+
+        if (!$targetCar) {
+            throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates. Please select another vehicle.");
+        }
+
+        $rezId = $targetCar['rez_id'] ?? '';
+        $carsParkId = $targetCar['cars_park_id'] ?? '';
+
+        if (!$rezId || !$carsParkId) {
+            throw new \Exception("Missing rez_id or cars_park_id from Nissa availability.");
+        }
+
+        $pickupDateObj = new \DateTime($pickupDateStr);
+        $returnDateObj = new \DateTime($returnDateStr);
+
+        $reservationData = [
+            'Rez_ID' => $rezId,
+            'Cars_Park_ID' => $carsParkId,
+            'Group_ID' => $nissaGroupId,
+            'Pickup_ID' => $stationId,
+            'Drop_Off_ID' => $stationId,
+            'Name' => $nameParts['first'] ?: 'Customer',
+            'SurName' => $nameParts['last'] ?: 'Customer',
+            'MobilePhone' => $customer->phone_num ?? '0000000000',
+            'Mail_Adress' => $customer->email ?? 'noreply@autours.net',
+            'Rental_ID' => $rental->order_number ?? (string) $rental->id,
+            'Pickup_Day' => $pickupDateObj->format('d'),
+            'Pickup_Month' => $pickupDateObj->format('m'),
+            'Pickup_Year' => $pickupDateObj->format('Y'),
+            'Drop_Off_Day' => $returnDateObj->format('d'),
+            'Drop_Off_Month' => $returnDateObj->format('m'),
+            'Drop_Off_Year' => $returnDateObj->format('Y'),
+            'Pickup_Hour' => $pickupDateObj->format('H'),
+            'Pickup_Min' => $pickupDateObj->format('i'),
+            'Drop_Off_Hour' => $returnDateObj->format('H'),
+            'Drop_Off_Min' => $returnDateObj->format('i'),
+            'Adress' => $customer->address ?? 'Unknown Address',
+            'District' => $customer->city ?? 'Unknown',
+            'City' => $customer->city ?? 'Unknown',
+            'Country' => $customer->country ?? 'TR',
+            'Currency' => $currency,
+        ];
+
+        $response = $service->saveReservation($reservationData);
+
+        $status = $response['Status'] ?? $response['status'] ?? $response['success'] ?? '';
+
+        if (strtolower((string)$status) === 'true') {
+            $id = $response['ID'] ?? $response['id'] ?? $response['rez_kayit_no'] ?? '';
+            $newRezId = $response['rez_id'] ?? $response['Rez_ID'] ?? $response['Rez_Id'] ?? '';
+            
+            if (empty($id)) {
+                throw new \Exception("Nissa booking succeeded but returned no ID. Response: " . json_encode($response));
+            }
+
+            // Save as ID|Rez_ID
+            $externalNo = $id . '|' . $newRezId;
+            $rental->update([
+                'external_reservation_no' => $externalNo,
+            ]);
+
+            Log::info('Nissa reservation created successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+            ]);
+
+            return true;
+        }
+
+        Log::error('Nissa booking failed', ['response' => $response, 'rental_id' => $rental->id]);
+        throw new \Exception("Nissa booking failed: " . json_encode($response));
+    }
+
+    /**
+     * Cancel a reservation on the Nissa API.
+     */
+    private function cancelNissaReservation(NissaJsonApiService $service, Rental $rental, User $supplier): bool
+    {
+        $externalNo = $rental->external_reservation_no;
+        if (empty($externalNo)) {
+            return false;
+        }
+
+        $parts = explode('|', $externalNo);
+        $id = $parts[0] ?? '';
+        $rezId = $parts[1] ?? '';
+
+        if (!$id || !$rezId) {
+            Log::warning('Nissa cancellation: Malformed external reservation number', [
+                'rental_id' => $rental->id,
+                'external_no' => $externalNo,
+            ]);
+            return false;
+        }
+
+        $response = $service->cancelReservation($rezId, $id);
+
+        $status = $response['Status'] ?? $response['status'] ?? $response['success'] ?? '';
+
+        if (strtolower((string)$status) === 'true') {
+            Log::info('Nissa reservation cancelled successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+            ]);
+            return true;
+        }
+
+        Log::error('Nissa reservation cancellation failed', [
+            'rental_id' => $rental->id,
+            'response' => $response,
+        ]);
 
         return false;
     }
