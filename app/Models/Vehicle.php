@@ -88,7 +88,7 @@ class Vehicle extends Model
     }
 
     public function branch() {
-        return $this->belongsTo(Branch::class, 'pickup_loc', 'id');
+        return $this->belongsTo(Branch::class, 'pickup_loc', 'id')->withTrashed();
     }
 
     public function branches() {
