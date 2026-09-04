@@ -222,4 +222,96 @@ class WheelsysApiService
             return [];
         }
     }
+    /**
+     * Make a new reservation
+     */
+    public function makeReservation(array $params): array
+    {
+        $url = self::BASE_URL . "/new-res_" . self::LINK_CODE . ".html";
+        $params['agent'] = self::AGENT_CODE;
+
+        $response = Http::timeout($this->requestTimeout)
+            ->withOptions(['verify' => false])
+            ->get($url, $params);
+
+        if (! $response->successful()) {
+            Log::error('Wheelsys API: Make Reservation request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception("Wheelsys API: Make Reservation request failed with status " . $response->status());
+        }
+
+        return $this->parseReservationResponseXml($response->body(), 'makeReservation');
+    }
+
+    /**
+     * Cancel an existing reservation
+     */
+    public function cancelReservation(string $reservationNo, string $referenceNo): array
+    {
+        $url = self::BASE_URL . "/cancel-res_" . self::LINK_CODE . ".html";
+        $params = [
+            'agent' => self::AGENT_CODE,
+            'irn' => $reservationNo,
+            'refrno' => $referenceNo,
+        ];
+
+        $response = Http::timeout($this->requestTimeout)
+            ->withOptions(['verify' => false])
+            ->get($url, $params);
+
+        if (! $response->successful()) {
+            Log::error('Wheelsys API: Cancel Reservation request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception("Wheelsys API: Cancel Reservation request failed with status " . $response->status());
+        }
+
+        return $this->parseReservationResponseXml($response->body(), 'cancelReservation');
+    }
+
+    /**
+     * Parse the reservation XML response.
+     */
+    private function parseReservationResponseXml(string $xmlContent, string $context): array
+    {
+        try {
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string($xmlContent);
+
+            if ($xml === false) {
+                Log::error("Wheelsys API: Failed to parse XML for {$context}", ['errors' => libxml_get_errors()]);
+                libxml_clear_errors();
+                throw new \Exception("Wheelsys API: Failed to parse XML response for {$context}");
+            }
+
+            if (isset($xml->Status) && str_starts_with((string)$xml->Status, 'ERR')) {
+                $status = (string)$xml->Status;
+                $msg = isset($xml->Message) ? (string)$xml->Message : 'Unknown error';
+                throw new \Exception("Wheelsys API Error [{$status}]: {$msg}");
+            }
+
+            if (isset($xml->reservation)) {
+                $resNode = $xml->reservation;
+                $status = (string) $resNode['status'];
+                if (str_starts_with($status, 'ERR')) {
+                    throw new \Exception("Wheelsys API Reservation Error: {$status}");
+                }
+                
+                return [
+                    'irn' => (string) $resNode['irn'],
+                    'status' => $status,
+                    'refno' => (string) $resNode['refno'],
+                    'bookedgroup' => (string) $resNode['bookedgroup'],
+                ];
+            }
+
+            throw new \Exception("Wheelsys API: Missing reservation data in response");
+        } catch (\Exception $e) {
+            Log::error("Wheelsys API: Exception while parsing {$context} XML", ['exception' => $e->getMessage(), 'xml' => $xmlContent]);
+            throw $e;
+        }
+    }
 }

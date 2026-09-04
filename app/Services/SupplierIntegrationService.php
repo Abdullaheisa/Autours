@@ -48,6 +48,10 @@ class SupplierIntegrationService
             return $this->sendViaSurprice($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'wheelsys') {
+            return $this->sendViaWheelsys($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -109,6 +113,10 @@ class SupplierIntegrationService
         }
 
         if ($supplier->integration_type === 'surprice') {
+            return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'wheelsys') {
             return $supplier->integration === true;
         }
 
@@ -517,6 +525,9 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'surprice') {
             $service = new SurpriceApiService();
             $this->createSurpriceReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'wheelsys') {
+            $service = new WheelsysApiService();
+            $this->createWheelsysReservation($service, $rental, $supplier);
         }
     }
 
@@ -1582,6 +1593,141 @@ class SupplierIntegrationService
             'supplier_id'    => $supplier->id,
             'response'       => $response,
         ]);
+
+        return false;
+    }
+
+    /**
+     * Send reservation to Wheelsys API.
+     */
+    private function sendViaWheelsys(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new WheelsysApiService();
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createWheelsysReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelWheelsysReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelWheelsysReservation($service, $rental, $supplier);
+                    }
+                    return $this->createWheelsysReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Wheelsys integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Wheelsys integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the Wheelsys API.
+     */
+    private function createWheelsysReservation(WheelsysApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('Wheelsys integration: Missing vehicle or customer', ['rental_id' => $rental->id]);
+            return false;
+        }
+
+        // [WHEELSYS-GROUP-ID:C]
+        if (preg_match('/\[WHEELSYS-GROUP-ID:([^\]]+)\]/', $vehicle->description, $m)) {
+            $wheelsysGroupId = $m[1];
+        } else {
+            Log::warning('Wheelsys integration: Could not extract group ID from description', [
+                'rental_id' => $rental->id,
+                'description' => $vehicle->description,
+            ]);
+            return false;
+        }
+
+        $stationId = $branch ? $branch->station_id : '';
+        if (!$stationId) {
+            throw new \Exception("Missing station ID for branch.");
+        }
+
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+
+        $pickupDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('d/m/Y') : '';
+        $returnDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('d/m/Y') : '';
+        $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : '10:00';
+        $returnTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : '10:00';
+
+        $reservationData = [
+            'DATE_FROM' => $pickupDate,
+            'TIME_FROM' => $pickupTime,
+            'DATE_TO' => $returnDate,
+            'TIME_TO' => $returnTime,
+            'PICKUP_STATION' => $stationId,
+            'RETURN_STATION' => $stationId,
+            'GROUP' => $wheelsysGroupId,
+            'CUSTFIRST_NAME' => $nameParts['first'] ?: 'Customer',
+            'CUSTLAST_NAME' => $nameParts['last'] ?: 'Customer',
+            'CUSTOMER_EMAIL' => $customer->email ?? 'noreply@autours.net',
+            'CUSTOMER_PHONE' => $customer->phone_num ?? '0000000000',
+            'VOUCHERNO' => $rental->order_number ?? (string) $rental->id,
+        ];
+
+        $response = $service->makeReservation($reservationData);
+
+        $reservationNo = $response['irn'] ?? null;
+
+        if (empty($reservationNo)) {
+            throw new \Exception("Wheelsys booking failed: No booking reference returned.");
+        }
+
+        $rental->update([
+            'external_reservation_no' => (string) $reservationNo,
+        ]);
+
+        Log::info('Wheelsys reservation created successfully', [
+            'rental_id' => $rental->id,
+            'reservation_no' => $reservationNo,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Cancel a reservation on the Wheelsys API.
+     */
+    private function cancelWheelsysReservation(WheelsysApiService $service, Rental $rental, User $supplier): bool
+    {
+        $reservationNo = $rental->external_reservation_no;
+        if (empty($reservationNo)) {
+            return false;
+        }
+
+        $referenceNo = $rental->order_number ?? (string) $rental->id;
+
+        $response = $service->cancelReservation($reservationNo, $referenceNo);
+
+        if (isset($response['status']) && $response['status'] === 'CNC') {
+            Log::info('Wheelsys reservation cancelled successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $reservationNo,
+            ]);
+            return true;
+        }
 
         return false;
     }
