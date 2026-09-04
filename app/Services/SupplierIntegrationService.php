@@ -1277,7 +1277,7 @@ class SupplierIntegrationService
 
                 case 'rental_updated':
                     if (!empty($rental->external_reservation_no)) {
-                        $this->cancelSurpriceReservation($service, $rental, $supplier);
+                        return $this->amendSurpriceReservation($service, $rental, $supplier);
                     }
                     return $this->createSurpriceReservation($service, $rental, $supplier);
 
@@ -1439,6 +1439,107 @@ class SupplierIntegrationService
             'order_number'   => $rental->order_number,
             'reservation_no' => $reservationNo,
             'supplier_id'    => $supplier->id,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Amend a reservation on the Surprice API.
+     *
+     * @param SurpriceApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function amendSurpriceReservation(SurpriceApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $orderId = $rental->external_reservation_no;
+
+        if (!$vehicle || !$customer || empty($orderId)) {
+            Log::error('Surprice integration: Missing vehicle, customer or orderId for amend', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        $description = $vehicle->description ?? '';
+        
+        $groupId = null;
+        if (preg_match('/\[SURPRICE-GROUP-ID:([^|\]]+)\|RATE:([^\]]+)\]/', $description, $m)) {
+            $groupId = $m[1];
+        } else {
+            Log::warning('Surprice integration: Could not extract groupId from description for amend', [
+                'rental_id'   => $rental->id,
+                'vehicle_id'  => $vehicle->id,
+            ]);
+            return false;
+        }
+
+        $pickupDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : '';
+        $returnDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : '';
+        $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i:s') : '10:00:00';
+        $returnTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i:s') : '10:00:00';
+        
+        $pickupDateTime = "{$pickupDate}T{$pickupTime}";
+        $returnDateTime = "{$returnDate}T{$returnTime}";
+        
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+        $dob = $customer->dob ? Carbon::parse($customer->dob)->format('Y-m-d') : Carbon::now()->subYears(30)->format('Y-m-d');
+        $issueDate = Carbon::now()->subYears(5)->format('Y-m-d');
+        $expDate = Carbon::now()->addYears(5)->format('Y-m-d');
+
+        $amendData = [
+            'pickUpDateTime' => Carbon::parse($pickupDateTime)->format('Y-m-d\TH:i:s'),
+            'returnDateTime' => Carbon::parse($returnDateTime)->format('Y-m-d\TH:i:s'),
+            'vehicleGroupPrefAccriss' => $groupId,
+            'flightNo' => $rental->flight_number ?? '',
+            'customerInfo' => [
+                'customer' => [
+                    'name' => $customer->name ?? 'Customer',
+                    'email' => $customer->email ?? 'noreply@autours.net',
+                    'phone' => $customer->phone_num ?? '+000000000000',
+                    'addressLine' => $customer->address ?? 'Unknown Address',
+                    'city' => $customer->city ?? 'Unknown',
+                    'country' => $customer->country ?? 'GB',
+                    'postalCode' => $customer->zip_code ?? '00000',
+                    'dateOfBirth' => $dob,
+                    'driverLicenseNumber' => $customer->license_number ?? '123456',
+                    'driverLicenseCountryId' => $customer->country ?? 'GB',
+                    'driverLicenseIssueDate' => $issueDate,
+                    'driverLicenseExpirationDate' => $expDate,
+                ]
+            ]
+        ];
+
+        $response = $service->amendReservation($orderId, $amendData);
+
+        if (empty($response)) {
+             throw new \Exception("Supplier booking amend failed: No response returned.");
+        }
+
+        if (isset($response['success']) && $response['success'] === false) {
+             $errorMsg = $response['error']['message'] ?? 'Unknown error';
+             throw new \Exception("Supplier booking amend failed: " . $errorMsg);
+        }
+
+        $status = strtolower($response['orderInfo']['status'] ?? $response['status'] ?? '');
+        
+        if ($status === 'pending') {
+            $commitResponse = $service->commitReservation($orderId);
+            
+            if (empty($commitResponse) || (isset($commitResponse['success']) && $commitResponse['success'] === false)) {
+                $errorMsg = $commitResponse['error']['message'] ?? 'Unknown error during commit';
+                throw new \Exception("Supplier booking commit failed: " . $errorMsg);
+            }
+        }
+
+        Log::info('Surprice reservation amended successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $orderId,
         ]);
 
         return true;

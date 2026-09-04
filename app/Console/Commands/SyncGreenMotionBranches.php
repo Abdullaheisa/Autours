@@ -30,12 +30,6 @@ class SyncGreenMotionBranches extends Command
             return self::FAILURE;
         }
 
-        $username = $this->option('us-source') ? 'GMatob@2026!' : 'GMato@2026!';
-        $password = $this->option('us-source') ? 'GMatob@2026!' : 'GMato@2026!';
-        
-        // Initialize the service with credentials provided by user
-        $service = new GreenMotionApiService($username, $password);
-
         $supplierUser = User::firstOrCreate(
             ['email' => 'georgiaparkhurst@greenmotion.com'],
             [
@@ -46,6 +40,12 @@ class SyncGreenMotionBranches extends Command
             ]
         );
         $supplierUserId = $supplierUser->id;
+
+        $username = $supplierUser->api_key ?: ($this->option('us-source') ? 'GMatob@2026!' : 'GMatob@2026!');
+        $password = $supplierUser->api_password ?: ($this->option('us-source') ? 'GMatob@2026!' : 'GMatob@2026!');
+        
+        // Initialize the service with credentials provided by user
+        $service = new GreenMotionApiService($username, $password);
         $this->info("Supplier user resolved: ID {$supplierUser->id} ({$supplierUser->email})");
 
         $this->info('Fetching country list from Green Motion...');

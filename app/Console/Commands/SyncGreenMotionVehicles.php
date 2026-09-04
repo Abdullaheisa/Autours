@@ -50,11 +50,6 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
             return self::FAILURE;
         }
 
-        $username = $this->option('us-source') ? 'GMatob@2026!' : 'GMato@2026!';
-        $password = $this->option('us-source') ? 'GMatob@2026!' : 'GMato@2026!';
-
-        $service = new GreenMotionApiService($username, $password);
-
         $supplierUser = User::firstOrCreate(
             ['email' => 'georgiaparkhurst@greenmotion.com'],
             [
@@ -64,6 +59,11 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 'company' => 'Green Motion',
             ]
         );
+
+        $username = $supplierUser->api_key ?: ($this->option('us-source') ? 'GMatob@2026!' : 'GMatob@2026!');
+        $password = $supplierUser->api_password ?: ($this->option('us-source') ? 'GMatob@2026!' : 'GMatob@2026!');
+
+        $service = new GreenMotionApiService($username, $password);
 
         $supplierUserId = $supplierUser->id;
         $this->info("Supplier user resolved: ID {$supplierUser->id} ({$supplierUser->email})");
@@ -520,16 +520,21 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
         $pickupTimeArg = $pickup->format('H:i');
         $dropoffTimeArg = $dropoff->format('H:i');
 
-        $result = $service->getVehicles(
-            (int)$branch->station_id,
-            $pickupDateArg,
-            $pickupTimeArg,
-            $dropoffDateArg,
-            $dropoffTimeArg,
-            30,
-            $branch->currency ?? 'GBP'
-        );
+        try {
+            $result = $service->getVehicles(
+                (int)$branch->station_id,
+                $pickupDateArg,
+                $pickupTimeArg,
+                $dropoffDateArg,
+                $dropoffTimeArg,
+                30,
+                $branch->currency ?? 'GBP'
+            );
 
-        return $result['vehicles'] ?? [];
+            return $result['vehicles'] ?? [];
+        } catch (\Exception $e) {
+            Log::warning("Green Motion sync warning for branch {$branch->name} (ID: {$branch->station_id}): " . $e->getMessage());
+            return [];
+        }
     }
 }
