@@ -101,4 +101,91 @@ class RenteonApiService
 
         return $response->json() ?? [];
     }
+
+    /**
+     * Calculate booking totals and fees based on a selected vehicle payload.
+     *
+     * @param array $payload
+     * @return array
+     * @throws \Exception
+     */
+    public function calculate(array $payload): array
+    {
+        $url = self::BASE_URL . '/api/bookings/calculate';
+
+        $response = Http::timeout($this->requestTimeout)
+            ->withBasicAuth(self::USERNAME, self::PASSWORD)
+            ->withOptions(['verify' => false])
+            ->post($url, $payload);
+
+        if (! $response->successful()) {
+            Log::error('Renteon API: Calculate request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception("Renteon API Calculate Error: " . $response->body());
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /**
+     * Commit a new booking or update an existing one (e.g. for cancellation).
+     *
+     * @param array $payload
+     * @return array
+     * @throws \Exception
+     */
+    public function saveBooking(array $payload): array
+    {
+        $url = self::BASE_URL . '/api/bookings/save';
+
+        $response = Http::timeout($this->requestTimeout)
+            ->withBasicAuth(self::USERNAME, self::PASSWORD)
+            ->withOptions(['verify' => false])
+            ->post($url, $payload);
+
+        if (! $response->successful()) {
+            Log::error('Renteon API: Save request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception("Renteon API Save Error: " . $response->body());
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /**
+     * Fetch an existing reservation to read its full state (useful for cancellations).
+     *
+     * @param string $number
+     * @param int $connectorId
+     * @return array
+     * @throws \Exception
+     */
+    public function openBooking(string $number, int $connectorId): array
+    {
+        $url = self::BASE_URL . '/api/bookings/open';
+
+        $payload = [
+            'ConnectorId' => $connectorId,
+            'Number' => $number
+        ];
+
+        $response = Http::timeout($this->requestTimeout)
+            ->withBasicAuth(self::USERNAME, self::PASSWORD)
+            ->withOptions(['verify' => false])
+            ->post($url, $payload);
+
+        if (! $response->successful()) {
+            Log::error('Renteon API: Open request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception("Renteon API Open Error: " . $response->body());
+        }
+
+        return $response->json() ?? [];
+    }
 }

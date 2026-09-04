@@ -107,7 +107,7 @@ class SyncSurpriceVehicles extends Command
         // ------------------------------------------------------------------
         // 4. Resolve dates and rate codes
         // ------------------------------------------------------------------
-        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addMonth()->format('Y-m-d');
+        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addDay()->format('Y-m-d');
         $pickupDateTime = $pickupDate . 'T10:00:00';
         $dropoffDateTime1 = Carbon::parse($pickupDate)->addDay()->format('Y-m-d\T10:00:00');
         $dropoffDateTime7 = Carbon::parse($pickupDate)->addDays(7)->format('Y-m-d\T10:00:00');

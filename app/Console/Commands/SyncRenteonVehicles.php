@@ -100,7 +100,7 @@ class SyncRenteonVehicles extends AbstractVehicleSyncCommand
         // Renteon format requires ISO 8601 without timezone: 'YYYY-MM-DDTHH:mm:ss'
         $pickupDateObj = $this->option('pickup-date') 
             ? Carbon::parse($this->option('pickup-date')) 
-            : Carbon::now()->addMonth();
+            : Carbon::now()->addDay();
 
         $pickupTimeStr = 'T10:00:00';
         $pickupDateStr = $pickupDateObj->format('Y-m-d') . $pickupTimeStr;

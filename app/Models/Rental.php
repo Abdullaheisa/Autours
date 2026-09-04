@@ -33,7 +33,7 @@ class Rental extends Model
         'rate' => 'decimal:1'
     ];
     public function vehicle() {
-        return $this->belongsTo(Vehicle::class, 'vehicle_id', 'id');
+        return $this->belongsTo(Vehicle::class, 'vehicle_id', 'id')->withTrashed();
     }
 
     public function supplier()

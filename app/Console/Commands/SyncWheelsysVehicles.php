@@ -94,7 +94,7 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
         // Wheelsys format requires DD/MM/YYYY
         $pickupDateObj = $this->option('pickup-date') 
             ? Carbon::parse($this->option('pickup-date')) 
-            : Carbon::now()->addMonth();
+            : Carbon::now()->addDay();
 
         $pickupDateStr = $pickupDateObj->format('d/m/Y');
         $dropoffDate1Str = $pickupDateObj->copy()->addDay()->format('d/m/Y');

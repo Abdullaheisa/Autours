@@ -60,6 +60,10 @@ class SupplierIntegrationService
             return $this->sendViaEmr($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'renteon') {
+            return $this->sendViaRenteon($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -133,6 +137,10 @@ class SupplierIntegrationService
         }
         
         if ($supplier->integration_type === 'emr') {
+            return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'renteon') {
             return $supplier->integration === true;
         }
 
@@ -557,6 +565,8 @@ class SupplierIntegrationService
             $this->createNissaReservation($service, $rental, $supplier);
         } elseif ($supplier->integration_type === 'emr') {
             $this->createEmrReservation($rental);
+        } elseif ($supplier->integration_type === 'renteon') {
+            $this->createRenteonReservation($rental);
         }
     }
 
@@ -2159,5 +2169,135 @@ class SupplierIntegrationService
         ]);
 
         return false;
+    }
+
+    private function sendViaRenteon(\App\Models\Rental $rental, \App\Models\User $supplier, string $eventType): bool
+    {
+        if ($eventType === 'new_rental' || $eventType === 'rental_request') {
+            return $this->createRenteonReservation($rental);
+        } elseif ($eventType === 'rental_cancelled') {
+            return $this->cancelRenteonReservation($rental);
+        }
+
+        return true;
+    }
+
+    private function createRenteonReservation(\App\Models\Rental $rental): bool
+    {
+        $vehicle = $rental->vehicle;
+        if (!$vehicle) {
+            throw new \Exception("Rental {$rental->id} has no vehicle.");
+        }
+
+        $customer = $rental->customer;
+        if (!$customer) {
+            throw new \Exception("Rental {$rental->id} has no customer.");
+        }
+
+        $service = app(\App\Services\RenteonApiService::class);
+        $stationId = $vehicle->branch->station_id ?? $vehicle->pickup_loc;
+
+        // Extract [RENTEON-GROUP-ID:XYZ]
+        $renteonGroupId = '';
+        if (preg_match('/\[RENTEON-GROUP-ID:([^\]]+)\]/', (string)$vehicle->description, $m)) {
+            $renteonGroupId = $m[1];
+        }
+
+        if (empty($renteonGroupId)) {
+            throw new \Exception("Vehicle {$vehicle->id} does not have an [RENTEON-GROUP-ID:XYZ] in description.");
+        }
+
+        $pickupDateStr = ($rental->start_date && $rental->start_time) ? \Carbon\Carbon::parse($rental->start_date)->format('Y-m-d') . 'T' . \Carbon\Carbon::parse($rental->start_time)->format('H:i') : '';
+        $returnDateStr = ($rental->end_date && $rental->end_time) ? \Carbon\Carbon::parse($rental->end_date)->format('Y-m-d') . 'T' . \Carbon\Carbon::parse($rental->end_time)->format('H:i') : '';
+        
+        $currency = $rental->currency ?? 'EUR';
+        if ($currency === 'TL') $currency = 'TRY';
+        if (!in_array($currency, ['EUR', 'TRY'])) {
+            $currency = 'EUR';
+        }
+
+        $availableCars = $service->getAvailability((string)$stationId, (string)$stationId, $pickupDateStr, $returnDateStr, $currency);
+        
+        $matchedCar = null;
+        foreach ($availableCars as $car) {
+            $groupId = $car['CarCategory'] ?? 'UNKNOWN';
+            if (!empty($car['ConnectorCarCategoryId'])) {
+                $groupId = $groupId . '-' . $car['ConnectorCarCategoryId'];
+            }
+            if ((string)$groupId === $renteonGroupId) {
+                $matchedCar = $car;
+                break;
+            }
+        }
+
+        if (!$matchedCar) {
+            throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates. Please select another vehicle.");
+        }
+
+        // Calculate totals
+        $calculated = $service->calculate($matchedCar);
+
+        // Inject customer details to calculate output to save
+        $payload = $calculated;
+        $payload['ClientName'] = $customer->name;
+        $payload['ClientEmail'] = $customer->email;
+        $payload['ClientPhone'] = $customer->phone_num;
+        $payload['IsCancelled'] = false;
+        $payload['VoucherNumber'] = $rental->order_number ?? '-';
+
+        $saved = $service->saveBooking($payload);
+
+        if (empty($saved['Number'])) {
+            Log::error('Renteon reservation failed to return a Number', ['response' => $saved]);
+            throw new \Exception('Renteon API Reservation Error: Invalid response.');
+        }
+
+        $externalNo = $saved['Number'] . '|' . ($saved['ConnectorId'] ?? 108);
+
+        $rental->update([
+            'external_reservation_no' => $externalNo,
+        ]);
+
+        Log::info('Renteon reservation created successfully', [
+            'rental_id' => $rental->id,
+            'reservation_no' => $externalNo,
+        ]);
+
+        return true;
+    }
+
+    private function cancelRenteonReservation(\App\Models\Rental $rental): bool
+    {
+        $externalNo = $rental->external_reservation_no;
+        if (empty($externalNo)) {
+            Log::info("Rental {$rental->id} has no external Renteon reservation number to cancel.");
+            return true;
+        }
+
+        $parts = explode('|', $externalNo);
+        $number = $parts[0];
+        $connectorId = $parts[1] ?? 108; // default to 108 if missing
+
+        $service = app(\App\Services\RenteonApiService::class);
+        
+        try {
+            $booking = $service->openBooking($number, (int)$connectorId);
+            $booking['IsCancelled'] = true;
+            $saved = $service->saveBooking($booking);
+
+            Log::info('Renteon reservation cancelled successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Renteon reservation cancellation failed', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 }
