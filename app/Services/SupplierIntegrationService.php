@@ -64,6 +64,10 @@ class SupplierIntegrationService
             return $this->sendViaRenteon($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'rently') {
+            return $this->sendViaRently($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -141,6 +145,10 @@ class SupplierIntegrationService
         }
 
         if ($supplier->integration_type === 'renteon') {
+            return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'rently') {
             return $supplier->integration === true;
         }
 
@@ -548,6 +556,18 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'greenmotion') {
             $service = new GreenMotionApiService($supplier->api_key, $supplier->api_password);
             $this->createGreenMotionReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'nissa') {
+            $service = new NissaJsonApiService();
+            $this->createNissaReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'emr') {
+            $service = new EmrJsonApiService();
+            $this->createEmrReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'renteon') {
+            $service = new RenteonApiService($supplier->api_key, $supplier->api_password);
+            $this->createRenteonReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'rently') {
+            $service = new RentlyApiService();
+            $this->createRentlyReservation($service, $rental, $supplier);
         } elseif ($supplier->integration_type === 'xdrive') {
             $service = new XdriveJsonApiService();
             $this->createXdriveReservation($service, $rental, $supplier);
@@ -2299,5 +2319,188 @@ class SupplierIntegrationService
             ]);
             return false;
         }
+    }
+
+    /**
+     * Send reservation to Rently API.
+     *
+     * @param Rental $rental
+     * @param User $supplier
+     * @param string $eventType
+     * @return bool
+     */
+    private function sendViaRently(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new RentlyApiService();
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createRentlyReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelRentlyReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelRentlyReservation($service, $rental, $supplier);
+                    }
+                    return $this->createRentlyReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Rently integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Rently integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the Rently API.
+     *
+     * @param RentlyApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function createRentlyReservation(RentlyApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer || !$branch) {
+            Log::error('Rently integration: Missing vehicle, branch or customer', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        $description = $vehicle->description ?? '';
+        
+        $modelId = null;
+        if (preg_match('/\[RENTLY-MODEL-ID:([^\]]+)\]/', $description, $m)) {
+            $modelId = (int) $m[1];
+        } else {
+            Log::warning('Rently integration: Could not extract model ID from description', [
+                'rental_id'   => $rental->id,
+                'vehicle_id'  => $vehicle->id,
+                'description' => $description,
+            ]);
+            return false;
+        }
+
+        $pickupDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : '';
+        $returnDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : '';
+        $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i:s') : '10:00:00';
+        $returnTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i:s') : '10:00:00';
+        
+        $pickupDateTime = "{$pickupDate}T{$pickupTime}";
+        $returnDateTime = "{$returnDate}T{$returnTime}";
+
+        // The station_id is the Place ID
+        $placeId = (int) $branch->station_id;
+        
+        if (!$placeId) {
+            Log::error('Rently integration: Invalid place ID on branch', [
+                'branch_id' => $branch->id,
+            ]);
+            return false;
+        }
+
+        $dob = $customer->dob ? Carbon::parse($customer->dob)->format('Y-m-d') : Carbon::now()->subYears(30)->format('Y-m-d');
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+
+        $reservationData = [
+            'isQuotation' => false,
+            'model' => $modelId,
+            'fromDate' => Carbon::parse($pickupDateTime)->format('Y-m-d\TH:i:s'),
+            'toDate' => Carbon::parse($returnDateTime)->format('Y-m-d\TH:i:s'),
+            'deliveryPlace' => $placeId,
+            'dropoffPlace' => $placeId,
+            'commercialAgreementCode' => 'pod-autours',
+            'customer' => [
+                'firstName' => $nameParts['first'] ?? 'Customer',
+                'lastName' => $nameParts['last'] ?? 'Customer',
+                'emailAddress' => $customer->email ?? 'noreply@autours.net',
+                'cellPhone' => $customer->phone_num ?? '+000000000000',
+                'address' => $customer->address ?? 'Unknown Address',
+                'country' => $customer->country ?? 'Unknown',
+                'birthDate' => Carbon::parse($dob)->format('Y-m-d\TH:i:s'),
+                'driverLicenceNumber' => $customer->license_number ?? '123456',
+                'driverLicenceCountry' => $customer->country ?? 'Unknown',
+            ]
+        ];
+
+        $response = $service->createReservation($reservationData);
+        
+        $reservationNo = $response['id'] ?? $response['globalId'] ?? null;
+        
+        if (empty($reservationNo)) {
+            Log::error('Rently reservation creation failed (no reservation number)', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+                'response'    => $response,
+            ]);
+            throw new \Exception("Supplier booking failed: No booking reference returned.");
+        }
+
+        $rental->update([
+            'external_reservation_no' => (string) $reservationNo,
+        ]);
+
+        Log::info('Rently reservation created successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $reservationNo,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Cancel a reservation on the Rently API.
+     *
+     * @param RentlyApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function cancelRentlyReservation(RentlyApiService $service, Rental $rental, User $supplier): bool
+    {
+        $externalNo = $rental->external_reservation_no;
+
+        if (empty($externalNo)) {
+            Log::warning('Rently cancellation: No external reservation number found', [
+                'rental_id' => $rental->id,
+            ]);
+            return true;
+        }
+
+        $success = $service->cancelReservation((string) $externalNo);
+
+        if ($success) {
+            Log::info('Rently reservation cancelled successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+            ]);
+            return true;
+        }
+
+        Log::error('Rently reservation cancellation failed', [
+            'rental_id' => $rental->id,
+            'reservation_no' => $externalNo,
+        ]);
+
+        return false;
     }
 }

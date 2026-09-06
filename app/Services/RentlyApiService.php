@@ -162,4 +162,77 @@ class RentlyApiService
 
         return [];
     }
+
+    /**
+     * Create a reservation on Rently.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    public function createReservation(array $data): array
+    {
+        $token = $this->getToken();
+        if (!$token) {
+            return [];
+        }
+
+        try {
+            $response = Http::withoutVerifying()->withToken($token)
+                ->timeout(60)
+                ->post(self::BASE_URL . '/api/Booking', $data);
+
+            if ($response->successful()) {
+                return $response->json() ?? [];
+            }
+
+            Log::error('Rently API: Failed to create reservation', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            
+            $errorData = $response->json();
+            $errorMsg = $errorData['errorMessage'] ?? 'Failed to create reservation.';
+            throw new \Exception("Rently API Error: {$errorMsg}");
+        } catch (\Exception $e) {
+            Log::error('Rently API: Create reservation exception', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Cancel a reservation on Rently.
+     *
+     * @param string $bookingId
+     * @return bool
+     */
+    public function cancelReservation(string $bookingId): bool
+    {
+        $token = $this->getToken();
+        if (!$token) {
+            return false;
+        }
+
+        try {
+            $response = Http::withoutVerifying()->withToken($token)
+                ->timeout(60)
+                ->delete(self::BASE_URL . "/api/Booking/{$bookingId}");
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::error('Rently API: Failed to cancel reservation', [
+                'status' => $response->status(),
+                'bookingId' => $bookingId,
+                'body' => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Rently API: Cancel reservation exception', [
+                'bookingId' => $bookingId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return false;
+    }
 }
