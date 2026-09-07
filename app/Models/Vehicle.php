@@ -128,10 +128,23 @@ class Vehicle extends Model
         // جلب الفرع والدولة المحددة للسيارة
         $branch = $this->branch;
         $country = $branch ? trim($branch->country) : null;
+        $pickupLocId = $this->pickup_loc ?? ($branch ? $branch->id : null);
+
+        if ($pickupLocId) {
+            $branchTerms = RentalTerms::query()
+                ->where('created_by', $supplierId)
+                ->where('branch_id', $pickupLocId)
+                ->select(['title', 'description'])
+                ->get();
+            if ($branchTerms->isNotEmpty()) {
+                return $branchTerms;
+            }
+        }
 
         $query = SupplierRentalTerm::query()
             ->where('supplier_rental_terms.supplier_id', $supplierId)
-            ->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id');
+            ->join('rental_terms', 'rental_terms.id', '=', 'supplier_rental_terms.rental_term_id')
+            ->whereNull('rental_terms.branch_id');
 
         if ($country) {
             $normalizedCountry = \App\Services\CountryCurrencyResolver::normalizeCountryName($country);

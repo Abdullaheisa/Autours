@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { isBefore, startOfDay, addMonths, subMonths, isSameDay, isToday, format } from 'date-fns';
 
 interface CalendarRangePickerProps {
@@ -25,6 +25,16 @@ export default function CalendarRangePicker({
   const [tempStart, setTempStart] = useState<Date | null>(startDate);
   const [tempEnd, setTempEnd] = useState<Date | null>(endDate);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const today = startOfDay(new Date());
   const nextMonth = addMonths(currentMonth, 1);
@@ -53,13 +63,13 @@ export default function CalendarRangePicker({
       return classes;
     }
 
-    if (tempStart && isSameDay(dayDate, tempStart) || (tempEnd && isSameDay(dayDate, tempEnd))) {
+    if ((tempStart && isSameDay(dayDate, tempStart)) || (tempEnd && isSameDay(dayDate, tempEnd))) {
       classes += 'bg-[#f9d602] text-gray-950 rounded-xl font-black shadow-xs';
       return classes;
     }
 
     if (tempStart && tempEnd && dayDate > tempStart && dayDate < tempEnd) {
-      classes += 'bg-[#f9d602]/20 text-gray-900 rounded-none';
+      classes += 'bg-[#f9d602]/25 text-gray-950 rounded-none';
       return classes;
     }
 
@@ -77,7 +87,7 @@ export default function CalendarRangePicker({
     return classes;
   };
 
-  const renderMonth = (date: Date, isPrimary: boolean = true) => {
+  const renderMonth = (date: Date, showPrev: boolean, showNext: boolean) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
@@ -111,35 +121,33 @@ export default function CalendarRangePicker({
     return (
       <div className="flex-1 min-w-0">
         {/* Month Header */}
-        <div className="flex items-center justify-between mb-2.5">
-          {isPrimary ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-xl text-gray-600 transition-all cursor-pointer"
-              >
-                <ChevronLeft size={17} strokeWidth={2.5} />
-              </button>
-              <span className="font-black text-gray-900 text-sm sm:text-base tracking-tight">
-                {monthName} {monthYear}
-              </span>
-              <div className="w-7 sm:hidden" />
-            </>
+        <div className="flex items-center justify-between mb-3">
+          {showPrev ? (
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-xl text-gray-700 transition-all cursor-pointer"
+            >
+              <ChevronLeft size={18} strokeWidth={2.5} />
+            </button>
           ) : (
-            <>
-              <div className="w-7 hidden sm:block" />
-              <span className="font-black text-gray-900 text-sm sm:text-base tracking-tight">
-                {monthName} {monthYear}
-              </span>
-              <button
-                type="button"
-                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-xl text-gray-600 transition-all cursor-pointer"
-              >
-                <ChevronRight size={17} strokeWidth={2.5} />
-              </button>
-            </>
+            <div className="w-8" />
+          )}
+
+          <span className="font-black text-gray-900 text-sm sm:text-base tracking-tight">
+            {monthName} {monthYear}
+          </span>
+
+          {showNext ? (
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-xl text-gray-700 transition-all cursor-pointer"
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </button>
+          ) : (
+            <div className="w-8" />
           )}
         </div>
 
@@ -160,19 +168,36 @@ export default function CalendarRangePicker({
     );
   };
 
+  const showSingle = singleMonth || isMobile;
+
   return (
-    <div className={`bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden
-                    ${singleMonth ? 'w-[290px] sm:w-[320px]' : 'w-[300px] sm:w-[560px]'}`}>
+    <div className={`bg-white rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.35)] border border-gray-100 overflow-hidden ${
+      showSingle ? 'w-[310px] sm:w-[330px]' : 'w-[580px]'
+    }`}>
+      {/* Mobile Top Close Header */}
+      <div className="sm:hidden flex items-center justify-between px-4 pt-3.5 pb-1 border-b border-gray-100">
+        <span className="text-xs font-black text-gray-500 uppercase tracking-wider">
+          {tempStart && !tempEnd ? 'Select Return Date' : 'Select Dates'}
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-1 text-gray-400 hover:text-gray-700 rounded-lg cursor-pointer"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
       <div className="p-4 sm:p-5">
-        <div className={`flex gap-5 ${singleMonth ? '' : 'flex-col sm:flex-row'}`}>
-          {renderMonth(currentMonth, true)}
-          {!singleMonth && (
-            <>
-              <div className="hidden sm:block w-[1px] bg-gray-100 self-stretch shrink-0" />
-              {renderMonth(nextMonth, false)}
-            </>
-          )}
-        </div>
+        {showSingle ? (
+          renderMonth(currentMonth, true, true)
+        ) : (
+          <div className="flex gap-6">
+            {renderMonth(currentMonth, true, false)}
+            <div className="w-[1px] bg-gray-100 self-stretch shrink-0" />
+            {renderMonth(nextMonth, false, true)}
+          </div>
+        )}
       </div>
     </div>
   );

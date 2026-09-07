@@ -101,9 +101,10 @@ export const includedApi = {
 
 // Rental Terms API
 export const rentalTermsApi = {
-  getAll: (country?: string) => apiClient.get("/api/supplier/get/rental-terms", { params: { country } }),
+  getAll: (country?: string, branch_id?: string | number) => apiClient.get("/api/supplier/get/rental-terms", { params: { country, branch_id } }),
   getActiveCountries: () => apiClient.get("/api/supplier/get/active-countries"),
-  getByCountry: (country: string) => apiClient.get("/api/supplier/get/rental-terms", { params: { country } }),
+  getActiveBranches: (country?: string) => apiClient.get("/api/supplier/get/active-branches", { params: { country } }),
+  getByCountry: (country: string, branch_id?: string | number) => apiClient.get("/api/supplier/get/rental-terms", { params: { country, branch_id } }),
   getMyTerms: () => apiClient.get("/api/supplier/get/rental-terms?my_terms=1"),
   create: (data: unknown) => apiClient.post("/api/supplier/post/rental-terms", data),
   bulkUpload: (formData: FormData) => apiClient.post("/api/supplier/post/rental-terms/bulk-upload", formData, {

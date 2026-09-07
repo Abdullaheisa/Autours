@@ -125,6 +125,7 @@ Route::prefix('supplier')->middleware(['auth:sanctum', 'active_supplier'])->grou
     // Rental Terms
     Route::get('get/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'index']);
     Route::get('get/active-countries', [\App\Http\Controllers\RentalTermsController::class, 'getActiveSupplierCountries']);
+    Route::get('get/active-branches', [\App\Http\Controllers\RentalTermsController::class, 'getActiveSupplierBranches']);
     Route::post('post/rental-terms', [\App\Http\Controllers\RentalTermsController::class, 'insert']);
     Route::post('post/rental-terms/bulk-upload', [\App\Http\Controllers\RentalTermsController::class, 'bulkUpload']);
     Route::get('get/rental-terms/template', [\App\Http\Controllers\RentalTermsController::class, 'downloadTemplate']);

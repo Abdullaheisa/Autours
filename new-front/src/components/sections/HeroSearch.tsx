@@ -55,7 +55,7 @@ interface HeroSearchProps {
 
 export default function HeroSearch({
   title = "Car Rentals - ",
-  titleHighlight = "Search, Compare & Book",
+  titleHighlight = "Search, Compare, Book & Enjoy",
   bottomText = "Looking for a vehicle? You're at the right place!",
   badge
 }: HeroSearchProps = {}) {
@@ -512,10 +512,10 @@ export default function HeroSearch({
               {showCalendar && (
                 <>
                   <div
-                    className="fixed inset-0 bg-black/50 z-[140] lg:hidden"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[140] sm:hidden"
                     onClick={() => setShowCalendar(false)}
                   />
-                  <div className="fixed lg:absolute top-[10%] lg:top-full left-1/2 -translate-x-1/2 lg:left-0 lg:translate-x-0 mt-2 z-[150] w-[95vw] lg:w-fit flex justify-center animate-fadeIn">
+                  <div className="fixed sm:absolute top-1/2 -translate-y-1/2 sm:translate-y-0 sm:top-full left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 mt-0 sm:mt-2 z-[150] w-fit flex justify-center animate-fadeIn">
                     <CalendarRangePicker
                       startDate={startDate}
                       endDate={endDate}
@@ -540,146 +540,142 @@ export default function HeroSearch({
             )}
 
             {/* 3. Driver Details & Country Selection Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3.5 pt-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 pt-1">
               
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-                
-                {/* I live in: Country Selector */}
-                <div className="relative" ref={countryRef}>
-                  <div className="flex items-center gap-1.5 text-xs sm:text-sm">
-                    <span className="text-white font-medium drop-shadow-sm">I live in:</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                      className="inline-flex items-center gap-1.5 text-[#f9d602] font-black hover:underline cursor-pointer group"
-                    >
-                      <img
-                        src={`https://flagcdn.com/w40/${selectedCountry.iso.toLowerCase()}.png`}
-                        alt={selectedCountry.name}
-                        className="w-4.5 h-3 object-cover rounded-xs shadow-2xs shrink-0"
-                      />
-                      <span className="truncate max-w-[140px]">{selectedCountry.name}</span>
-                      <ChevronDown size={14} className="text-[#f9d602] group-hover:translate-y-0.5 transition-transform" />
-                    </button>
-                  </div>
-
-                  {/* Searchable Country Dropdown */}
-                  {showCountryDropdown && (
-                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-2xl shadow-2xl border border-gray-100 w-72 sm:w-80 max-h-[320px] flex flex-col z-[160] overflow-hidden animate-fadeIn">
-                      <div className="p-2.5 border-b border-gray-100 bg-gray-50/90">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5 px-0.5">
-                          Where do you currently live?
-                        </p>
-                        <div className="relative">
-                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="text"
-                            value={countrySearch}
-                            onChange={(e) => setCountrySearch(e.target.value)}
-                            placeholder="Search your country..."
-                            className="w-full pl-8 pr-3 py-1.5 text-xs font-bold text-gray-900 bg-white rounded-xl border border-gray-200 outline-none focus:border-[#f9d602]"
-                            autoFocus
-                          />
-                        </div>
-                      </div>
-                      <div className="overflow-y-auto max-h-[240px] p-1.5 space-y-0.5">
-                        {filteredCountries.length > 0 ? (
-                          filteredCountries.map((c) => (
-                            <button
-                              key={c.iso}
-                              type="button"
-                              onClick={() => {
-                                setSelectedCountry(c);
-                                setShowCountryDropdown(false);
-                                setCountrySearch('');
-                              }}
-                              className={`w-full px-3 py-2 text-left text-xs font-extrabold flex items-center justify-between rounded-xl transition-all cursor-pointer ${
-                                selectedCountry.iso === c.iso
-                                  ? 'bg-[#f9d602] text-gray-950 font-black'
-                                  : 'text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <img
-                                  src={`https://flagcdn.com/w40/${c.iso.toLowerCase()}.png`}
-                                  alt={c.name}
-                                  className="w-5 h-3.5 object-cover rounded-xs shadow-2xs shrink-0"
-                                />
-                                <span className="truncate">{c.name}</span>
-                              </div>
-                              {selectedCountry.iso === c.iso && (
-                                <Check size={14} strokeWidth={3} className="text-gray-950 shrink-0" />
-                              )}
-                            </button>
-                          ))
-                        ) : (
-                          <div className="p-4 text-center text-xs text-gray-400 font-bold">
-                            No matching countries
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+              {/* I live in: Country Selector */}
+              <div className="relative" ref={countryRef}>
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+                  <span className="text-white font-medium drop-shadow-sm">I live in:</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                    className="inline-flex items-center gap-1.5 text-[#f9d602] font-black hover:underline cursor-pointer group"
+                  >
+                    <img
+                      src={`https://flagcdn.com/w40/${selectedCountry.iso.toLowerCase()}.png`}
+                      alt={selectedCountry.name}
+                      className="w-4.5 h-3 object-cover rounded-xs shadow-2xs shrink-0"
+                    />
+                    <span className="truncate max-w-[150px] sm:max-w-[140px]">{selectedCountry.name}</span>
+                    <ChevronDown size={14} className="text-[#f9d602] group-hover:translate-y-0.5 transition-transform" />
+                  </button>
                 </div>
 
-                {/* Driver's age Checkbox */}
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2.5 cursor-pointer select-none group">
-                    <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
-                      driverAge25to70 
-                        ? 'bg-[#f9d602] border-[#f9d602] text-gray-950 shadow-md shadow-yellow-500/20' 
-                        : 'bg-white/10 border-white/50 group-hover:border-[#f9d602] group-hover:bg-white/20'
-                    }`}>
-                      {driverAge25to70 && <Check size={13} strokeWidth={3.5} />}
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={driverAge25to70}
-                      onChange={(e) => setDriverAge25to70(e.target.checked)}
-                      className="sr-only"
-                    />
-                    <span className="text-xs sm:text-sm font-extrabold text-white drop-shadow-sm group-hover:text-[#f9d602] transition-colors">
-                      Driver's age between 30-65?
-                    </span>
-                  </label>
-
-                  {/* Custom Age Stepper when unchecked */}
-                  {!driverAge25to70 && (
-                    <div className="flex items-center bg-white rounded-xl p-1 shadow-md border border-white/60 animate-fadeIn">
-                      <span className="text-[10px] font-extrabold text-gray-500 px-1.5 uppercase tracking-wider">
-                        Age
-                      </span>
-                      <div className="flex items-center gap-1 bg-gray-100 px-1 py-0.5 rounded-lg">
-                        <button
-                          type="button"
-                          onClick={() => setDriverAge(prev => Math.max(18, prev - 1))}
-                          className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
-                        >
-                          <Minus size={11} strokeWidth={3} />
-                        </button>
+                {/* Searchable Country Dropdown */}
+                {showCountryDropdown && (
+                  <div className="absolute bottom-full left-0 mb-2 bg-white rounded-2xl shadow-2xl border border-gray-100 w-72 sm:w-80 max-h-[320px] flex flex-col z-[160] overflow-hidden animate-fadeIn">
+                    <div className="p-2.5 border-b border-gray-100 bg-gray-50/90">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5 px-0.5">
+                        Where do you currently live?
+                      </p>
+                      <div className="relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                           type="text"
-                          inputMode="numeric"
-                          value={driverAge}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            if (val === '') setDriverAge(18);
-                            else setDriverAge(Math.min(99, Math.max(18, Number(val))));
-                          }}
-                          className="w-7 text-center text-xs font-black text-gray-950 bg-transparent outline-none"
+                          value={countrySearch}
+                          onChange={(e) => setCountrySearch(e.target.value)}
+                          placeholder="Search your country..."
+                          className="w-full pl-8 pr-3 py-1.5 text-xs font-bold text-gray-900 bg-white rounded-xl border border-gray-200 outline-none focus:border-[#f9d602]"
+                          autoFocus
                         />
-                        <button
-                          type="button"
-                          onClick={() => setDriverAge(prev => Math.min(99, prev + 1))}
-                          className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
-                        >
-                          <Plus size={11} strokeWidth={3} />
-                        </button>
                       </div>
                     </div>
-                  )}
-                </div>
+                    <div className="overflow-y-auto max-h-[240px] p-1.5 space-y-0.5">
+                      {filteredCountries.length > 0 ? (
+                        filteredCountries.map((c) => (
+                          <button
+                            key={c.iso}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCountry(c);
+                              setShowCountryDropdown(false);
+                              setCountrySearch('');
+                            }}
+                            className={`w-full px-3 py-2 text-left text-xs font-extrabold flex items-center justify-between rounded-xl transition-all cursor-pointer ${
+                              selectedCountry.iso === c.iso
+                                ? 'bg-[#f9d602] text-gray-950 font-black'
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={`https://flagcdn.com/w40/${c.iso.toLowerCase()}.png`}
+                                alt={c.name}
+                                className="w-5 h-3.5 object-cover rounded-xs shadow-2xs shrink-0"
+                              />
+                              <span className="truncate">{c.name}</span>
+                            </div>
+                            {selectedCountry.iso === c.iso && (
+                              <Check size={14} strokeWidth={3} className="text-gray-950 shrink-0" />
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-xs text-gray-400 font-bold">
+                          No matching countries
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
+              {/* Driver's age Checkbox & Age Stepper */}
+              <div className="flex items-center justify-between sm:justify-start gap-2.5 sm:gap-3 flex-wrap">
+                <label className="flex items-center gap-2 cursor-pointer select-none group shrink-0">
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0 ${
+                    driverAge25to70 
+                      ? 'bg-[#f9d602] border-[#f9d602] text-gray-950 shadow-md shadow-yellow-500/20' 
+                      : 'bg-white/10 border-white/80 group-hover:border-[#f9d602] group-hover:bg-white/20'
+                  }`}>
+                    {driverAge25to70 && <Check size={13} strokeWidth={3.5} />}
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={driverAge25to70}
+                    onChange={(e) => setDriverAge25to70(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span className="text-xs sm:text-sm font-extrabold text-white drop-shadow-sm group-hover:text-[#f9d602] transition-colors whitespace-nowrap">
+                    Driver's age between 30-65?
+                  </span>
+                </label>
+
+                {/* Custom Age Stepper when unchecked */}
+                {!driverAge25to70 && (
+                  <div className="flex items-center bg-white rounded-xl p-1 shadow-md border border-white/60 animate-fadeIn shrink-0">
+                    <span className="text-[10px] font-extrabold text-gray-500 px-1.5 uppercase tracking-wider">
+                      Age
+                    </span>
+                    <div className="flex items-center gap-1 bg-gray-100 px-1 py-0.5 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setDriverAge(prev => Math.max(18, prev - 1))}
+                        className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+                      >
+                        <Minus size={11} strokeWidth={3} />
+                      </button>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={driverAge}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          if (val === '') setDriverAge(18);
+                          else setDriverAge(Math.min(99, Math.max(18, Number(val))));
+                        }}
+                        className="w-7 text-center text-xs font-black text-gray-950 bg-transparent outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDriverAge(prev => Math.min(99, prev + 1))}
+                        className="w-5 h-5 rounded-md bg-white hover:bg-[#f9d602] text-gray-900 font-black flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+                      >
+                        <Plus size={11} strokeWidth={3} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>

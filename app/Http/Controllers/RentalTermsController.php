@@ -78,28 +78,70 @@ class RentalTermsController extends Controller
         return response()->json($validCountries);
     }
 
+    public function getActiveSupplierBranches(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
+        if (!$user) {
+            return response()->json([], 401);
+        }
+
+        $country = $request->input('country');
+        $normalizedCountry = $country ? \App\Services\CountryCurrencyResolver::normalizeCountryName($country) : null;
+
+        $query = Branch::query()
+            ->where('company_id', $user->id)
+            ->where('activation', 1);
+
+        if ($country) {
+            $query->where(function($q) use ($country, $normalizedCountry) {
+                $q->whereRaw('LOWER(country) = ?', [strtolower($country)]);
+                if ($normalizedCountry) {
+                    $q->orWhereRaw('LOWER(country) = ?', [strtolower($normalizedCountry)]);
+                }
+            });
+        }
+
+        $branches = $query->select(['id', 'name', 'city', 'country', 'adresse', 'location_type', 'abriviation'])->get();
+        return response()->json($branches);
+    }
+
     public function index(Request $request)
     {
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
              ?? \Illuminate\Support\Facades\Auth::user();
         $country = \App\Services\CountryCurrencyResolver::normalizeCountryName($request->input('country'));
+        $branchId = $request->input('branch_id');
 
         if ($user && ($user->role == 'active_supplier' || $user->role == 'supplier' || $user->role == 'under_review')) {
             // Strict Supplier & Country Isolation: Only terms created by this supplier for this country
-            $query = RentalTerms::query()->where('created_by', $user->id);
+            $query = RentalTerms::query()->where('created_by', $user->id)->with('branch:id,name,city,country,adresse,location_type,abriviation');
             if ($country) {
                 $query->where('country', $country);
             }
-            $terms = $query->get();
+            if ($branchId !== null && $branchId !== '' && $branchId !== 'all') {
+                if ($branchId === 'country_only' || $branchId === 'null') {
+                    $query->whereNull('branch_id');
+                } else {
+                    $query->where('branch_id', (int)$branchId);
+                }
+            }
+            $terms = $query->latest('id')->get();
             return response()->json($terms);
         }
 
         // For Admin / Public
-        $query = RentalTerms::query();
+        $query = RentalTerms::query()->with('branch:id,name,city,country,adresse,location_type,abriviation');
         if ($country) {
             $query->where('country', $country);
         }
-        return response()->json($query->get());
+        if ($branchId !== null && $branchId !== '' && $branchId !== 'all') {
+            if ($branchId === 'country_only' || $branchId === 'null') {
+                $query->whereNull('branch_id');
+            } else {
+                $query->where('branch_id', (int)$branchId);
+            }
+        }
+        return response()->json($query->latest('id')->get());
     }
 
     public function insert(Request $request)
@@ -115,8 +157,11 @@ class RentalTermsController extends Controller
             $rental->description = $request->description;
             $rental->status = $request->status ?? 'approved';
             $rental->country = \App\Services\CountryCurrencyResolver::normalizeCountryName($request->country);
+            $rental->branch_id = $request->filled('branch_id') && is_numeric($request->branch_id) ? (int)$request->branch_id : null;
             $rental->created_by = $user->id;
             $rental->save();
+
+            $rental->load('branch:id,name,city,country,adresse,location_type,abriviation');
 
             return response()->json([
                 'status' => true,
@@ -145,6 +190,7 @@ class RentalTermsController extends Controller
 
             $file = $request->file('file');
             $country = \App\Services\CountryCurrencyResolver::normalizeCountryName($request->input('country'));
+            $branchId = $request->filled('branch_id') && is_numeric($request->branch_id) ? (int)$request->branch_id : null;
             $extension = strtolower($file->getClientOriginalExtension());
             $items = [];
 
@@ -168,6 +214,7 @@ class RentalTermsController extends Controller
                     'description' => $item['description'],
                     'status' => 'approved',
                     'country' => $country,
+                    'branch_id' => $branchId,
                     'created_by' => $user->id,
                 ]);
                 $created[] = $term;
@@ -209,7 +256,11 @@ class RentalTermsController extends Controller
             if (isset($data['country'])) {
                 $data['country'] = \App\Services\CountryCurrencyResolver::normalizeCountryName($data['country']);
             }
+            if (array_key_exists('branch_id', $data)) {
+                $data['branch_id'] = (!empty($data['branch_id']) && is_numeric($data['branch_id'])) ? (int)$data['branch_id'] : null;
+            }
             $term->update($data);
+            $term->load('branch:id,name,city,country,adresse,location_type,abriviation');
             return response()->json(['status' => true, 'data' => $term]);
         }
         return response()->json(['status' => false, 'message' => 'Unauthorized or term not found'], 403);
