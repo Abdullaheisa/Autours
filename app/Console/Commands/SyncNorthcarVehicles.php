@@ -72,6 +72,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
         $pricesOnly = $this->hasOption('prices-only') && $this->option('prices-only');
         
         $syncedPoliciesForCountries = [];
+        $syncedVehicleIds = [];
 
         foreach ($allBranches as $branch) {
             $this->info("Fetching rates for branch: {$branch->station_id}");
@@ -153,7 +154,8 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
             }
 
             if (empty($rates1)) {
-                $this->warn("No rates found for branch {$branch->station_id}. Deleting branch.");
+                $this->warn("No rates found for branch {$branch->station_id}. Deleting branch and deactivating its vehicles.");
+                Vehicle::where('pickup_loc', $branch->id)->delete();
                 $branch->delete();
                 continue;
             }
@@ -205,6 +207,7 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
                         'instant_confirmation' => 1,
                     ]);
                     $this->syncVehicleInclusions($vehicle, $rateInfo['RawData'] ?? []);
+                    $syncedVehicleIds[] = $vehicle->id;
                     $this->updatedCount++;
                 } else {
                     if ($pricesOnly) continue;
@@ -238,8 +241,24 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
 
                     $this->syncVehicleSpecifications($vehicle, $classCode, $rateInfo['RawData'] ?? []);
                     $this->syncVehicleInclusions($vehicle, $rateInfo['RawData'] ?? []);
+                    $syncedVehicleIds[] = $vehicle->id;
                     $this->createdCount++;
                 }
+            }
+        }
+
+        // Clean up orphaned vehicles not seen in this sync
+        if (!$pricesOnly && !empty($syncedVehicleIds)) {
+            $orphaned = Vehicle::where('supplier', $supplierUser->id)
+                ->whereNotIn('id', $syncedVehicleIds)
+                ->get();
+
+            foreach ($orphaned as $ov) {
+                $ov->delete();
+                $this->deactivatedCount++;
+            }
+            if ($this->deactivatedCount > 0) {
+                $this->info("Deactivated {$this->deactivatedCount} orphaned Northcar vehicles.");
             }
         }
 
@@ -409,16 +428,19 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
         }
         $includedIds[] = $mileageIncluded->id;
 
-        // 3. Inclusive Coverages
-        if (($rawData['RateSource'] ?? '') === 'Inclusive') {
-            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Collision Damage Waiver']);
-            $includedIds[] = $inc->id;
-            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Third Party Liability']);
-            $includedIds[] = $inc->id;
-            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Theft Protection']);
-            $includedIds[] = $inc->id;
-            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
-            $includedIds[] = $inc->id;
+        // 3. Inclusive / Standard Coverages
+        $rateSource = strtolower(trim((string)($rawData['RateSource'] ?? '')));
+        if ($rateSource === 'inclusive' || $rateSource === '' || !isset($rawData['RateSource'])) {
+            $standardCoverages = [
+                'Collision Damage Waiver',
+                'Third Party Liability',
+                'Theft Protection',
+                'Airport surcharges and local taxes',
+            ];
+            foreach ($standardCoverages as $cov) {
+                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $cov]);
+                $includedIds[] = $inc->id;
+            }
         }
 
         if (!empty($includedIds)) {

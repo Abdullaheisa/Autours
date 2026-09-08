@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Services\NorthcarApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -65,8 +66,9 @@ class SyncNorthcarBranches extends Command
 
             $this->info('Locations fetched: ' . count($locations));
 
-            // Load existing station IDs to determine created vs updated
-            $existingStationIds = Branch::where('company_id', $supplierUser->id)
+            // Load existing station IDs (including soft-deleted) to determine created vs updated
+            $existingStationIds = Branch::withTrashed()
+                ->where('company_id', $supplierUser->id)
                 ->pluck('station_id')
                 ->toArray();
             
@@ -191,10 +193,17 @@ class SyncNorthcarBranches extends Command
             \Illuminate\Support\Facades\DB::transaction(function () use ($upsertData, &$newBranchesData, $existingMap) {
                 foreach ($upsertData as $data) {
                     if (isset($existingMap[$data['station_id']])) {
-                        // Update existing
-                        Branch::where('company_id', $data['company_id'])
+                        // Update existing and restore if soft-deleted
+                        $branch = Branch::withTrashed()
+                            ->where('company_id', $data['company_id'])
                             ->where('station_id', $data['station_id'])
-                            ->update($data);
+                            ->first();
+                        if ($branch) {
+                            if ($branch->trashed()) {
+                                $branch->restore();
+                            }
+                            $branch->update($data);
+                        }
                     } else {
                         // Collect for bulk insert
                         $newBranchesData[] = $data;
@@ -207,7 +216,7 @@ class SyncNorthcarBranches extends Command
                 }
             });
 
-            // Delete branches no longer returned
+            // Delete branches no longer returned and cascade delete their vehicles
             $this->info('Cleaning up orphaned branches...');
             $orphanedBranches = Branch::where('company_id', $supplierUser->id)
                 ->whereNotIn('station_id', $validStationIds)
@@ -215,6 +224,7 @@ class SyncNorthcarBranches extends Command
 
             $deleted = 0;
             foreach ($orphanedBranches as $ob) {
+                Vehicle::where('pickup_loc', $ob->id)->delete();
                 $ob->delete();
                 $deleted++;
                 $this->warn("Deleted orphaned branch: {$ob->name}");
