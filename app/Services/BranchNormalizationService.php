@@ -88,7 +88,6 @@ class BranchNormalizationService
             'airport_id' => null,
             'normalized_name' => null,
             'location' => $normalizedLocation,
-            'country' => null,
         ];
     }
 
