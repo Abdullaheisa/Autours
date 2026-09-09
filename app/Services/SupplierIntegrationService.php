@@ -723,7 +723,7 @@ class SupplierIntegrationService
         $returnDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : '';
         $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : '10:00';
         $returnTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : '10:00';
-        $currency = $rental->currency ?? 'GBP';
+        $currency = $branch->currency ?? $rental->currency ?? 'GBP';
         
         $age = $rental->customer_age ?? 30;
 
@@ -959,7 +959,7 @@ class SupplierIntegrationService
         $returnDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : '';
         $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : '10:00';
         $returnTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : '10:00';
-        $currency = $rental->currency ?? 'GBP';
+        $currency = $branch->currency ?? $rental->currency ?? 'GBP';
         
         $age = $rental->customer_age ?? 30;
 
