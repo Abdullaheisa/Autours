@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, AlertCircle, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 import { companyApi } from "@/services/api";
@@ -13,10 +13,27 @@ interface CompanyDetailsIntegrationProps {
 export default function CompanyDetailsIntegration({ company, onUpdate }: CompanyDetailsIntegrationProps) {
   const [loading, setLoading] = useState(false);
   
-  const [integration, setIntegration] = useState(company.integration === 1 || company.integration === true);
+  const [integration, setIntegration] = useState(
+    company.integration === 1 || 
+    company.integration === "1" || 
+    company.integration === true || 
+    company.integration === "true"
+  );
   const [integrationType, setIntegrationType] = useState(company.integration_type || "");
   const [apiKey, setApiKey] = useState(company.api_key || "");
   const [apiPassword, setApiPassword] = useState(company.api_password || "");
+
+  useEffect(() => {
+    setIntegration(
+      company.integration === 1 || 
+      company.integration === "1" || 
+      company.integration === true || 
+      company.integration === "true"
+    );
+    setIntegrationType(company.integration_type || "");
+    setApiKey(company.api_key || "");
+    setApiPassword(company.api_password || "");
+  }, [company]);
 
   const INTEGRATION_TYPES = [
     { value: "", label: "None" },
