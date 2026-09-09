@@ -241,6 +241,39 @@ class UserController extends Controller
         });
     }
 
+    public function updateIntegration(Request $request, $id)
+    {
+        $admin = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? \auth()->user();
+        if (!$admin || $admin->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'integration' => 'boolean',
+            'integration_type' => 'nullable|string',
+            'api_key' => 'nullable|string',
+            'api_password' => 'nullable|string'
+        ]);
+
+        $company = User::findOrFail($id);
+        
+        $company->integration = $request->input('integration', false);
+        $company->integration_type = $request->input('integration_type');
+        $company->api_key = $request->input('api_key');
+        
+        // Only update password if provided
+        if ($request->has('api_password') && $request->input('api_password') !== null && $request->input('api_password') !== '') {
+            $company->api_password = $request->input('api_password');
+        }
+
+        $company->save();
+
+        return response()->json([
+            'message' => 'Integration settings updated successfully',
+            'company' => $company
+        ]);
+    }
+
     public function getLogos()
     {
         return User::query()->where('role', 'active_supplier')->whereNotNull('logo')->take(4)->pluck('logo');

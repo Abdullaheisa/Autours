@@ -5,6 +5,7 @@ import CompanyDetailsHeader from "./details/CompanyDetailsHeader";
 import CompanyDetailsHero from "./details/CompanyDetailsHero";
 import CompanyDetailsStats from "./details/CompanyDetailsStats";
 import CompanyDetailsSidebar from "./details/CompanyDetailsSidebar";
+import CompanyDetailsIntegration from "./details/CompanyDetailsIntegration";
 
 interface CompanyDetailsProps {
   company: any;
@@ -58,6 +59,13 @@ export default function CompanyDetails({ company, onBack }: CompanyDetailsProps)
                   </div>
                 </div>
               </div>
+
+              <CompanyDetailsIntegration 
+                company={company} 
+                onUpdate={(updatedCompany) => {
+                  // We can optionally pass up to parent if needed, but component handles its own state
+                }} 
+              />
             </div>
 
             <CompanyDetailsSidebar company={company} />
