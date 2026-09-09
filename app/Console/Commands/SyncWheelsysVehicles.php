@@ -129,11 +129,11 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
 
         foreach ($allBranches as $branch) {
             $stationId = $branch->station_id;
-            $country = $branch->country;
+            $countryCode = \App\Services\CountryCurrencyResolver::resolveCountryCode($branch->country);
 
-            $prices1 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate1Str, $dropoffTime, $country);
-            $prices7 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate7Str, $dropoffTime, $country);
-            $prices30 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate30Str, $dropoffTime, $country);
+            $prices1 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate1Str, $dropoffTime, $countryCode);
+            $prices7 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate7Str, $dropoffTime, $countryCode);
+            $prices30 = $service->getAvailability($stationId, $stationId, $pickupDateStr, $pickupTime, $dropoffDate30Str, $dropoffTime, $countryCode);
 
             // Merge prices
             foreach ($prices1 as $groupId => $data1) {

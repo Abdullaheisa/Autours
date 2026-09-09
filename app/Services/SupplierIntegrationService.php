@@ -36,6 +36,10 @@ class SupplierIntegrationService
             return $this->sendViaGreenMotion($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'usave') {
+            return $this->sendViaUSave($rental, $supplier, $eventType);
+        }
+
         if ($supplier->integration_type === 'xdrive') {
             return $this->sendViaXdrive($rental, $supplier, $eventType);
         }
@@ -115,6 +119,12 @@ class SupplierIntegrationService
 
         // For Green Motion suppliers, we also need integration enabled + credentials
         if ($supplier->integration_type === 'greenmotion') {
+            return $supplier->integration === true
+                && !empty($supplier->api_key)
+                && !empty($supplier->api_password);
+        }
+
+        if ($supplier->integration_type === 'usave') {
             return $supplier->integration === true
                 && !empty($supplier->api_key)
                 && !empty($supplier->api_password);
@@ -556,6 +566,9 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'greenmotion') {
             $service = new GreenMotionApiService($supplier->api_key, $supplier->api_password);
             $this->createGreenMotionReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'usave') {
+            $service = new USaveApiService($supplier->api_key, $supplier->api_password);
+            $this->createUSaveReservation($service, $rental, $supplier);
         } elseif ($supplier->integration_type === 'nissa') {
             $service = new NissaJsonApiService();
             $this->createNissaReservation($service, $rental, $supplier);
@@ -850,6 +863,242 @@ class SupplierIntegrationService
         }
 
         Log::error('Green Motion reservation cancellation failed', [
+            'rental_id'      => $rental->id,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+            'response'       => $response,
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Send reservation to U-Save API.
+     *
+     * @param Rental $rental
+     * @param User $supplier
+     * @param string $eventType
+     * @return bool
+     */
+    private function sendViaUSave(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new USaveApiService($supplier->api_key, $supplier->api_password);
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createUSaveReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelUSaveReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelUSaveReservation($service, $rental, $supplier);
+                    }
+                    return $this->createUSaveReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("U-Save integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("U-Save integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the U-Save API.
+     *
+     * @param USaveApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function createUSaveReservation(USaveApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('U-Save integration: Missing vehicle or customer', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        $usaveVehicleId = $this->extractExternalVehicleId($vehicle->description);
+
+        if (!$usaveVehicleId) {
+            Log::warning('U-Save integration: Could not extract vehicle ID from description', [
+                'rental_id'   => $rental->id,
+                'vehicle_id'  => $vehicle->id,
+                'description' => $vehicle->description,
+            ]);
+            return false;
+        }
+
+        $pickupLocationId = $branch ? $branch->station_id : '';
+        
+        if (!$pickupLocationId) {
+            throw new \Exception("Missing station ID for branch.");
+        }
+
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+
+        $pickupDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : '';
+        $returnDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : '';
+        $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : '10:00';
+        $returnTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : '10:00';
+        $currency = $rental->currency ?? 'GBP';
+        
+        $age = $rental->customer_age ?? 30;
+
+        // Fetch fresh quoteid and vehicle total from GetVehicles
+        $vehiclesResponse = $service->getVehicles(
+            (int) $pickupLocationId,
+            $pickupDate,
+            $pickupTime,
+            $returnDate,
+            $returnTime,
+            $age,
+            $currency
+        );
+
+        $quoteid = $vehiclesResponse['quoteid'] ?? null;
+        if (!$quoteid) {
+            throw new \Exception("Could not retrieve quoteid from U-Save API.");
+        }
+
+        $targetVehicle = null;
+        foreach ($vehiclesResponse['vehicles'] as $v) {
+            if (isset($v['@attributes']['id']) && (string) $v['@attributes']['id'] === (string) $usaveVehicleId) {
+                $targetVehicle = $v;
+                break;
+            }
+        }
+
+        if (!$targetVehicle) {
+            throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates. Please select another vehicle.");
+        }
+
+        // Handle possible product type
+        $vehicleTotal = 0;
+        $rentalCode = '';
+        if (isset($targetVehicle['product']) && is_array($targetVehicle['product'])) {
+            $products = isset($targetVehicle['product']['@attributes']) ? [$targetVehicle['product']] : $targetVehicle['product'];
+            $targetProduct = $products[0]; // just grab the first product for now, or match it
+            $vehicleTotal = (float) $targetProduct['total'];
+            $rentalCode = $targetProduct['@attributes']['type'] ?? '';
+        } else {
+            $vehicleTotal = (float) $targetVehicle['total'];
+        }
+
+        $reservationData = [
+            'location_id' => $pickupLocationId,
+            'start_date' => $pickupDate,
+            'start_time' => $pickupTime,
+            'end_date' => $returnDate,
+            'end_time' => $returnTime,
+            'vehicle_id' => $usaveVehicleId,
+            'vehicle_total' => number_format($vehicleTotal, 2, '.', ''),
+            'currency' => $currency,
+            'grand_total' => number_format($vehicleTotal, 2, '.', ''),
+            'cust_info' => [
+                'firstname' => $nameParts['first'],
+                'lastname' => $nameParts['last'] ?: 'Customer',
+                'age' => $age,
+                'telephone' => $customer->phone_num ?? '0000000000',
+                'email' => $customer->email ?? 'noreply@autours.net',
+                'city' => $customer->city ?? 'Unknown',
+                'postcode' => $customer->zip_code ?? '00000',
+                'country' => $customer->country ?? 'GB',
+            ],
+            'payment_type' => 'POA',
+            'quoteid' => $quoteid,
+        ];
+
+        if ($rentalCode) {
+            $reservationData['rentalcode'] = $rentalCode;
+        }
+
+        $response = $service->makeReservation($reservationData);
+
+        $reservationNo = $response['booking_ref'] ?? null;
+
+        if (empty($reservationNo)) {
+            Log::error('U-Save reservation creation failed', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+                'response'    => $response,
+            ]);
+            throw new \Exception("Supplier booking failed: No booking reference returned.");
+        }
+
+        $rental->update([
+            'external_reservation_no' => (string) $reservationNo,
+        ]);
+
+        Log::info('U-Save reservation created successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Cancel a reservation on the U-Save API.
+     *
+     * @param USaveApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function cancelUSaveReservation(USaveApiService $service, Rental $rental, User $supplier): bool
+    {
+        $reservationNo = $rental->external_reservation_no;
+
+        if (empty($reservationNo)) {
+            Log::warning('U-Save cancellation: No external reservation number found', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+            ]);
+            return false;
+        }
+
+        $vehicle = $rental->vehicle;
+        $branch = $vehicle ? $vehicle->branch : null;
+        $pickupLocationId = $branch ? $branch->station_id : '';
+
+        if (!$pickupLocationId) {
+            Log::error('U-Save cancellation: Missing station ID', ['rental_id' => $rental->id]);
+            return false;
+        }
+
+        $response = $service->cancelReservation((int) $pickupLocationId, $reservationNo);
+
+        if (!empty($response['booking_ref'])) {
+            Log::info('U-Save reservation cancelled successfully', [
+                'rental_id'      => $rental->id,
+                'reservation_no' => $reservationNo,
+                'supplier_id'    => $supplier->id,
+            ]);
+            return true;
+        }
+
+        Log::error('U-Save reservation cancellation failed', [
             'rental_id'      => $rental->id,
             'reservation_no' => $reservationNo,
             'supplier_id'    => $supplier->id,
@@ -1746,7 +1995,10 @@ class SupplierIntegrationService
             'VOUCHERNO' => $rental->order_number ?? (string) $rental->id,
         ];
 
-        $response = $service->makeReservation($reservationData);
+        // Resolve country code for rate code / CDP lookup
+        $countryCode = $branch ? \App\Services\CountryCurrencyResolver::resolveCountryCode($branch->country) : null;
+
+        $response = $service->makeReservation($reservationData, $countryCode);
 
         $reservationNo = $response['irn'] ?? null;
 

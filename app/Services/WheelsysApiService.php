@@ -14,6 +14,18 @@ class WheelsysApiService
     private const LINK_CODE = 'WL0AT';
     private const AGENT_CODE = 'AU0WL';
 
+    /**
+     * Country-specific rate codes and CDPs required by the Wheelsys API.
+     * Each country must be configured separately with its own RATECODE and CDP.
+     * Without these, the API returns "stop sale" / "No Rental Rate" errors.
+     */
+    private const COUNTRY_CONFIG = [
+        'EG' => ['ratecode' => 'EGYRC', 'cdp' => 'EGYPOA'],
+        'MA' => ['ratecode' => 'MORRC', 'cdp' => 'MORPOA'],
+        // Turkey will be added once T&Cs are finalised:
+        // 'TR' => ['ratecode' => 'TURRC', 'cdp' => 'TURPOA'],
+    ];
+
     private int $requestTimeout = 30;
 
     /**
@@ -56,6 +68,15 @@ class WheelsysApiService
             'RETURN_STATION' => $returnStation,
             'TRACING' => 'ON',
         ];
+
+        // Append country-specific RATECODE and CDP when configured
+        if ($country) {
+            $countryCode = strtoupper(trim($country));
+            if (isset(self::COUNTRY_CONFIG[$countryCode])) {
+                $params['RATECODE'] = self::COUNTRY_CONFIG[$countryCode]['ratecode'];
+                $params['CDP'] = self::COUNTRY_CONFIG[$countryCode]['cdp'];
+            }
+        }
 
 
 
@@ -225,10 +246,19 @@ class WheelsysApiService
     /**
      * Make a new reservation
      */
-    public function makeReservation(array $params): array
+    public function makeReservation(array $params, ?string $countryCode = null): array
     {
         $url = self::BASE_URL . "/new-res_" . self::LINK_CODE . ".html";
         $params['agent'] = self::AGENT_CODE;
+
+        // Append country-specific RATECODE and CDP when configured
+        if ($countryCode) {
+            $code = strtoupper(trim($countryCode));
+            if (isset(self::COUNTRY_CONFIG[$code])) {
+                $params['RATECODE'] = self::COUNTRY_CONFIG[$code]['ratecode'];
+                $params['CDP'] = self::COUNTRY_CONFIG[$code]['cdp'];
+            }
+        }
 
         $response = Http::timeout($this->requestTimeout)
             ->withOptions(['verify' => false])
