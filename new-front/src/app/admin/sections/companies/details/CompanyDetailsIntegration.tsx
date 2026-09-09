@@ -16,7 +16,7 @@ export default function CompanyDetailsIntegration({ company, onUpdate }: Company
   const [integration, setIntegration] = useState(company.integration === 1 || company.integration === true);
   const [integrationType, setIntegrationType] = useState(company.integration_type || "");
   const [apiKey, setApiKey] = useState(company.api_key || "");
-  const [apiPassword, setApiPassword] = useState("");
+  const [apiPassword, setApiPassword] = useState(company.api_password || "");
 
   const INTEGRATION_TYPES = [
     { value: "", label: "None" },
@@ -56,9 +56,8 @@ export default function CompanyDetailsIntegration({ company, onUpdate }: Company
         integration: payload.integration,
         integration_type: payload.integration_type,
         api_key: payload.api_key,
+        api_password: apiPassword,
       });
-      
-      setApiPassword(""); // clear password field after save
     } catch (error: any) {
       console.error("Error updating integration:", error);
       toast.error(error?.response?.data?.message || "Failed to update integration settings");
@@ -130,13 +129,12 @@ export default function CompanyDetailsIntegration({ company, onUpdate }: Company
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">API Password / Secret</label>
             <input
-              type="password"
+              type="text"
               value={apiPassword}
               onChange={(e) => setApiPassword(e.target.value)}
-              placeholder="Leave blank to keep existing password"
+              placeholder="e.g. USuat@2026!"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">Only fill this if you need to update the password.</p>
           </div>
         </div>
 
