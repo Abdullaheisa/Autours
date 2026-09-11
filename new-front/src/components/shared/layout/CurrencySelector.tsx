@@ -30,68 +30,154 @@ export const currencies: CurrencyItem[] = [
   { code: 'AFN', symbol: 'AFN', name: 'Afghan Afghani', flag: 'af' },
   { code: 'ALL', symbol: 'ALL', name: 'Albanian Lek', flag: 'al' },
   { code: 'AMD', symbol: 'AMD', name: 'Armenian Dram', flag: 'am' },
+  { code: 'AOA', symbol: 'AOA', name: 'Angolan Kwanza', flag: 'ao' },
   { code: 'ARS', symbol: 'ARS', name: 'Argentine Peso', flag: 'ar' },
   { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', flag: 'au' },
   { code: 'AZN', symbol: 'AZN', name: 'Azerbaijani Manat', flag: 'az' },
   { code: 'BAM', symbol: 'BAM', name: 'Bosnian Mark', flag: 'ba' },
+  { code: 'BBD', symbol: 'BBD', name: 'Barbadian Dollar', flag: 'bb' },
+  { code: 'BDT', symbol: 'BDT', name: 'Bangladeshi Taka', flag: 'bd' },
   { code: 'BGN', symbol: 'BGN', name: 'Bulgarian Lev', flag: 'bg' },
   { code: 'BHD', symbol: 'BHD', name: 'Bahraini Dinar', flag: 'bh' },
+  { code: 'BIF', symbol: 'BIF', name: 'Burundian Franc', flag: 'bi' },
+  { code: 'BMD', symbol: 'BMD', name: 'Bermudian Dollar', flag: 'bm' },
+  { code: 'BND', symbol: 'BND', name: 'Brunei Dollar', flag: 'bn' },
+  { code: 'BOB', symbol: 'BOB', name: 'Bolivian Boliviano', flag: 'bo' },
   { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', flag: 'br' },
+  { code: 'BSD', symbol: 'BSD', name: 'Bahamian Dollar', flag: 'bs' },
+  { code: 'BTN', symbol: 'BTN', name: 'Bhutanese Ngultrum', flag: 'bt' },
+  { code: 'BWP', symbol: 'BWP', name: 'Botswana Pula', flag: 'bw' },
+  { code: 'BYN', symbol: 'BYN', name: 'Belarusian Ruble', flag: 'by' },
+  { code: 'BZD', symbol: 'BZD', name: 'Belize Dollar', flag: 'bz' },
   { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', flag: 'ca' },
   { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', flag: 'ch' },
   { code: 'CLP', symbol: 'CLP', name: 'Chilean Peso', flag: 'cl' },
   { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', flag: 'cn' },
   { code: 'COP', symbol: 'COP', name: 'Colombian Peso', flag: 'co' },
+  { code: 'CRC', symbol: 'CRC', name: 'Costa Rican Colón', flag: 'cr' },
+  { code: 'CUP', symbol: 'CUP', name: 'Cuban Peso', flag: 'cu' },
+  { code: 'CVE', symbol: 'CVE', name: 'Cape Verdean Escudo', flag: 'cv' },
   { code: 'CZK', symbol: 'CZK', name: 'Czech Koruna', flag: 'cz' },
+  { code: 'DJF', symbol: 'DJF', name: 'Djiboutian Franc', flag: 'dj' },
   { code: 'DKK', symbol: 'DKK', name: 'Danish Krone', flag: 'dk' },
+  { code: 'DOP', symbol: 'DOP', name: 'Dominican Peso', flag: 'do' },
   { code: 'DZD', symbol: 'DZD', name: 'Algerian Dinar', flag: 'dz' },
   { code: 'EGP', symbol: 'EGP', name: 'Egyptian Pound', flag: 'eg' },
+  { code: 'ERN', symbol: 'ERN', name: 'Eritrean Nakfa', flag: 'er' },
+  { code: 'ETB', symbol: 'ETB', name: 'Ethiopian Birr', flag: 'et' },
   { code: 'EUR', symbol: '€', name: 'Euro', flag: 'eu' },
+  { code: 'FJD', symbol: 'FJD', name: 'Fijian Dollar', flag: 'fj' },
   { code: 'GBP', symbol: '£', name: 'British Pound', flag: 'gb' },
   { code: 'GEL', symbol: 'GEL', name: 'Georgian Lari', flag: 'ge' },
+  { code: 'GHS', symbol: 'GHS', name: 'Ghanaian Cedi', flag: 'gh' },
+  { code: 'GMD', symbol: 'GMD', name: 'Gambian Dalasi', flag: 'gm' },
+  { code: 'GNF', symbol: 'GNF', name: 'Guinean Franc', flag: 'gn' },
+  { code: 'GTQ', symbol: 'GTQ', name: 'Guatemalan Quetzal', flag: 'gt' },
+  { code: 'GYD', symbol: 'GYD', name: 'Guyanese Dollar', flag: 'gy' },
   { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar', flag: 'hk' },
+  { code: 'HNL', symbol: 'HNL', name: 'Honduran Lempira', flag: 'hn' },
   { code: 'HUF', symbol: 'HUF', name: 'Hungarian Forint', flag: 'hu' },
   { code: 'IDR', symbol: 'IDR', name: 'Indonesian Rupiah', flag: 'id' },
   { code: 'INR', symbol: '₹', name: 'Indian Rupee', flag: 'in' },
   { code: 'IQD', symbol: 'IQD', name: 'Iraqi Dinar', flag: 'iq' },
+  { code: 'IRR', symbol: 'IRR', name: 'Iranian Rial', flag: 'ir' },
+  { code: 'ISK', symbol: 'ISK', name: 'Icelandic Króna', flag: 'is' },
+  { code: 'JMD', symbol: 'JMD', name: 'Jamaican Dollar', flag: 'jm' },
   { code: 'JOD', symbol: 'JOD', name: 'Jordanian Dinar', flag: 'jo' },
   { code: 'JPY', symbol: '¥', name: 'Japanese Yen', flag: 'jp' },
   { code: 'KES', symbol: 'KES', name: 'Kenyan Shilling', flag: 'ke' },
+  { code: 'KGS', symbol: 'KGS', name: 'Kyrgyzstani Som', flag: 'kg' },
+  { code: 'KHR', symbol: 'KHR', name: 'Cambodian Riel', flag: 'kh' },
+  { code: 'KMF', symbol: 'KMF', name: 'Comorian Franc', flag: 'km' },
   { code: 'KRW', symbol: '₩', name: 'South Korean Won', flag: 'kr' },
   { code: 'KWD', symbol: 'KWD', name: 'Kuwaiti Dinar', flag: 'kw' },
+  { code: 'KYD', symbol: 'KYD', name: 'Cayman Islands Dollar', flag: 'ky' },
+  { code: 'KZT', symbol: 'KZT', name: 'Kazakhstani Tenge', flag: 'kz' },
+  { code: 'LAK', symbol: 'LAK', name: 'Lao Kip', flag: 'la' },
   { code: 'LBP', symbol: 'LBP', name: 'Lebanese Pound', flag: 'lb' },
+  { code: 'LKR', symbol: 'LKR', name: 'Sri Lankan Rupee', flag: 'lk' },
+  { code: 'LRD', symbol: 'LRD', name: 'Liberian Dollar', flag: 'lr' },
+  { code: 'LSL', symbol: 'LSL', name: 'Lesotho Loti', flag: 'ls' },
   { code: 'LYD', symbol: 'LYD', name: 'Libyan Dinar', flag: 'ly' },
   { code: 'MAD', symbol: 'MAD', name: 'Moroccan Dirham', flag: 'ma' },
   { code: 'MDL', symbol: 'MDL', name: 'Moldovan Leu', flag: 'md' },
+  { code: 'MGA', symbol: 'MGA', name: 'Malagasy Ariary', flag: 'mg' },
   { code: 'MKD', symbol: 'MKD', name: 'Macedonian Denar', flag: 'mk' },
+  { code: 'MMK', symbol: 'MMK', name: 'Myanmar Kyat', flag: 'mm' },
+  { code: 'MNT', symbol: 'MNT', name: 'Mongolian Tögrög', flag: 'mn' },
+  { code: 'MOP', symbol: 'MOP', name: 'Macanese Pataca', flag: 'mo' },
   { code: 'MRU', symbol: 'MRU', name: 'Mauritanian Ouguiya', flag: 'mr' },
   { code: 'MUR', symbol: 'MUR', name: 'Mauritian Rupee', flag: 'mu' },
+  { code: 'MVR', symbol: 'MVR', name: 'Maldivian Rufiyaa', flag: 'mv' },
+  { code: 'MWK', symbol: 'MWK', name: 'Malawian Kwacha', flag: 'mw' },
   { code: 'MXN', symbol: 'Mex$', name: 'Mexican Peso', flag: 'mx' },
   { code: 'MYR', symbol: 'MYR', name: 'Malaysian Ringgit', flag: 'my' },
+  { code: 'MZN', symbol: 'MZN', name: 'Mozambican Metical', flag: 'mz' },
+  { code: 'NAD', symbol: 'NAD', name: 'Namibian Dollar', flag: 'na' },
+  { code: 'NGN', symbol: 'NGN', name: 'Nigerian Naira', flag: 'ng' },
+  { code: 'NIO', symbol: 'NIO', name: 'Nicaraguan Córdoba', flag: 'ni' },
   { code: 'NOK', symbol: 'NOK', name: 'Norwegian Krone', flag: 'no' },
+  { code: 'NPR', symbol: 'NPR', name: 'Nepalese Rupee', flag: 'np' },
   { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar', flag: 'nz' },
   { code: 'OMR', symbol: 'OMR', name: 'Omani Rial', flag: 'om' },
+  { code: 'PAB', symbol: 'PAB', name: 'Panamanian Balboa', flag: 'pa' },
+  { code: 'PEN', symbol: 'PEN', name: 'Peruvian Sol', flag: 'pe' },
+  { code: 'PGK', symbol: 'PGK', name: 'Papua New Guinean Kina', flag: 'pg' },
   { code: 'PHP', symbol: '₱', name: 'Philippine Peso', flag: 'ph' },
   { code: 'PKR', symbol: 'PKR', name: 'Pakistani Rupee', flag: 'pk' },
   { code: 'PLN', symbol: 'PLN', name: 'Polish Zloty', flag: 'pl' },
+  { code: 'PYG', symbol: 'PYG', name: 'Paraguayan Guaraní', flag: 'py' },
   { code: 'QAR', symbol: 'QAR', name: 'Qatari Riyal', flag: 'qa' },
   { code: 'RON', symbol: 'RON', name: 'Romanian Leu', flag: 'ro' },
   { code: 'RSD', symbol: 'RSD', name: 'Serbian Dinar', flag: 'rs' },
   { code: 'RUB', symbol: 'RUB', name: 'Russian Ruble', flag: 'ru' },
+  { code: 'RWF', symbol: 'RWF', name: 'Rwandan Franc', flag: 'rw' },
   { code: 'SAR', symbol: 'SAR', name: 'Saudi Riyal', flag: 'sa' },
+  { code: 'SBD', symbol: 'SBD', name: 'Solomon Islands Dollar', flag: 'sb' },
+  { code: 'SCR', symbol: 'SCR', name: 'Seychellois Rupee', flag: 'sc' },
   { code: 'SDG', symbol: 'SDG', name: 'Sudanese Pound', flag: 'sd' },
   { code: 'SEK', symbol: 'SEK', name: 'Swedish Krona', flag: 'se' },
   { code: 'SGD', symbol: 'SG$', name: 'Singapore Dollar', flag: 'sg' },
+  { code: 'SLE', symbol: 'SLE', name: 'Sierra Leonean Leone', flag: 'sl' },
+  { code: 'SOS', symbol: 'SOS', name: 'Somali Shilling', flag: 'so' },
+  { code: 'SRD', symbol: 'SRD', name: 'Surinamese Dollar', flag: 'sr' },
+  { code: 'SSP', symbol: 'SSP', name: 'South Sudanese Pound', flag: 'ss' },
+  { code: 'STN', symbol: 'STN', name: 'São Tomé Dobra', flag: 'st' },
   { code: 'SYP', symbol: 'SYP', name: 'Syrian Pound', flag: 'sy' },
+  { code: 'SZL', symbol: 'SZL', name: 'Swazi Lilangeni', flag: 'sz' },
   { code: 'THB', symbol: '฿', name: 'Thai Baht', flag: 'th' },
+  { code: 'TJS', symbol: 'TJS', name: 'Tajikistani Somoni', flag: 'tj' },
+  { code: 'TMT', symbol: 'TMT', name: 'Turkmenistani Manat', flag: 'tm' },
   { code: 'TND', symbol: 'TND', name: 'Tunisian Dinar', flag: 'tn' },
+  { code: 'TOP', symbol: 'TOP', name: 'Tongan Paʻanga', flag: 'to' },
   { code: 'TRY', symbol: 'TRY', name: 'Turkish Lira', flag: 'tr' },
+  { code: 'TTD', symbol: 'TTD', name: 'Trinidad and Tobago Dollar', flag: 'tt' },
+  { code: 'TWD', symbol: 'NT$', name: 'New Taiwan Dollar', flag: 'tw' },
+  { code: 'TZS', symbol: 'TZS', name: 'Tanzanian Shilling', flag: 'tz' },
   { code: 'UAH', symbol: 'UAH', name: 'Ukrainian Hryvnia', flag: 'ua' },
+  { code: 'UGX', symbol: 'UGX', name: 'Ugandan Shilling', flag: 'ug' },
   { code: 'USD', symbol: '$', name: 'US Dollar', flag: 'us' },
+  { code: 'UYU', symbol: 'UYU', name: 'Uruguayan Peso', flag: 'uy' },
   { code: 'UZS', symbol: 'UZS', name: 'Uzbekistani Som', flag: 'uz' },
+  { code: 'VES', symbol: 'VES', name: 'Venezuelan Bolívar', flag: 've' },
+  { code: 'VND', symbol: '₫', name: 'Vietnamese Đồng', flag: 'vn' },
+  { code: 'VUV', symbol: 'VUV', name: 'Vanuatu Vatu', flag: 'vu' },
+  { code: 'WST', symbol: 'WST', name: 'Samoan Tala', flag: 'ws' },
+  { code: 'XAF', symbol: 'XAF', name: 'Central African CFA', flag: 'cm' },
+  { code: 'XCD', symbol: 'XCD', name: 'East Caribbean Dollar', flag: 'ag' },
+  { code: 'XOF', symbol: 'XOF', name: 'West African CFA', flag: 'sn' },
   { code: 'YER', symbol: 'YER', name: 'Yemeni Rial', flag: 'ye' },
   { code: 'ZAR', symbol: 'ZAR', name: 'South African Rand', flag: 'za' },
+  { code: 'ZMW', symbol: 'ZMW', name: 'Zambian Kwacha', flag: 'zm' },
 ];
+
+export const DEFAULT_CURRENCY_ITEM: CurrencyItem = { code: 'EGP', symbol: 'EGP', name: 'Egyptian Pound', flag: 'eg' };
+
+export const getCurrencyItem = (code: string): CurrencyItem => {
+  const found = currencies.find(c => c.code === code);
+  if (found) return found;
+  return DEFAULT_CURRENCY_ITEM;
+};
 
 interface CurrencySelectorProps {
   variant?: 'desktop' | 'mobile' | 'mobile-dropdown';
@@ -145,13 +231,13 @@ export default function CurrencySelector({
   }, [search]);
 
   // Base currency for initial server render to match Redux initialState
-  const displayCode = mounted ? currentCode : 'AED';
-  const currentCurrency = currencies.find(c => c.code === displayCode) || currencies[0];
+  const displayCode = mounted && currentCode ? currentCode : 'EGP';
+  const currentCurrency = getCurrencyItem(displayCode);
 
   if (variant === 'mobile-dropdown') {
     return (
       <MobileDropdownCurrency 
-        currentCode={mounted ? currentCode : 'AED'}
+        currentCode={displayCode}
         onSelect={handleCurrencySelect}
         mounted={mounted}
       />
@@ -585,7 +671,7 @@ function MobileDropdownCurrency({
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const currentCurrency = currencies.find(c => c.code === currentCode) || currencies[0];
+  const currentCurrency = getCurrencyItem(currentCode);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -76,6 +76,16 @@ export default function HeroSearch({
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
+  // Keep country in sync if currency is changed elsewhere (e.g. Navbar)
+  useEffect(() => {
+    if (currencyCode && currencyCode !== selectedCountry.currency) {
+      const matchingCountry = worldCountries.find((c) => c.currency === currencyCode);
+      if (matchingCountry) {
+        setSelectedCountry(matchingCountry);
+      }
+    }
+  }, [currencyCode]);
+
   const [locations, setLocations] = useState<LocationBranch[]>([]);
   const [showLocations, setShowLocations] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -254,7 +264,7 @@ export default function HeroSearch({
   };
 
   return (
-    <section className="relative h-auto min-h-[620px] lg:min-h-[680px] flex flex-col items-center justify-center pt-8 sm:pt-10 md:pt-12 pb-10 sm:pb-12 md:pb-14 px-4 sm:px-6 overflow-visible" aria-label="Car Rental Search">
+    <section className="relative h-auto min-h-[500px] lg:min-h-[540px] flex flex-col items-center justify-center pt-5 sm:pt-7 md:pt-8 pb-5 sm:pb-7 md:pb-8 px-4 sm:px-6 overflow-visible" aria-label="Car Rental Search">
       {/* Background Image Container */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-gray-950">
         <Image
@@ -274,7 +284,7 @@ export default function HeroSearch({
       <div className="relative z-10 max-w-4xl lg:max-w-5xl xl:max-w-5xl mx-auto w-full flex flex-col items-center px-2 sm:px-4">
         
         {/* Main Headline */}
-        <div className="text-center mb-5 sm:mb-7 md:mb-8 flex flex-col items-center justify-center gap-2">
+        <div className="text-center mb-3.5 sm:mb-4 md:mb-5 flex flex-col items-center justify-center gap-2">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-black text-white leading-tight drop-shadow-2xl tracking-tight">
             {title}<span className="text-[#f9d602]">{titleHighlight}</span>
           </h1>
@@ -732,7 +742,7 @@ export default function HeroSearch({
 
         {/* Bottom Sub-title */}
         {bottomText && (
-          <p className="mt-7 sm:mt-9 md:mt-12 text-sm sm:text-base md:text-xl lg:text-2xl font-black text-white text-center drop-shadow-lg tracking-tight relative z-0 pointer-events-none px-4">
+          <p className="mt-3.5 sm:mt-4 md:mt-5 text-sm sm:text-base md:text-xl lg:text-2xl font-black text-white text-center drop-shadow-lg tracking-tight relative z-0 pointer-events-none px-4">
             {bottomText}
           </p>
         )}
