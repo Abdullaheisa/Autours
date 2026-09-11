@@ -22,68 +22,100 @@ const GEMINI_KEY_DIRECT =
   process.env.GEMINI_API_KEY ||
   (typeof window !== 'undefined' ? atob(FALLBACK_B64) : Buffer.from(FALLBACK_B64, 'base64').toString('utf8'));
 
-const LOCATION_ALIASES: Record<string, string[]> = {
-  // Kuwait
-  'Kuwait': ['الكويت', 'الكويتيه', 'كويت', 'kuwait', 'kwi', 'مطار الكويت', 'مطار الكويت الدولي', 'الفروانية', 'حولي', 'الري', 'al rai', 'العاصمة'],
+// Universal Arabic to English Destination Dictionary
+export const ARABIC_DESTINATION_MAP: Record<string, string> = {
+  // Gulf & Middle East
+  'الكويت': 'Kuwait',
+  'كويت': 'Kuwait',
+  'الإمارات': 'United Arab Emirates',
+  'الامارات': 'United Arab Emirates',
+  'دبي': 'Dubai',
+  'دبى': 'Dubai',
+  'أبوظبي': 'Abu Dhabi',
+  'ابوظبي': 'Abu Dhabi',
+  'الشارقة': 'Sharjah',
+  'البحرين': 'Bahrain',
+  'المنامة': 'Manama',
+  'الأردن': 'Jordan',
+  'الاردن': 'Jordan',
+  'عمان': 'Amman',
+  'عمّان': 'Amman',
+  'قطر': 'Qatar',
+  'الدوحة': 'Doha',
+  'سلطنة عمان': 'Oman',
+  'سلطنه عمان': 'Oman',
+  'مسقط': 'Muscat',
 
-  // UAE
-  'Dubai': ['دبي', 'دبى', 'dubai', 'dxb', 'مطار دبي', 'مطار دبي الدولي'],
-  'Abu Dhabi': ['ابو ظبي', 'أبوظبي', 'أبو ظبي', 'ابوظبي', 'abu dhabi', 'auh', 'مطار ابو ظبي', 'البطين', 'الراحة'],
-  'Sharjah': ['الشارقة', 'الشارقه', 'شارقة', 'sharjah', 'shj'],
-  'United Arab Emirates': ['الإمارات', 'الامارات', 'uae', 'united arab emirates'],
+  // North Africa & Levant
+  'مصر': 'Egypt',
+  'القاهرة': 'Cairo',
+  'الغردقة': 'Hurghada',
+  'شرم الشيخ': 'Sharm El Sheikh',
+  'المغرب': 'Morocco',
+  'كازابلانكا': 'Casablanca',
+  'الدار البيضاء': 'Casablanca',
+  'مراكش': 'Marrakech',
+  'طنجة': 'Tangier',
+  'أكادير': 'Agadir',
+  'فاس': 'Fez',
 
-  // Morocco
-  'Casablanca': ['كازابلانكا', 'الدار البيضاء', 'الدارالبيضاء', 'casablanca', 'cmn', 'مطار كازابلانكا', 'محمد الخامس'],
-  'Marrakech': ['مراكش', 'marrakech', 'marrakesh', 'rak', 'مطار مراكش'],
-  'Tangier': ['طنجة', 'طنجه', 'tangier', 'tng', 'ابن بطوطة'],
-  'Agadir': ['أكادير', 'اكادير', 'agadir', 'aga', 'المسيرة'],
-  'Fez': ['فاس', 'fez', 'fes'],
-  'Morocco': ['المغرب', 'موروكو', 'morocco', 'maroc'],
+  // Europe & Mediterranean
+  'تركيا': 'Turkey',
+  'إسطنبول': 'Istanbul',
+  'اسطنبول': 'Istanbul',
+  'أنطاليا': 'Antalya',
+  'انطاليا': 'Antalya',
+  'أنقرة': 'Ankara',
+  'انقرة': 'Ankara',
+  'إزمير': 'Izmir',
+  'طرابزون': 'Trabzon',
+  'جورجيا': 'Georgia',
+  'تبليسي': 'Tbilisi',
+  'باتومي': 'Batumi',
+  'قبرص': 'Cyprus',
+  'اليونان': 'Greece',
+  'أثينا': 'Athens',
+  'إسبانيا': 'Spain',
+  'مدريد': 'Madrid',
+  'برشلونة': 'Barcelona',
+  'البرتغال': 'Portugal',
+  'لشبونة': 'Lisbon',
+  'إيطاليا': 'Italy',
+  'روما': 'Rome',
+  'ميلانو': 'Milan',
+  'ألبانيا': 'Albania',
+  'كرواتيا': 'Croatia',
+  'صربيا': 'Serbia',
+  'الجبل الأسود': 'Montenegro',
+  'المجر': 'Hungary',
+  'بولندا': 'Poland',
+  'مالطا': 'Malta',
+  'أرمينيا': 'Armenia',
 
-  // Egypt
-  'Cairo': ['القاهرة', 'القاهره', 'cairo', 'cai', 'مطار القاهرة'],
-  'Hurghada': ['الغردقة', 'الغردقه', 'hurghada', 'hrg'],
-  'Sharm El Sheikh': ['شرم الشيخ', 'شرم', 'sharm', 'sharm el sheikh', 'ssh'],
-  'Egypt': ['مصر', 'egypt'],
-
-  // Turkey
-  'Istanbul': ['اسطنبول', 'إسطنبول', 'istanbul', 'ist', 'saw', 'صبيحة', 'مطار اسطنبول'],
-  'Antalya': ['أنطاليا', 'انطاليا', 'antalya', 'ayt'],
-  'Izmir': ['إزمير', 'ازمير', 'izmir', 'adb'],
-  'Trabzon': ['طرابزون', 'trabzon', 'tzx'],
-  'Turkey': ['تركيا', 'turkey', 'türkiye'],
-
-  // Bahrain
-  'Bahrain': ['البحرين', 'المنامة', 'المنامه', 'bahrain', 'manama', 'bah', 'مطار البحرين', 'مطار البحرين الدولي'],
-
-  // Jordan
-  'Amman': ['عمان', 'عمّان', 'amman', 'amm', 'الملكة علياء', 'الملكه علياء'],
-  'Jordan': ['الأردن', 'الاردن', 'jordan'],
-
-  // Georgia
-  'Tbilisi': ['تبليسي', 'tbilisi', 'tbs'],
-  'Batumi': ['باتومي', 'batumi', 'bus'],
-  'Georgia': ['جورجيا', 'georgia'],
-
-  // Qatar
-  'Doha': ['الدوحة', 'الدوحه', 'doha', 'doh', 'مطار حمد'],
-  'Qatar': ['قطر', 'qatar'],
-
-  // Oman
-  'Muscat': ['مسقط', 'muscat'],
-  'Oman': ['عمان', 'سلطنة عمان', 'oman'],
+  // Americas & Asia-Pacific
+  'الأرجنتين': 'Argentina',
+  'المكسيك': 'Mexico',
+  'تشيلي': 'Chile',
+  'أمريكا': 'United States',
+  'الولايات المتحدة': 'United States',
+  'ميامي': 'Miami',
+  'أورلاندو': 'Orlando',
+  'كندا': 'Canada',
+  'أستراليا': 'Australia',
+  'اليابان': 'Japan',
+  'إندونيسيا': 'Indonesia',
+  'موريشيوس': 'Mauritius',
 };
 
 let cachedLocations: any[] | null = null;
 let lastLocationsFetchTime = 0;
 
-async function fetchLocations(): Promise<any[]> {
+export async function fetchLocations(): Promise<any[]> {
   const now = Date.now();
-  if (cachedLocations && now - lastLocationsFetchTime < 300000) {
+  if (cachedLocations && cachedLocations.length > 0 && now - lastLocationsFetchTime < 300000) {
     return cachedLocations;
   }
   try {
-    // Try client proxy path or direct backend URL
     const url = typeof window !== 'undefined' ? '/api/backend/get/locations' : `${BACKEND_URL}/get/locations`;
     const res = await fetch(url, { headers: { Accept: 'application/json' } });
     if (res.ok) {
@@ -92,28 +124,66 @@ async function fetchLocations(): Promise<any[]> {
       return cachedLocations || [];
     }
   } catch (err) {
-    console.warn('Could not fetch locations:', err);
+    console.warn('Could not fetch locations from backend:', err);
   }
   return cachedLocations || [];
 }
 
-function resolveTargetLocation(query: string, locations: any[]): any | null {
+export function buildDynamicDatabaseContext(locations: any[]) {
+  if (!Array.isArray(locations) || locations.length === 0) {
+    return {
+      totalCountries: 0,
+      countriesListStr: 'البلدان المتاحة: الكويت، الإمارات، تركيا، مصر، المغرب، البحرين، الأردن، جورجيا، قطر، عمان وغيرها.',
+      summaryStr: '',
+    };
+  }
+
+  const countryMap = new Map<string, { branches: any[]; airports: string[] }>();
+  for (const loc of locations) {
+    const c = loc.country;
+    if (!c) continue;
+    if (!countryMap.has(c)) {
+      countryMap.set(c, { branches: [], airports: [] });
+    }
+    const data = countryMap.get(c)!;
+    data.branches.push(loc);
+    if (loc.airport || loc.location_type === 'Airport') {
+      const name = loc.name || loc.airport?.airport_name;
+      if (name && !data.airports.includes(name)) {
+        data.airports.push(name);
+      }
+    }
+  }
+
+  const summaries: string[] = [];
+  for (const [country, info] of countryMap.entries()) {
+    const topAirports = info.airports.slice(0, 3).join(', ');
+    summaries.push(`- ${country} (${info.branches.length} فرع/مكتب${topAirports ? ' - مطارات: ' + topAirports : ''})`);
+  }
+
+  return {
+    totalCountries: countryMap.size,
+    countriesListStr: Array.from(countryMap.keys()).join(', '),
+    summaryStr: summaries.slice(0, 30).join('\n'),
+  };
+}
+
+export function resolveTargetLocation(query: string, locations: any[]): any | null {
   if (!query || !Array.isArray(locations) || locations.length === 0) return null;
   const cleanQ = query.trim().toLowerCase();
 
+  // 1. Check Arabic Map or English direct canonical match
   let canonicalName: string | null = null;
-  for (const [key, aliases] of Object.entries(LOCATION_ALIASES)) {
-    if (
-      key.toLowerCase() === cleanQ ||
-      aliases.some((a) => cleanQ.includes(a.toLowerCase()) || a.toLowerCase().includes(cleanQ))
-    ) {
-      canonicalName = key;
+  for (const [ar, en] of Object.entries(ARABIC_DESTINATION_MAP)) {
+    if (cleanQ.includes(ar.toLowerCase()) || ar.toLowerCase().includes(cleanQ)) {
+      canonicalName = en;
       break;
     }
   }
 
   const searchTerm = (canonicalName || cleanQ).toLowerCase();
 
+  // 2. Filter matching branches from DB
   const matches = locations.filter((l: any) => {
     const loc = (l.location || '').toLowerCase();
     const city = (l.city || '').toLowerCase();
@@ -138,6 +208,7 @@ function resolveTargetLocation(query: string, locations: any[]): any | null {
 
   if (matches.length === 0) return null;
 
+  // 3. Sort: prioritize Airport branches and active locations
   matches.sort((a: any, b: any) => {
     const aIsAirport =
       a.location_type === 'Airport' ||
@@ -216,91 +287,13 @@ async function queryVehicles(params: {
 
 export function getSmartActionButtons(
   userText: string,
+  locations: any[] = [],
   currentUser?: any
 ): ActionButton[] {
   const clean = userText.toLowerCase();
 
-  if (clean.includes('كويت') || clean.includes('kuwait') || clean.includes('kwi')) {
-    return [
-      { label: '✈️ مطار الكويت الدولي (3 أيام)', promptText: 'عربيات مطار الكويت الدولي من بكرة لمدة 3 أيام' },
-      { label: '🏢 الكويت العاصمة (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-      { label: '⚡ أرخص سيارة في الكويت (5 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 5 أيام' },
-    ];
-  }
-  if (clean.includes('بحرين') || clean.includes('bahrain') || clean.includes('المنام')) {
-    return [
-      { label: '✈️ مطار البحرين الدولي (3 أيام)', promptText: 'عربيات مطار البحرين الدولي من بكرة لمدة 3 أيام' },
-      { label: '🏢 المنامة (3 أيام)', promptText: 'عربيات المنامة من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('تركيا') || clean.includes('turkey') || clean.includes('اسطنبول') || clean.includes('إسطنبول') || clean.includes('انطاليا')) {
-    return [
-      { label: '✈️ مطار إسطنبول (3 أيام)', promptText: 'عربيات مطار اسطنبول من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار صبيحة (3 أيام)', promptText: 'عربيات مطار صبيحة من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار أنطاليا (3 أيام)', promptText: 'عربيات مطار انطاليا من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('مصر') || clean.includes('egypt') || clean.includes('قاهر') || clean.includes('غردق') || clean.includes('شرم')) {
-    return [
-      { label: '✈️ مطار القاهرة (3 أيام)', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-      { label: '🏖️ مطار الغردقة (3 أيام)', promptText: 'عربيات مطار الغردقة من بكرة لمدة 3 أيام' },
-      { label: '🏖️ شرم الشيخ (3 أيام)', promptText: 'عربيات شرم الشيخ من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('مغرب') || clean.includes('morocco') || clean.includes('كازا') || clean.includes('مراكش') || clean.includes('طنج')) {
-    return [
-      { label: '✈️ مطار كازابلانكا (3 أيام)', promptText: 'عربيات مطار كازابلانكا من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار مراكش (3 أيام)', promptText: 'عربيات مطار مراكش من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار طنجة (3 أيام)', promptText: 'عربيات مطار طنجة من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('دبي') || clean.includes('dubai') || clean.includes('امارات') || clean.includes('إمارات') || clean.includes('أبوظبي') || clean.includes('ابوظبي')) {
-    return [
-      { label: '✈️ مطار دبي الدولي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار أبوظبي (3 أيام)', promptText: 'عربيات مطار ابو ظبي من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('جورجيا') || clean.includes('georgia') || clean.includes('تبليسي') || clean.includes('باتومي')) {
-    return [
-      { label: '✈️ مطار تبليسي (3 أيام)', promptText: 'عربيات مطار تبليسي من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار باتومي (3 أيام)', promptText: 'عربيات مطار باتومي من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('أردن') || clean.includes('اردن') || clean.includes('jordan') || clean.includes('عمان') || clean.includes('عمّان')) {
-    return [
-      { label: '✈️ مطار الملكة علياء (3 أيام)', promptText: 'عربيات مطار الملكة علياء من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('قطر') || clean.includes('qatar') || clean.includes('دوحة') || clean.includes('دوحه') || clean.includes('doha')) {
-    return [
-      { label: '✈️ مطار حمد الدولي (3 أيام)', promptText: 'عربيات مطار حمد الدولي من بكرة لمدة 3 أيام' },
-      { label: '🏢 الدوحة (3 أيام)', promptText: 'عربيات الدوحة من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (
-    clean.includes('سعودي') ||
-    clean.includes('saudi') ||
-    clean.includes('ksa') ||
-    clean.includes('رياض') ||
-    clean.includes('جده') ||
-    clean.includes('جدة')
-  ) {
-    return [
-      { label: '🇰🇼 سيارات الكويت', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-      { label: '🇦🇪 سيارات دبي (الإمارات)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-      { label: '🇧🇭 سيارات البحرين', promptText: 'عربيات مطار البحرين الدولي من بكرة لمدة 3 أيام' },
-      { label: '🇹🇷 سيارات تركيا', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-      { label: '🇲🇦 سيارات المغرب', promptText: 'عربيات المغرب من بكرة لمدة 3 أيام' },
-      { label: '🇪🇬 سيارات مصر', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء')) {
-    return [
-      { label: '💬 تواصل واتساب للدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-      { label: '✈️ سيارات مطار دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول')) {
+  // 1. Account intent
+  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول') || clean.includes('بروفايل')) {
     if (!currentUser) {
       return [
         { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
@@ -313,6 +306,70 @@ export function getSmartActionButtons(
     }
   }
 
+  // 2. Policy / Contact intent
+  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء') || clean.includes('دعم')) {
+    return [
+      { label: '💬 تواصل واتساب للدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+      { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
+      { label: '✈️ سيارات مطار دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
+    ];
+  }
+
+  // 3. Dynamic Destination Extraction from Live DB Locations
+  let matchedCountry: string | null = null;
+  for (const [ar, en] of Object.entries(ARABIC_DESTINATION_MAP)) {
+    if (clean.includes(ar.toLowerCase()) || clean.includes(en.toLowerCase())) {
+      matchedCountry = en;
+      break;
+    }
+  }
+
+  if (!matchedCountry && locations.length > 0) {
+    const directMatch = locations.find((l: any) =>
+      clean.includes((l.country || '').toLowerCase()) ||
+      clean.includes((l.city || '').toLowerCase()) ||
+      clean.includes((l.name || '').toLowerCase())
+    );
+    if (directMatch) matchedCountry = directMatch.country;
+  }
+
+  if (matchedCountry && locations.length > 0) {
+    const countryBranches = locations.filter(
+      (l: any) => (l.country || '').toLowerCase() === matchedCountry!.toLowerCase()
+    );
+    const airportBranches = countryBranches.filter(
+      (l: any) =>
+        l.location_type === 'Airport' ||
+        l.airport_id != null ||
+        (l.name || '').toLowerCase().includes('airport') ||
+        (l.name || '').toLowerCase().includes('مطار')
+    );
+
+    const buttons: ActionButton[] = [];
+    if (airportBranches.length > 0) {
+      for (const b of airportBranches.slice(0, 2)) {
+        buttons.push({
+          label: `✈️ ${b.name || b.city} (3 أيام)`,
+          promptText: `عربيات ${b.name || b.city} من بكرة لمدة 3 أيام`,
+        });
+      }
+    }
+    const cityBranches = countryBranches.filter((l: any) => !airportBranches.includes(l));
+    if (cityBranches.length > 0 && buttons.length < 3) {
+      const b = cityBranches[0];
+      buttons.push({
+        label: `🏢 ${b.city || b.name} (3 أيام)`,
+        promptText: `عربيات ${b.city || b.name} من بكرة لمدة 3 أيام`,
+      });
+    }
+    buttons.push({
+      label: `⚡ أرخص سيارة في ${matchedCountry} (5 أيام)`,
+      promptText: `عربيات ${matchedCountry} من بكرة لمدة 5 أيام`,
+    });
+    return buttons.slice(0, 4);
+  }
+
+  // Default dynamic top suggestions
   return [
     { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
     { label: '✈️ مطار دبي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
@@ -340,43 +397,44 @@ export async function processChatWithGemini(params: {
   fourDays.setDate(fourDays.getDate() + 4);
   const fourDaysStr = `${fourDays.getFullYear()}-${String(fourDays.getMonth() + 1).padStart(2, '0')}-${String(fourDays.getDate()).padStart(2, '0')}`;
 
+  const sixDays = new Date(today);
+  sixDays.setDate(sixDays.getDate() + 6);
+  const sixDaysStr = `${sixDays.getFullYear()}-${String(sixDays.getMonth() + 1).padStart(2, '0')}-${String(sixDays.getDate()).padStart(2, '0')}`;
+
   const userInfoSummary = currentUser?.name
     ? `المستخدم مسجل: الاسم (${currentUser.name})، نوع الحساب (${currentUser.role})، الإيميل (${currentUser.email || 'غير متوفر'}).`
     : `المستخدم زائر لم يسجل دخوله بعد.`;
 
+  // ⚡ Fetch Live Locations Data Directly from DB
+  const locations = await fetchLocations();
+  const dbContext = buildDynamicDatabaseContext(locations);
+
   const systemPrompt = `
-أنت "مساعد وصديق أوتورز الذكي" (Autours AI Assistant) لتأجير السيارات. رد بلهجة مصرية مرحة وودودة وخفيفة دم وموجزة جداً وسريعة وبدون تطويل ممل.
+أنت "مساعد وصديق أوتورز الذكي" (Autours AI Assistant) لتأجير السيارات. رد بلهجة مصرية مرحة وودودة وخفيفة دم وموجزة جداً وسريعة ومباشرة.
 
 👤 ${userInfoSummary}
 📅 تاريخ اليوم: ${todayStr}
 
-🎯 قائمة الوجهات والبلدان المدعومة بالكامل لدينا في قاعدة البيانات:
-- 🇰🇼 الكويت (Kuwait - مطار الكويت الدولي، العاصمة، الفروانية، حولي، الري)
-- 🇦🇪 الإمارات (UAE - دبي، أبوظبي، الشارقة)
-- 🇹🇷 تركيا (Turkey - إسطنبول، صبيحة، أنطاليا، أنقرة، إزمير، طرابزون)
-- 🇲🇦 المغرب (Morocco - كازابلانكا، مراكش، طنجة، أكادير، فاس)
-- 🇪🇬 مصر (Egypt - القاهرة، الغردقة، شرم الشيخ، الإسكندرية)
-- 🇧🇭 البحرين (Bahrain - مطار البحرين الدولي، المنامة)
-- 🇯🇴 الأردن (Jordan - مطار الملكة علياء، عمّان)
-- 🇬🇪 جورجيا (Georgia - تبليسي، باتومي، كوتايسي)
-- 🇶🇦 قطر (Qatar - الدوحة، مطار حمد)
-- 🇴🇲 سلطنة عمان (Oman - مسقط)
-- 🌍 دول أخرى مدعومة: قبرص، اليونان، إسبانيا، البرتغال، الأرجنتين، المكسيك، إيطاليا، ألبانيا، وغيرها.
+🎯 بيانات وقواعد المنصة الحية (مستخرجة مباشرة ولحظياً من قاعدة بيانات النظام):
+- عدد البلدان والوجهات المتوفرة فعلياً في قاعدة البيانات الحية: ${dbContext.totalCountries} دولة
+- قائمة البلدان والمطارات المتوفرة حالياً في السيستم:
+${dbContext.summaryStr}
 
-🎯 القواعد الصارمة والأساسية:
-1. ⚠️ عندما يطلب المستخدم أو يسأل عن دولة أو وجهة فقط دون تحديد التواريخ (مثلاً: "طب الكويت", "الكويت", "عايز عربية في مصر", "تركيا", "المغرب", "عربيات دبي", "جورجيا", "البحرين"):
+🎯 القواعد الصارمة للتعامل مع قاعدة البيانات:
+1. ⚠️ عندما يطلب المستخدم أو يسأل عن دولة أو وجهة من قاعدة البيانات أعلاه دون تحديد التواريخ (مثلاً: "طب الكويت", "الكويت", "عايز عربية في مصر", "تركيا", "المغرب", "عربيات دبي", "جورجيا", "البحرين", "الأرجنتين"):
    - ⛔ إياك أن تضع [SEARCH] أو تخترع تواريخ عشوائية من عندك!
-   - ⛔ إياك أن تقول إن الدولة غير مدعومة إذا كانت من الدول المدعومة أعلاه (مثل الكويت، الإمارات، تركيا، مصر، البحرين، المغرب، الأردن، جورجيا، قطر، عمان)!
+   - ⛔ إياك أن تقول إن الدولة غير مدعومة طالما هي موجودة في قاعدة البيانات الحية أعلاه!
    - رحب به بحماس واسأله بوضوح ولطافة عن تاريخ الاستلام والمدة والمدينة/المطار المفضل في تلك الدولة.
 
 2. ✅ متى تضع وسم [SEARCH: Location, DateFrom, DateTo]؟
-   - تضع الوسم إذا حدد المستخدم التواريخ أو المدة مع الوجهة (مثلاً: "عربيات الكويت من بكرة لمدة 5 أيام" -> [SEARCH: Kuwait, ${tomorrowStr}, 2026-09-18]).
-   - 🧠 تتبع سياق المحادثة (Multi-turn Context): إذا كان المستخدم في الرسالة السابقة يتكلم عن وجهة معينة (مثلاً: "طب الكويت") وفي الرسالة الحالية قال فقط: "من بكرا لمدة خمس ايام"، تذكر فوراً أن الوجهة المقصودة هي (الكويت 'Kuwait') وضع الوسم فوراً: [SEARCH: Kuwait, ${tomorrowStr}, 2026-09-18]!
+   - تضع الوسم إذا حدد المستخدم التواريخ أو المدة مع الوجهة (مثلاً: "عربيات الكويت من بكرة لمدة 5 أيام" -> [SEARCH: Kuwait, ${tomorrowStr}, ${sixDaysStr}]).
+   - 🧠 تتبع سياق المحادثة (Multi-turn Context): إذا كان المستخدم في الرسالة السابقة يتكلم عن وجهة معينة (مثلاً: "طب الكويت") وفي الرسالة الحالية قال فقط: "من بكرا لمدة خمس ايام"، تذكر فوراً أن الوجهة المقصودة هي (الكويت 'Kuwait') وضع الوسم فوراً: [SEARCH: Kuwait, ${tomorrowStr}, ${sixDaysStr}]!
    - إذا طلب صراحة "أرخص سيارة اقتصادية الأسبوع ده" بدون تحديد وجهة: اعتبر دبي 'Dubai' وجهة افتراضية للأيام القادمة من ${tomorrowStr} إلى ${fourDaysStr}.
+   - اكتب اسم الوجهة في الوسم باللغة الإنجليزية كما هي موجودة في قاعدة البيانات (مثل Kuwait, Dubai, Turkey, Egypt, Morocco, Bahrain, Jordan, Georgia, Spain, Argentina).
 
 3. لو المستخدم حيّاك أو رحب بيك (مثل "اهلا", "مرحبا", "سلام", "صباح الخير"): رحب بيه بلهجة مصرية لطيفة واسأله ناوي يسافر فين ومحتاج عربية في أي بلد.
 
-4. لو طلب دولة غير متوفرة إطلاقاً (مثل السعودية، ألمانيا، فرنسا، لبنان): اعتذر بلباقة واقترح عليه أقرب الوجهات المدعومة (الكويت، الإمارات، تركيا، مصر، البحرين، المغرب، الأردن، جورجيا...). ولا تضع [SEARCH] على وجهة غير مدعومة.
+4. لو طلب دولة غير متوفرة إطلاقاً في قاعدة البيانات: اعتذر بلباقة واقترح عليه بعض الوجهات المتاحة حالياً في قاعدة البيانات الحية. ولا تضع [SEARCH] على وجهة غير مدعومة.
 
 5. مزايا المنصة: إلغاء مجاني 100% حتى قبل 24 ساعة، تأمين أساسي مشمول، الدفع عند الاستلام.
 `;
@@ -437,11 +495,10 @@ export async function processChatWithGemini(params: {
 
             rawText = rawText.replace(/\[SEARCH:[^\]]+\]/gi, '').trim();
 
-            const locations = await fetchLocations();
             let targetLoc = resolveTargetLocation(locQuery, locations);
             const userName = currentUser?.name ? ` يا مستر ${currentUser.name}` : ' يا غالي';
 
-            // Fallback context: If locQuery is generic or unresolved, check previous user messages
+            // Multi-turn fallback: If locQuery didn't resolve directly, search previous user turns
             if (!targetLoc) {
               for (const m of [...messages].reverse()) {
                 const prevMatch = resolveTargetLocation(m.content, locations);
@@ -455,13 +512,7 @@ export async function processChatWithGemini(params: {
 
             if (!targetLoc) {
               assistantResponseText = `عذراً${userName}! 🚗\n\nحالياً لا تتوفر سيارات متاحة للحجز في "${locQuery}".\n\nتقدر تختار من أكثر الوجهات المتوفرة والأكثر طلباً على منصتنا:`;
-              actionButtons = [
-                { label: '🇰🇼 سيارات الكويت', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-                { label: '🇦🇪 سيارات دبي (الإمارات)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-                { label: '🇹🇷 سيارات تركيا', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-                { label: '🇲🇦 سيارات المغرب', promptText: 'عربيات المغرب من بكرة لمدة 3 أيام' },
-                { label: '🇪🇬 سيارات مصر', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-              ];
+              actionButtons = getSmartActionButtons('', locations, currentUser);
               foundVehicles = [];
               searchCriteria = null;
               break;
@@ -491,13 +542,7 @@ export async function processChatWithGemini(params: {
 
             if (!vehicles || vehicles.length === 0) {
               assistantResponseText = `عذراً${userName}! 🚗\n\nلم نعثر على سيارات شاغرة حالياً في ${targetLoc.name || targetLoc.city || locQuery} للفترة المحددة (${dFrom} إلى ${dTo}).\n\nتقدر تجرب تغيير التواريخ أو تختار وجهة أخرى:`;
-              actionButtons = [
-                { label: '🇰🇼 سيارات الكويت', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-                { label: '🇦🇪 سيارات دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-                { label: '🇹🇷 سيارات تركيا', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-                { label: '🇲🇦 سيارات المغرب', promptText: 'عربيات المغرب من بكرة لمدة 3 أيام' },
-                { label: '🇪🇬 سيارات مصر', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-              ];
+              actionButtons = getSmartActionButtons(locQuery, locations, currentUser);
               foundVehicles = [];
               searchCriteria = null;
               break;
@@ -530,7 +575,7 @@ export async function processChatWithGemini(params: {
   }
 
   if (actionButtons.length === 0) {
-    actionButtons = getSmartActionButtons(latestUserMsg, currentUser);
+    actionButtons = getSmartActionButtons(latestUserMsg, locations, currentUser);
   }
 
   return {

@@ -150,66 +150,43 @@ const LOCATION_ALIASES: Record<string, string[]> = {
   'Mauritius': ['موريشيوس', 'mauritius'],
 };
 
-function getDestinationActionButtons(text: string): ActionButton[] {
-  const clean = text.toLowerCase();
-  if (clean.includes('كويت') || clean.includes('kuwait') || clean.includes('kwi')) {
-    return [
-      { label: '✈️ مطار الكويت الدولي (3 أيام)', promptText: 'عربيات مطار الكويت الدولي من بكرة لمدة 3 أيام' },
-      { label: '🏢 الكويت العاصمة (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-      { label: '⚡ أرخص سيارة في الكويت (5 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 5 أيام' },
-    ];
+function buildDynamicDatabaseContext(locations: any[]) {
+  if (!Array.isArray(locations) || locations.length === 0) {
+    return {
+      totalCountries: 0,
+      countriesListStr: 'البلدان المتاحة: الكويت، الإمارات، تركيا، مصر، المغرب، البحرين، الأردن، جورجيا، قطر، عمان وغيرها.',
+      summaryStr: '',
+    };
   }
-  if (clean.includes('بحرين') || clean.includes('bahrain') || clean.includes('المنام')) {
-    return [
-      { label: '✈️ مطار البحرين الدولي (3 أيام)', promptText: 'عربيات مطار البحرين الدولي من بكرة لمدة 3 أيام' },
-      { label: '🏢 المنامة (3 أيام)', promptText: 'عربيات المنامة من بكرة لمدة 3 أيام' },
-    ];
+
+  const countryMap = new Map<string, { branches: any[]; airports: string[] }>();
+  for (const loc of locations) {
+    const c = loc.country;
+    if (!c) continue;
+    if (!countryMap.has(c)) {
+      countryMap.set(c, { branches: [], airports: [] });
+    }
+    const data = countryMap.get(c)!;
+    data.branches.push(loc);
+    if (loc.airport || loc.location_type === 'Airport') {
+      const name = loc.name || loc.airport?.airport_name;
+      if (name && !data.airports.includes(name)) {
+        data.airports.push(name);
+      }
+    }
   }
-  if (clean.includes('تركيا') || clean.includes('turkey') || clean.includes('اسطنبول') || clean.includes('إسطنبول') || clean.includes('انطاليا')) {
-    return [
-      { label: '✈️ مطار إسطنبول (3 أيام)', promptText: 'عربيات مطار اسطنبول من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار صبيحة (3 أيام)', promptText: 'عربيات مطار صبيحة من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار أنطاليا (3 أيام)', promptText: 'عربيات مطار انطاليا من بكرة لمدة 3 أيام' },
-    ];
+
+  const summaries: string[] = [];
+  for (const [country, info] of countryMap.entries()) {
+    const topAirports = info.airports.slice(0, 3).join(', ');
+    summaries.push(`- ${country} (${info.branches.length} فرع/مكتب${topAirports ? ' - مطارات: ' + topAirports : ''})`);
   }
-  if (clean.includes('مصر') || clean.includes('egypt') || clean.includes('قاهر') || clean.includes('غردق') || clean.includes('شرم')) {
-    return [
-      { label: '✈️ مطار القاهرة (3 أيام)', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-      { label: '🏖️ مطار الغردقة (3 أيام)', promptText: 'عربيات مطار الغردقة من بكرة لمدة 3 أيام' },
-      { label: '🏖️ شرم الشيخ (3 أيام)', promptText: 'عربيات شرم الشيخ من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('مغرب') || clean.includes('morocco') || clean.includes('كازا') || clean.includes('مراكش') || clean.includes('طنج')) {
-    return [
-      { label: '✈️ مطار كازابلانكا (3 أيام)', promptText: 'عربيات مطار كازابلانكا من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار مراكش (3 أيام)', promptText: 'عربيات مطار مراكش من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار طنجة (3 أيام)', promptText: 'عربيات مطار طنجة من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('دبي') || clean.includes('dubai') || clean.includes('امارات') || clean.includes('إمارات') || clean.includes('أبوظبي') || clean.includes('ابوظبي')) {
-    return [
-      { label: '✈️ مطار دبي الدولي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار أبوظبي (3 أيام)', promptText: 'عربيات مطار ابو ظبي من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('جورجيا') || clean.includes('georgia') || clean.includes('تبليسي') || clean.includes('باتومي')) {
-    return [
-      { label: '✈️ مطار تبليسي (3 أيام)', promptText: 'عربيات مطار تبليسي من بكرة لمدة 3 أيام' },
-      { label: '✈️ مطار باتومي (3 أيام)', promptText: 'عربيات مطار باتومي من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('أردن') || clean.includes('اردن') || clean.includes('jordan') || clean.includes('عمان') || clean.includes('عمّان')) {
-    return [
-      { label: '✈️ مطار الملكة علياء (3 أيام)', promptText: 'عربيات مطار الملكة علياء من بكرة لمدة 3 أيام' },
-    ];
-  }
-  if (clean.includes('قطر') || clean.includes('qatar') || clean.includes('دوحة') || clean.includes('دوحه') || clean.includes('doha')) {
-    return [
-      { label: '✈️ مطار حمد الدولي (3 أيام)', promptText: 'عربيات مطار حمد الدولي من بكرة لمدة 3 أيام' },
-      { label: '🏢 الدوحة (3 أيام)', promptText: 'عربيات الدوحة من بكرة لمدة 3 أيام' },
-    ];
-  }
-  return [];
+
+  return {
+    totalCountries: countryMap.size,
+    countriesListStr: Array.from(countryMap.keys()).join(', '),
+    summaryStr: summaries.slice(0, 30).join('\n'),
+  };
 }
 
 function resolveTargetLocation(query: string, locations: any[]): any | null {
@@ -343,69 +320,99 @@ async function queryAutoursVehicles(params: {
   }
 }
 
-// ── Smart Action Buttons Generator ──────────────────────────────────────────
 function getSmartActionButtons(
   userText: string,
+  locations: any[] = [],
   currentUser?: CurrentUser | null
 ): ActionButton[] {
-  const destButtons = getDestinationActionButtons(userText);
-  if (destButtons.length > 0) return destButtons;
-
   const clean = userText.toLowerCase();
 
-  // If user asks about insurance or policies
-  if (
-    clean.includes('تأمين') ||
-    clean.includes('تامين') ||
-    clean.includes('شروط') ||
-    clean.includes('إلغاء') ||
-    clean.includes('الغاء')
-  ) {
-    return [
-      { label: '💬 تواصل واتساب للدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-      { label: '✈️ سيارات مطار دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-    ];
-  }
-
-  // If user asks about unsupported countries (e.g. Saudi Arabia, etc.)
-  if (
-    clean.includes('سعودي') ||
-    clean.includes('saudi') ||
-    clean.includes('ksa') ||
-    clean.includes('رياض') ||
-    clean.includes('جده') ||
-    clean.includes('جدة')
-  ) {
-    return [
-      { label: '🇦🇪 سيارات دبي (الإمارات)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-      { label: '🇧🇭 سيارات البحرين', promptText: 'عربيات مطار البحرين الدولي من بكرة لمدة 3 أيام' },
-      { label: '🇹🇷 سيارات تركيا', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-      { label: '🇲🇦 سيارات المغرب', promptText: 'عربيات المغرب من بكرة لمدة 3 أيام' },
-      { label: '🇪🇬 سيارات مصر', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-    ];
-  }
-
-  // If user asks about account or login
-  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول')) {
+  // 1. Account intent
+  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول') || clean.includes('بروفايل')) {
     if (!currentUser) {
       return [
         { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
         { label: '📝 حساب جديد', url: '/register', actionType: 'link' },
-        { label: '✈️ مطار دبي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
       ];
     } else {
       return [
         { label: '👤 صفحتي الشخصية', url: '/profile', actionType: 'link' },
-        { label: '✈️ مطار دبي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
       ];
     }
   }
 
-  // Default smart suggestions for greetings / general questions
+  // 2. Policy / Contact intent
+  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء') || clean.includes('دعم')) {
+    return [
+      { label: '💬 تواصل واتساب للدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+      { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
+      { label: '✈️ سيارات مطار دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
+    ];
+  }
+
+  // 3. Dynamic Destination Extraction from Live DB Locations
+  let matchedCountry: string | null = null;
+  for (const [key, aliases] of Object.entries(LOCATION_ALIASES)) {
+    if (
+      key.toLowerCase() === clean ||
+      aliases.some((a) => clean.includes(a.toLowerCase()) || a.toLowerCase().includes(clean))
+    ) {
+      matchedCountry = key;
+      break;
+    }
+  }
+
+  if (!matchedCountry && locations.length > 0) {
+    const directMatch = locations.find((l: any) =>
+      clean.includes((l.country || '').toLowerCase()) ||
+      clean.includes((l.city || '').toLowerCase()) ||
+      clean.includes((l.name || '').toLowerCase())
+    );
+    if (directMatch) matchedCountry = directMatch.country;
+  }
+
+  if (matchedCountry && locations.length > 0) {
+    const countryBranches = locations.filter(
+      (l: any) => (l.country || '').toLowerCase() === matchedCountry!.toLowerCase()
+    );
+    const airportBranches = countryBranches.filter(
+      (l: any) =>
+        l.location_type === 'Airport' ||
+        l.airport_id != null ||
+        (l.name || '').toLowerCase().includes('airport') ||
+        (l.name || '').toLowerCase().includes('مطار')
+    );
+
+    const buttons: ActionButton[] = [];
+    if (airportBranches.length > 0) {
+      for (const b of airportBranches.slice(0, 2)) {
+        buttons.push({
+          label: `✈️ ${b.name || b.city} (3 أيام)`,
+          promptText: `عربيات ${b.name || b.city} من بكرة لمدة 3 أيام`,
+        });
+      }
+    }
+    const cityBranches = countryBranches.filter((l: any) => !airportBranches.includes(l));
+    if (cityBranches.length > 0 && buttons.length < 3) {
+      const b = cityBranches[0];
+      buttons.push({
+        label: `🏢 ${b.city || b.name} (3 أيام)`,
+        promptText: `عربيات ${b.city || b.name} من بكرة لمدة 3 أيام`,
+      });
+    }
+    buttons.push({
+      label: `⚡ أرخص سيارة في ${matchedCountry} (5 أيام)`,
+      promptText: `عربيات ${matchedCountry} من بكرة لمدة 5 أيام`,
+    });
+    return buttons.slice(0, 4);
+  }
+
+  // Default dynamic top suggestions
   return [
+    { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
     { label: '✈️ مطار دبي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
     { label: '⚡ أرخص سيارة اقتصادية', promptText: 'أرخص عربية اقتصادية متاحة الأسبوع ده' },
-    { label: '🇧🇭 سيارات البحرين (3 أيام)', promptText: 'عربيات مطار البحرين الدولي من بكرة لمدة 3 أيام' },
+    { label: '🇹🇷 سيارات تركيا (3 أيام)', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
   ];
 }
 
@@ -638,6 +645,7 @@ export async function POST(request: Request) {
 
     // ⚡ 2. AI Generation via Gemini
     const locations = await getCachedLocations();
+    const dbContext = buildDynamicDatabaseContext(locations);
     const FALLBACK_KEY_B64 = 'QVEuQWI4Uk42SmlGUWNnQjFCOWpUcHhKTXNsT19KMjJNNUlwWnV4LURGaFg4RnFIa1ZHTUE=';
     const geminiApiKey =
       process.env.GEMINI_API_KEY ||
@@ -655,38 +663,31 @@ export async function POST(request: Request) {
       : `المستخدم زائر لم يسجل دخوله بعد.`;
 
     const systemPrompt = `
-أنت "مساعد وصديق أوتورز الذكي" (Autours AI Assistant) لتأجير السيارات. رد بلهجة مصرية مرحة وودودة وخفيفة دم وموجزة جداً وسريعة وبدون تطويل ممل.
+أنت "مساعد وصديق أوتورز الذكي" (Autours AI Assistant) لتأجير السيارات. رد بلهجة مصرية مرحة وودودة وخفيفة دم وموجزة جداً وسريعة ومباشرة.
 
 👤 ${userInfoSummary}
 📅 تاريخ اليوم: ${todayStr}
 
-🎯 قائمة الوجهات والبلدان المدعومة بالكامل لدينا في قاعدة البيانات:
-- 🇰🇼 الكويت (Kuwait - مطار الكويت الدولي، العاصمة، الفروانية، حولي، الري)
-- 🇦🇪 الإمارات (UAE - دبي، أبوظبي، الشارقة)
-- 🇹🇷 تركيا (Turkey - إسطنبول، صبيحة، أنطاليا، أنقرة، إزمير، طرابزون)
-- 🇲🇦 المغرب (Morocco - كازابلانكا، مراكش، طنجة، أكادير، فاس)
-- 🇪🇬 مصر (Egypt - القاهرة، الغردقة، شرم الشيخ، الإسكندرية)
-- 🇧🇭 البحرين (Bahrain - مطار البحرين الدولي، المنامة)
-- 🇯🇴 الأردن (Jordan - مطار الملكة علياء، عمّان)
-- 🇬🇪 جورجيا (Georgia - تبليسي، باتومي، كوتايسي)
-- 🇶🇦 قطر (Qatar - الدوحة، مطار حمد)
-- 🇴🇲 سلطنة عمان (Oman - مسقط)
-- 🌍 دول أخرى مدعومة: قبرص، اليونان، إسبانيا، البرتغال، الأرجنتين، المكسيك، إيطاليا، ألبانيا، وغيرها.
+🎯 بيانات وقواعد المنصة الحية (مستخرجة مباشرة ولحظياً من قاعدة بيانات النظام):
+- عدد البلدان والوجهات المتوفرة فعلياً في قاعدة البيانات الحية: ${dbContext.totalCountries} دولة
+- قائمة البلدان والمطارات المتوفرة حالياً في السيستم:
+${dbContext.summaryStr}
 
-🎯 القواعد الصارمة والأساسية:
-1. ⚠️ عندما يطلب المستخدم أو يسأل عن دولة أو وجهة فقط دون تحديد التواريخ (مثلاً: "طب الكويت", "الكويت", "عايز عربية في مصر", "تركيا", "المغرب", "عربيات دبي", "جورجيا", "البحرين"):
+🎯 القواعد الصارمة للتعامل مع قاعدة البيانات:
+1. ⚠️ عندما يطلب المستخدم أو يسأل عن دولة أو وجهة من قاعدة البيانات أعلاه دون تحديد التواريخ (مثلاً: "طب الكويت", "الكويت", "عايز عربية في مصر", "تركيا", "المغرب", "عربيات دبي", "جورجيا", "البحرين", "الأرجنتين"):
    - ⛔ إياك أن تضع [SEARCH] أو تخترع تواريخ عشوائية من عندك!
-   - ⛔ إياك أن تقول إن الدولة غير مدعومة إذا كانت من الدول المدعومة أعلاه (مثل الكويت، الإمارات، تركيا، مصر، البحرين، المغرب، الأردن، جورجيا، قطر، عمان)!
+   - ⛔ إياك أن تقول إن الدولة غير مدعومة طالما هي موجودة في قاعدة البيانات الحية أعلاه!
    - رحب به بحماس واسأله بوضوح ولطافة عن تاريخ الاستلام والمدة والمدينة/المطار المفضل في تلك الدولة.
 
 2. ✅ متى تضع وسم [SEARCH: Location, DateFrom, DateTo]؟
    - تضع الوسم إذا حدد المستخدم التواريخ أو المدة مع الوجهة (مثلاً: "عربيات الكويت من بكرة لمدة 5 أيام" -> [SEARCH: Kuwait, ${formatDate(addDays(new Date(), 1))}, ${formatDate(addDays(new Date(), 6))}]).
    - 🧠 تتبع سياق المحادثة (Multi-turn Context): إذا كان المستخدم في الرسالة السابقة يتكلم عن وجهة معينة (مثلاً: "طب الكويت") وفي الرسالة الحالية قال فقط: "من بكرا لمدة خمس ايام"، تذكر فوراً أن الوجهة المقصودة هي (الكويت 'Kuwait') وضع الوسم فوراً: [SEARCH: Kuwait, ${formatDate(addDays(new Date(), 1))}, ${formatDate(addDays(new Date(), 6))}]!
    - إذا طلب صراحة "أرخص سيارة اقتصادية الأسبوع ده" بدون تحديد وجهة: اعتبر دبي 'Dubai' وجهة افتراضية للأيام القادمة من ${formatDate(addDays(new Date(), 1))} إلى ${formatDate(addDays(new Date(), 4))}.
+   - اكتب اسم الوجهة في الوسم باللغة الإنجليزية كما هي موجودة في قاعدة البيانات (مثل Kuwait, Dubai, Turkey, Egypt, Morocco, Bahrain, Jordan, Georgia, Spain, Argentina).
 
 3. لو المستخدم حيّاك أو رحب بيك (مثل "اهلا", "مرحبا", "سلام", "صباح الخير"): رحب بيه بلهجة مصرية لطيفة واسأله ناوي يسافر فين ومحتاج عربية في أي بلد.
 
-4. لو طلب دولة غير متوفرة إطلاقاً (مثل السعودية، ألمانيا، فرنسا، لبنان): اعتذر بلباقة واقترح عليه أقرب الوجهات المدعومة (الكويت، الإمارات، تركيا، مصر، البحرين، المغرب، الأردن، جورجيا...). ولا تضع [SEARCH] على وجهة غير مدعومة.
+4. لو طلب دولة غير متوفرة إطلاقاً في قاعدة البيانات: اعتذر بلباقة واقترح عليه بعض الوجهات المتاحة حالياً في قاعدة البيانات الحية. ولا تضع [SEARCH] على وجهة غير مدعومة.
 
 5. مزايا المنصة: إلغاء مجاني 100% حتى قبل 24 ساعة، تأمين أساسي مشمول، الدفع عند الاستلام.
 `;
@@ -760,13 +761,7 @@ export async function POST(request: Request) {
 
                 if (!targetLoc) {
                   assistantResponseText = `عذراً${userName}! 🚗\n\nحالياً لا تتوفر سيارات متاحة للحجز في "${locQuery}".\n\nتقدر تختار من أكثر الوجهات المتوفرة والأكثر طلباً على منصتنا:`;
-                  actionButtons = [
-                    { label: '🇰🇼 سيارات الكويت', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-                    { label: '🇦🇪 سيارات دبي (الإمارات)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-                    { label: '🇹🇷 سيارات تركيا', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-                    { label: '🇲🇦 سيارات المغرب', promptText: 'عربيات المغرب من بكرة لمدة 3 أيام' },
-                    { label: '🇪🇬 سيارات مصر', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-                  ];
+                  actionButtons = getSmartActionButtons('', locations, currentUser);
                   foundVehicles = [];
                   searchCriteria = null;
                   break;
@@ -797,13 +792,7 @@ export async function POST(request: Request) {
 
                 if (!vehicles || vehicles.length === 0) {
                   assistantResponseText = `عذراً${userName}! 🚗\n\nلم نعثر على سيارات شاغرة حالياً في ${targetLoc.name || targetLoc.city || locQuery} للفترة المحددة (${dFrom} إلى ${dTo}).\n\nتقدر تجرب تغيير التواريخ أو تختار وجهة أخرى:`;
-                  actionButtons = [
-                    { label: '🇰🇼 سيارات الكويت', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-                    { label: '🇦🇪 سيارات دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-                    { label: '🇹🇷 سيارات تركيا', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-                    { label: '🇲🇦 سيارات المغرب', promptText: 'عربيات المغرب من بكرة لمدة 3 أيام' },
-                    { label: '🇪🇬 سيارات مصر', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
-                  ];
+                  actionButtons = getSmartActionButtons(locQuery, locations, currentUser);
                   foundVehicles = [];
                   searchCriteria = null;
                   break;
@@ -820,12 +809,9 @@ export async function POST(request: Request) {
                 };
                 foundVehicles = vehicles;
               } else {
-                // User asked about a destination without dates -> attach destination quick buttons
+                // User asked about a destination without dates -> attach dynamic destination buttons
                 if (actionButtons.length === 0) {
-                  const destButtons = getDestinationActionButtons(latestUserMsg);
-                  if (destButtons.length > 0) {
-                    actionButtons = destButtons;
-                  }
+                  actionButtons = getSmartActionButtons(latestUserMsg, locations, currentUser);
                 }
               }
 
@@ -845,7 +831,7 @@ export async function POST(request: Request) {
     }
 
     if (actionButtons.length === 0) {
-      actionButtons = getSmartActionButtons(latestUserMsg, currentUser);
+      actionButtons = getSmartActionButtons(latestUserMsg, locations, currentUser);
     }
 
     return NextResponse.json({
