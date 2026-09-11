@@ -25,6 +25,7 @@ import { RootState } from '@/store';
 import ChatCarCard from './ChatCarCard';
 import InChatBookingForm from './InChatBookingForm';
 import { Vehicle } from '@/types';
+import { processChatWithGemini } from '@/services/aiAssistantService';
 
 interface ActionButton {
   label: string;
@@ -268,17 +269,45 @@ export default function AIChatAssistant() {
           ? localStorage.getItem('token') || sessionStorage.getItem('token')
           : null;
 
-      const res = await fetch('/api/assistant/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
+      let data: any = null;
+
+      try {
+        const res = await fetch('/api/assistant/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            messages: payload,
+            currency: currencyCode,
+            currentSearchParams: reduxSearchParams,
+            customerToken: token,
+            currentUser:
+              isAuthenticated && user
+                ? {
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone_num,
+                    role: user.role,
+                    country: user.country,
+                  }
+                : null,
+          }),
+        });
+
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (serverErr) {
+        console.warn('Server chat API error, switching to direct AI engine:', serverErr);
+      }
+
+      // If server API route is unavailable or failed, run Direct Client-Side AI Engine!
+      if (!data || !data.reply || data.reply.includes('أنا تحت أمرك فوراً')) {
+        data = await processChatWithGemini({
           messages: payload,
           currency: currencyCode,
-          currentSearchParams: reduxSearchParams,
-          customerToken: token,
           currentUser:
             isAuthenticated && user
               ? {
@@ -289,10 +318,9 @@ export default function AIChatAssistant() {
                   country: user.country,
                 }
               : null,
-        }),
-      });
+        });
+      }
 
-      const data = await res.json();
       if (data.searchCriteria) {
         setCurrentSearchCriteria(data.searchCriteria);
       }
@@ -309,7 +337,8 @@ export default function AIChatAssistant() {
           actionButtons: data.actionButtons || [],
         },
       ]);
-    } catch {
+    } catch (err) {
+      console.error('Chat error:', err);
       setMessages((prev) => [
         ...prev,
         {
