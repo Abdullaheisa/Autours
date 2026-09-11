@@ -435,6 +435,34 @@ function tryInstantMatch(
     };
   }
 
+  // 5. Unsupported Countries Check (e.g. Saudi Arabia, France, Germany, etc.)
+  if (
+    text.includes('سعودي') ||
+    text.includes('saudi') ||
+    text.includes('ksa') ||
+    text.includes('رياض') ||
+    text.includes('جده') ||
+    text.includes('جدة') ||
+    text.includes('دمام') ||
+    text.includes('مكه') ||
+    text.includes('مكة') ||
+    text.includes('فرنسا') ||
+    text.includes('المانيا') ||
+    text.includes('ألمانيا')
+  ) {
+    const namePart = currentUser?.name ? ` يا مستر ${currentUser.name}` : ' يا غالي';
+    return {
+      reply: `عذراً${namePart}! 🚗✨\n\nخدمة تأجير السيارات في المملكة العربية السعودية غير متاحة حالياً على منصتنا، وقريباً جداً هنتوسع هناك بإذن الله! 🇸🇦\n\nتقدر تختار وتحجز سيارتك بأفضل الأسعار في الوجهات المتاحة حالياً على أوتورز:`,
+      actionButtons: [
+        { label: '🇦🇪 سيارات دبي (الإمارات)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
+        { label: '🇧🇭 سيارات البحرين', promptText: 'عربيات مطار البحرين الدولي من بكرة لمدة 3 أيام' },
+        { label: '🇹🇷 سيارات تركيا', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
+        { label: '🇲🇦 سيارات المغرب', promptText: 'عربيات المغرب من بكرة لمدة 3 أيام' },
+        { label: '🇪🇬 سيارات مصر', promptText: 'عربيات مطار القاهرة من بكرة لمدة 3 أيام' },
+      ],
+    };
+  }
+
   return null;
 }
 

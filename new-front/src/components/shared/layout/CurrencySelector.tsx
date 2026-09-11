@@ -15,13 +15,14 @@ export interface CurrencyItem {
   flag: string;
 }
 
-// ── Top currencies (AUD, CAD, EUR, GBP, USD) ──────────────────────────────────
+// ── Top currencies (USD, EUR, GBP, AED, SAR, KWD) ─────────────────────────
 export const topCurrencies: CurrencyItem[] = [
-  { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', flag: 'au' },
-  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', flag: 'ca' },
+  { code: 'USD', symbol: '$', name: 'US Dollar', flag: 'us' },
   { code: 'EUR', symbol: '€', name: 'Euro', flag: 'eu' },
   { code: 'GBP', symbol: '£', name: 'British Pound', flag: 'gb' },
-  { code: 'USD', symbol: '$', name: 'US Dollar', flag: 'us' },
+  { code: 'AED', symbol: 'AED', name: 'UAE Dirham', flag: 'ae' },
+  { code: 'SAR', symbol: 'SAR', name: 'Saudi Riyal', flag: 'sa' },
+  { code: 'KWD', symbol: 'KWD', name: 'Kuwaiti Dinar', flag: 'kw' },
 ];
 
 // ── All currencies sorted alphabetically (A-Z) ──────────────────────────────────
