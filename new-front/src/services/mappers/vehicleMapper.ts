@@ -82,6 +82,9 @@ export const vehicleMapper = {
       promos: raw.promos || [],
       available_branches: raw.available_branches || [],
       branch_vehicle_ids: raw.branch_vehicle_ids || {},
+      branch: branch,
+      location: branch.name || branch.city || branch.country || '',
+      pickup_loc: raw.pickup_loc || branch.id || '',
     };
   },
 

@@ -65,14 +65,15 @@ export default function CustomerBookings() {
       setFareConfirmId(null);
       fetchRentals();
     } catch (error: any) {
-      console.log("CANCEL 403 DATA:", error.response?.data);
+      console.log("CANCEL ERROR DATA:", error.response?.data);
       const errorMsg = error.response?.data?.message || error.message || "Failed to cancel booking.";
       
-      // If error status is 403, assume cancellation fare fee applies and open Fare Modal (without toast error)
-      if (error.response?.status === 403) {
+      // If error status is 403 with fare requirement, open Fare Modal
+      if (error.response?.status === 403 && errorMsg.toLowerCase().includes("fare")) {
         setCancelConfirmId(null);
         setFareConfirmId(rentalId);
       } else {
+        setCancelConfirmId(null);
         toast.error(errorMsg);
       }
     } finally {
@@ -168,6 +169,14 @@ export default function CustomerBookings() {
 
         // Eligibility logic: Confirmed (2) or Reconciled/Completed (7) and end_date in the past
         const isPast = rental.end_date ? new Date(rental.end_date) < new Date() : false;
+
+        // Calculate hours remaining before pickup
+        const startDateTimeStr = rental.start_date ? `${rental.start_date}T${rental.start_time || '10:00:00'}` : '';
+        const startDateTime = startDateTimeStr ? new Date(startDateTimeStr).getTime() : 0;
+        const nowMs = Date.now();
+        const hasStarted = startDateTime > 0 && nowMs >= startDateTime;
+        const hoursRemaining = startDateTime > 0 ? (startDateTime - nowMs) / (1000 * 60 * 60) : 999;
+        const isWithin24Hours = !hasStarted && hoursRemaining <= 24;
 
         return (
           <div key={rental.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
@@ -292,17 +301,36 @@ export default function CustomerBookings() {
                   </div>
                 )}
 
-                {/* Cancel button shows if status is pending (1, 4, 6) or status text contains "pending" */}
-                {((normalizedStatus === 1 || normalizedStatus === 4 || normalizedStatus === 6) || 
-                  String(statusName).toLowerCase().includes("pending")) && (
-                  <button
-                    onClick={() => setCancelConfirmId(rental.id)}
-                    disabled={cancellingId === rental.id}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors ml-auto disabled:opacity-50"
-                  >
-                    <XCircle size={16} />
-                    {cancellingId === rental.id ? "Cancelling..." : "Cancel"}
-                  </button>
+                {/* Cancel button handling */}
+                {normalizedStatus !== 3 && normalizedStatus !== 5 && normalizedStatus !== 7 && !isPast && (
+                  hasStarted ? (
+                    <button
+                      disabled
+                      title="Cancellation unavailable: rental period has already started."
+                      className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-neutral-400 bg-neutral-100 rounded-xl cursor-not-allowed ml-auto border border-neutral-200"
+                    >
+                      <XCircle size={15} />
+                      <span>Non-cancellable (Rental started)</span>
+                    </button>
+                  ) : isWithin24Hours ? (
+                    <button
+                      disabled
+                      title="Cancellation unavailable within 24 hours of pickup time."
+                      className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-neutral-400 bg-neutral-100 rounded-xl cursor-not-allowed ml-auto border border-neutral-200"
+                    >
+                      <XCircle size={15} />
+                      <span>Non-cancellable (&le;24h)</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setCancelConfirmId(rental.id)}
+                      disabled={cancellingId === rental.id}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors ml-auto disabled:opacity-50"
+                    >
+                      <XCircle size={16} />
+                      {cancellingId === rental.id ? "Cancelling..." : "Cancel"}
+                    </button>
+                  )
                 )}
               </div>
             </div>

@@ -6,6 +6,7 @@ import type { AppDispatch } from '@/store';
 import { initCurrency, fetchExchangeRates } from '@/store/slices/currencySlice';
 import { restoreAuth } from '@/store/slices/authSlice';
 import ContestPopup from '@/components/shared/layout/ContestPopup';
+import AIChatAssistant from '@/components/chat/AIChatAssistant';
 
 export default function RootLayoutContent({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -55,6 +56,8 @@ export default function RootLayoutContent({ children }: { children: React.ReactN
     <div className="min-h-screen">
       <ContestPopup />
       {children}
+      <AIChatAssistant />
     </div>
   );
 }
+

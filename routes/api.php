@@ -35,6 +35,8 @@ Route::post('/post/user/data', [\App\Http\Controllers\Auth\RegisterController::c
 
 Route::middleware(['auth:sanctum', 'customer'])->group(function () {
     Route::post('/book/vehicles', [\App\Http\Controllers\BookingsController::class, 'book']);
+});
+Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cancel/booking', [\App\Http\Controllers\BookingsController::class, 'cancelBooking']);
 });
 Route::get('/booking/{id}', [\App\Http\Controllers\BookingsController::class, 'bookingInvoice']);

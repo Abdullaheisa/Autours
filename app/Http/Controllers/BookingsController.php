@@ -58,53 +58,107 @@ class BookingsController extends Controller
     public function cancelBooking(CancelBookingRequest $request)
     {
         try {
-            $rental = Rental::query()->find($request->id);
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
+                 ?? \Illuminate\Support\Facades\Auth::user();
+
+            $rental = null;
+            if ($request->has('order_number') && $request->order_number) {
+                $cleanNum = trim(str_replace('#', '', $request->order_number));
+                $rental = Rental::query()->where('order_number', $cleanNum)->first();
+            }
+            if (!$rental && $request->has('id') && $request->id) {
+                $rental = Rental::query()->find($request->id);
+            }
+
+            if (!$rental) {
+                return response()->json([
+                    'status' => false,
+                    'data' => [],
+                    'message' => "عذراً، لم يتم العثور على حجز بهذا الرقم."
+                ], StatusCodes::NOT_FOUND);
+            }
+
+            // Customer can only cancel their own booking unless admin
+            if ($user && $user->role === 'customer' && (int)$rental->customer_id !== (int)$user->id) {
+                return response()->json([
+                    'status' => false,
+                    'data' => [],
+                    'message' => "Unauthorized to cancel this booking."
+                ], StatusCodes::FORBIDDEN);
+            }
+
             $today = Carbon::today();
             if ($rental->order_status == RentalStatuses::CANCELED) {
                 return response()->json([
+                    'status' => false,
                     'data' => [],
                     'message' => "Rental Already Cancelled."
                 ], StatusCodes::FORBIDDEN);
             }
-            if ($today->isAfter(new Carbon($rental->start_date))) {
-                return response()->json([
-                    'data' => [],
-                    'message' => "it's not allowed to change this booking."
-                ], StatusCodes::FORBIDDEN);
+
+            $datePart = Carbon::parse($rental->start_date)->format('Y-m-d');
+            $timePart = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i:s') : '10:00:00';
+            $startDate = Carbon::parse($datePart . ' ' . $timePart);
+            $now = Carbon::now();
+
+            // Prevent customer cancellation if period has started OR 24 hours (1 day) or less remain before start date
+            if ($user && $user->role === 'customer') {
+                if ($now->greaterThanOrEqualTo($startDate)) {
+                    return response()->json([
+                        'status' => false,
+                        'data' => [],
+                        'message' => "عذراً، لا يمكن إلغاء الحجز نظراً لأن فترة الحجز قد بدأت بالفعل."
+                    ], StatusCodes::FORBIDDEN);
+                }
+                if ($now->diffInHours($startDate, false) <= 24) {
+                    return response()->json([
+                        'status' => false,
+                        'data' => [],
+                        'message' => "لا يمكن إلغاء الحجز قبل أقل من 24 ساعة من موعد الاستلام."
+                    ], StatusCodes::FORBIDDEN);
+                }
             }
-            $rental->start_date = new Carbon($rental->start_date);
+
             $cancel24PolicyId = VehicleIncluded::query()->where('vehicle_id', $rental->vehicle_id)->where('included_id', 1)->first();
             $cancel48PolicyId = VehicleIncluded::query()->where('vehicle_id', $rental->vehicle_id)->where('included_id', 48)->first();
 
-            if ($rental->start_date->diffInDays($today) <= 2 && !is_null($cancel48PolicyId) && !$request->fareApproval) {
+            $today = Carbon::today();
+            if ($startDate->diffInDays($today) <= 2 && !is_null($cancel48PolicyId) && !$request->fareApproval) {
                 return response()->json([
+                    'status' => false,
                     'data' => [],
                     'message' => "There will be a fare to cancel"
                 ], StatusCodes::FORBIDDEN);
             }
-            if ($rental->start_date->diffInDays($today) <= 1 && !is_null($cancel24PolicyId) && !$request->fareApproval) {
+            if ($startDate->diffInDays($today) <= 1 && !is_null($cancel24PolicyId) && !$request->fareApproval) {
                 return response()->json([
+                    'status' => false,
                     'data' => [],
                     'message' => "There will be a fare to cancel"
                 ], StatusCodes::FORBIDDEN);
             }
-            if (is_null($cancel24PolicyId) && is_null($cancel48PolicyId) && !$request->fareApproval) {
-                return response()->json([
-                    'data' => [],
-                    'message' => "There will be a fare to cancel"
-                ], StatusCodes::FORBIDDEN);
-            }
+
             $rental->update(['order_status' => RentalStatuses::CANCELED]);
 
-            event(new CancelRental($rental->id));
+            // Safely notify Customer, Supplier, Admin via Email, Events and WhatsApp
+            try {
+                event(new CancelRental($rental->id));
+                $this->sendWhatsAppCancellationNotification($rental);
+            } catch (\Throwable $notifEx) {
+                Log::warning("CancelRental notification warning: " . $notifEx->getMessage(), [
+                    'rental_id' => $rental->id,
+                ]);
+            }
 
             return response()->json([
-                'data' => [],
-                'message' => "Order has benn canceled"
+                'status' => true,
+                'data' => $rental,
+                'message' => "Order has been canceled successfully"
             ], StatusCodes::SUCCESS);
 
         } catch (\Exception $e) {
             return response()->json([
+                'status' => false,
                 'data' => [],
                 'message' => $e->getMessage()
             ], StatusCodes::SERVER_ERROR);
@@ -544,6 +598,65 @@ class BookingsController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Error sending UltraMsg booking notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send WhatsApp Cancellation Notification to site owners via UltraMsg.
+     */
+    private function sendWhatsAppCancellationNotification($rental)
+    {
+        try {
+            $rental->load(['customer', 'vehicle.supplierUser', 'vehicle.branch']);
+
+            $customerName = $rental->customer ? $rental->customer->name : 'N/A';
+            $customerPhone = $rental->customer ? $rental->customer->phone_num : 'N/A';
+            
+            $vehicle = $rental->vehicle;
+            $vehicleName = $vehicle ? $vehicle->name : 'N/A';
+            
+            $supplierName = ($vehicle && $vehicle->supplierUser) 
+                ? ($vehicle->supplierUser->company ?: $vehicle->supplierUser->name) 
+                : 'N/A';
+                
+            $country = ($vehicle && $vehicle->branch) ? $vehicle->branch->country : 'N/A';
+            $orderNumber = $rental->order_number ?: ('#ATR' . $rental->id);
+
+            $startDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : 'N/A';
+            $endDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : 'N/A';
+
+            $token = env('ULTRAMSG_TOKEN') ?: env('WHATSAPP_TOKEN');
+            $instanceId = env('ULTRAMSG_INSTANCE_ID') ?: env('WHATSAPP_PHONE_NUMBER_ID');
+
+            if (empty($token) || empty($instanceId)) {
+                return;
+            }
+
+            $url = "https://api.ultramsg.com/{$instanceId}/messages/chat";
+            $numbersString = env('ULTRAMSG_NOTIFY_NUMBERS') ?: env('WHATSAPP_NOTIFY_NUMBERS') ?: '96560480382,201067320128';
+            $numbers = array_filter(array_map('trim', explode(',', $numbersString)));
+
+            $message = "⚠️ *إشعار إلغاء حجز سيارة على Autours*\n\n"
+                     . "🔢 *رقم الحجز:* #" . $orderNumber . "\n"
+                     . "👤 *اسم العميل:* " . $customerName . "\n"
+                     . "📞 *رقم العميل:* " . $customerPhone . "\n"
+                     . "🚗 *السيارة:* " . $vehicleName . "\n"
+                     . "🏢 *الشركة الموردة:* " . $supplierName . "\n"
+                     . "📍 *البلد:* " . $country . "\n"
+                     . "📅 *الفترة:* من " . $startDate . " إلى " . $endDate . "\n"
+                     . "❌ *الحالة:* تم إلغاء الحجز من قِبل العميل.";
+
+            foreach ($numbers as $number) {
+                $cleanNumber = preg_replace('/[^0-9]/', '', $number);
+                $payload = [
+                    'token' => $token,
+                    'to' => $cleanNumber,
+                    'body' => $message
+                ];
+                Http::withoutVerifying()->post($url, $payload);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending UltraMsg cancellation notification: ' . $e->getMessage());
         }
     }
 }

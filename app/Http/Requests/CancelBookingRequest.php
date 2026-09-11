@@ -22,7 +22,8 @@ class CancelBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => 'required|integer|exists:rentals,id',
+            'id' => 'required_without:order_number|nullable|integer',
+            'order_number' => 'required_without:id|nullable|string',
             'fareApproval' => 'nullable|boolean'
         ];
     }
