@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Users, Phone, MapPin, Star, Calendar, CheckCircle2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -8,6 +8,7 @@ import StatsCard from "@/components/ui/StatsCard";
 import FilterBar from "@/components/shared/FilterBar";
 import EmptyState from "@/components/ui/EmptyState";
 import Pagination from "@/components/ui/Pagination";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 import { customerApi } from "@/services/api";
 import toast from "react-hot-toast";
@@ -16,9 +17,19 @@ export default function CustomersSection() {
   const [customersData, setCustomersData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_customers', 1);
   const itemsPerPage = 6;
   const [isLoading, setIsLoading] = useState(true);
+  const prevFiltersRef = useRef({ searchQuery, selectedCountry });
+
+  useEffect(() => {
+    const prev = prevFiltersRef.current;
+    const filtersChanged = prev.searchQuery !== searchQuery || prev.selectedCountry !== selectedCountry;
+    if (filtersChanged) {
+      prevFiltersRef.current = { searchQuery, selectedCountry };
+      setCurrentPage(1);
+    }
+  }, [searchQuery, selectedCountry, setCurrentPage]);
 
   const countryMap: Record<string, string> = {
     'jordan': 'Jordan',

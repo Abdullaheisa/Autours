@@ -7,13 +7,14 @@ import SectionLayout from "@/components/shared/SectionLayout";
 import Pagination from "@/components/ui/Pagination";
 import { includedApi } from "@/services/api";
 import { toast } from "react-hot-toast";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 export default function WhatIsIncludedSection() {
   const [items, setItems] = useState<any[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_what-is-included', 1);
   const itemsPerPage = 10;
 
   // Delete State

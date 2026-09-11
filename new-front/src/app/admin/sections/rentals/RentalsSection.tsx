@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Search, Filter, Download, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, Trash2, Building2, Eye } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -8,6 +8,7 @@ import Pagination from "@/components/ui/Pagination";
 import { rentalApi } from "@/services/api";
 import toast from "react-hot-toast";
 import BookingDetailsModal from "./BookingDetailsModal";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 export default function RentalsSection() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,10 +16,11 @@ export default function RentalsSection() {
   const [rentalsData, setRentalsData] = useState<any[]>([]);
   const [selectedRental, setSelectedRental] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_rentals', 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 20;
+  const prevFiltersRef = useRef({ searchQuery, statusFilter });
 
   const mapOrderStatus = (statusVal: any): string => {
     if (statusVal === undefined || statusVal === null) return "upcoming";
@@ -141,8 +143,8 @@ export default function RentalsSection() {
   };
 
   useEffect(() => {
-    fetchRentals(1);
-  }, []);
+    fetchRentals(currentPage);
+  }, [currentPage]);
 
   const handleExport = () => {
     if (rentalsData.length === 0) {
@@ -238,11 +240,16 @@ export default function RentalsSection() {
     return matchesSearch && matchesStatus;
   });
 
-  // Reset to page 1 when search/filter changes and re-fetch
+  // Reset to page 1 when search/filter actually changes and re-fetch
   useEffect(() => {
-    setCurrentPage(1);
-    fetchRentals(1);
-  }, [searchQuery, statusFilter]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged = prev.searchQuery !== searchQuery || prev.statusFilter !== statusFilter;
+    if (filtersChanged) {
+      prevFiltersRef.current = { searchQuery, statusFilter };
+      setCurrentPage(1);
+      fetchRentals(1);
+    }
+  }, [searchQuery, statusFilter, setCurrentPage]);
 
   // For server-side mode: paginatedRentals = filteredRentals (already one page from backend)
   // When searching locally within the page results:

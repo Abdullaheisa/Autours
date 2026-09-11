@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, Calendar, ChevronDown, CheckCircle, XCircle, Clock, Filter, Download } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { useSearch } from "../../context/SearchContext";
 import Pagination from "@/components/ui/Pagination";
 import CreateRentalModal from "./CreateRentalModal";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 export default function CompanyRentalsSection() {
   const { searchQuery } = useSearch();
@@ -18,11 +19,16 @@ export default function CompanyRentalsSection() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('company_rentals', 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
   const itemsPerPage = 15;
+  const prevFiltersRef = useRef({
+    searchQuery,
+    localSearch,
+    statusFilter,
+  });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const mapStatus = (statusId: number, statusObj?: any): string => {
@@ -121,14 +127,27 @@ export default function CompanyRentalsSection() {
   };
 
   useEffect(() => {
-    fetchRentals(1);
-  }, []);
+    fetchRentals(currentPage);
+  }, [currentPage]);
 
-  // Reset to page 1 and re-fetch when search/status filter changes
+  // Reset to page 1 and re-fetch ONLY when search/status filter changes
   useEffect(() => {
-    setCurrentPage(1);
-    fetchRentals(1);
-  }, [searchQuery, localSearch, statusFilter]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged =
+      prev.searchQuery !== searchQuery ||
+      prev.localSearch !== localSearch ||
+      prev.statusFilter !== statusFilter;
+
+    if (filtersChanged) {
+      prevFiltersRef.current = {
+        searchQuery,
+        localSearch,
+        statusFilter,
+      };
+      setCurrentPage(1);
+      fetchRentals(1);
+    }
+  }, [searchQuery, localSearch, statusFilter, setCurrentPage]);
 
   const filteredItems = useMemo(() => {
     const query = (searchQuery || localSearch).toLowerCase();

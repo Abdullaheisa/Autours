@@ -198,9 +198,9 @@ export const fetchExchangeRates = createAsyncThunk(
 );
 
 const initialState: CurrencyState = {
-  code: 'AED',
-  symbol: 'AED',
-  rate: 3.67,
+  code: 'EGP',
+  symbol: 'EGP',
+  rate: 48.5,
   allRates: fallbackRates,
   isLoading: false,
   error: null,

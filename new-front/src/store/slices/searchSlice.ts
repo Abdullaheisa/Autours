@@ -68,7 +68,7 @@ const initialState: SearchState = {
     endTime: '10:00',
     driverAge: 26,
     driverAge25to70: true,
-    residenceCountry: 'United Arab Emirates',
+    residenceCountry: 'Egypt',
   },
   filterParams: {
     priceRange: null,
@@ -97,7 +97,7 @@ const initialState: SearchState = {
   searchError: null,
   filterError: null,
   hasSearched: false,
-  fetchedCurrency: 'AED',
+  fetchedCurrency: 'EGP',
   currentPage: 1,
   totalPages: 1,
   perPage: 15,
@@ -207,7 +207,7 @@ const searchSlice = createSlice({
         state.daysNumber = action.payload.daysNumber;
         state.maxPrice = action.payload.max;
         state.minPrice = action.payload.min;
-        state.fetchedCurrency = action.meta?.arg?.currency || 'AED';
+        state.fetchedCurrency = action.meta?.arg?.currency || 'EGP';
 
         state.currentPage = action.payload.current_page || 1;
         state.totalPages = action.payload.last_page || Math.ceil(state.count / state.perPage) || 1;

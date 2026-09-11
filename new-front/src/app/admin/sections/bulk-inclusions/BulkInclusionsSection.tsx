@@ -12,6 +12,7 @@ import VehicleInclusionsTable, { VehicleInclusion } from "@/app/admin/components
 import Pagination from "@/components/ui/Pagination";
 import toast from "react-hot-toast";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 interface IncludedFeature {
   id: number;
@@ -30,7 +31,7 @@ export default function BulkInclusionsSection() {
   const [showNoInclusionsOnly, setShowNoInclusionsOnly] = useState(false);
 
   // Server-side pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_bulk-inclusions', 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 

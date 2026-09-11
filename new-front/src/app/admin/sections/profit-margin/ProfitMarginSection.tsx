@@ -12,6 +12,7 @@ import VehicleProfitTable from "@/app/admin/components/profit/VehicleProfitTable
 import Pagination from "@/components/ui/Pagination";
 import toast from "react-hot-toast";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 interface VehicleProfit {
   id: number;
@@ -40,7 +41,7 @@ export default function ProfitMarginsPage() {
   const [showNoProfitOnly, setShowNoProfitOnly] = useState(false);
 
   // Server-side pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_profit-margin', 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 

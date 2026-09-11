@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, ArrowLeft } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import { supplierApi } from "@/services/api/supplierApi";
@@ -16,7 +16,7 @@ import PricesSection from "./components/PricesSection";
 import IncludedFeaturesSection from "./components/IncludedFeaturesSection";
 import SpecificationsSection from "./components/SpecificationsSection";
 
-export default function CreateVehicleSection() {
+export default function CreateVehicleSection({ onBack }: { onBack?: () => void } = {}) {
   const { user } = useSelector((state: RootState) => state.auth);
   const isActiveSupplier = user?.role === 'admin' || user?.status === 'active_supplier';
 
@@ -305,6 +305,17 @@ export default function CreateVehicleSection() {
 
   return (
     <SectionLayout>
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors mb-4"
+        >
+          <ArrowLeft size={16} />
+          Back to Vehicles
+        </button>
+      )}
+
       <PageHeader
         title="Create New Vehicle"
         description="Add a new vehicle to your fleet with details, pricing and specifications"

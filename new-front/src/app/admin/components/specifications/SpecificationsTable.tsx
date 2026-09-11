@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import Pagination from "@/components/ui/Pagination";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 export interface Specification {
   id: number;
@@ -41,11 +42,11 @@ const AirConditionIcon = ({ size = 16, className = "" }: { size?: number; classN
     style={{
       width: `${size}px`,
       height: `${size}px`,
-      maskImage: "url('/img/icons/air.png')",
+      maskImage: "url('/img/icons/ac.svg')",
       maskSize: "contain",
       maskRepeat: "no-repeat",
       maskPosition: "center",
-      WebkitMaskImage: "url('/img/icons/air.png')",
+      WebkitMaskImage: "url('/img/icons/ac.svg')",
       WebkitMaskSize: "contain",
       WebkitMaskRepeat: "no-repeat",
       WebkitMaskPosition: "center",
@@ -56,31 +57,38 @@ const AirConditionIcon = ({ size = 16, className = "" }: { size?: number; classN
 
 // Map icon names to Lucide components
 const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  // Core icons
-  Gauge, Fuel, Users, Briefcase, Settings2, Car, Wind: AirConditionIcon, DoorOpen, Luggage, Armchair: CarSeat,
-  // Additional icons for specs
-  Palette, Cog, Sparkles, CheckCircle2,
+  Gauge,
+  Fuel,
+  Users,
+  Briefcase,
+  Car,
+  Settings2,
+  Wind,
+  DoorOpen,
+  Luggage,
+  Palette,
+  Cog,
+  Sparkles,
+  CheckCircle2,
+  CarSeat,
+  Armchair,
+  AirConditionIcon,
 };
 
 // Map emoji/icon identifiers to Lucide icon names
 const iconNameMap: Record<string, string> = {
-  "🎨": "Palette",
-  "⚙️": "Cog",
-  "🚪": "DoorOpen",
-  "👥": "Users",
   "⛽": "Fuel",
-  "🆕": "Sparkles",
-  // Fallback mappings
-  "Color": "Palette",
-  "Gearbox": "Cog",
-  "Doors": "DoorOpen",
-  "Seats": "Users",
-  "Fuel": "Fuel",
-  "Fuel Type": "Fuel",
-  "Condition": "Sparkles",
-  "Air Conditioner": "Wind",
-  "Suitcase": "Luggage",
-  "Transmission": "Settings2",
+  "⚡": "Gauge",
+  "👥": "Users",
+  "💼": "Briefcase",
+  "🚗": "Car",
+  "⚙️": "Cog",
+  "🎨": "Palette",
+  "❄️": "Wind",
+  "🪑": "Armchair",
+  "🧳": "Luggage",
+  "🚪": "DoorOpen",
+  "✨": "Sparkles",
 };
 
 interface SpecificationsTableProps {
@@ -103,7 +111,7 @@ function getIconComponent(iconName: string): React.ComponentType<{ size?: number
 
 export default function SpecificationsTable({ specifications, onEdit, onDelete }: SpecificationsTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_specifications', 1);
   const itemsPerPage = 10;
 
   const filteredSpecs = useMemo(() => {
@@ -145,12 +153,12 @@ export default function SpecificationsTable({ specifications, onEdit, onDelete }
             type="text"
             placeholder="Type to search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-64"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => { setSearchQuery(""); setCurrentPage(1); }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               <X size={14} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check, Edit3, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -10,14 +10,16 @@ import { apiClient } from "@/services/api/axiosClient";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 export default function PromosSection() {
   const [promos, setPromos] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_promos', 1);
   const itemsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState("");
+  const prevFiltersRef = useRef({ searchQuery });
 
   // Modal States
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -55,8 +57,13 @@ export default function PromosSection() {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged = prev.searchQuery !== searchQuery;
+    if (filtersChanged) {
+      prevFiltersRef.current = { searchQuery };
+      setCurrentPage(1);
+    }
+  }, [searchQuery, setCurrentPage]);
 
   useEffect(() => {
     if (isAssignModalOpen || isAddEditModalOpen) {

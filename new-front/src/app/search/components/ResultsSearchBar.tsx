@@ -298,16 +298,16 @@ export default function ResultsSearchBar({
               onClick={() => setShowStartTime(!showStartTime)}
               aria-label={`Select pickup time, currently ${startTime}`} // 🚀 Accessibility Fix
               aria-expanded={showStartTime}
-              className="w-full flex items-center justify-between px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="relative w-full flex items-center justify-center px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
             >
-              <span>{startTime}</span>
-              <Clock size={14} className="text-gray-400" aria-hidden="true" />
+              <span className="text-center">{startTime}</span>
+              <Clock size={14} className="text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
             </button>
             {showStartTime && (
               <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-[160px] overflow-y-auto z-[60]">
                 {TIME_OPTIONS.map((time) => (
                   <button key={time} type="button" onClick={() => { setStartTime(time); setShowStartTime(false); }}
-                    className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-primary/10 transition-all ${startTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
+                    className={`w-full px-3 py-2 text-center text-xs font-bold hover:bg-primary/10 transition-all cursor-pointer ${startTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
                   >{time}</button>
                 ))}
               </div>
@@ -319,16 +319,16 @@ export default function ResultsSearchBar({
               onClick={() => setShowEndTime(!showEndTime)}
               aria-label={`Select return time, currently ${endTime}`} // 🚀 Accessibility Fix
               aria-expanded={showEndTime}
-              className="w-full flex items-center justify-between px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="relative w-full flex items-center justify-center px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
             >
-              <span>{endTime}</span>
-              <Clock size={14} className="text-gray-400" aria-hidden="true" />
+              <span className="text-center">{endTime}</span>
+              <Clock size={14} className="text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
             </button>
             {showEndTime && (
               <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-[160px] overflow-y-auto z-[60]">
                 {TIME_OPTIONS.map((time) => (
                   <button key={time} type="button" onClick={() => { setEndTime(time); setShowEndTime(false); }}
-                    className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-primary/10 transition-all ${endTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
+                    className={`w-full px-3 py-2 text-center text-xs font-bold hover:bg-primary/10 transition-all cursor-pointer ${endTime === time ? 'bg-primary/10 text-gray-900' : ''}`}
                   >{time}</button>
                 ))}
               </div>

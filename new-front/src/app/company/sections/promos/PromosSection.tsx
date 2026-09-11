@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check, AlertCircle } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -11,6 +11,7 @@ import { promoApi } from "@/services/api";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 export default function PromosSection() {
   const { searchQuery } = useSearch();
@@ -18,8 +19,9 @@ export default function PromosSection() {
   const [promos, setPromos] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('company_promos', 1);
   const itemsPerPage = 10;
+  const isSearchMount = useRef(true);
 
   // Suggest State
   const [showSuggestModal, setShowSuggestModal] = useState(false);
@@ -36,8 +38,12 @@ export default function PromosSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (isSearchMount.current) {
+      isSearchMount.current = false;
+      return;
+    }
     setCurrentPage(1);
-  }, [localSearch, searchQuery]);
+  }, [localSearch, searchQuery, setCurrentPage]);
 
   const fetchPromosAndIncluded = async () => {
     setIsLoading(true);

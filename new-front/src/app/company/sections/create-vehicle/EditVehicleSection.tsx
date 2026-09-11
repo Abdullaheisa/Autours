@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import { supplierApi } from "@/services/api/supplierApi";
@@ -321,6 +321,15 @@ export default function EditVehicleSection({
 
   return (
     <SectionLayout>
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors mb-4"
+      >
+        <ArrowLeft size={16} />
+        Back to Vehicles
+      </button>
+
       <PageHeader
         title="Edit Vehicle"
         description="Update your vehicle's details, pricing, and specifications"

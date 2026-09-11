@@ -1,9 +1,8 @@
-"use client";
-
-import { useState, useMemo, useEffect, Fragment } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment } from "react";
 import { Calendar, ChevronDown, ChevronUp, Star, MessageSquare, MapPin } from "lucide-react";
 import { rentalApi } from "@/services/api";
 import Pagination from "@/components/ui/Pagination";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 const rentalStatuses = ["All", "confirmed", "pending", "completed", "cancelled"];
 
@@ -13,10 +12,28 @@ export default function RentalReviewsSection() {
   const [suppliers, setSuppliers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedRentalId, setExpandedRentalId] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_reviews', 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 15;
+
+  const [countryFilter, setCountryFilter] = useState("All");
+  const [supplierFilter, setSupplierFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [referenceFilter, setReferenceFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const prevFiltersRef = useRef({
+    searchQuery,
+    countryFilter,
+    supplierFilter,
+    statusFilter,
+    referenceFilter,
+    startDate,
+    endDate,
+  });
 
   const fetchReviews = async (page: number = 1) => {
     setIsLoading(true);
@@ -79,16 +96,8 @@ export default function RentalReviewsSection() {
   };
 
   useEffect(() => {
-    fetchReviews(1);
-  }, []);
-
-  const [countryFilter, setCountryFilter] = useState("All");
-  const [supplierFilter, setSupplierFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [referenceFilter, setReferenceFilter] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+    fetchReviews(currentPage);
+  }, [currentPage]);
 
   const filteredItems = useMemo(() => {
     return items.filter((review) => {
@@ -119,9 +128,30 @@ export default function RentalReviewsSection() {
   }, [items, searchQuery, countryFilter, supplierFilter, statusFilter]);
 
   useEffect(() => {
-    setCurrentPage(1);
-    fetchReviews(1);
-  }, [searchQuery, countryFilter, supplierFilter, statusFilter, referenceFilter, startDate, endDate]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged =
+      prev.searchQuery !== searchQuery ||
+      prev.countryFilter !== countryFilter ||
+      prev.supplierFilter !== supplierFilter ||
+      prev.statusFilter !== statusFilter ||
+      prev.referenceFilter !== referenceFilter ||
+      prev.startDate !== startDate ||
+      prev.endDate !== endDate;
+
+    if (filtersChanged) {
+      prevFiltersRef.current = {
+        searchQuery,
+        countryFilter,
+        supplierFilter,
+        statusFilter,
+        referenceFilter,
+        startDate,
+        endDate,
+      };
+      setCurrentPage(1);
+      fetchReviews(1);
+    }
+  }, [searchQuery, countryFilter, supplierFilter, statusFilter, referenceFilter, startDate, endDate, setCurrentPage]);
 
   // Server-side: backend already returns one page; local filter narrows that page
   const isLocalFiltering = !!(searchQuery || countryFilter !== "All" || supplierFilter !== "All" || statusFilter !== "All");

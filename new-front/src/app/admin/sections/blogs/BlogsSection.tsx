@@ -19,6 +19,7 @@ import { fetchBlogs, createBlog, updateBlog, deleteBlog as deleteBlogThunk } fro
 import { fetchBlogCategories } from "@/store/slices/blogCategoriesSlice";
 import { Blog } from "@/store/slices/blogsSlice";
 import toast from "react-hot-toast";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 const statuses = ["All", "published", "draft", "scheduled"];
 
@@ -36,7 +37,7 @@ export default function BlogsSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStatus, setSelectedStatus] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_blogs', 1);
   const [view, setView] = useState<"list" | "details" | "edit">("list");
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const itemsPerPage = 8;

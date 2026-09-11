@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
-  Search, MapPin, Calendar, Clock, CheckCircle2,
+  Search, MapPin, Calendar, Clock,
   Plane, Building, AlertCircle, Check, X, ChevronDown,
   Minus, Plus, Globe
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { assets } from '@/config/assets';
 import { RootState, AppDispatch } from '@/store';
 import { setSearchParams } from '@/store/slices/searchSlice';
+import { setCurrency } from '@/store/slices/currencySlice';
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { referenceApi } from '@/services/api';
 import { LocationBranch } from '@/types';
@@ -36,14 +37,15 @@ const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) =>
 const DEFAULT_COUNTRY: WorldCountry = {
   name: "Egypt",
   code: "+20",
-  iso: "EG"
+  iso: "EG",
+  currency: "EGP"
 };
 
 const TRUST_BADGES = [
-  'Free Cancellation',
+  'Free Cancelation',
+  'Free Amendment',
   'No Credit Card Fees',
   'No Hidden Fees',
-  'Best Price Guarantee',
 ];
 
 interface HeroSearchProps {
@@ -187,6 +189,15 @@ export default function HeroSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleCountrySelect = (c: WorldCountry) => {
+    setSelectedCountry(c);
+    setShowCountryDropdown(false);
+    setCountrySearch('');
+    if (c.currency) {
+      dispatch(setCurrency(c.currency as any));
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: { location?: string; dates?: string } = {};
     if (!location.trim()) newErrors.location = 'Please select a pickup location';
@@ -209,6 +220,7 @@ export default function HeroSearch({
     const pickup = matched ? getLocationPickupValue(matched) : location.trim();
     const label = location.trim();
     const finalAge = driverAge25to70 ? 30 : driverAge;
+    const activeCurrency = (selectedCountry.currency || currencyCode) as string;
 
     dispatch(setSearchParams({
       location: pickup,
@@ -229,7 +241,7 @@ export default function HeroSearch({
     params.set('end', dateTo);
     params.set('st', startTime);
     params.set('et', endTime);
-    params.set('currency', currencyCode);
+    params.set('currency', activeCurrency);
     params.set('country', selectedCountry.iso);
     params.set('countryName', selectedCountry.name);
     params.set('residence_country', selectedCountry.name);
@@ -410,12 +422,12 @@ export default function HeroSearch({
                     setShowEndTime(false);
                     setShowCalendar(false);
                   }}
-                  className="w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all px-3.5 sm:px-4 flex items-center justify-between shadow-xs text-left cursor-pointer"
+                  className="relative w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all flex items-center justify-center shadow-xs cursor-pointer group"
                 >
-                  <span className="text-xs sm:text-sm font-extrabold text-gray-900">
+                  <span className="w-full text-center text-xs sm:text-sm font-extrabold text-gray-900 select-none -translate-x-2.5 sm:-translate-x-3">
                     {startTime}
                   </span>
-                  <Clock size={17} className="text-gray-400 shrink-0" />
+                  <Clock size={16} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>
 
                 {showStartTime && (
@@ -428,7 +440,7 @@ export default function HeroSearch({
                           setStartTime(time);
                           setShowStartTime(false);
                         }}
-                        className={`w-full px-3.5 py-2 text-left text-xs font-extrabold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
+                        className={`w-full px-3.5 py-2 text-center text-xs font-extrabold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
                           startTime === time ? 'bg-[#f9d602] text-gray-950 font-black' : 'text-gray-700'
                         }`}
                       >
@@ -479,12 +491,12 @@ export default function HeroSearch({
                     setShowStartTime(false);
                     setShowCalendar(false);
                   }}
-                  className="w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all px-3.5 sm:px-4 flex items-center justify-between shadow-xs text-left cursor-pointer"
+                  className="relative w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all flex items-center justify-center shadow-xs cursor-pointer group"
                 >
-                  <span className="text-xs sm:text-sm font-extrabold text-gray-900">
+                  <span className="w-full text-center text-xs sm:text-sm font-extrabold text-gray-900 select-none -translate-x-2.5 sm:-translate-x-3">
                     {endTime}
                   </span>
-                  <Clock size={17} className="text-gray-400 shrink-0" />
+                  <Clock size={16} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>
 
                 {showEndTime && (
@@ -497,7 +509,7 @@ export default function HeroSearch({
                           setEndTime(time);
                           setShowEndTime(false);
                         }}
-                        className={`w-full px-3.5 py-2 text-left text-xs font-extrabold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
+                        className={`w-full px-3.5 py-2 text-center text-xs font-extrabold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
                           endTime === time ? 'bg-[#f9d602] text-gray-950 font-black' : 'text-gray-700'
                         }`}
                       >
@@ -586,11 +598,7 @@ export default function HeroSearch({
                           <button
                             key={c.iso}
                             type="button"
-                            onClick={() => {
-                              setSelectedCountry(c);
-                              setShowCountryDropdown(false);
-                              setCountrySearch('');
-                            }}
+                            onClick={() => handleCountrySelect(c)}
                             className={`w-full px-3 py-2 text-left text-xs font-extrabold flex items-center justify-between rounded-xl transition-all cursor-pointer ${
                               selectedCountry.iso === c.iso
                                 ? 'bg-[#f9d602] text-gray-950 font-black'
@@ -701,13 +709,20 @@ export default function HeroSearch({
             </div>
 
             {/* 5. Trust Badges */}
-            <div className="pt-3 border-t border-white/15 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-8 sm:gap-y-2">
+            <div className="pt-3.5 border-t border-white/15 flex flex-wrap items-center justify-center gap-y-2.5">
               {TRUST_BADGES.map((text, i) => (
-                <div key={i} className="flex items-center gap-1.5 sm:gap-2 text-white/95 drop-shadow-sm">
-                  <CheckCircle2 size={15} className="text-[#f9d602] shrink-0 stroke-[2.5]" />
-                  <span className="text-[11px] sm:text-xs md:text-sm font-extrabold tracking-tight sm:tracking-wide truncate">
-                    {text}
-                  </span>
+                <div key={i} className="flex items-center">
+                  <div className="flex items-center gap-2 px-2.5 sm:px-3.5 md:px-4 text-white drop-shadow-sm">
+                    <div className="w-4.5 h-4.5 rounded-full bg-[#f9d602] flex items-center justify-center shrink-0 shadow-xs">
+                      <Check size={11} strokeWidth={3.5} className="text-gray-950" />
+                    </div>
+                    <span className="text-xs sm:text-sm font-extrabold tracking-tight whitespace-nowrap">
+                      {text}
+                    </span>
+                  </div>
+                  {i < TRUST_BADGES.length - 1 && (
+                    <div className="hidden md:block h-3.5 w-px bg-white/25" />
+                  )}
                 </div>
               ))}
             </div>

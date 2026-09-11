@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { 
   Plus, 
   Trash2, 
@@ -23,6 +23,8 @@ import { rentalTermsApi } from "@/services/api";
 import toast from "react-hot-toast";
 import RichTextEditor from "@/components/shared/RichTextEditor";
 import Modal from "@/components/ui/Modal";
+import { useSearch } from "../../context/SearchContext";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 interface BranchItem {
   id: number;
@@ -48,8 +50,13 @@ export default function CompanyRentalTermsSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('company_rental-terms', 1);
   const itemsPerPage = 10;
+  const prevFiltersRef = useRef({
+    searchQuery,
+    selectedCountry,
+    selectedBranchFilter,
+  });
 
   // Modal State (Single Add vs Bulk Upload)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,8 +75,21 @@ export default function CompanyRentalTermsSection() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCountry, selectedBranchFilter]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged =
+      prev.searchQuery !== searchQuery ||
+      prev.selectedCountry !== selectedCountry ||
+      prev.selectedBranchFilter !== selectedBranchFilter;
+
+    if (filtersChanged) {
+      prevFiltersRef.current = {
+        searchQuery,
+        selectedCountry,
+        selectedBranchFilter,
+      };
+      setCurrentPage(1);
+    }
+  }, [searchQuery, selectedCountry, selectedBranchFilter, setCurrentPage]);
 
   // Fetch Active Countries (Countries with active supplier branch AND active vehicle)
   const fetchActiveCountries = async () => {

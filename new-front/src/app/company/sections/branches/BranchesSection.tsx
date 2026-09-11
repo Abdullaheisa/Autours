@@ -14,6 +14,7 @@ import { useSearch } from "../../context/SearchContext";
 import { branchApi, vehicleApi } from "@/services/api";
 import toast from "react-hot-toast";
 import { LocationBranch } from "@/types";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 interface Branch {
   id: number;
@@ -531,16 +532,41 @@ export default function BranchesSection() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [allAirports, setAllAirports] = useState<LocationBranch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('company_branches', 1);
   const itemsPerPage = 10;
 
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedAddress, setSelectedAddress] = useState("");
 
+  const prevFiltersRef = useRef({
+    localSearch,
+    searchQuery,
+    selectedCountry,
+    selectedStatus,
+    selectedAddress,
+  });
+
   useEffect(() => {
-    setCurrentPage(1);
-  }, [localSearch, searchQuery, selectedCountry, selectedStatus, selectedAddress]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged =
+      prev.localSearch !== localSearch ||
+      prev.searchQuery !== searchQuery ||
+      prev.selectedCountry !== selectedCountry ||
+      prev.selectedStatus !== selectedStatus ||
+      prev.selectedAddress !== selectedAddress;
+
+    if (filtersChanged) {
+      prevFiltersRef.current = {
+        localSearch,
+        searchQuery,
+        selectedCountry,
+        selectedStatus,
+        selectedAddress,
+      };
+      setCurrentPage(1);
+    }
+  }, [localSearch, searchQuery, selectedCountry, selectedStatus, selectedAddress, setCurrentPage]);
 
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

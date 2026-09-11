@@ -70,7 +70,9 @@ export default function AdminDashboard() {
   const setActiveItem = (id: string) => {
     setActiveItemState(id);
     if (typeof window !== "undefined") {
-      window.history.pushState({ tab: id }, "", `?tab=${id}`);
+      const savedPage = sessionStorage.getItem(`pagination_page_admin_${id}`);
+      const pageParam = savedPage && parseInt(savedPage, 10) > 1 ? `&page=${savedPage}` : '';
+      window.history.pushState({ tab: id }, "", `?tab=${id}${pageParam}`);
     }
   };
 

@@ -49,7 +49,9 @@ export default function CompanyDashboard() {
   const setActiveItem = (id: string) => {
     setActiveItemState(id);
     if (typeof window !== "undefined") {
-      window.history.pushState({ tab: id }, "", `?tab=${id}`);
+      const savedPage = sessionStorage.getItem(`pagination_page_company_${id}`);
+      const pageParam = savedPage && parseInt(savedPage, 10) > 1 ? `&page=${savedPage}` : '';
+      window.history.pushState({ tab: id }, "", `?tab=${id}${pageParam}`);
     }
   };
 
@@ -104,7 +106,7 @@ export default function CompanyDashboard() {
       case "calendar":        return <CompanyCalendarSection />;
       case "branches":        return <BranchesSection />;
       case "payment-methods": return <PaymentMethodsSection />;
-      case "create-vehicle":  return <CreateVehicleSection />;
+      case "create-vehicle":  return <CreateVehicleSection onBack={() => setActiveItem("vehicles")} />;
       case "edit-vehicle":    return <EditVehicleSection vehicleId={editVehicleId!} onBack={() => setActiveItem("vehicles")} />;
       case "price-list":      return <PriceListSection />;
       case "vehicles":        return <MyVehiclesSection onEditVehicle={handleEditVehicle} onAddVehicle={() => setActiveItem("create-vehicle")} />;

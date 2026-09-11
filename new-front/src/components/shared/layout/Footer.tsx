@@ -99,7 +99,7 @@ export default function Footer() {
           </Link>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-8 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-8 mb-8">
           {Object.entries(footerLinks).map(([category, links], idx) => (
             <motion.div 
               key={category}
@@ -157,29 +157,6 @@ export default function Footer() {
             >
               + View All Locations
             </Link>
-          </motion.div>
-
-          {/* Top Cities Column */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="space-y-2"
-          >
-            <h2 className="text-sm sm:text-base lg:text-[16px] xl:text-[17px] font-black text-black">
-              Top Cities
-            </h2>
-            <ul className="space-y-0.5">
-              <li>
-                <Link 
-                  href="/cities/dubai"
-                  className="text-[13px] sm:text-[14px] lg:text-[15px] font-bold text-black/80 hover:text-black hover:underline underline-offset-2 transition-all focus:outline-none rounded-sm block"
-                >
-                  Dubai Car Rental
-                </Link>
-              </li>
-            </ul>
           </motion.div>
         </div>
 

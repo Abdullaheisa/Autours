@@ -8,6 +8,7 @@ import RichTextEditor from "@/components/shared/RichTextEditor";
 import Pagination from "@/components/ui/Pagination";
 import { rentalTermsApi } from "@/services/api";
 import { toast } from "react-hot-toast";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 export default function RentalTermsSection() {
   const [terms, setTerms] = useState<any[]>([]);
@@ -15,7 +16,7 @@ export default function RentalTermsSection() {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_rental-terms', 1);
   const itemsPerPage = 10;
 
   const fetchTerms = async () => {

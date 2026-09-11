@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, CheckCircle2, XCircle, Save, Loader2, DollarSign } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -9,6 +9,7 @@ import { supplierApi } from "@/services/api/supplierApi";
 import { useSearch } from "../../context/SearchContext";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 export default function PriceListSection() {
   const { searchQuery } = useSearch();
@@ -19,16 +20,21 @@ export default function PriceListSection() {
   const [prices, setPrices] = useState<Record<number, { price: string; week_price: string; month_price: string }>>({});
   const [savingId, setSavingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('company_price-list', 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+  const isSearchMount = useRef(true);
 
   const [branches, setBranches] = useState<any[]>([]);
 
   useEffect(() => {
+    if (isSearchMount.current) {
+      isSearchMount.current = false;
+      return;
+    }
     setCurrentPage(1);
-  }, [localSearch, searchQuery]);
+  }, [localSearch, searchQuery, setCurrentPage]);
 
   // Fetch branches once on mount
   useEffect(() => {

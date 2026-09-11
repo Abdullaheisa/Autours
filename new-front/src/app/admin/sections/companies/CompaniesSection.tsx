@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Building2, ShieldCheck, CalendarCheck, X } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -13,6 +13,7 @@ import CompanyCard from "./CompanyCard";
 import { companyApi } from "@/services/api";
 import { getLogoUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 const statuses = ["All", "active", "pending", "suspended"];
 
@@ -87,12 +88,30 @@ export default function CompaniesSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("active");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_companies', 1);
   const itemsPerPage = 8;
+  const prevFiltersRef = useRef({
+    searchQuery,
+    selectedCountry,
+    selectedStatus,
+  });
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCountry, selectedStatus]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged =
+      prev.searchQuery !== searchQuery ||
+      prev.selectedCountry !== selectedCountry ||
+      prev.selectedStatus !== selectedStatus;
+
+    if (filtersChanged) {
+      prevFiltersRef.current = {
+        searchQuery,
+        selectedCountry,
+        selectedStatus,
+      };
+      setCurrentPage(1);
+    }
+  }, [searchQuery, selectedCountry, selectedStatus, setCurrentPage]);
 
   useEffect(() => {
     fetchData();

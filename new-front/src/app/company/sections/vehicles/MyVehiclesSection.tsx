@@ -11,6 +11,7 @@ import { getVehicleImageUrl } from "@/utils/getImageUrl";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { usePersistedPage } from "@/hooks/usePersistedPage";
 
 // ─── Delete Confirmation Modal ───────────────────────────────────────
 function DeleteModal({
@@ -264,7 +265,7 @@ export default function MyVehiclesSection({
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('company_vehicles', 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
@@ -274,6 +275,14 @@ export default function MyVehiclesSection({
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedAddress, setSelectedAddress] = useState("");
+
+  const prevFiltersRef = useRef({
+    localSearch,
+    searchQuery,
+    selectedCountry,
+    selectedBranch,
+    selectedAddress,
+  });
 
   // Fetch branches once on mount
   useEffect(() => {
@@ -383,15 +392,32 @@ export default function MyVehiclesSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
-  // Reset to page 1 and re-fetch when filters/search change
+  // Reset to page 1 and re-fetch ONLY when filters/search actually change
   useEffect(() => {
-    setCurrentPage(1);
-    fetchVehicles(1, {
-      branch_id: selectedBranch || undefined,
-      country: selectedCountry || undefined,
-      address: selectedAddress || undefined,
-      search: (localSearch || searchQuery) || undefined,
-    });
+    const prev = prevFiltersRef.current;
+    const filtersChanged =
+      prev.localSearch !== localSearch ||
+      prev.searchQuery !== searchQuery ||
+      prev.selectedCountry !== selectedCountry ||
+      prev.selectedBranch !== selectedBranch ||
+      prev.selectedAddress !== selectedAddress;
+
+    if (filtersChanged) {
+      prevFiltersRef.current = {
+        localSearch,
+        searchQuery,
+        selectedCountry,
+        selectedBranch,
+        selectedAddress,
+      };
+      setCurrentPage(1);
+      fetchVehicles(1, {
+        branch_id: selectedBranch || undefined,
+        country: selectedCountry || undefined,
+        address: selectedAddress || undefined,
+        search: (localSearch || searchQuery) || undefined,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localSearch, searchQuery, selectedCountry, selectedBranch, selectedAddress]);
 

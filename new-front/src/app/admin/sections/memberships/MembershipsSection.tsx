@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Search, X, Check, Ban } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -8,6 +8,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import Pagination from "@/components/ui/Pagination";
 import { membershipApi } from "@/services/api";
 import { getLogoUrl } from "@/utils/getImageUrl";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 type MembershipRequest = {
   id: number;
@@ -28,8 +29,9 @@ export default function MembershipsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_memberships', 1);
   const itemsPerPage = 10;
+  const prevFiltersRef = useRef({ searchQuery, statusFilter });
 
   const fetchRequests = async () => {
     setIsLoading(true);
@@ -89,8 +91,13 @@ export default function MembershipsPage() {
   });
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+    const prev = prevFiltersRef.current;
+    const filtersChanged = prev.searchQuery !== searchQuery || prev.statusFilter !== statusFilter;
+    if (filtersChanged) {
+      prevFiltersRef.current = { searchQuery, statusFilter };
+      setCurrentPage(1);
+    }
+  }, [searchQuery, statusFilter, setCurrentPage]);
 
   const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
   const paginatedRequests = useMemo(() => {

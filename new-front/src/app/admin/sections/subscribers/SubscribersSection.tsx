@@ -6,6 +6,7 @@ import SectionLayout from "@/components/shared/SectionLayout";
 import Pagination from "@/components/ui/Pagination";
 import { subscriberApi } from "@/services/api";
 import toast from "react-hot-toast";
+import usePersistedPage from "@/hooks/usePersistedPage";
 
 type Subscriber = {
   id: number;
@@ -19,7 +20,7 @@ export default function SubscribersSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePersistedPage('admin_subscribers', 1);
   const itemsPerPage = 10;
 
   const fetchSubscribers = async () => {
