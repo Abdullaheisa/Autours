@@ -108,17 +108,17 @@ class VehicleController extends Controller
                     } else {
                         // String location: search by location, name, city, adresse, country, abbreviation, station_id or linked airport
                         $q->where(function ($q2) use ($location) {
-                            $q2->where('branches.location', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.name', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.city', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.adresse', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.country', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.abriviation', 'LIKE', "%{$location}%")
-                               ->orWhere('branches.station_id', 'LIKE', "%{$location}%")
+                            $q2->where('branches.location', 'ILIKE', "%{$location}%")
+                               ->orWhere('branches.name', 'ILIKE', "%{$location}%")
+                               ->orWhere('branches.city', 'ILIKE', "%{$location}%")
+                               ->orWhere('branches.adresse', 'ILIKE', "%{$location}%")
+                               ->orWhere('branches.country', 'ILIKE', "%{$location}%")
+                               ->orWhere('branches.abriviation', 'ILIKE', "%{$location}%")
+                               ->orWhere('branches.station_id', 'ILIKE', "%{$location}%")
                                ->orWhereHas('airport', function ($aq) use ($location) {
-                                   $aq->where('city', 'LIKE', "%{$location}%")
-                                      ->orWhere('airport_name', 'LIKE', "%{$location}%")
-                                      ->orWhere('iata_code', 'LIKE', "%{$location}%");
+                                   $aq->where('city', 'ILIKE', "%{$location}%")
+                                      ->orWhere('airport_name', 'ILIKE', "%{$location}%")
+                                      ->orWhere('iata_code', 'ILIKE', "%{$location}%");
                                });
                         });
                     }
@@ -138,7 +138,7 @@ class VehicleController extends Controller
             }
             $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
             $query = $filteredVehicles->whereHas('supplierUser', function($q) use ($user) {
-                $q->where('role', 'active_supplier');
+                $q->whereIn('role', ['active_supplier', 'supplier']);
                 if (!$user || $user->role !== 'admin') {
                     $q->where(function($q2) {
                         $q2->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
@@ -188,7 +188,7 @@ class VehicleController extends Controller
                 return $vehicle->supplierUser ? $vehicle->supplierUser->id : ($vehicle->getAttributes()['supplier'] ?? null);
             })->unique()->filter()->values()->toArray();
 
-            $suppliers = User::query()->whereIn('id', $supplierIds)->where('role', 'active_supplier')->get();
+            $suppliers = User::query()->whereIn('id', $supplierIds)->whereIn('role', ['active_supplier', 'supplier'])->get();
             $paymentMethods = PaymentMethod::query()->whereIn('id', PaymentMethodSupplier::query()->whereIn('supplier_id', $supplierIds)->get()->pluck('payment_method_id')->toArray())->get();
 
             // Group vehicles to ensure sidebar aggregates only count unique models
@@ -1158,7 +1158,7 @@ class VehicleController extends Controller
         $locations = Branch::query()
             ->with(['airport', 'company:id,name,logo,company'])
             ->whereHas('company', function ($query) use ($user) {
-                $query->where('role', 'active_supplier');
+                $query->whereIn('role', ['active_supplier', 'supplier']);
                 if (!$user || $user->role !== 'admin') {
                     $query->where(function($q) {
                         $q->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
@@ -1210,7 +1210,7 @@ class VehicleController extends Controller
             ->with(['airport', 'company:id,name,logo,company'])
             ->where('activation', 1)
             ->whereHas('company', function ($query) {
-                $query->where('role', 'active_supplier');
+                $query->whereIn('role', ['active_supplier', 'supplier']);
             })
             ->where(function ($query) use ($city) {
                 $query->where('location', 'ilike', "%{$city}%")
@@ -1273,7 +1273,7 @@ class VehicleController extends Controller
             ->with(['airport', 'company:id,name,logo,company'])
             ->where('activation', 1)
             ->whereHas('company', function ($query) {
-                $query->where('role', 'active_supplier');
+                $query->whereIn('role', ['active_supplier', 'supplier']);
             })
             ->where(function ($query) use ($searchCountry) {
                 $query->where('country', 'ilike', $searchCountry)
