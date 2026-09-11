@@ -130,6 +130,7 @@ export default function AIChatAssistant() {
   const [isListening, setIsListening] = useState(false);
   const [activeBookingVehicle, setActiveBookingVehicle] = useState<Vehicle | null>(null);
   const [currentSearchCriteria, setCurrentSearchCriteria] = useState<any>(null);
+  const [userMemory, setUserMemory] = useState<any>(null);
 
   const currencyCode = useSelector((state: RootState) => state.currency.code) || 'AED';
   const reduxSearchParams = useSelector((state: RootState) => state.search.searchParams);
@@ -140,7 +141,7 @@ export default function AIChatAssistant() {
   const recognitionRef = useRef<any>(null);
   const isLoadedRef = useRef(false);
 
-  // 💾 1. استعادة الرسائل المحفوظة ومعايير البحث من LocalStorage عند تحميل الصفحة لأول مرة
+  // 💾 1. استعادة الرسائل والذاكرة التراكمية من LocalStorage عند تحميل الصفحة
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -155,8 +156,12 @@ export default function AIChatAssistant() {
         if (savedCriteria) {
           setCurrentSearchCriteria(JSON.parse(savedCriteria));
         }
+        const savedMemory = localStorage.getItem('autours_ai_user_memory_v1');
+        if (savedMemory) {
+          setUserMemory(JSON.parse(savedMemory));
+        }
       } catch (e) {
-        console.warn('Could not restore chat history:', e);
+        console.warn('Could not restore chat history/memory:', e);
       } finally {
         isLoadedRef.current = true;
       }
@@ -238,6 +243,24 @@ export default function AIChatAssistant() {
     }
   };
 
+  const dynamicSuggestions = React.useMemo(() => {
+    const list = [...QUICK_SUGGESTIONS];
+    if (userMemory?.frequentDestinations && userMemory.frequentDestinations.length > 0) {
+      const topDest = userMemory.frequentDestinations[0].name;
+      list.unshift({
+        label: `🔁 وجهتك المعتادة: ${topDest} (3 أيام)`,
+        text: `عربيات ${topDest} من بكرة لمدة 3 أيام`,
+      });
+    }
+    if (userMemory?.preferredVehicleType) {
+      list.unshift({
+        label: `⭐ فئتك المفضلة: ${userMemory.preferredVehicleType}`,
+        text: `أفضل سيارات ${userMemory.preferredVehicleType} المتاحة من بكرة`,
+      });
+    }
+    return list.slice(0, 6);
+  }, [userMemory]);
+
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
     if (!text || isLoading) return;
@@ -293,6 +316,7 @@ export default function AIChatAssistant() {
                     country: user.country,
                   }
                 : null,
+            userMemory,
           }),
         });
 
@@ -308,6 +332,7 @@ export default function AIChatAssistant() {
         data = await processChatWithGemini({
           messages: payload,
           currency: currencyCode,
+          userMemory,
           currentUser:
             isAuthenticated && user
               ? {
@@ -323,6 +348,15 @@ export default function AIChatAssistant() {
 
       if (data.searchCriteria) {
         setCurrentSearchCriteria(data.searchCriteria);
+      }
+
+      if (data.userMemory) {
+        setUserMemory(data.userMemory);
+        try {
+          localStorage.setItem('autours_ai_user_memory_v1', JSON.stringify(data.userMemory));
+        } catch (e) {
+          console.warn('Could not persist learned user memory:', e);
+        }
       }
 
       setMessages((prev) => [

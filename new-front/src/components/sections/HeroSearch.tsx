@@ -264,7 +264,7 @@ export default function HeroSearch({
   };
 
   return (
-    <section className="relative h-auto min-h-[500px] lg:min-h-[540px] flex flex-col items-center justify-center pt-5 sm:pt-7 md:pt-8 pb-5 sm:pb-7 md:pb-8 px-4 sm:px-6 overflow-visible" aria-label="Car Rental Search">
+    <section className="relative w-full min-h-[calc(100vh-64px)] min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-center pt-8 sm:pt-10 md:pt-12 pb-8 sm:pb-10 md:pb-12 px-4 sm:px-6 overflow-visible" aria-label="Car Rental Search">
       {/* Background Image Container */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-gray-950">
         <Image
@@ -274,11 +274,11 @@ export default function HeroSearch({
           priority
           fetchPriority="high"
           sizes="100vw"
-          quality={80}
-          className="object-cover"
+          quality={85}
+          className="object-cover object-center"
           style={{ filter: 'brightness(0.60) contrast(1.05)' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/10 to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/60" />
       </div>
 
       <div className="relative z-10 max-w-4xl lg:max-w-5xl xl:max-w-5xl mx-auto w-full flex flex-col items-center px-2 sm:px-4">

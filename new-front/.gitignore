@@ -48,6 +48,8 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+.data
+.data/*
 *.temp
 
 # Project specific
