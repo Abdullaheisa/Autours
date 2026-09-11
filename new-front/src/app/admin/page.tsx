@@ -67,12 +67,18 @@ export default function AdminDashboard() {
   const [activeItem, setActiveItemState] = useState("profile");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const setActiveItem = (id: string) => {
+  const setActiveItem = (id: string, fromDetail: boolean = false) => {
     setActiveItemState(id);
     if (typeof window !== "undefined") {
-      const savedPage = sessionStorage.getItem(`pagination_page_admin_${id}`);
-      const pageParam = savedPage && parseInt(savedPage, 10) > 1 ? `&page=${savedPage}` : '';
-      window.history.pushState({ tab: id }, "", `?tab=${id}${pageParam}`);
+      if (!fromDetail) {
+        // Fresh navigation from sidebar: start from page 1
+        sessionStorage.removeItem(`pagination_page_admin_${id}`);
+        window.history.pushState({ tab: id }, "", `?tab=${id}`);
+      } else {
+        const savedPage = sessionStorage.getItem(`pagination_page_admin_${id}`);
+        const pageParam = savedPage && parseInt(savedPage, 10) > 1 ? `&page=${savedPage}` : '';
+        window.history.pushState({ tab: id }, "", `?tab=${id}${pageParam}`);
+      }
     }
   };
 

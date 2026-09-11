@@ -46,12 +46,19 @@ export default function CompanyDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editVehicleId, setEditVehicleId] = useState<number | null>(null);
 
-  const setActiveItem = (id: string) => {
+  const setActiveItem = (id: string, fromDetail: boolean = false) => {
     setActiveItemState(id);
     if (typeof window !== "undefined") {
-      const savedPage = sessionStorage.getItem(`pagination_page_company_${id}`);
-      const pageParam = savedPage && parseInt(savedPage, 10) > 1 ? `&page=${savedPage}` : '';
-      window.history.pushState({ tab: id }, "", `?tab=${id}${pageParam}`);
+      if (!fromDetail && id !== "edit-vehicle") {
+        // Fresh navigation: reset page to 1
+        sessionStorage.removeItem(`pagination_page_company_${id}`);
+        window.history.pushState({ tab: id }, "", `?tab=${id}`);
+      } else {
+        // Subview return: preserve saved page
+        const savedPage = sessionStorage.getItem(`pagination_page_company_${id}`);
+        const pageParam = savedPage && parseInt(savedPage, 10) > 1 ? `&page=${savedPage}` : '';
+        window.history.pushState({ tab: id }, "", `?tab=${id}${pageParam}`);
+      }
     }
   };
 
@@ -97,7 +104,7 @@ export default function CompanyDashboard() {
 
   const handleEditVehicle = (id: number) => {
     setEditVehicleId(id);
-    setActiveItem("edit-vehicle");
+    setActiveItem("edit-vehicle", true);
   };
 
   const renderContent = () => {
@@ -106,10 +113,10 @@ export default function CompanyDashboard() {
       case "calendar":        return <CompanyCalendarSection />;
       case "branches":        return <BranchesSection />;
       case "payment-methods": return <PaymentMethodsSection />;
-      case "create-vehicle":  return <CreateVehicleSection onBack={() => setActiveItem("vehicles")} />;
-      case "edit-vehicle":    return <EditVehicleSection vehicleId={editVehicleId!} onBack={() => setActiveItem("vehicles")} />;
+      case "create-vehicle":  return <CreateVehicleSection onBack={() => setActiveItem("vehicles", true)} />;
+      case "edit-vehicle":    return <EditVehicleSection vehicleId={editVehicleId!} onBack={() => setActiveItem("vehicles", true)} />;
       case "price-list":      return <PriceListSection />;
-      case "vehicles":        return <MyVehiclesSection onEditVehicle={handleEditVehicle} onAddVehicle={() => setActiveItem("create-vehicle")} />;
+      case "vehicles":        return <MyVehiclesSection onEditVehicle={handleEditVehicle} onAddVehicle={() => setActiveItem("create-vehicle", true)} />;
       case "membership":      return <CompanyMembershipSection />;
       case "rentals":         return <CompanyRentalsSection />;
       case "rental-terms":    return <CompanyRentalTermsSection />;

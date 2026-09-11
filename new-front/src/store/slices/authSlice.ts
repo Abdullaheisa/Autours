@@ -247,6 +247,14 @@ const authSlice = createSlice({
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};`;
           }
         }
+        // Clear all pagination session storage keys on logout
+        try {
+          Object.keys(sessionStorage).forEach((key) => {
+            if (key.startsWith('pagination_page_')) {
+              sessionStorage.removeItem(key);
+            }
+          });
+        } catch {}
       }
     },
     updateUser: (state, action: PayloadAction<User>) => {
@@ -277,6 +285,15 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        if (typeof window !== 'undefined') {
+          try {
+            Object.keys(sessionStorage).forEach((key) => {
+              if (key.startsWith('pagination_page_')) {
+                sessionStorage.removeItem(key);
+              }
+            });
+          } catch {}
+        }
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
