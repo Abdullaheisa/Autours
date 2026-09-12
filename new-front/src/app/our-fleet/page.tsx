@@ -15,7 +15,7 @@ import { apiClient } from '@/services/api/axiosClient';
 import { vehicleMapper } from '@/services/mappers/vehicleMapper';
 import { assets } from '@/config/assets';
 import { getVehicleImageUrl } from '@/utils/getImageUrl';
-import { formatPrice } from '@/utils/currency';
+import { formatPriceParts } from '@/utils/currency';
 
 const WORLD_CATEGORY_ORDER = ['mini', 'small', 'standard', 'economy', 'full size', 'compact suv', 'suv', 'van', 'family', 'luxury'];
 
@@ -241,7 +241,7 @@ export default function OurFleetPage() {
                     const targetRate = allRates[currencyCode] || 1;
                     convertedPrice = priceInUsd * targetRate;
                   }
-                  const priceDetails = formatPrice(Math.round(convertedPrice), currencyCode);
+                  const priceParts = formatPriceParts(Math.round(convertedPrice), currencyCode);
 
                   return (
                     <div
@@ -321,11 +321,18 @@ export default function OurFleetPage() {
 
                             {/* Starting Price */}
                             <div className="text-left sm:text-right shrink-0">
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Starting from</span>
-                              <p className="text-lg md:text-xl font-black text-slate-900 leading-none mt-1">
-                                {priceDetails}
-                                <span className="text-xs font-bold text-slate-500"> / day</span>
-                              </p>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Starting from</span>
+                              <div className="flex items-baseline sm:justify-end gap-1">
+                                <span className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-none">
+                                  {priceParts.amount}
+                                </span>
+                                <span className="text-xs sm:text-sm font-extrabold text-slate-600 uppercase tracking-wider">
+                                  {priceParts.currency}
+                                </span>
+                                <span className="text-xs font-semibold text-slate-400">
+                                  / day
+                                </span>
+                              </div>
                             </div>
 
                           </div>
