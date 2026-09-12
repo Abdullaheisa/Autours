@@ -256,7 +256,7 @@ export default function ChatCarCard({
         {/* Clear Prominent Total-Only Pricing Info */}
         <div className="text-center flex flex-col justify-center px-1">
           <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider leading-none">
-            Total Price {days > 0 && <span className="text-[9.5px] text-gray-400 font-normal">({days}d)</span>}
+            Total Price
           </span>
           <div className="text-sm sm:text-base font-black text-gray-950 font-sans tracking-tight leading-tight mt-0.5">
             {totalPrice}{' '}

@@ -85,6 +85,28 @@ export default function OurFleetPage() {
   const [loading, setLoading] = useState(true);
   const [selectedDesc, setSelectedDesc] = useState<{ name: string; text: string } | null>(null);
 
+  // Lock background scroll when modal is open
+  useEffect(() => {
+    if (selectedDesc) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setSelectedDesc(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalOverflow || '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [selectedDesc]);
+
   const cleanHtml = (html: string) => {
     if (!html) return '';
     // Remove class and style attributes which might be pasted from other pages
@@ -326,13 +348,20 @@ export default function OurFleetPage() {
                             />
                           </div>
 
-                          <div className="space-y-0.5 mt-2">
-                            <h4 className="text-sm md:text-base font-extrabold text-slate-800 tracking-tight leading-snug">
+                          <div className="w-full space-y-2 mt-2.5 flex flex-col items-center">
+                            <h4 className="text-sm md:text-base font-black text-slate-900 tracking-tight leading-snug">
                               {cat.vehicle.name}
                             </h4>
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-slate-500 bg-white px-2.5 py-0.5 rounded-full border border-slate-200/60">
-                              Cheapest by: <span className="text-slate-800 font-bold">{cat.vehicle.supplier.company}</span>
-                            </span>
+                            {cat.vehicle?.supplier?.company && (
+                              <div className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                <span className="text-[11px] font-bold text-slate-500">
+                                  Cheapest by:
+                                </span>
+                                <span className="text-xs sm:text-[13px] font-black text-slate-950 tracking-tight">
+                                  {cat.vehicle.supplier.company}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 

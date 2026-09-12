@@ -71,13 +71,7 @@ interface ChatMessage {
   };
 }
 
-const QUICK_SUGGESTIONS = [
-  { label: '✈️ Dubai Airport (3 days)', text: 'Cars available at Dubai Airport tomorrow for 3 days' },
-  { label: '⚡ Best Economy Deal', text: 'What are the best economy cars available this week?' },
-  { label: '❌ Cancel a Booking', text: 'Cancel booking' },
-  { label: '🛡️ Cancellation Policy', text: 'What are the cancellation and insurance policy conditions?' },
-  { label: '🚗 Book a Car', text: 'I want to book a car' },
-];
+
 
 function FormattedText({ content }: { content: string }) {
   const lines = content.split('\n');
@@ -120,21 +114,15 @@ function FormattedText({ content }: { content: string }) {
 const INITIAL_MSG: ChatMessage = {
   id: 'init',
   role: 'assistant',
-  content: `Welcome to **Autours**! 🚗✨
-
-I'm your AI Assistant. I can help you find and compare the best car rental deals, manage or cancel your bookings, and answer any questions.
-
-How may I assist you today?`,
+  content: `Please choose your preferred language / يرجى اختيار لغة المحادثة:`,
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   actionButtons: [
-    { label: '✈️ Dubai Airport (3 Days)', promptText: 'Show cars available at Dubai Airport for 3 days' },
-    { label: '⚡ Economy Car Deals', promptText: 'What are the best economy cars available?' },
-    { label: '❌ Cancel a Booking', promptText: 'Cancel booking' },
-    { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+    { label: '🇸🇦 العربية', promptText: 'المتابعة باللغة العربية' },
+    { label: '🇬🇧 English', promptText: 'Continue in English' },
   ],
 };
 
-const STORAGE_KEY = 'autours_ai_chat_history_v1';
+const STORAGE_KEY = 'autours_ai_chat_history_v3';
 
 export default function AIChatAssistant() {
   const router = useRouter();
@@ -258,23 +246,7 @@ export default function AIChatAssistant() {
     }
   };
 
-  const dynamicSuggestions = React.useMemo(() => {
-    const list = [...QUICK_SUGGESTIONS];
-    if (userMemory?.frequentDestinations && userMemory.frequentDestinations.length > 0) {
-      const topDest = userMemory.frequentDestinations[0].name;
-      list.unshift({
-        label: `🔁 Your destination: ${topDest}`,
-        text: `Best cars available in ${topDest}?`,
-      });
-    }
-    if (userMemory?.preferredVehicleType) {
-      list.unshift({
-        label: `⭐ Preferred: ${userMemory.preferredVehicleType}`,
-        text: `Best ${userMemory.preferredVehicleType} cars available now?`,
-      });
-    }
-    return list.slice(0, 6);
-  }, [userMemory]);
+
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
@@ -413,10 +385,15 @@ export default function AIChatAssistant() {
     startTime: string;
     endTime: string;
   }) => {
-    const isEnglish = !/[\u0600-\u06FF]/.test(messages[messages.length - 1]?.content || '');
-    const searchText = isEnglish
-      ? `Available cars at ${searchData.locationName} from ${searchData.dateFrom} to ${searchData.dateTo}`
-      : `سيارات ${searchData.locationName} من ${searchData.dateFrom} إلى ${searchData.dateTo}`;
+    // Determine language preference from past conversation
+    const isArabic = messages.some(
+      (m) =>
+        m.content.includes('المتابعة باللغة العربية') ||
+        (m.role === 'assistant' && /[\u0600-\u06FF]/.test(m.content) && !m.content.includes('Please choose'))
+    );
+    const searchText = isArabic
+      ? `أريد سيارات في ${searchData.locationName} من ${searchData.dateFrom} إلى ${searchData.dateTo}`
+      : `Available cars at ${searchData.locationName} from ${searchData.dateFrom} to ${searchData.dateTo}`;
     
     handleSendMessage(searchText);
   };
@@ -438,17 +415,24 @@ export default function AIChatAssistant() {
 
   const handleBookingCompleted = (voucher: ConfirmedBookingVoucher) => {
     setActiveBookingVehicle(null);
+    const isArabic = messages.some(
+      (m) =>
+        m.content.includes('المتابعة باللغة العربية') ||
+        (m.role === 'assistant' && /[\u0600-\u06FF]/.test(m.content) && !m.content.includes('Please choose'))
+    );
     setMessages((prev) => [
       ...prev,
       {
         id: `voucher-${Date.now()}`,
         role: 'assistant',
-        content: `🎉 **مبروك يا فندم! تم تأكيد حجزك بنجاح**\nتم تسجيل الحجز في النظام وإرسال تفاصيل الحجز إلى بريدك الإلكتروني. إليك ملخص قسيمة الحجز:`,
+        content: isArabic
+          ? `🎉 **مبروك يا فندم! تم تأكيد حجزك بنجاح**\nتم تسجيل الحجز في النظام وإرسال تفاصيل الحجز إلى بريدك الإلكتروني. إليك ملخص قسيمة الحجز:`
+          : `🎉 **Congratulations! Your booking is confirmed**\nYour booking has been registered in the system and confirmation details have been sent to your email. Here is your voucher summary:`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         voucher,
         actionButtons: [
-          { label: '💬 تواصل واتساب مع الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-          { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+          { label: isArabic ? '💬 تواصل واتساب مع الدعم' : '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+          { label: isArabic ? '👤 صفحة حجوزاتي' : '👤 My Bookings', url: '/profile', actionType: 'link' },
         ],
       },
     ]);
@@ -607,8 +591,8 @@ export default function AIChatAssistant() {
                         </div>
                       )}
 
-                      {/* Action Buttons */}
-                      {msg.actionButtons && msg.actionButtons.length > 0 && (
+                      {/* Action Buttons (Never render when search widget is active or vehicles are shown) */}
+                      {msg.actionButtons && msg.actionButtons.length > 0 && !msg.showSearchWidget && (!msg.vehicles || msg.vehicles.length === 0) && (
                         <div className="flex flex-wrap gap-1.5 mt-0.5">
                           {msg.actionButtons.map((btn, bIdx) => (
                             <button
@@ -627,7 +611,7 @@ export default function AIChatAssistant() {
                         </div>
                       )}
 
-                      {/* In-Chat Interactive Search & Date Picker Widget */}
+                      {/* In-Chat Interactive Search & Date Picker Widget (100% in English like HeroSearch) */}
                       {msg.showSearchWidget && (
                         <div className="mt-2 w-full">
                           <InChatSearchWidget
@@ -636,7 +620,7 @@ export default function AIChatAssistant() {
                             initialDateTo={msg.searchWidgetData?.dateTo}
                             initialStartTime={msg.searchWidgetData?.startTime}
                             initialEndTime={msg.searchWidgetData?.endTime}
-                            isEnglish={!/[\u0600-\u06FF]/.test(msg.content)}
+                            isEnglish={true}
                             onSearch={handleWidgetSearch}
                           />
                         </div>
@@ -698,18 +682,7 @@ export default function AIChatAssistant() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* ── Quick Chips (Light Suggestion Pills) ────────────────────────── */}
-            <div className="px-3 py-2 border-t border-gray-200 bg-white flex items-center gap-1.5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden shrink-0 shadow-xs">
-              {dynamicSuggestions.map((s, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(s.text)}
-                  className="bg-gray-50 hover:bg-amber-50 hover:border-amber-400 hover:text-amber-950 text-gray-700 border border-gray-200/90 text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap transition-all shrink-0 active:scale-95 font-bold shadow-2xs"
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
+
 
             {/* ── Input Bar (Light Theme) ────────────────────────────────────── */}
             <div className="p-2.5 bg-white border-t border-gray-200 shrink-0">

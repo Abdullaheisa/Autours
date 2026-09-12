@@ -521,7 +521,7 @@ export default function InChatBookingForm({
         {/* Reactive Total Price in Selected Currency */}
         <div className="text-right shrink-0 pl-2">
           <div className="text-[9.5px] font-bold text-gray-400 uppercase tracking-wider leading-none">
-            Total Price ({days}d)
+            Total Price
           </div>
           <div className="text-sm sm:text-base font-black text-[#f9d602] font-sans tracking-tight leading-tight mt-0.5">
             {totalPrice}{' '}

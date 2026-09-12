@@ -938,6 +938,47 @@ export async function POST(request: Request) {
     const isEnglish = !/[\u0600-\u06FF]/.test(latestUserMsg);
     const todayStr = formatDate(new Date());
 
+    // ⚡ Language Selection Immediate Handling (Arabic / English)
+    const cleanUserMsg = latestUserMsg.trim().toLowerCase();
+    const isArabicSelection =
+      latestUserMsg.includes('المتابعة باللغة العربية') ||
+      cleanUserMsg === 'عربي' ||
+      cleanUserMsg === 'العربية' ||
+      cleanUserMsg === 'arabic';
+
+    const isEnglishSelection =
+      latestUserMsg.includes('Continue in English') ||
+      cleanUserMsg === 'english' ||
+      cleanUserMsg === 'en' ||
+      cleanUserMsg === 'انجليزي' ||
+      cleanUserMsg === 'إنجليزي';
+
+    if (isArabicSelection) {
+      const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+      return NextResponse.json({
+        reply: `أهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nيسعدني مساعدتك في العثور على أفضل عروض تأجير السيارات حول العالم ومقارنة الأسعار.\nيرجى تحديد وجهتك وتواريخ الإيجار أدناه لعرض السيارات المتاحة فوراً:`,
+        vehicles: [],
+        searchCriteria: null,
+        actionButtons: [],
+        showSearchWidget: true,
+        searchWidgetData: {},
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    if (isEnglishSelection) {
+      const userGreeting = currentUser?.name ? ` Mr. ${currentUser.name}` : '';
+      return NextResponse.json({
+        reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm your AI Assistant. I can help you find and compare the best car rental deals worldwide.\nPlease select your destination and rental dates below to view available cars:`,
+        vehicles: [],
+        searchCriteria: null,
+        actionButtons: [],
+        showSearchWidget: true,
+        searchWidgetData: {},
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     // ⚡ 1. Try Real Booking Cancellation First (if cancel intent or order number present)
     const cancelResolution = await handleCancellationRequest(latestUserMsg, currentUser, effectiveToken);
     if (cancelResolution) {
@@ -1180,7 +1221,7 @@ ${dbContext.summaryStr}
       }
     }
 
-    if (actionButtons.length === 0) {
+    if (actionButtons.length === 0 && foundVehicles.length === 0) {
       actionButtons = getSmartActionButtons(latestUserMsg, locations, currentUser);
     }
 
@@ -1224,6 +1265,11 @@ ${dbContext.summaryStr}
       )) {
         showSearchWidget = true;
       }
+    }
+
+    // Suppress suggestion chips/buttons whenever vehicles are displayed or interactive search widget is active
+    if (showSearchWidget || foundVehicles.length > 0) {
+      actionButtons = [];
     }
 
     return NextResponse.json({

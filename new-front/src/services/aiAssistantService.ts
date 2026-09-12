@@ -581,8 +581,46 @@ export async function processChatWithGemini(params: {
 }): Promise<AssistantChatResult> {
   const { messages, currency = 'AED', currentUser, userMemory } = params;
   const latestUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
-  
   const today = new Date();
+
+  // ⚡ Language Selection Immediate Handling (Arabic / English)
+  const cleanUserMsg = latestUserMsg.trim().toLowerCase();
+  const isArabicSelection =
+    latestUserMsg.includes('المتابعة باللغة العربية') ||
+    cleanUserMsg === 'عربي' ||
+    cleanUserMsg === 'العربية' ||
+    cleanUserMsg === 'arabic';
+
+  const isEnglishSelection =
+    latestUserMsg.includes('Continue in English') ||
+    cleanUserMsg === 'english' ||
+    cleanUserMsg === 'en' ||
+    cleanUserMsg === 'انجليزي' ||
+    cleanUserMsg === 'إنجليزي';
+
+  if (isArabicSelection) {
+    const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+    return {
+      reply: `أهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nيسعدني مساعدتك في العثور على أفضل عروض تأجير السيارات حول العالم ومقارنة الأسعار.\nيرجى تحديد وجهتك وتواريخ الإيجار أدناه لعرض السيارات المتاحة فوراً:`,
+      vehicles: [],
+      searchCriteria: null,
+      actionButtons: [],
+      showSearchWidget: true,
+      searchWidgetData: {},
+    };
+  }
+
+  if (isEnglishSelection) {
+    const userGreeting = currentUser?.name ? ` Mr. ${currentUser.name}` : '';
+    return {
+      reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm your AI Assistant. I can help you find and compare the best car rental deals worldwide.\nPlease select your destination and rental dates below to view available cars:`,
+      vehicles: [],
+      searchCriteria: null,
+      actionButtons: [],
+      showSearchWidget: true,
+      searchWidgetData: {},
+    };
+  }
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   
   const tomorrow = new Date(today);
@@ -859,13 +897,13 @@ ${dbContext.summaryStr}
     }
   }
 
-  return {
-    reply: assistantResponseText,
-    vehicles: foundVehicles.slice(0, 5),
-    searchCriteria,
-    actionButtons,
-    userMemory: learningResult.updatedUserMemory,
-    showSearchWidget,
-    searchWidgetData: showSearchWidget ? { defaultLocation: detectedLocation } : undefined,
-  };
+    return {
+      reply: assistantResponseText,
+      vehicles: foundVehicles.slice(0, 5),
+      searchCriteria,
+      actionButtons: showSearchWidget ? [] : actionButtons,
+      userMemory: learningResult.updatedUserMemory,
+      showSearchWidget,
+      searchWidgetData: showSearchWidget ? { defaultLocation: detectedLocation } : undefined,
+    };
 }

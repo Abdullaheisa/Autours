@@ -72,7 +72,6 @@ export default function CategoryCard({ category, onEdit, onDelete }: CategoryCar
           </div>
           <div className="absolute bottom-4 left-4">
             <h3 className="text-lg font-bold text-white">{category.name}</h3>
-            <p className="text-xs text-white/80 font-medium">{category.vehicles} active vehicles</p>
           </div>
         </div>
         {category.description && (
@@ -88,7 +87,6 @@ export default function CategoryCard({ category, onEdit, onDelete }: CategoryCar
           <span className={`w-1.5 h-1.5 rounded-full ${category.active ? "bg-emerald-500" : "bg-gray-500"}`} />
           {category.active ? "Active" : "Inactive"}
         </span>
-        <span className="text-xs text-gray-500 font-medium">{category.vehicles} vehicles</span>
       </div>
     </div>
   );
