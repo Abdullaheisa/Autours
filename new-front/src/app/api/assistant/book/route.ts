@@ -141,18 +141,41 @@ export async function POST(request: Request) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const bookingRes = await fetch(`${BACKEND_URL}/api/book/vehicles`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(bookingPayload),
-    });
+    let bookingRes: any = null;
+    let bookingData: any = {};
 
-    const bookingData = await bookingRes.json().catch(() => ({}));
+    const bookingUrls = Array.from(new Set([
+      'https://www.autours.net/api/backend/book/vehicles',
+      'https://www.autours.net/api/backend/api/book/vehicles',
+      `${BACKEND_URL}/api/book/vehicles`,
+      'http://127.0.0.1:8000/api/book/vehicles',
+      'http://localhost:8000/api/book/vehicles',
+    ]));
 
-    if (!bookingRes.ok) {
+    for (const bUrl of bookingUrls) {
+      try {
+        const res = await fetch(bUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(bookingPayload),
+        });
+        if (res.ok) {
+          bookingRes = res;
+          bookingData = await res.json().catch(() => ({}));
+          break;
+        } else {
+          bookingRes = res;
+          bookingData = await res.json().catch(() => ({}));
+        }
+      } catch {
+        // try next
+      }
+    }
+
+    if (!bookingRes || !bookingRes.ok) {
       return NextResponse.json(
-        { success: false, message: bookingData.message || 'فشل في تسجيل الحجز بالسيرفر' },
-        { status: bookingRes.status }
+        { success: false, message: bookingData?.message || 'فشل في تسجيل الحجز بالسيرفر' },
+        { status: bookingRes?.status || 500 }
       );
     }
 

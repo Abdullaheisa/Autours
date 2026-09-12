@@ -20,17 +20,17 @@ export const BACKEND_URL =
 export const CLIENT_API_BASE = '/api/backend';
 
 // 3. For Server Components ("use server" or App Router routes)
-export const SERVER_API_BASE = `${BACKEND_URL}/api`;
+export const SERVER_API_BASE = isProd
+  ? 'https://www.autours.net/api/backend'
+  : `${BACKEND_URL}/api`;
 
 // 4. Robust Candidate Backend URLs for fallback resilience
 export const CANDIDATE_BACKEND_URLS: string[] = Array.from(
   new Set([
-    BACKEND_URL,
+    'https://www.autours.net/api/backend',
     'https://www.autours.net',
-    'https://autours.net',
     'http://127.0.0.1:8000',
     'http://localhost:8000',
-    'http://127.0.0.1',
-    'http://localhost',
+    BACKEND_URL,
   ].filter(Boolean))
 );

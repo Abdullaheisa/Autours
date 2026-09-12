@@ -195,22 +195,19 @@ export async function fetchLocations(): Promise<any[]> {
     ? Array.from(new Set([
         '/api/backend/get/locations',
         '/api/backend/api/get/locations',
-        'https://www.autours.net/api/get/locations',
-        'https://autours.net/api/get/locations',
+        'https://www.autours.net/api/backend/get/locations',
+        'https://www.autours.net/api/backend/api/get/locations',
         '/get/locations',
         `${BACKEND_URL}/api/get/locations`,
         `${BACKEND_URL}/get/locations`,
-        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/get/locations`),
       ].filter(Boolean)))
     : Array.from(new Set([
-        `${BACKEND_URL}/api/get/locations`,
-        `${BACKEND_URL}/get/locations`,
-        'https://www.autours.net/api/get/locations',
-        'https://autours.net/api/get/locations',
-        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/get/locations`),
-        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/get/locations`),
+        'https://www.autours.net/api/backend/get/locations',
+        'https://www.autours.net/api/backend/api/get/locations',
         'http://127.0.0.1:8000/api/get/locations',
         'http://localhost:8000/api/get/locations',
+        `${BACKEND_URL}/api/get/locations`,
+        `${BACKEND_URL}/get/locations`,
       ].filter(Boolean)));
 
   for (const url of urlsToTry) {
@@ -409,22 +406,19 @@ export async function queryVehicles(params: {
     ? Array.from(new Set([
         '/api/backend/filter/vehicles',
         '/api/backend/api/filter/vehicles',
-        'https://www.autours.net/api/filter/vehicles',
-        'https://autours.net/api/filter/vehicles',
+        'https://www.autours.net/api/backend/filter/vehicles',
+        'https://www.autours.net/api/backend/api/filter/vehicles',
         '/filter/vehicles',
         `${BACKEND_URL}/api/filter/vehicles`,
         `${BACKEND_URL}/filter/vehicles`,
-        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/filter/vehicles`),
       ].filter(Boolean)))
     : Array.from(new Set([
-        `${BACKEND_URL}/api/filter/vehicles`,
-        `${BACKEND_URL}/filter/vehicles`,
-        'https://www.autours.net/api/filter/vehicles',
-        'https://autours.net/api/filter/vehicles',
-        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/filter/vehicles`),
-        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/filter/vehicles`),
+        'https://www.autours.net/api/backend/filter/vehicles',
+        'https://www.autours.net/api/backend/api/filter/vehicles',
         'http://127.0.0.1:8000/api/filter/vehicles',
         'http://localhost:8000/api/filter/vehicles',
+        `${BACKEND_URL}/api/filter/vehicles`,
+        `${BACKEND_URL}/filter/vehicles`,
       ].filter(Boolean)));
 
   for (const url of urlsToTry) {

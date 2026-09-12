@@ -51,14 +51,12 @@ async function getCachedLocations() {
   
   const urlsToTry = Array.from(
     new Set([
-      `${BACKEND_URL}/api/get/locations`,
-      `${BACKEND_URL}/get/locations`,
-      'https://www.autours.net/api/get/locations',
-      'https://autours.net/api/get/locations',
-      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/api/get/locations`),
-      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/get/locations`),
+      'https://www.autours.net/api/backend/get/locations',
+      'https://www.autours.net/api/backend/api/get/locations',
       'http://127.0.0.1:8000/api/get/locations',
       'http://localhost:8000/api/get/locations',
+      `${BACKEND_URL}/api/get/locations`,
+      `${BACKEND_URL}/get/locations`,
     ].filter(Boolean))
   );
 
@@ -424,14 +422,12 @@ async function queryAutoursVehicles(params: {
 
   const urlsToTry = Array.from(
     new Set([
-      `${BACKEND_URL}/api/filter/vehicles`,
-      `${BACKEND_URL}/filter/vehicles`,
-      'https://www.autours.net/api/filter/vehicles',
-      'https://autours.net/api/filter/vehicles',
-      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/api/filter/vehicles`),
-      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/filter/vehicles`),
+      'https://www.autours.net/api/backend/filter/vehicles',
+      'https://www.autours.net/api/backend/api/filter/vehicles',
       'http://127.0.0.1:8000/api/filter/vehicles',
       'http://localhost:8000/api/filter/vehicles',
+      `${BACKEND_URL}/api/filter/vehicles`,
+      `${BACKEND_URL}/filter/vehicles`,
     ].filter(Boolean))
   );
 
