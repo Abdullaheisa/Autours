@@ -47,6 +47,16 @@ export const assets = {
     family: '/img/categories/Family.png__category.png',
   },
   suppliers: {
+    surprice: '/img/SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png',
+    greenMotion: '/img/Green Motion_logoc95e161f9301c10bd721f8a973c94db0.png',
+    usave: '/img/U-SAVE_logodc11c608f2e44e287d25dbed9df19519.png',
+    street: '/img/STREET_logo790f7e69b9b1c91eba4c48b21f78685f.png',
+    autowill: '/img/Autowill_logo8014343f4e7df937551052d2d68d09ea.png',
+    drivus: '/img/DRIVUS_logo71ad64bc92aa187e5c988f88b6805f95.png',
+    xdrive: '/img/XDrive Mobility_logo35b20acbc5264b77db20690e3d849bf7.png',
+    nissa: '/img/Niss a car rental_logo97c32ae610d3f37ee8b7e2de1070fd2d.png',
+    northCar: '/img/North Car_logof79a76fb9f6c50d3e8b62c2211effb79.png',
+    routes: '/img/ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png',
     alamo: '/img/company_logos/alamo.webp',
     avis: '/img/company_logos/avis.webp',
     hertz: '/img/company_logos/hertz.webp',
@@ -63,7 +73,6 @@ export const assets = {
     rama: '/img/RAMA_logodc11c608f2e44e287d25dbed9df19519.png',
     goRental: '/img/GO RENTAL_logof286ceda378c5cc4622aba3ac6afe972.png',
     royalStar: '/img/Royal Star_logo779b164104b2daee4d690f6ae57ca45d.jpg',
-
   },
   vehicles: {
     nissanPatrol: '/img/vehicles/Nissan-Patrol-2024.png_Nissan Patrol Automatic_vehicle_photo.png',

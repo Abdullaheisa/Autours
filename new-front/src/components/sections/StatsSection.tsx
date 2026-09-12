@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { CLIENT_API_BASE, SERVER_API_BASE } from '@/config/api';
 
-interface StatData {
+export interface StatData {
   countries: number;
   cities: number;
   airports: number;
@@ -13,7 +13,7 @@ interface StatData {
   cars: number;
 }
 
-const DEFAULT_STATS: StatData = {
+export const DEFAULT_STATS: StatData = {
   countries: 58,
   cities: 679,
   airports: 363,
@@ -22,14 +22,21 @@ const DEFAULT_STATS: StatData = {
   cars: 7730,
 };
 
-export default function StatsSection() {
-  const [stats, setStats] = useState<StatData>(DEFAULT_STATS);
+export default function StatsSection({ stats: propStats }: { stats?: StatData } = {}) {
+  const [stats, setStats] = useState<StatData>(propStats || DEFAULT_STATS);
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: '-40px' });
   const [activeSlide, setActiveSlide] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (propStats) {
+      setStats(propStats);
+    }
+  }, [propStats]);
+
+  useEffect(() => {
+    if (propStats) return;
     async function fetchStats() {
       try {
         const res = await fetch(`${CLIENT_API_BASE}/stats`, { cache: 'no-store' }).catch(() => null);
@@ -54,7 +61,7 @@ export default function StatsSection() {
     }
 
     fetchStats();
-  }, []);
+  }, [propStats]);
 
   const handleScroll = () => {
     if (!scrollRef.current) return;

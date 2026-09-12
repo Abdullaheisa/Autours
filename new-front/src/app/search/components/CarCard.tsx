@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { Vehicle } from '@/types';
 import { getVehicleImageUrl, getLogoUrl } from '@/utils/getImageUrl';
 import { assets } from '@/config/assets';
-import { formatPrice } from '@/utils/currency';
+import { formatPrice, formatPriceParts } from '@/utils/currency';
 import { getVehicleDisplayPrice } from '@/utils/vehiclePrice';
 import type { Currency } from '@/types';
 import RentalTermsModal from './RentalTermsModal';
@@ -539,10 +539,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           <div className="flex items-end justify-between gap-3 md:gap-4">
             <div>
-              <span className="text-[10px] md:text-[11px] font-bold text-gray-600 block mb-0.5">for {carData.price.totalDays} days</span>
-              <div className="flex items-baseline">
-                <span className="text-lg md:text-xl font-black text-gray-900">
-                  {formatPrice(carData.price.amount, carData.price.currency as Currency)}
+              <span className="text-[10px] md:text-[11px] font-bold text-gray-500 block mb-0.5">for {carData.price.totalDays} days</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl md:text-3xl font-black text-gray-950 tracking-tight leading-none">
+                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
+                </span>
+                <span className="text-xs md:text-sm font-extrabold text-gray-600 uppercase tracking-wide">
+                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}
                 </span>
               </div>
             </div>
@@ -851,10 +854,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
             <div className="flex flex-row lg:flex-col items-end lg:items-start justify-between w-full lg:gap-3 mt-auto gap-3">
               <div className="flex flex-col lg:items-start items-start">
-                <span className="text-[10px] lg:text-[11px] xl:text-xs font-bold text-gray-600 block mb-1">for {carData.price.totalDays} days</span>
-                <div className="text-left lg:text-left">
-                  <span className="text-lg lg:text-xl xl:text-2xl font-black text-gray-900">
-                    {formatPrice(carData.price.amount, carData.price.currency as Currency)}
+                <span className="text-[10px] lg:text-[11px] xl:text-xs font-bold text-gray-500 block mb-1">for {carData.price.totalDays} days</span>
+                <div className="flex items-baseline gap-1.5 text-left">
+                  <span className="text-2xl lg:text-3xl xl:text-[2rem] font-black text-gray-950 tracking-tight leading-none">
+                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
+                  </span>
+                  <span className="text-xs lg:text-sm font-extrabold text-gray-600 uppercase tracking-wide">
+                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}
                   </span>
                 </div>
               </div>

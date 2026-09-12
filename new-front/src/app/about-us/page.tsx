@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
+import { type StatData, DEFAULT_STATS } from '@/components/sections/StatsSection';
+import { CLIENT_API_BASE, SERVER_API_BASE } from '@/config/api';
+import { getLogoUrl } from '@/utils/getImageUrl';
 import { assets } from '@/config/assets';
 import { 
   Search, ArrowRight, Check, X, ChevronDown, Globe, 
@@ -14,27 +17,100 @@ import {
   ShieldAlert, ArrowUpRight, Car, Users, Gem
 } from 'lucide-react';
 
-const PARTNER_LOGOS = [
-  { name: 'Alamo', logo: assets.suppliers.alamo },
-  { name: 'Avis', logo: assets.suppliers.avis },
-  { name: 'Hertz', logo: assets.suppliers.hertz },
-  { name: 'Sixt', logo: assets.suppliers.sixt },
-  { name: 'Dollar', logo: assets.suppliers.dollar },
-  { name: 'Europcar', logo: assets.suppliers.europcar },
-  { name: 'Enterprise', logo: assets.suppliers.enterprise },
-  { name: 'Budget', logo: assets.suppliers.budget },
-  { name: 'National', logo: assets.suppliers.national },
-  { name: 'Thrifty', logo: assets.suppliers.thrifty },
-  { name: 'Highway', logo: assets.suppliers.highway },
-  { name: 'KTC', logo: assets.suppliers.ktc },
-  { name: 'MAHD', logo: assets.suppliers.mahd },
-  { name: 'RAMA', logo: assets.suppliers.rama },
-  { name: 'Go Rental', logo: assets.suppliers.goRental },
-  { name: 'Royal Star', logo: assets.suppliers.royalStar },
+interface PartnerConfig {
+  name: string;
+  logo: string;
+  keys: string[];
+}
+
+const TARGET_PARTNERS: PartnerConfig[] = [
+  { name: 'SurPrice', logo: assets.suppliers.surprice, keys: ['surprice', 'sur price', 'سيربيس'] },
+  { name: 'Green Motion', logo: assets.suppliers.greenMotion, keys: ['green motion', 'greenmotion', 'جرين مويشن'] },
+  { name: 'U-Save', logo: assets.suppliers.usave, keys: ['u-save', 'usave', 'يو سيف'] },
+  { name: 'Street', logo: assets.suppliers.street, keys: ['street', 'ستريت'] },
+  { name: 'Autowill', logo: assets.suppliers.autowill, keys: ['autowill', 'auto will', 'اوتو ويل'] },
+  { name: 'DRIVUS', logo: assets.suppliers.drivus, keys: ['drivus', 'drive us', 'driveandsmile', 'drive & smile', 'درايف اس', 'درايفوس'] },
+  { name: 'XDrive Mobility', logo: assets.suppliers.xdrive, keys: ['xdrive', 'x drive', 'x-drive', 'اكس درايف'] },
+  { name: 'Nissa Car Rental', logo: assets.suppliers.nissa, keys: ['nissa', 'niss a', 'نيسا'] },
+  { name: 'North Car', logo: assets.suppliers.northCar, keys: ['north', 'north car', 'northcar', 'نورث'] },
+  { name: 'Routes', logo: assets.suppliers.routes, keys: ['routes', 'روتس'] },
 ];
 
 export default function AboutUsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [stats, setStats] = useState<StatData>(DEFAULT_STATS);
+  const [partnerLogos, setPartnerLogos] = useState<Array<{ name: string; logo: string }>>(
+    TARGET_PARTNERS.map(p => ({ name: p.name, logo: p.logo }))
+  );
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch(`${CLIENT_API_BASE}/stats`, { cache: 'no-store' }).catch(() => null);
+        if (res && res.ok) {
+          const json = await res.json();
+          if (json?.data) {
+            setStats(json.data);
+            return;
+          }
+        }
+
+        const serverRes = await fetch(`${SERVER_API_BASE}/stats`, { cache: 'no-store' }).catch(() => null);
+        if (serverRes && serverRes.ok) {
+          const json = await serverRes.json();
+          if (json?.data) {
+            setStats(json.data);
+          }
+        }
+      } catch {
+        // Keeps DEFAULT_STATS if offline
+      }
+    }
+
+    async function fetchPartners() {
+      try {
+        let suppliers: any[] = [];
+        const res = await fetch(`${CLIENT_API_BASE}/get/suppliers`, { cache: 'no-store' }).catch(() => null);
+        if (res && res.ok) {
+          const json = await res.json();
+          suppliers = Array.isArray(json) ? json : json?.data || [];
+        } else {
+          const sRes = await fetch(`${SERVER_API_BASE}/get/suppliers`, { cache: 'no-store' }).catch(() => null);
+          if (sRes && sRes.ok) {
+            const json = await sRes.json();
+            suppliers = Array.isArray(json) ? json : json?.data || [];
+          }
+        }
+
+        if (suppliers && suppliers.length > 0) {
+          const dynamicList = TARGET_PARTNERS.map(target => {
+            const dbSupplier = suppliers.find((s: any) => {
+              const sName = (s.name || s.company || '').toLowerCase();
+              return target.keys.some(k => sName.includes(k.toLowerCase()));
+            });
+
+            if (dbSupplier && dbSupplier.logo && String(dbSupplier.logo).trim() !== '') {
+              return {
+                name: dbSupplier.name || target.name,
+                logo: getLogoUrl(dbSupplier.logo),
+              };
+            }
+            return {
+              name: target.name,
+              logo: target.logo,
+            };
+          });
+
+          setPartnerLogos(dynamicList);
+        }
+      } catch {
+        // Keeps default TARGET_PARTNERS
+      }
+    }
+
+    fetchStats();
+    fetchPartners();
+  }, []);
 
   const openModal = (index: number) => {
     setOpenFaq(index);
@@ -61,11 +137,11 @@ export default function AboutUsPage() {
     },
     {
       q: "Which countries does Autours operate in?",
-      a: "Autours currently serves travelers across the GCC countries, Egypt, Morocco, and Turkey, with continued regional expansion."
+      a: `Autours currently serves travelers across ${stats.countries}+ countries including the GCC countries, Egypt, Morocco, and Turkey, with continued regional expansion.`
     },
     {
       q: "How many rental companies are available?",
-      a: "Autours works with more than 30 trusted local and international car rental companies."
+      a: `Autours works with more than ${stats.suppliers} trusted local and international car rental companies.`
     },
     {
       q: "Can I compare airport car rentals?",
@@ -141,7 +217,7 @@ export default function AboutUsPage() {
                   <Globe size={20} className="text-primary" />
                   <div>
                     <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider leading-none">Operating Areas</p>
-                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">50+ Countries</p>
+                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">{stats.countries}+ Countries</p>
                   </div>
                 </div>
 
@@ -149,7 +225,7 @@ export default function AboutUsPage() {
                   <Award size={20} className="text-primary" />
                   <div>
                     <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider leading-none">Trusted Network</p>
-                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">30+ Suppliers</p>
+                    <p className="text-xs sm:text-sm font-black text-white mt-1.5 leading-none">{stats.suppliers}+ Suppliers</p>
                   </div>
                 </div>
               </motion.div>
@@ -182,7 +258,7 @@ export default function AboutUsPage() {
                 <div className="mt-4">
                   <h3 className="text-sm sm:text-base font-black text-slate-900 mb-1 group-hover:text-primary-800 transition-colors">Compare Multiple Companies</h3>
                   <p className="text-slate-500 text-xs font-semibold leading-relaxed">
-                    Browse offers from over 30 local and international rental partners without switching between different websites. Everything is gathered in one unified dashboard.
+                    Browse offers from over {stats.suppliers}+ local and international rental partners without switching between different websites. Everything is gathered in one unified dashboard.
                   </p>
                 </div>
               </motion.div>
@@ -505,11 +581,11 @@ export default function AboutUsPage() {
                     <span className="w-2 h-2 rounded-full bg-emerald-450 shrink-0" />
                     <span className="text-[10px] font-black uppercase tracking-wider text-primary-850">Autours Comparison</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-905 mb-6 leading-tight">Comparing Through Autours</h3>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-950 mb-6 leading-tight">Comparing Through Autours</h3>
                   
                   <div className="space-y-5">
                     {[
-                      { title: "Compare 30+ suppliers at once", desc: "Instantly find the best rates across the market." },
+                      { title: `Compare ${stats.suppliers}+ suppliers at once`, desc: "Instantly find the best rates across the market." },
                       { title: "Wider selection of vehicles", desc: "Access economy, SUVs, luxury, and family vans." },
                       { title: "Compare competitive prices", desc: "Get the absolute lowest price guaranteed." },
                       { title: "Everything in one place", desc: "No tab clutter, fully consolidated filters." },
@@ -554,7 +630,7 @@ export default function AboutUsPage() {
                     { code: 'TR', label: 'Turkey', desc: 'Istanbul, Antalya, Ankara, Izmir' }
                   ].map((dest, i) => (
                     <motion.div 
-                      key={i}
+                      key={i} 
                       whileHover={{ y: -3 }}
                       className="bg-slate-50/50 border border-slate-200 p-4 rounded-2xl flex items-start gap-4 hover:border-primary/50 shadow-3xs transition-all group cursor-default"
                     >
@@ -613,29 +689,30 @@ export default function AboutUsPage() {
         </section>
 
         {/* ── 7. Trusted Partner Network (Vibrant Primary Color Section with White Card Logos) ── */}
-        <section className="py-12 bg-primary text-slate-950 relative">
+        <section className="py-14 bg-primary text-slate-950 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             
             <div className="text-center max-w-2xl mx-auto mb-10">
               <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">Trusted Partner Network</h2>
-              <p className="text-slate-800 text-xs sm:text-sm mt-1 font-bold">Autours partners with more than 30 local and international car rental companies to give you the ultimate comparison experience.</p>
+              <p className="text-slate-800 text-xs sm:text-sm mt-1 font-bold">Autours partners with more than {stats.suppliers}+ local and international car rental companies to give you the ultimate comparison experience.</p>
             </div>
 
             {/* Logo Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
-              {PARTNER_LOGOS.map((partner, idx) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4.5 max-w-5xl mx-auto">
+              {partnerLogos.map((partner, idx) => (
                 <motion.div 
                   key={idx}
-                  whileHover={{ scale: 1.03 }}
-                  className="bg-white/95 border border-slate-100 rounded-xl p-3.5 flex items-center justify-center aspect-video shadow-sm hover:bg-white transition-all group relative overflow-hidden cursor-default"
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-white rounded-2xl p-4 sm:p-5 flex items-center justify-center aspect-[16/10] shadow-sm hover:shadow-md border border-white hover:border-slate-200 transition-all group relative overflow-hidden cursor-default"
                 >
-                  <div className="relative w-full h-7 sm:h-8">
+                  <div className="relative w-full h-9 sm:h-11">
                     <Image 
                       src={partner.logo}
                       alt={partner.name}
                       fill
-                      sizes="110px"
-                      className="object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-350"
+                      sizes="(max-width: 768px) 140px, 180px"
+                      className="object-contain opacity-95 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
                     />
                   </div>
                 </motion.div>
