@@ -289,31 +289,31 @@ export default function OurFleetPage() {
                           <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
                             
                             {/* Specs Pills */}
-                            <div className="flex flex-wrap items-center gap-2 text-[10px] md:text-[11px] font-bold text-slate-650">
-                              <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/50">
+                            <div className="flex flex-wrap items-center gap-2.5 text-xs md:text-[13px] font-bold text-slate-800">
+                              <span className="flex items-center gap-2 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200/70 shadow-2xs">
                                 <img
                                   src={assets.icons.seats}
                                   alt="Seats"
-                                  className="object-contain shrink-0"
-                                  style={{ width: '15px', height: '15px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                  className="w-5 h-5 md:w-[22px] md:h-[22px] object-contain shrink-0"
+                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
                                 />
                                 {specs.seats}
                               </span>
-                              <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/50">
+                              <span className="flex items-center gap-2 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200/70 shadow-2xs">
                                 <img
                                   src={assets.icons.doors}
                                   alt="Doors"
-                                  className="object-contain shrink-0"
-                                  style={{ width: '15px', height: '15px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                  className="w-5 h-5 md:w-[22px] md:h-[22px] object-contain shrink-0"
+                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
                                 />
                                 {specs.doors}
                               </span>
-                              <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/50">
+                              <span className="flex items-center gap-2 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200/70 shadow-2xs">
                                 <img
                                   src={assets.icons.bags}
                                   alt="Luggage"
-                                  className="object-contain shrink-0"
-                                  style={{ width: '15px', height: '15px', filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
+                                  className="w-5 h-5 md:w-[22px] md:h-[22px] object-contain shrink-0"
+                                  style={{ filter: 'invert(88%) sepia(35%) saturate(1005%) hue-rotate(345deg) brightness(101%) contrast(92%)' }}
                                 />
                                 {specs.luggage}
                               </span>

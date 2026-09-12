@@ -13,6 +13,8 @@ import {
   X,
   ShieldCheck,
 } from 'lucide-react';
+import { format } from 'date-fns';
+import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { LocationBranch } from '@/types';
 import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
 import { vehicleApi } from '@/services/api/vehicleApi';
@@ -80,23 +82,35 @@ const AIRPORT_CODE_MAP: Record<string, string> = {
   dmm: 'dammam',
 };
 
+function parseIsoDate(isoStr: string): Date | null {
+  if (!isoStr) return null;
+  const parts = isoStr.split('-').map(Number);
+  if (parts.length < 3 || !parts[0] || !parts[1] || !parts[2]) return null;
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
+function toIsoString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function formatDisplayDate(dateStr: string) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-  });
+  if (!dateStr) return 'Select Date';
+  const d = parseIsoDate(dateStr);
+  if (!d) return dateStr;
+  try {
+    return format(d, 'dd/MM/yyyy');
+  } catch {
+    return dateStr;
+  }
 }
 
 function addDaysToDate(dateStr: string, days: number): string {
-  const d = dateStr ? new Date(dateStr) : new Date();
+  const d = dateStr ? parseIsoDate(dateStr) || new Date() : new Date();
   d.setDate(d.getDate() + days);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return toIsoString(d);
 }
 
 export default function InChatSearchWidget({
@@ -125,6 +139,11 @@ export default function InChatSearchWidget({
   const [dateTo, setDateTo] = useState(defaultDateTo);
   const [startTime, setStartTime] = useState(initialStartTime);
   const [endTime, setEndTime] = useState(initialEndTime);
+
+  // HeroSearch-Style Dropdown & Calendar Popups
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showStartTime, setShowStartTime] = useState(false);
+  const [showEndTime, setShowEndTime] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -472,67 +491,157 @@ export default function InChatSearchWidget({
           )}
         </div>
 
-        {/* 2. Pick-up Date, Return Date & Times */}
-        <div className="grid grid-cols-2 gap-2">
-          {/* Pickup Date & Time */}
+        {/* 2. Pick-up Date, Return Date & Times (HeroSearch Calendar & Custom Time Picker) */}
+        <div className="grid grid-cols-2 gap-2 relative">
+          {/* Pickup Date & Time Box */}
           <div className="bg-gray-50/90 border border-gray-200 rounded-xl p-2 space-y-1.5 shadow-2xs">
             <label className="block text-[10px] font-extrabold text-gray-700 flex items-center gap-1">
               <Calendar className="w-3 h-3 text-amber-600 shrink-0" />
               <span>Pick-up Date</span>
             </label>
-            <input
-              type="date"
-              value={dateFrom}
-              min={addDaysToDate('', 0)}
-              onChange={(e) => {
-                setDateFrom(e.target.value);
-                if (e.target.value >= dateTo) {
-                  setDateTo(addDaysToDate(e.target.value, 3));
-                }
+
+            {/* Date Button (opens Hero Calendar) */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowCalendar(true);
+                setShowStartTime(false);
+                setShowEndTime(false);
               }}
-              className="w-full bg-white border border-gray-300 rounded-lg px-2 py-1 text-[11px] font-bold text-gray-900 focus:outline-none focus:border-amber-500"
-            />
-            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-1.5 py-0.5">
-              <Clock className="w-2.5 h-2.5 text-gray-400 shrink-0" />
-              <select
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full bg-transparent text-[10.5px] font-bold text-gray-800 focus:outline-none cursor-pointer"
+              className="w-full bg-white hover:border-amber-400 border border-gray-300 rounded-lg px-2.5 py-1.5 text-left flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+            >
+              <span className="text-[11px] font-black text-gray-900 truncate">
+                {formatDisplayDate(dateFrom)}
+              </span>
+              <Calendar className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-600 transition-colors shrink-0" />
+            </button>
+
+            {/* Time Selector Dropdown (HeroSearch Style) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowStartTime(!showStartTime);
+                  setShowEndTime(false);
+                  setShowCalendar(false);
+                }}
+                className="w-full bg-white hover:border-amber-400 border border-gray-200 rounded-lg px-2 py-1 flex items-center justify-between transition-all cursor-pointer shadow-2xs"
               >
-                {TIME_OPTIONS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+                <div className="flex items-center gap-1 min-w-0">
+                  <Clock className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                  <span className="text-[10.5px] font-extrabold text-gray-800 truncate">{startTime}</span>
+                </div>
+                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showStartTime ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showStartTime && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 max-h-36 overflow-y-auto z-[60] py-1">
+                  {TIME_OPTIONS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => {
+                        setStartTime(t);
+                        setShowStartTime(false);
+                      }}
+                      className={`w-full px-2.5 py-1 text-center text-[10.5px] font-bold transition-colors cursor-pointer ${
+                        startTime === t ? 'bg-[#f9d602] text-neutral-950 font-black' : 'text-gray-700 hover:bg-amber-50'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Return Date & Time */}
+          {/* Return Date & Time Box */}
           <div className="bg-gray-50/90 border border-gray-200 rounded-xl p-2 space-y-1.5 shadow-2xs">
             <label className="block text-[10px] font-extrabold text-gray-700 flex items-center gap-1">
               <Calendar className="w-3 h-3 text-amber-600 shrink-0" />
               <span>Return Date</span>
             </label>
-            <input
-              type="date"
-              value={dateTo}
-              min={dateFrom || addDaysToDate('', 1)}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full bg-white border border-gray-300 rounded-lg px-2 py-1 text-[11px] font-bold text-gray-900 focus:outline-none focus:border-amber-500"
-            />
-            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-1.5 py-0.5">
-              <Clock className="w-2.5 h-2.5 text-gray-400 shrink-0" />
-              <select
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full bg-transparent text-[10.5px] font-bold text-gray-800 focus:outline-none cursor-pointer"
+
+            {/* Return Date Button (opens Hero Calendar) */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowCalendar(true);
+                setShowStartTime(false);
+                setShowEndTime(false);
+              }}
+              className="w-full bg-white hover:border-amber-400 border border-gray-300 rounded-lg px-2.5 py-1.5 text-left flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+            >
+              <span className="text-[11px] font-black text-gray-900 truncate">
+                {formatDisplayDate(dateTo)}
+              </span>
+              <Calendar className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-600 transition-colors shrink-0" />
+            </button>
+
+            {/* Time Selector Dropdown (HeroSearch Style) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEndTime(!showEndTime);
+                  setShowStartTime(false);
+                  setShowCalendar(false);
+                }}
+                className="w-full bg-white hover:border-amber-400 border border-gray-200 rounded-lg px-2 py-1 flex items-center justify-between transition-all cursor-pointer shadow-2xs"
               >
-                {TIME_OPTIONS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+                <div className="flex items-center gap-1 min-w-0">
+                  <Clock className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                  <span className="text-[10.5px] font-extrabold text-gray-800 truncate">{endTime}</span>
+                </div>
+                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showEndTime ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showEndTime && (
+                <div className="absolute top-full right-0 left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 max-h-36 overflow-y-auto z-[60] py-1">
+                  {TIME_OPTIONS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => {
+                        setEndTime(t);
+                        setShowEndTime(false);
+                      }}
+                      className={`w-full px-2.5 py-1 text-center text-[10.5px] font-bold transition-colors cursor-pointer ${
+                        endTime === t ? 'bg-[#f9d602] text-neutral-950 font-black' : 'text-gray-700 hover:bg-amber-50'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Hero-Style CalendarRangePicker Popup Modal */}
+        {showCalendar && (
+          <div className="relative z-[200]">
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[210]"
+              onClick={() => setShowCalendar(false)}
+            />
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[220] flex justify-center animate-fadeIn shadow-2xl">
+              <CalendarRangePicker
+                startDate={parseIsoDate(dateFrom)}
+                endDate={parseIsoDate(dateTo)}
+                singleMonth={true}
+                onSelect={(start, end) => {
+                  setDateFrom(toIsoString(start));
+                  setDateTo(toIsoString(end));
+                  setShowCalendar(false);
+                }}
+                onClose={() => setShowCalendar(false)}
+              />
+            </div>
+          </div>
+        )}
 
         {/* 3. Quick Duration Preset Buttons */}
         <div className="flex items-center gap-2 pt-0.5">

@@ -581,6 +581,7 @@ export async function processChatWithGemini(params: {
 }): Promise<AssistantChatResult> {
   const { messages, currency = 'AED', currentUser, userMemory } = params;
   const latestUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
+  const isEnglish = !/[\u0600-\u06FF]/.test(latestUserMsg);
   const today = new Date();
 
   // ⚡ Language Selection Immediate Handling (Arabic / English)
@@ -599,27 +600,54 @@ export async function processChatWithGemini(params: {
     cleanUserMsg === 'إنجليزي';
 
   if (isArabicSelection) {
-    const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+    const userGreeting = currentUser?.name ? ` يا ${currentUser.name}` : ' يا غالي';
     return {
-      reply: `أهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nيسعدني مساعدتك في العثور على أفضل عروض تأجير السيارات حول العالم ومقارنة الأسعار.\nيرجى تحديد وجهتك وتواريخ الإيجار أدناه لعرض السيارات المتاحة فوراً:`,
+      reply: `أهلاً وسهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nأنا صديقك ومساعدك الشخصي للرحلات، ومعاك خطوة بخطوة عشان تختار السيارة الأنسب لك بأفضل سعر وبدون أي تعقيد.\n\nحابب تسافر فين أو إيه المدينة أو المطار اللي ناوي تزورها؟`,
       vehicles: [],
       searchCriteria: null,
       actionButtons: [],
-      showSearchWidget: true,
+      showSearchWidget: false,
       searchWidgetData: {},
     };
   }
 
   if (isEnglishSelection) {
-    const userGreeting = currentUser?.name ? ` Mr. ${currentUser.name}` : '';
+    const userGreeting = currentUser?.name ? ` ${currentUser.name}` : '';
     return {
-      reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm your AI Assistant. I can help you find and compare the best car rental deals worldwide.\nPlease select your destination and rental dates below to view available cars:`,
+      reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm your personal assistant and travel companion. I'll guide you step-by-step to find the perfect car for your trip at the best rate.\n\nWhere are you planning to travel, or which city/airport do you have in mind for pick-up?`,
       vehicles: [],
       searchCriteria: null,
       actionButtons: [],
-      showSearchWidget: true,
+      showSearchWidget: false,
       searchWidgetData: {},
     };
+  }
+
+  // ⚡ General booking intent without destination (e.g. "عاوز حجز", "محتاج سيارة", "book a car")
+  const isGeneralBookingIntent =
+    /^(عاوز|عايز|اريد|أريد|محتاج|ودي|ابغى|ابغي|نبي|book|rent|i want to book|i want to rent)\s*(حجز|احجز|أحجز|سيارة|عربية|تأجير|استئجار|سياره|a car|car)?$/i.test(latestUserMsg.trim()) ||
+    ['عاوز حجز', 'عايز حجز', 'اريد حجز', 'أريد حجز', 'حجز سيارة', 'حجز', 'احجز سيارة', 'book a car', 'rent a car', 'book car'].includes(cleanUserMsg);
+
+  if (isGeneralBookingIntent) {
+    if (isEnglish) {
+      return {
+        reply: `With pleasure! Which city or airport would you like to pick up the car from? (e.g. Dubai, Istanbul, Cairo, Kuwait...)`,
+        vehicles: [],
+        searchCriteria: null,
+        actionButtons: [],
+        showSearchWidget: false,
+        searchWidgetData: {},
+      };
+    } else {
+      return {
+        reply: `من عيوني يا غالي! تحب تستلم السيارة في أي مدينة أو مطار؟ (مثلاً: دبي، إسطنبول، القاهرة، الكويت...)`,
+        vehicles: [],
+        searchCriteria: null,
+        actionButtons: [],
+        showSearchWidget: false,
+        searchWidgetData: {},
+      };
+    }
   }
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   
@@ -883,17 +911,6 @@ ${dbContext.summaryStr}
           break;
         }
       }
-    }
-
-    if (!showSearchWidget && (
-      assistantResponseText.includes('تاريخ') ||
-      assistantResponseText.includes('تحديد') ||
-      assistantResponseText.includes('استلام') ||
-      assistantResponseText.includes('date') ||
-      assistantResponseText.includes('pickup') ||
-      assistantResponseText.includes('destination')
-    )) {
-      showSearchWidget = true;
     }
   }
 
