@@ -24,6 +24,7 @@ import {
 import { RootState } from '@/store';
 import ChatCarCard from './ChatCarCard';
 import InChatBookingForm from './InChatBookingForm';
+import InChatSearchWidget from './InChatSearchWidget';
 import { Vehicle } from '@/types';
 import { processChatWithGemini } from '@/services/aiAssistantService';
 
@@ -60,14 +61,22 @@ interface ChatMessage {
   searchCriteria?: any;
   actionButtons?: ActionButton[];
   voucher?: ConfirmedBookingVoucher;
+  showSearchWidget?: boolean;
+  searchWidgetData?: {
+    defaultLocation?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    startTime?: string;
+    endTime?: string;
+  };
 }
 
 const QUICK_SUGGESTIONS = [
-  { label: '✈️ Dubai Airport (3 Days)', text: 'Cars available at Dubai Airport tomorrow for 3 days' },
-  { label: '⚡ Cheapest Economy Car', text: 'Cheapest economy car available this week' },
-  { label: '👨‍👩‍👧 7-Seater Family SUV', text: '7-seater family SUV with automatic transmission' },
-  { label: '🛡️ Cancellation & Policy', text: 'What are the free cancellation and insurance policies?' },
-  { label: '🤝 Register as Supplier', text: 'How can I register my car rental company with Autours?' },
+  { label: '🇸🇦 العربية', text: 'أريد المتابعة باللغة العربية' },
+  { label: '🇬🇧 English', text: 'Continue in English' },
+  { label: '✈️ مطار دبي (3 أيام)', text: 'سيارات متاحة في مطار دبي من الغد لمدة 3 أيام' },
+  { label: '⚡ أفضل عرض اقتصادي', text: 'ما هي أفضل السيارات الاقتصادية المتاحة هذا الأسبوع؟' },
+  { label: '🛡️ سياسة الإلغاء والتأمين', text: 'ما هي شروط وسياسة الإلغاء والتأمين؟' },
 ];
 
 function FormattedText({ content }: { content: string }) {
@@ -111,11 +120,16 @@ function FormattedText({ content }: { content: string }) {
 const INITIAL_MSG: ChatMessage = {
   id: 'init',
   role: 'assistant',
-  content: `Welcome to **Autours**! 🚗✨\nI'm your AI assistant. I can help you search and book cars, manage your reservation, or answer any questions.`,
+  content: `مرحباً بك في **أوتورز (Autours)** لتأجير السيارات حول العالم! 🚗✨
+
+أنا مساعدك الذكي، يسعدني مساعدتك في البحث عن أفضل عروض السيارات وحجزها وإدارة حجوزاتك بكل سهولة.
+
+يرجى اختيار لغة المحادثة / Please choose your preferred language:`,
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   actionButtons: [
-    { label: '🚗 Find Cars in Dubai', url: '/search?location=Dubai', actionType: 'link' },
-    { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+    { label: '🇸🇦 المتابعة باللغة العربية', promptText: 'أريد المتابعة باللغة العربية' },
+    { label: '🇬🇧 Continue in English', promptText: 'Continue in English' },
+    { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
   ],
 };
 
@@ -248,14 +262,14 @@ export default function AIChatAssistant() {
     if (userMemory?.frequentDestinations && userMemory.frequentDestinations.length > 0) {
       const topDest = userMemory.frequentDestinations[0].name;
       list.unshift({
-        label: `🔁 وجهتك المعتادة: ${topDest} (3 أيام)`,
-        text: `عربيات ${topDest} من بكرة لمدة 3 أيام`,
+        label: `🔁 وجهتك المعتادة: ${topDest}`,
+        text: `ما هي أفضل السيارات المتاحة في ${topDest}؟`,
       });
     }
     if (userMemory?.preferredVehicleType) {
       list.unshift({
         label: `⭐ فئتك المفضلة: ${userMemory.preferredVehicleType}`,
-        text: `أفضل سيارات ${userMemory.preferredVehicleType} المتاحة من بكرة`,
+        text: `ما هي أفضل سيارات ${userMemory.preferredVehicleType} المتاحة حالياً؟`,
       });
     }
     return list.slice(0, 6);
@@ -369,6 +383,8 @@ export default function AIChatAssistant() {
           vehicles: data.vehicles || [],
           searchCriteria: data.searchCriteria,
           actionButtons: data.actionButtons || [],
+          showSearchWidget: data.showSearchWidget,
+          searchWidgetData: data.searchWidgetData,
         },
       ]);
     } catch (err) {
@@ -385,6 +401,23 @@ export default function AIChatAssistant() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleWidgetSearch = (searchData: {
+    location: string | number;
+    locationName: string;
+    country?: string;
+    dateFrom: string;
+    dateTo: string;
+    startTime: string;
+    endTime: string;
+  }) => {
+    const isEnglish = !/[\u0600-\u06FF]/.test(messages[messages.length - 1]?.content || '');
+    const searchText = isEnglish
+      ? `Available cars at ${searchData.locationName} from ${searchData.dateFrom} to ${searchData.dateTo}`
+      : `سيارات ${searchData.locationName} من ${searchData.dateFrom} إلى ${searchData.dateTo}`;
+    
+    handleSendMessage(searchText);
   };
 
   const handleActionClick = (btn: ActionButton) => {
@@ -593,6 +626,21 @@ export default function AIChatAssistant() {
                         </div>
                       )}
 
+                      {/* In-Chat Interactive Search & Date Picker Widget */}
+                      {msg.showSearchWidget && (
+                        <div className="mt-2 w-full">
+                          <InChatSearchWidget
+                            initialLocation={msg.searchWidgetData?.defaultLocation}
+                            initialDateFrom={msg.searchWidgetData?.dateFrom}
+                            initialDateTo={msg.searchWidgetData?.dateTo}
+                            initialStartTime={msg.searchWidgetData?.startTime}
+                            initialEndTime={msg.searchWidgetData?.endTime}
+                            isEnglish={!/[\u0600-\u06FF]/.test(msg.content)}
+                            onSearch={handleWidgetSearch}
+                          />
+                        </div>
+                      )}
+
                       {/* Car Cards */}
                       {msg.vehicles && msg.vehicles.length > 0 && (
                         <div className="flex flex-col gap-2.5 mt-2">
@@ -651,7 +699,7 @@ export default function AIChatAssistant() {
 
             {/* ── Quick Chips (Light Suggestion Pills) ────────────────────────── */}
             <div className="px-3 py-2 border-t border-gray-200 bg-white flex items-center gap-1.5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden shrink-0 shadow-xs">
-              {QUICK_SUGGESTIONS.map((s, idx) => (
+              {dynamicSuggestions.map((s, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(s.text)}
@@ -671,7 +719,7 @@ export default function AIChatAssistant() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder={isListening ? 'Listening now...' : 'Ask anything or request a car...'}
+                  placeholder={isListening ? 'جارٍ الاستماع... / Listening...' : 'اكتب استفسارك أو طلبك هنا... / Type your message...'}
                   disabled={isLoading}
                   className="flex-1 bg-transparent text-gray-900 text-xs sm:text-[13px] placeholder-gray-400 focus:outline-none py-0.5"
                 />

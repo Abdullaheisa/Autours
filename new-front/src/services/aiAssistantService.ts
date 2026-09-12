@@ -16,6 +16,14 @@ export interface AssistantChatResult {
   searchCriteria?: any;
   actionButtons?: ActionButton[];
   userMemory?: UserMemoryProfile;
+  showSearchWidget?: boolean;
+  searchWidgetData?: {
+    defaultLocation?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    startTime?: string;
+    endTime?: string;
+  };
 }
 
 const FALLBACK_B64 = 'QVEuQWI4Uk42SmlGUWNnQjFCOWpUcHhKTXNsT19KMjJNNUlwWnV4LURGaFg4RnFIa1ZHTUE=';
@@ -453,28 +461,40 @@ export function getSmartActionButtons(
   currentUser?: any
 ): ActionButton[] {
   const clean = userText.toLowerCase();
+  const isEnglish = !/[\u0600-\u06FF]/.test(userText);
 
   // 1. Account intent
-  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول') || clean.includes('بروفايل')) {
+  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول') || clean.includes('بروفايل') || clean.includes('account') || clean.includes('login') || clean.includes('profile')) {
     if (!currentUser) {
-      return [
-        { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
-        { label: '📝 حساب جديد', url: '/register', actionType: 'link' },
-      ];
+      return isEnglish
+        ? [
+            { label: '👤 Sign In', url: '/login', actionType: 'link' },
+            { label: '📝 Create Account', url: '/register', actionType: 'link' },
+          ]
+        : [
+            { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
+            { label: '📝 إنشاء حساب جديد', url: '/register', actionType: 'link' },
+          ];
     } else {
       return [
-        { label: '👤 صفحتي الشخصية', url: '/profile', actionType: 'link' },
+        { label: isEnglish ? '👤 My Profile' : '👤 حسابي الشخصي', url: '/profile', actionType: 'link' },
       ];
     }
   }
 
   // 2. Policy / Contact intent
-  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء') || clean.includes('دعم')) {
-    return [
-      { label: '💬 تواصل واتساب للدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-      { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-      { label: '✈️ سيارات مطار دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-    ];
+  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء') || clean.includes('دعم') || clean.includes('insurance') || clean.includes('policy') || clean.includes('cancel') || clean.includes('support')) {
+    return isEnglish
+      ? [
+          { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+          { label: '✈️ Dubai Airport Cars', promptText: 'Show cars available at Dubai Airport for 3 days' },
+          { label: '⚡ Economy Car Deals', promptText: 'What are the best economy rental deals?' },
+        ]
+      : [
+          { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+          { label: '✈️ سيارات مطار دبي (3 أيام)', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
+          { label: '⚡ أفضل العروض الاقتصادية', promptText: 'ما هي أفضل السيارات الاقتصادية المتاحة؟' },
+        ];
   }
 
   // 3. Dynamic Destination Extraction from Live DB Locations
@@ -511,8 +531,10 @@ export function getSmartActionButtons(
     if (airportBranches.length > 0) {
       for (const b of airportBranches.slice(0, 2)) {
         buttons.push({
-          label: `✈️ ${b.name || b.city} (3 أيام)`,
-          promptText: `عربيات ${b.name || b.city} من بكرة لمدة 3 أيام`,
+          label: isEnglish ? `✈️ ${b.name || b.city}` : `✈️ سيارات ${b.name || b.city}`,
+          promptText: isEnglish
+            ? `Available cars at ${b.name || b.city} for 3 days`
+            : `سيارات متاحة في ${b.name || b.city} لمدة 3 أيام`,
         });
       }
     }
@@ -520,24 +542,35 @@ export function getSmartActionButtons(
     if (cityBranches.length > 0 && buttons.length < 3) {
       const b = cityBranches[0];
       buttons.push({
-        label: `🏢 ${b.city || b.name} (3 أيام)`,
-        promptText: `عربيات ${b.city || b.name} من بكرة لمدة 3 أيام`,
+        label: isEnglish ? `🏢 ${b.city || b.name}` : `🏢 فروع ${b.city || b.name}`,
+        promptText: isEnglish
+          ? `Available cars in ${b.city || b.name} for 3 days`
+          : `سيارات متاحة في ${b.city || b.name} لمدة 3 أيام`,
       });
     }
     buttons.push({
-      label: `⚡ أرخص سيارة في ${matchedCountry} (5 أيام)`,
-      promptText: `عربيات ${matchedCountry} من بكرة لمدة 5 أيام`,
+      label: isEnglish ? `⚡ Best deals in ${matchedCountry}` : `⚡ أفضل عروض ${matchedCountry}`,
+      promptText: isEnglish
+        ? `Best car rental deals in ${matchedCountry}`
+        : `أفضل عروض تأجير السيارات في ${matchedCountry}`,
     });
     return buttons.slice(0, 4);
   }
 
-  // Default dynamic top suggestions
-  return [
-    { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-    { label: '✈️ مطار دبي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-    { label: '⚡ أرخص سيارة اقتصادية', promptText: 'أرخص عربية اقتصادية متاحة الأسبوع ده' },
-    { label: '🇹🇷 سيارات تركيا (3 أيام)', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-  ];
+  // Default professional top suggestions
+  return isEnglish
+    ? [
+        { label: '✈️ Dubai Airport (3 Days)', promptText: 'Show cars available at Dubai Airport for 3 days' },
+        { label: '⚡ Economy Car Deals', promptText: 'What are the best economy cars available?' },
+        { label: '🇹🇷 Turkey Car Rentals', promptText: 'Car rental options in Turkey' },
+        { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+      ]
+    : [
+        { label: '✈️ مطار دبي (3 أيام)', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
+        { label: '⚡ أفضل السيارات الاقتصادية', promptText: 'ما هي أفضل السيارات الاقتصادية المتاحة؟' },
+        { label: '🇹🇷 سيارات تركيا', promptText: 'عروض تأجير السيارات في تركيا' },
+        { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+      ];
 }
 
 export async function processChatWithGemini(params: {
@@ -573,59 +606,41 @@ export async function processChatWithGemini(params: {
   const dbContext = buildDynamicDatabaseContext(locations);
 
   const systemPrompt = `
-أنت "مساعد وصديق أوتورز الذكي" (Autours AI Assistant) لتأجير السيارات في جميع أنحاء العالم.
+أنت "المساعد الذكي لخدمة عملاء منصة أوتورز" (Autours AI Assistant) لتأجير السيارات عالمياً.
 
-👤 ${userInfoSummary}
-📅 تاريخ اليوم: ${todayStr}
+👤 بيانات العميل: ${userInfoSummary}
+📅 تاريخ اليوم الحالي: ${todayStr}
 
-🌐 اللغات واللهجات (Multilingual & Global Intelligence):
-- أنت ذكي جداً وتفهم جميع اللغات (العربية، الإنجليزية، الفرنسية، الروسية، التركية، الألمانية، الإسبانية، الإيطالية، الأردية، الفارسية، الصينية، الفرانكو، إلخ).
-- رد دائماً بنفس لغة المستخدم (لو كلمك بالإنجليزي رد عليه بالإنجليزي، لو بالفرنسي رد بالفرنسي، لو بالتركي رد بالتركي، لو بالعربي رد باللهجة المصرية اللطيفة والمرحة والخفيفة).
+💎 قواعد الأسلوب، اللباقة، واللغة (Tone, Politeness & Strict Professionalism):
+1. **أسلوب راقي ومهذب**: تحدث بلغة عربية فصحى مبسطة، أنيقة ومهذبة للغاية (تليق بخدمة عملاء المنصات العالمية المرموقة)، وخالية تماماً من الألفاظ العامية أو الشعبية أو الابتذال.
+2. **الالتزام الصارم باللغة**: 
+   - إذا اختار العميل أو تحدث باللغة العربية، أكمل الحوار باللغة العربية الفصحى المهذبة.
+   - إذا اختار العميل أو تحدث بالإنجليزية، التزم باللغة الإنجليزية الاحترافية واللبقة (Polite, concise, and articulate customer support English).
+   - لأي لغة أخرى (فرنسي، تركي، روسي)، أجب بنفس لغة العميل باحترافية.
+3. **الإيجاز والتنظيم**:
+   - اجعل ردودك مختصرة، مرتبة وواضحة (استخدم النقاط والعلامات المنظمة).
+   - تجنب الإطالة والنصوص الإنشائية المكررة أو أسلوب "س/ج" الآلي الجامد.
+   - تحاور بذكاء وتفاعل باحترام مع العميل.
 
-🧠 الذكاء في فهم الأخطاء الإملائية والأسماء الشائعة والعامية للدول والمدن:
-- أنت خبير وتفهم فوراً أسماء الدول والمدن حتى لو كتبها المستخدم بأخطاء إملائية أو حروف ناقصة أو بالعامية أو بألقابها وأسمائها الشائعة، مثل:
-  * "الكوت" / "كويت" / "الكوايت" / "الدانة" -> Kuwait
-  * "ترركيا" / "توركيا" / "تركية" / "turky" / "turkye" -> Turkey
-  * "مسر" / "أم الدنيا" / "المحروسة" / "كايرو" / "cairo" -> Egypt
-  * "دبى" / "دار الحي" / "dubay" -> Dubai
-  * "ابوظبي" / "أبو ظبي" -> Abu Dhabi
-  * "المغريب" / "كازا" / "مروك" / "moroco" -> Morocco
-  * "الاردن" / "النشامى" / "عمّان" -> Jordan
-  * "البحرين" / "بحرين" / "المنامة" / "bahrin" -> Bahrain
-  * "جورجيا" / "جورجيا" / "تبليسي" -> Georgia
-  * "اسبانيا" / "أسبانيا" / "spane" / "espana" / "مدريد" / "برشلونة" -> Spain
-  * "الارجنتين" / "الأرجنتين" / "argentine" -> Argentina
-  * "امريكا" / "أمريكا" / "الولايات المتحدة" / "ميامي" / "usa" -> United States
-  * "قطر" / "الدوحة" / "qater" -> Qatar
-  * "عمان" / "سلطنة عمان" / "مسقط" -> Oman
-  * "ايطاليا" / "إيطاليا" / "italie" / "روما" / "ميلان" -> Italy
-  * "اليونان" / "اثينا" / "grece" -> Greece
-  * "قبرص" / "لارنكا" / "cypre" -> Cyprus
+🧠 قواعد التعامل مع الوجهات والتواريخ (Strict No-Guessing & Realistic Travel Dates):
+1. **⛔ ممنوع التخمين العشوائي (Strictly No Guessing)**:
+   - لا تخمن تواريخ من عندك ولا تفترض أن العميل سيحجز اليوم أو غداً، فالعملاء يخططون لرحلاتهم مسبقاً.
+   - إذا سأل العميل عن دولة أو مدينة فقط دون تحديد تواريخ (مثل "أريد سيارة في دبي", "سيارات تركيا", "الكويت", "spain", "argentina"):
+     * رحب به بلباقة واحترافية وأكد له توفر الخدمة في تلك الوجهة.
+     * اطلب منه تحديد تاريخ استلام السيارة والمدة المطلوبة والمدينة/المطار المفضل.
+     * ⛔ إياك أن تضع وسم [SEARCH] إذا لم يحدد العميل التواريخ أو المدة بوضوح!
+2. **✅ متى تضع وسم البحث [SEARCH: Location, DateFrom, DateTo]؟**:
+   - تضع الوسم فقط وحصرياً إذا حدد العميل التواريخ أو المدة بوضوح مع الوجهة (مثال: "سيارات دبي من 15 إلى 20 أكتوبر" -> [SEARCH: Dubai, 2026-10-15, 2026-10-20]).
+   - تتبع سياق الحوار (Context Memory): إذا ذكر العميل الوجهة في رسالة سابقة، ثم في الرسالة التالية حدد التاريخ (مثلاً: "من 15 إلى 20 أكتوبر")، اربط الوجهة السابقة بالتواريخ وضع الوسم فوراً.
+   - اكتب اسم الوجهة بالإنجليزية المعيارية المطابقة للنظام (مثل: Dubai, Abu Dhabi, Kuwait, Turkey, Egypt, Morocco, Bahrain, Jordan, Georgia, Spain, Argentina).
+3. **الإجابة على الأسئلة العامة والاستفسارات**:
+   - إذا سأل عن عدد الشركات أو السيارات: وضّح باختصار أن أوتورز شبكة عالمية تضم مئات الموردين وآلاف السيارات المعتمدة في مختلف البلدان حول العالم.
+   - إذا سأل عن المزايا والسياسات: وضّح باختصار (إلغاء مجاني 100% حتى قبل 24 ساعة، تأمين أساسي مشمول، والدفع عند الاستلام).
+   - ⛔ لا تضع وسم [SEARCH] على الاستفسارات العامة.
 
-${buildLearnedMemoryPrompt(userMemory)}
-
-🎯 بيانات وقواعد المنصة الحية (مستخرجة مباشرة ولحظياً من قاعدة بيانات النظام):
+🎯 بيانات وقواعد المنصة الحية المتاحة حالياً في قاعدة البيانات:
 - عدد البلدان والوجهات المتوفرة فعلياً في قاعدة البيانات الحية: ${dbContext.totalCountries} دولة
-- قائمة البلدان والمطارات المتوفرة حالياً في السيستم:
 ${dbContext.summaryStr}
-
-🎯 القواعد الصارمة للتعامل مع قاعدة البيانات:
-1. ⚠️ عندما يطلب المستخدم أو يسأل عن دولة أو وجهة من قاعدة البيانات أعلاه دون تحديد التواريخ (مثلاً: "طب الكويت", "الكوت", "عايز عربية في مسر", "ترركيا", "المغرب", "عربيات دبي", "جورجيا", "spain", "argentina"):
-   - ⛔ إياك أن تضع [SEARCH] أو تخترع تواريخ عشوائية من عندك!
-   - ⛔ إياك أن تقول إن الدولة غير مدعومة طالما هي موجودة في قاعدة البيانات الحية أعلاه!
-   - رحب به بحماس واسأله بوضوح ولطافة عن تاريخ الاستلام والمدة والمدينة/المطار المفضل في تلك الدولة.
-
-2. ✅ متى تضع وسم [SEARCH: Location, DateFrom, DateTo]؟
-   - تضع الوسم إذا حدد المستخدم التواريخ أو المدة مع الوجهة (مثلاً: "عربيات الكويت من بكرة لمدة 5 أيام" -> [SEARCH: Kuwait, ${tomorrowStr}, ${sixDaysStr}]).
-   - 🧠 تتبع سياق المحادثة (Multi-turn Context): إذا كان المستخدم في الرسالة السابقة يتكلم عن وجهة معينة (مثلاً: "طب الكويت" أو "ترركيا") وفي الرسالة الحالية قال فقط: "من بكرا لمدة خمس ايام"، تذكر فوراً أن الوجهة المقصودة هي تلك الدولة وضع الوسم فوراً: [SEARCH: Kuwait, ${tomorrowStr}, ${sixDaysStr}]!
-   - إذا طلب صراحة "أرخص سيارة اقتصادية الأسبوع ده" بدون تحديد وجهة: اعتبر دبي 'Dubai' وجهة افتراضية للأيام القادمة من ${tomorrowStr} إلى ${fourDaysStr}.
-   - اكتب اسم الوجهة في الوسم دائماً بالاسم الإنجليزي المعياري المطابق للسيستم (مثل Kuwait, Dubai, Turkey, Egypt, Morocco, Bahrain, Jordan, Georgia, Spain, Argentina).
-
-3. لو المستخدم حيّاك أو رحب بيك (مثل "اهلا", "hello", "bonjour", "merhaba", "سلام", "صباح الخير"): رحب بيه بلطف واسأله ناوي يسافر فين ومحتاج عربية في أي بلد.
-
-4. لو طلب دولة غير متوفرة إطلاقاً في قاعدة البيانات: اعتذر بلباقة واقترح عليه بعض الوجهات المتاحة حالياً في قاعدة البيانات الحية. ولا تضع [SEARCH] على وجهة غير مدعومة.
-
-5. مزايا المنصة: إلغاء مجاني 100% حتى قبل 24 ساعة، تأمين أساسي مشمول، الدفع عند الاستلام.
 `;
 
   const modelsToTry = [
@@ -753,7 +768,13 @@ ${dbContext.summaryStr}
 
             if (!vehicles || vehicles.length === 0) {
               const displayLocation = targetLoc?.name || targetLoc?.city || countryName || locQuery;
-              assistantResponseText = `عذراً${userName}! 🚗\n\nلم نعثر على سيارات شاغرة حالياً في ${displayLocation} للفترة المحددة (${dFrom} إلى ${dTo}).\n\nتقدر تجرب تغيير التواريخ أو تختار وجهة أخرى:`;
+              const isEnglish = !/[\u0600-\u06FF]/.test(latestUserMsg);
+              if (isEnglish) {
+                assistantResponseText = `We apologize${currentUser?.name ? ` Mr. ${currentUser.name}` : ''}, no available vehicles were found in **${displayLocation}** for the selected dates (**${dFrom} to ${dTo}**).\n\nYou may try different dates or choose from the suggested destinations below:`;
+              } else {
+                const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+                assistantResponseText = `نعتذر منك${userGreeting}، لم تتوفر سيارات شاغرة حالياً في **${displayLocation}** للفترة المحددة (**${dFrom} إلى ${dTo}**).\n\nيمكنك تجربة تواريخ أخرى أو اختيار إحدى الوجهات المقترحة:`;
+              }
               actionButtons = getSmartActionButtons(locQuery, locations, currentUser);
               foundVehicles = [];
               searchCriteria = null;
@@ -782,8 +803,13 @@ ${dbContext.summaryStr}
   }
 
   if (!assistantResponseText) {
-    const userName = currentUser?.name ? ` يا عم ${currentUser.name}` : ' يا غالي';
-    assistantResponseText = `يا مرحب بيك${userName}! 🚗✨ أنا صديقك ومساعدك في أوتورز. قولي تحب نسافر فين أو محتاج عربية في أي بلد وتاريخ؟`;
+    const isEnglish = !/[\u0600-\u06FF]/.test(latestUserMsg);
+    if (isEnglish) {
+      assistantResponseText = `Welcome${currentUser?.name ? ` Mr. ${currentUser.name}` : ''}! 🚗✨ I am your Autours AI assistant. How can I assist you with your car rental today? Please specify your destination and preferred rental dates.`;
+    } else {
+      const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+      assistantResponseText = `أهلاً وسهلاً بك${userGreeting}! 🚗✨ يسعدني مساعدتك في حجز أفضل سيارات الإيجار مع أوتورز. يُرجى تزويدي بوجهة السفر وتواريخ الاستلام والتسليم المفضلة لنعرض لك أفضل الخيارات المتاحة.`;
+    }
   }
 
   if (actionButtons.length === 0) {
@@ -798,11 +824,48 @@ ${dbContext.summaryStr}
     existingUserMemory: userMemory,
   });
 
+  // ⚡ 4. Automatically activate interactive In-Chat Search Widget if destination mentioned without dates or dates requested
+  let showSearchWidget = false;
+  let detectedLocation: string | undefined = undefined;
+
+  if (foundVehicles.length === 0) {
+    const locMatch = resolveTargetLocation(latestUserMsg, locations);
+    if (locMatch) {
+      detectedLocation = locMatch.name || locMatch.city || locMatch.country;
+      showSearchWidget = true;
+    } else {
+      // check if any country or city alias in user message or in previous turn
+      for (const [alias, canonical] of Object.entries(UNIVERSAL_DESTINATION_MAP)) {
+        if (
+          normalizeText(latestUserMsg).includes(normalizeText(alias)) ||
+          isFuzzyMatch(latestUserMsg, alias)
+        ) {
+          detectedLocation = canonical;
+          showSearchWidget = true;
+          break;
+        }
+      }
+    }
+
+    if (!showSearchWidget && (
+      assistantResponseText.includes('تاريخ') ||
+      assistantResponseText.includes('تحديد') ||
+      assistantResponseText.includes('استلام') ||
+      assistantResponseText.includes('date') ||
+      assistantResponseText.includes('pickup') ||
+      assistantResponseText.includes('destination')
+    )) {
+      showSearchWidget = true;
+    }
+  }
+
   return {
     reply: assistantResponseText,
     vehicles: foundVehicles.slice(0, 5),
     searchCriteria,
     actionButtons,
     userMemory: learningResult.updatedUserMemory,
+    showSearchWidget,
+    searchWidgetData: showSearchWidget ? { defaultLocation: detectedLocation } : undefined,
   };
 }

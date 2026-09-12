@@ -42,17 +42,21 @@ export async function POST(request: Request) {
       timeFrom = '10:00',
       timeTo = '10:00',
       currency = 'AED',
-      pickupLoc,
-      fullName,
-      phone,
+      pickupLoc = 'Dubai',
+      fullName = '',
+      phone = '',
       mobileCode = '+971',
-      email,
+      email = '',
       country = 'United Arab Emirates',
       gender = 'Mr.',
       customerToken = '',
     } = body;
 
-    if (!vehicleId || !fullName || !phone || !email || !dateFrom || !dateTo) {
+    const cleanName = (fullName || '').replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u200E\u200F]/g, '').trim();
+    const cleanPhone = (phone || '').replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u200E\u200F]/g, '').trim();
+    const cleanEmail = (email || '').replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u200E\u200F]/g, '').trim();
+
+    if (!vehicleId || !cleanName || !cleanPhone || !cleanEmail || !dateFrom || !dateTo) {
       return NextResponse.json(
         { message: 'يرجى إكمال جميع بيانات الحجز المطلوبة' },
         { status: 400 }
@@ -60,7 +64,6 @@ export async function POST(request: Request) {
     }
 
     const csrf = await getCsrf();
-
     let token = customerToken;
     const tempPassword = 'AutoursUser2026!';
 
@@ -75,7 +78,7 @@ export async function POST(request: Request) {
             Cookie: csrf.cookie,
             'X-XSRF-TOKEN': csrf.token,
           },
-          body: JSON.stringify({ email: email.trim(), password: tempPassword }),
+          body: JSON.stringify({ email: cleanEmail, password: tempPassword }),
         });
 
         if (loginRes.ok) {
@@ -92,12 +95,12 @@ export async function POST(request: Request) {
               'X-XSRF-TOKEN': csrf.token,
             },
             body: JSON.stringify({
-              name: `${gender} ${fullName.trim()}`,
+              name: `${gender} ${cleanName}`,
               gender,
-              phone: phone.trim(),
+              phone: cleanPhone,
               mobile_code: mobileCode,
               country,
-              email: email.trim(),
+              email: cleanEmail,
               password: tempPassword,
               user_type: 'customer',
               supplier: 0,
@@ -116,15 +119,16 @@ export async function POST(request: Request) {
 
     // Submit booking to backend
     const bookingPayload = {
-      id: vehicleId,
+      id: Number(vehicleId),
+      pickupLoc: pickupLoc || 'Dubai',
       date_from: dateFrom,
       date_to: dateTo,
       time_from: timeFrom,
       time_to: timeTo,
       currency,
-      name: `${gender} ${fullName.trim()}`,
-      phone: `${mobileCode}${phone.trim()}`,
-      email: email.trim(),
+      name: `${gender} ${cleanName}`,
+      phone: `${mobileCode}${cleanPhone}`,
+      email: cleanEmail,
       country,
       driver_age: 28,
       residence_country: country,
@@ -145,9 +149,10 @@ export async function POST(request: Request) {
     let bookingData: any = {};
 
     const bookingUrls = Array.from(new Set([
-      'https://www.autours.net/api/backend/book/vehicles',
-      'https://www.autours.net/api/backend/api/book/vehicles',
       `${BACKEND_URL}/api/book/vehicles`,
+      `${BACKEND_URL}/book/vehicles`,
+      'https://www.autours.net/api/book/vehicles',
+      'https://www.autours.net/api/backend/book/vehicles',
       'http://127.0.0.1:8000/api/book/vehicles',
       'http://localhost:8000/api/book/vehicles',
     ]));
@@ -197,9 +202,9 @@ export async function POST(request: Request) {
         timeFrom,
         timeTo,
         pickupLoc,
-        customerName: fullName,
-        phone: `${mobileCode} ${phone}`,
-        email,
+        customerName: cleanName,
+        phone: `${mobileCode} ${cleanPhone}`,
+        email: cleanEmail,
         currency,
       },
     });

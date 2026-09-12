@@ -296,16 +296,12 @@ class BookingsController extends Controller
 
             $item->order_status = ($vehicle && $vehicle->instant_confirmation >= 1) ? RentalStatuses::CONFIRMED : RentalStatuses::PENDING;
 
-            $prefix = ($vehicle && $vehicle->branch && $vehicle->branch->country) ? strtoupper($vehicle->branch->country[0]) . strtoupper($vehicle->branch->country[1]) : 'AE';
+            $countryRaw = ($vehicle && $vehicle->branch && $vehicle->branch->country) ? $vehicle->branch->country : 'AE';
+            $normalizedCountry = \App\Services\CountryCurrencyResolver::normalizeCountryName($countryRaw);
+            $cleanAscii = preg_replace('/[^A-Za-z]/', '', $normalizedCountry);
+            $prefix = strlen($cleanAscii) >= 2 ? strtoupper(substr($cleanAscii, 0, 2)) : 'AE';
             $count = Rental::query()->count();
-            $suffix_count = $count;
-            if ($count < 1000) {
-                $suffix_count = '0' . $suffix_count;
-                if ($count < 100)
-                    $suffix_count = '0' . $suffix_count;
-                if ($count < 10)
-                    $suffix_count = '0' . $suffix_count;
-            }
+            $suffix_count = str_pad((string)($count + 1), 4, '0', STR_PAD_LEFT);
             $oldRental = null;
             $item->order_number = $prefix . 'ATR' . $suffix_count;
             $item->vehicle_id = $request->id;
@@ -351,11 +347,12 @@ class BookingsController extends Controller
                 ]);
             }
 
+            $item->unsetRelations();
             return response()->json([
                 'data' => $item,
                 'status' => true,
-            ]);
-        } catch (\Exception $e) {
+            ], StatusCodes::SUCCESS, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Booking failed', [
                 'request' => $request->all(),
@@ -366,7 +363,7 @@ class BookingsController extends Controller
                 ],
                 'message' => $e->getMessage(),
                 'status' => false
-            ], StatusCodes::SERVER_ERROR);
+            ], StatusCodes::SERVER_ERROR, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
     }
 

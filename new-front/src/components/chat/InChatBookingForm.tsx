@@ -333,7 +333,11 @@ export default function InChatBookingForm({
   // ── Handle Final Booking Submission ───────────────────────────────────────
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !phone.trim() || !email.trim()) {
+    const cleanFullName = (fullName || '').replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u200E\u200F]/g, '').trim();
+    const cleanPhone = (phone || '').replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u200E\u200F]/g, '').trim();
+    const cleanEmail = (email || '').replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u200E\u200F]/g, '').trim();
+
+    if (!cleanFullName || !cleanPhone || !cleanEmail) {
       setErrorMsg('Please complete your full name, phone number, and email.');
       return;
     }
@@ -348,36 +352,87 @@ export default function InChatBookingForm({
         vehicle.pickup_loc ||
         'Dubai';
 
-      const bookingPayload = {
-        id: vehicle.id,
-        pickupLoc: pickupLocValue,
-        date_from: dateFrom,
-        date_to: dateTo,
-        time_from: timeFrom || '10:00',
-        time_to: timeTo || '10:00',
-        currency: activeCurrency,
-        vehicle: vehicle.id,
-        price: totalPrice,
-        driver_age: 28,
-        residence_country: country || 'United Arab Emirates',
-      };
+      const branchVehicleIds = (vehicle as any).branch_vehicle_ids || {};
+      const actualVehicleId = (branchVehicleIds && Object.values(branchVehicleIds).length > 0)
+        ? Number(Object.values(branchVehicleIds)[0])
+        : Number(vehicle.id);
 
-      const res: any = await bookingApi.create(bookingPayload);
-      const rentalData = res?.data || res;
+      const customerToken = typeof window !== 'undefined'
+        ? (localStorage.getItem('token') || sessionStorage.getItem('token') || '')
+        : '';
 
-      if (res?.status || rentalData?.id || rentalData?.order_number) {
-        const orderNumber = rentalData.order_number || `AEATR${rentalData.id || '001'}`;
+      let rentalData: any = null;
+      let orderNumber = '';
+
+      // 1. First Attempt: Via Next.js Assistant Resilient Route
+      try {
+        const assistantRes = await fetch('/api/assistant/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vehicleId: actualVehicleId,
+            dateFrom,
+            dateTo,
+            timeFrom: timeFrom || '10:00',
+            timeTo: timeTo || '10:00',
+            currency: activeCurrency,
+            pickupLoc: pickupLocValue,
+            fullName: cleanFullName,
+            phone: cleanPhone,
+            mobileCode,
+            email: cleanEmail,
+            country: country || 'United Arab Emirates',
+            customerToken,
+          }),
+        });
+
+        if (assistantRes.ok) {
+          const assistData = await assistantRes.json();
+          if (assistData.success || assistData.orderNumber) {
+            rentalData = assistData;
+            orderNumber = assistData.orderNumber;
+          }
+        }
+      } catch (err) {
+        console.warn('Assistant book route attempt:', err);
+      }
+
+      // 2. Fallback Attempt: Direct bookingApi.create
+      if (!rentalData) {
+        const bookingPayload = {
+          id: actualVehicleId,
+          pickupLoc: pickupLocValue,
+          date_from: dateFrom,
+          date_to: dateTo,
+          time_from: timeFrom || '10:00',
+          time_to: timeTo || '10:00',
+          currency: activeCurrency,
+          vehicle: actualVehicleId,
+          price: totalPrice,
+          driver_age: 28,
+          residence_country: country || 'United Arab Emirates',
+        };
+
+        const res: any = await bookingApi.create(bookingPayload);
+        rentalData = res?.data || res;
+        if (res?.status || rentalData?.id || rentalData?.order_number) {
+          orderNumber = rentalData.order_number || `AEATR${rentalData.id || '001'}`;
+        }
+      }
+
+      if (rentalData && (rentalData.status || rentalData.success || orderNumber || rentalData.id)) {
+        const finalOrderNumber = orderNumber || `AEATR${rentalData.id || Math.floor(1000 + Math.random() * 9000)}`;
         onBookingComplete({
-          orderNumber,
+          orderNumber: finalOrderNumber,
           vehicleName: vehicle.name,
           dateFrom,
           dateTo,
           timeFrom,
           timeTo,
           pickupLoc: typeof pickupLocValue === 'string' ? pickupLocValue : vehicle.branch?.name || 'Dubai',
-          customerName: fullName,
-          phone: `${mobileCode} ${phone}`,
-          email,
+          customerName: cleanFullName,
+          phone: `${mobileCode} ${cleanPhone}`,
+          email: cleanEmail,
           totalPrice,
           dailyPrice,
           days,
@@ -385,7 +440,7 @@ export default function InChatBookingForm({
           supplierCompany: vehicle.supplier?.company || 'Autours Partner',
         });
       } else {
-        setErrorMsg(res?.message || 'Unable to complete reservation. Please try again.');
+        setErrorMsg(rentalData?.message || 'Unable to complete reservation. Please try again.');
       }
     } catch (bookingErr: any) {
       console.error('In-chat booking error:', bookingErr);

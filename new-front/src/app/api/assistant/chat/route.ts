@@ -463,28 +463,40 @@ function getSmartActionButtons(
   currentUser?: CurrentUser | null
 ): ActionButton[] {
   const clean = userText.toLowerCase();
+  const isEnglish = !/[\u0600-\u06FF]/.test(userText);
 
   // 1. Account intent
-  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول') || clean.includes('بروفايل')) {
+  if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول') || clean.includes('بروفايل') || clean.includes('account') || clean.includes('login') || clean.includes('profile')) {
     if (!currentUser) {
-      return [
-        { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
-        { label: '📝 حساب جديد', url: '/register', actionType: 'link' },
-      ];
+      return isEnglish
+        ? [
+            { label: '👤 Sign In', url: '/login', actionType: 'link' },
+            { label: '📝 Create Account', url: '/register', actionType: 'link' },
+          ]
+        : [
+            { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
+            { label: '📝 إنشاء حساب جديد', url: '/register', actionType: 'link' },
+          ];
     } else {
       return [
-        { label: '👤 صفحتي الشخصية', url: '/profile', actionType: 'link' },
+        { label: isEnglish ? '👤 My Profile' : '👤 صفحتي الشخصية', url: '/profile', actionType: 'link' },
       ];
     }
   }
 
   // 2. Policy / Contact intent
-  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء') || clean.includes('دعم')) {
-    return [
-      { label: '💬 تواصل واتساب للدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-      { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-      { label: '✈️ سيارات مطار دبي', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-    ];
+  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء') || clean.includes('دعم') || clean.includes('insurance') || clean.includes('policy') || clean.includes('cancel') || clean.includes('support')) {
+    return isEnglish
+      ? [
+          { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+          { label: '✈️ Dubai Airport Cars', promptText: 'Show cars available at Dubai Airport for 3 days' },
+          { label: '⚡ Economy Car Deals', promptText: 'What are the best economy rental deals?' },
+        ]
+      : [
+          { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+          { label: '✈️ سيارات مطار دبي (3 أيام)', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
+          { label: '⚡ أفضل السيارات الاقتصادية', promptText: 'ما هي أفضل السيارات الاقتصادية المتاحة؟' },
+        ];
   }
 
   // 3. Dynamic Destination Extraction from Live DB Locations
@@ -524,8 +536,10 @@ function getSmartActionButtons(
     if (airportBranches.length > 0) {
       for (const b of airportBranches.slice(0, 2)) {
         buttons.push({
-          label: `✈️ ${b.name || b.city} (3 أيام)`,
-          promptText: `عربيات ${b.name || b.city} من بكرة لمدة 3 أيام`,
+          label: isEnglish ? `✈️ ${b.name || b.city}` : `✈️ سيارات ${b.name || b.city}`,
+          promptText: isEnglish
+            ? `Available cars at ${b.name || b.city} for 3 days`
+            : `سيارات متاحة في ${b.name || b.city} لمدة 3 أيام`,
         });
       }
     }
@@ -533,24 +547,35 @@ function getSmartActionButtons(
     if (cityBranches.length > 0 && buttons.length < 3) {
       const b = cityBranches[0];
       buttons.push({
-        label: `🏢 ${b.city || b.name} (3 أيام)`,
-        promptText: `عربيات ${b.city || b.name} من بكرة لمدة 3 أيام`,
+        label: isEnglish ? `🏢 ${b.city || b.name}` : `🏢 فروع ${b.city || b.name}`,
+        promptText: isEnglish
+          ? `Available cars in ${b.city || b.name} for 3 days`
+          : `سيارات متاحة في ${b.city || b.name} لمدة 3 أيام`,
       });
     }
     buttons.push({
-      label: `⚡ أرخص سيارة في ${matchedCountry} (5 أيام)`,
-      promptText: `عربيات ${matchedCountry} من بكرة لمدة 5 أيام`,
+      label: isEnglish ? `⚡ Best deals in ${matchedCountry}` : `⚡ أفضل عروض ${matchedCountry}`,
+      promptText: isEnglish
+        ? `Best car rental deals in ${matchedCountry}`
+        : `أفضل عروض تأجير السيارات في ${matchedCountry}`,
     });
     return buttons.slice(0, 4);
   }
 
   // Default dynamic top suggestions
-  return [
-    { label: '🇰🇼 سيارات الكويت (3 أيام)', promptText: 'عربيات الكويت من بكرة لمدة 3 أيام' },
-    { label: '✈️ مطار دبي (3 أيام)', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-    { label: '⚡ أرخص سيارة اقتصادية', promptText: 'أرخص عربية اقتصادية متاحة الأسبوع ده' },
-    { label: '🇹🇷 سيارات تركيا (3 أيام)', promptText: 'عربيات تركيا من بكرة لمدة 3 أيام' },
-  ];
+  return isEnglish
+    ? [
+        { label: '✈️ Dubai Airport (3 Days)', promptText: 'Show cars available at Dubai Airport for 3 days' },
+        { label: '⚡ Economy Car Deals', promptText: 'What are the best economy cars available?' },
+        { label: '🇹🇷 Turkey Car Rentals', promptText: 'Car rental options in Turkey' },
+        { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+      ]
+    : [
+        { label: '✈️ مطار دبي (3 أيام)', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
+        { label: '⚡ أفضل السيارات الاقتصادية', promptText: 'ما هي أفضل السيارات الاقتصادية المتاحة؟' },
+        { label: '🇹🇷 سيارات تركيا', promptText: 'عروض تأجير السيارات في تركيا' },
+        { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+      ];
 }
 
 // ── Real Booking Cancellation Resolver ───────────────────────────────────────
@@ -574,17 +599,26 @@ async function handleCancellationRequest(
     return null;
   }
 
+  const isEnglish = !/[\u0600-\u06FF]/.test(userText);
+  const userGreetingAr = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+  const userGreetingEn = currentUser?.name ? ` Mr. ${currentUser.name}` : '';
+
   // If user provided an order number
   if (matchedOrderNumber) {
-    const userName = currentUser?.name ? ` يا مستر ${currentUser.name}` : ' يا غالي';
-
     if (!customerToken && !currentUser) {
       return {
-        reply: `يا هلا بيك${userName}! 🚗\n\nلإلغاء الحجز رقم **#${matchedOrderNumber}**، يرجى تسجيل الدخول أولاً بحسابك المسجل به الحجز للتحقق وتأكيد الإلغاء فوراً.`,
-        actionButtons: [
-          { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
-          { label: '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-        ],
+        reply: isEnglish
+          ? `Hello${userGreetingEn}! 🚗\n\nTo cancel booking **#${matchedOrderNumber}**, please sign in to your account first to verify and confirm the cancellation.`
+          : `أهلاً بك${userGreetingAr}! 🚗\n\nلإلغاء الحجز رقم **#${matchedOrderNumber}**، يرجى تسجيل الدخول أولاً بحسابك للتحقق وتأكيد الإلغاء.`,
+        actionButtons: isEnglish
+          ? [
+              { label: '👤 Sign In', url: '/login', actionType: 'link' },
+              { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+            ]
+          : [
+              { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
+              { label: '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+            ],
       };
     }
 
@@ -606,11 +640,18 @@ async function handleCancellationRequest(
 
       if (cancelRes.ok && (cancelData.status === true || cancelData.status === 1)) {
         return {
-          reply: `من عيوني${userName}! ✋\n\n✅ **تم إلغاء الحجز رقم #${matchedOrderNumber} بنجاح** في السيستم وحذفه من الحجوزات النشطة.\n\nتم إرسال إشعار فوري لإدارة المنصة وللشركة الموردة عبر الإيميل والواتساب. 🚗\n\nتحب نظبط حجز جديد ولا أساعدك في أي حاجة تانية؟ ✨`,
-          actionButtons: [
-            { label: '👤 عرض حجوزاتي', url: '/profile', actionType: 'link' },
-            { label: '🚗 حجز سيارة جديدة', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
-          ],
+          reply: isEnglish
+            ? `✅ **Booking #${matchedOrderNumber} has been successfully cancelled.**\n\nA confirmation notification has been sent to our team and the supplier company via email and WhatsApp. 🚗\n\nHow else may I assist you today?`
+            : `✅ **تم إلغاء الحجز رقم #${matchedOrderNumber} بنجاح** في النظام وحذفه من الحجوزات النشطة.\n\nتم إرسال إشعار فوري لإدارة المنصة وللشركة الموردة عبر البريد الإلكتروني والواتساب. 🚗\n\nهل ترغب في المساعدة بأي حجز أو استفسار آخر؟ ✨`,
+          actionButtons: isEnglish
+            ? [
+                { label: '👤 My Bookings', url: '/profile', actionType: 'link' },
+                { label: '🚗 Book a New Car', promptText: 'Show cars available at Dubai Airport for 3 days' },
+              ]
+            : [
+                { label: '👤 عرض حجوزاتي', url: '/profile', actionType: 'link' },
+                { label: '🚗 حجز سيارة جديدة', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
+              ],
         };
       }
 
@@ -618,71 +659,72 @@ async function handleCancellationRequest(
 
       if (errMsg.includes('بدأت بالفعل') || errMsg.includes('started')) {
         return {
-          reply: `عذراً${userName}! ⚠️\n\nلا يمكن إلغاء الحجز رقم **#${matchedOrderNumber}** نظراً لأن فترة الحجز قد بدأت بالفعل!`,
+          reply: isEnglish
+            ? `We apologize${userGreetingEn}. Booking **#${matchedOrderNumber}** cannot be cancelled as the rental period has already started.`
+            : `نعتذر منك${userGreetingAr}. لا يمكن إلغاء الحجز رقم **#${matchedOrderNumber}** نظراً لأن فترة الإيجار قد بدأت بالفعل.`,
           actionButtons: [
-            { label: '💬 تواصل مع الدعم الفني', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-            { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+            { label: isEnglish ? '💬 Contact Support' : '💬 تواصل مع الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+            { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
           ],
         };
       }
 
       if (errMsg.includes('24') || errMsg.includes('أقل من 24')) {
         return {
-          reply: `عذراً${userName}! ⚠️\n\nلا يمكن إلغاء الحجز رقم **#${matchedOrderNumber}** نظراً لأنه متبقي أقل من 24 ساعة على موعد الاستلام (حسب سياسة شروط الإلغاء بالمنصة).\n\nتقدر تتواصل مع فريق الدعم لو عندك أي ظرف طارئ.`,
+          reply: isEnglish
+            ? `We apologize${userGreetingEn}. Booking **#${matchedOrderNumber}** cannot be cancelled online as there are less than 24 hours remaining before pickup (per platform cancellation policy).\n\nPlease reach out to support for assistance.`
+            : `نعتذر منك${userGreetingAr}. لا يمكن إلغاء الحجز رقم **#${matchedOrderNumber}** نظراً لأنه متبقي أقل من 24 ساعة على موعد الاستلام (حسب سياسة شروط الإلغاء بالمنصة).\n\nيمكنك التواصل مع فريق الدعم للمساعدة.`,
           actionButtons: [
-            { label: '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-            { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+            { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+            { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
           ],
         };
       }
 
       if (errMsg.includes('ملغي بالفعل') || errMsg.includes('Already Cancelled')) {
         return {
-          reply: `الحجز رقم **#${matchedOrderNumber}** ملغي بالفعل مسبقاً في السيستم يا فندم! 👍`,
+          reply: isEnglish
+            ? `Booking **#${matchedOrderNumber}** is already cancelled.`
+            : `الحجز رقم **#${matchedOrderNumber}** ملغي مسبقاً في النظام.`,
           actionButtons: [
-            { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+            { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
           ],
         };
       }
 
       if (cancelRes.status === 404 || errMsg.includes('العثور')) {
         return {
-          reply: `عذراً${userName}، لم نتمكن من العثور على حجز بالرقم **#${matchedOrderNumber}** في حسابك. يرجى التأكد من رقم الحجز من صفحة البروفايل.`,
+          reply: isEnglish
+            ? `We could not find booking **#${matchedOrderNumber}** in your account. Please check the booking number in your profile.`
+            : `لم نتمكن من العثور على حجز برقم **#${matchedOrderNumber}** في حسابك. يرجى مراجعة رقم الحجز من صفحة حسابك.`,
           actionButtons: [
-            { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
-          ],
-        };
-      }
-
-      if (cancelRes.status === 403 || errMsg.includes('Unauthorized') || errMsg.includes('غير مصرح')) {
-        return {
-          reply: `عذراً${userName}، هذا الحجز رقم **#${matchedOrderNumber}** غير تابع لهذا الحساب ولا يمكن إلغاؤه.`,
-          actionButtons: [
-            { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+            { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
           ],
         };
       }
 
       return {
-        reply: `عذراً${userName}، تعذر إلغاء الحجز رقم **#${matchedOrderNumber}**: ${errMsg || 'حدث خطأ غير متوقع'}. يرجى المحاولة من صفحة البروفايل أو التواصل مع الدعم.`,
+        reply: isEnglish
+          ? `Could not cancel booking **#${matchedOrderNumber}**: ${errMsg || 'An unexpected error occurred'}. Please try from your profile or contact support.`
+          : `تعذر إلغاء الحجز رقم **#${matchedOrderNumber}**: ${errMsg || 'حدث خطأ غير متوقع'}. يرجى المحاولة من صفحة حسابك أو التواصل مع الدعم.`,
         actionButtons: [
-          { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
-          { label: '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+          { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+          { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
         ],
       };
     } catch (err: any) {
       console.error('Cancel booking error in chat route:', err);
       return {
-        reply: `حدث خطأ أثناء محاولة إلغاء الحجز رقم **#${matchedOrderNumber}**. يرجى المحاولة من صفحة البروفايل.`,
-        actionButtons: [{ label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' }],
+        reply: isEnglish
+          ? `An error occurred while attempting to cancel booking **#${matchedOrderNumber}**. Please try from your profile.`
+          : `حدث خطأ أثناء محاولة إلغاء الحجز رقم **#${matchedOrderNumber}**. يرجى المحاولة من صفحة حسابك.`,
+        actionButtons: [{ label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' }],
       };
     }
   }
 
   // If cancellation intent without order number
   if (isCancelIntent) {
-    const userName = currentUser?.name ? ` يا مستر ${currentUser.name}` : ' يا غالي';
-
     if (customerToken) {
       try {
         const rentalsRes = await fetch(`${BACKEND_URL}/api/get/rentals`, {
@@ -705,32 +747,38 @@ async function handleCancellationRequest(
             const ordNum = single.order_number || ('ATR' + single.id);
             const carName = single.vehicle?.name || 'السيارة المحجوزة';
             return {
-              reply: `يا هلا بيك${userName}! 🚗\n\nلقيت عندك حجز نشط برقم **#${ordNum}** (سيارة ${carName} - استلام ${single.start_date}).\n\nتحب ألغيهولك فوراً؟ اضغط على زر الإلغاء بالأسفل:`,
+              reply: isEnglish
+                ? `You have an active booking **#${ordNum}** (${carName} - pickup ${single.start_date}).\n\nWould you like to cancel it? Click the button below:`
+                : `لديك حجز نشط برقم **#${ordNum}** (${carName} - تاريخ الاستلام ${single.start_date}).\n\nهل ترغب في إلغائه؟ يمكنك الضغط على زر الإلغاء أدناه:`,
               actionButtons: [
-                { label: `❌ تأكيد إلغاء #${ordNum}`, promptText: `الغي الحجز ده ${ordNum}` },
-                { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+                { label: isEnglish ? `❌ Cancel #${ordNum}` : `❌ تأكيد إلغاء #${ordNum}`, promptText: isEnglish ? `Cancel booking ${ordNum}` : `إلغاء الحجز ${ordNum}` },
+                { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
               ],
             };
           } else if (activeBookings.length > 1) {
             const buttons: ActionButton[] = activeBookings.slice(0, 3).map((r: any) => {
               const num = r.order_number || ('ATR' + r.id);
               return {
-                label: `❌ إلغاء #${num} (${r.vehicle?.name || 'سيارة'})`,
-                promptText: `الغي الحجز ده ${num}`,
+                label: isEnglish ? `❌ Cancel #${num}` : `❌ إلغاء #${num} (${r.vehicle?.name || 'سيارة'})`,
+                promptText: isEnglish ? `Cancel booking ${num}` : `إلغاء الحجز ${num}`,
               };
             });
-            buttons.push({ label: '👤 كل الحجوزات', url: '/profile', actionType: 'link' });
+            buttons.push({ label: isEnglish ? '👤 All Bookings' : '👤 كل الحجوزات', url: '/profile', actionType: 'link' });
 
             return {
-              reply: `يا هلا بيك${userName}! 🚗\nعندك أكثر من حجز نشط، اختر الحجز اللي تحب تلغيه:`,
+              reply: isEnglish
+                ? `You have multiple active bookings. Please select the one you wish to cancel:`
+                : `لديك أكثر من حجز نشط، يرجى اختيار الحجز المراد إلغاؤه:`,
               actionButtons: buttons,
             };
           } else {
             return {
-              reply: `ما عندكش أي حجوزات نشطة حالياً قابلة للإلغاء في حسابك${userName}! 👍`,
+              reply: isEnglish
+                ? `You have no active cancellable bookings in your account.`
+                : `لا توجد لديك أي حجوزات نشطة قابلة للإلغاء في حسابك حالياً.`,
               actionButtons: [
-                { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
-                { label: '🚗 حجز سيارة جديدة', promptText: 'عربيات مطار دبي من بكرة لمدة 3 أيام' },
+                { label: isEnglish ? '👤 My Profile' : '👤 صفحة حسابي', url: '/profile', actionType: 'link' },
+                { label: isEnglish ? '🚗 Book a Car' : '🚗 حجز سيارة جديدة', promptText: isEnglish ? 'Show cars available at Dubai Airport for 3 days' : 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
               ],
             };
           }
@@ -741,10 +789,12 @@ async function handleCancellationRequest(
     }
 
     return {
-      reply: `يا هلا بيك${userName}! 🚗\nلإلغاء أي حجز، يرجى تزويدي برقم الحجز كاملاً (مثال: **الغي الحجز UNATR0024**)، أو يمكنك الإلغاء مباشرة بنقرة زر من صفحة البروفايل!`,
+      reply: isEnglish
+        ? `To cancel a booking, please provide the complete booking number (e.g., **Cancel booking UNATR0024**), or manage it directly from your Profile page.`
+        : `لإلغاء أي حجز، يرجى تزويدي برقم الحجز كاملاً (مثال: **إلغاء الحجز UNATR0024**)، أو يمكنك الإلغاء مباشرة من صفحة حسابك.`,
       actionButtons: [
-        { label: '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
-        { label: '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+        { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+        { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
       ],
     };
   }
@@ -766,6 +816,7 @@ export async function POST(request: Request) {
     }
 
     const latestUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
+    const isEnglish = !/[\u0600-\u06FF]/.test(latestUserMsg);
     const todayStr = formatDate(new Date());
 
     // ⚡ 1. Try Real Booking Cancellation First (if cancel intent or order number present)
@@ -796,38 +847,41 @@ export async function POST(request: Request) {
     let actionButtons: ActionButton[] = [];
 
     const userInfoSummary = currentUser?.name
-      ? `المستخدم مسجل: الاسم (${currentUser.name})، نوع الحساب (${currentUser.role})، الإيميل (${currentUser.email || 'غير متوفر'}).`
-      : `المستخدم زائر لم يسجل دخوله بعد.`;
+      ? `بيانات العميل: الاسم (${currentUser.name})، نوع الحساب (${currentUser.role})، البريد الإلكتروني (${currentUser.email || 'غير متوفر'}).`
+      : `العميل زائر لم يسجل دخوله بعد.`;
 
     const systemPrompt = `
-أنت "مساعد وصديق أوتورز الذكي" (Autours AI Assistant) لتأجير السيارات في جميع أنحاء العالم.
+أنت "المساعد الذكي لخدمة عملاء منصة أوتورز" (Autours AI Assistant) لتأجير السيارات عالمياً.
 
 👤 ${userInfoSummary}
-📅 تاريخ اليوم: ${todayStr}
+📅 تاريخ اليوم الحالي: ${todayStr}
 
-🌐 الذكاء واللغات واللهجات (Multilingual & Global Intelligence):
-- أنت ذكي جداً، لماح، وتفهم جميع لغات ولهجات العالم (العربية بجميع لهجاتها: مصرية، خليجية، كويتية، شامية، مغاربية، فرانكو، والإنجليزية، الفرنسية، الروسية، التركية، الألمانية، الإسبانية، الإيطالية، الأردية، وغيرها).
-- رد دائماً بنفس لغة ولهجة المستخدم (لو كلمك بالإنجليزي رد عليه بالإنجليزي، لو بالفرنسي رد بالفرنسي، لو بالتركي رد بالتركي، لو بالعربي رد باللهجة المصرية اللطيفة والمرحة والخفيفة).
+💎 قواعد الأسلوب، اللباقة، واللغة (Tone, Politeness & Strict Professionalism):
+1. **أسلوب راقي ومهذب**: تحدث بلغة عربية فصحى مبسطة، أنيقة ومهذبة للغاية (تليق بخدمة عملاء المنصات العالمية المرموقة)، وخالية تماماً من الألفاظ العامية أو الشعبية أو الابتذال.
+2. **الالتزام الصارم باللغة**: 
+   - إذا اختار العميل أو تحدث باللغة العربية، أكمل الحوار باللغة العربية الفصحى المهذبة.
+   - إذا اختار العميل أو تحدث بالإنجليزية، التزم باللغة الإنجليزية الاحترافية واللبقة (Polite, concise, and articulate customer support English).
+   - لأي لغة أخرى (فرنسي، تركي، روسي)، أجب بنفس لغة العميل باحترافية.
+3. **الإيجاز والتنظيم**:
+   - اجعل ردودك مختصرة، مرتبة وواضحة (استخدم النقاط والعلامات المنظمة).
+   - تجنب الإطالة والنصوص الإنشائية المكررة أو أسلوب "س/ج" الآلي الجامد.
+   - تحاور بذكاء وتفاعل باحترام مع العميل.
 
-🧠 الفهم العبقري للأخطاء الإملائية والأسماء الشائعة والعامية للدول والمدن:
-- أنت خبير وتفهم فوراً أسماء الدول والمدن حتى لو كُتبت بأخطاء إملائية أو حروف ناقصة أو مكررة أو بالعامية أو بألقابها وأسمائها الشائعة، مثل:
-  * "الكوت" / "كويت" / "الكوايت" / "الدانة" -> Kuwait
-  * "ترركيا" / "توركيا" / "تركية" / "turky" / "turkye" -> Turkey
-  * "مسر" / "أم الدنيا" / "المحروسة" / "كايرو" / "cairo" -> Egypt
-  * "دبى" / "دار الحي" / "dubay" -> Dubai
-  * "ابوظبي" / "أبو ظبي" -> Abu Dhabi
-  * "المغريب" / "كازا" / "مروك" / "moroco" -> Morocco
-  * "الاردن" / "النشامى" / "عمّان" -> Jordan
-  * "البحرين" / "بحرين" / "المنامة" / "bahrin" -> Bahrain
-  * "جورجيا" / "تبليسي" / "باتومي" -> Georgia
-  * "اسبانيا" / "أسبانيا" / "spane" / "espana" / "مدريد" / "برشلونة" -> Spain
-  * "الارجنتين" / "الأرجنتين" / "argentine" -> Argentina
-  * "امريكا" / "أمريكا" / "الولايات المتحدة" / "ميامي" / "usa" -> United States
-  * "قطر" / "الدوحة" / "qater" -> Qatar
-  * "عمان" / "سلطنة عمان" / "مسقط" -> Oman
-  * "ايطاليا" / "إيطاليا" / "italie" / "روما" / "ميلان" -> Italy
-  * "اليونان" / "اثينا" / "grece" -> Greece
-  * "قبرص" / "لارنكا" / "cypre" -> Cyprus
+🧠 قواعد التعامل مع الوجهات والتواريخ (Strict No-Guessing & Realistic Travel Dates):
+1. **⛔ ممنوع التخمين العشوائي (Strictly No Guessing)**:
+   - لا تخمن تواريخ من عندك ولا تفترض أن العميل سيحجز اليوم أو غداً، فالعملاء يخططون لرحلاتهم مسبقاً.
+   - إذا سأل العميل عن دولة أو مدينة فقط دون تحديد تواريخ (مثل "أريد سيارة في دبي", "سيارات تركيا", "الكويت", "spain", "argentina"):
+     * رحب به بلباقة واحترافية وأكد له توفر الخدمة في تلك الوجهة.
+     * اطلب منه تحديد تاريخ استلام السيارة والمدة المطلوبة والمدينة/المطار المفضل.
+     * ⛔ إياك أن تضع وسم [SEARCH] إذا لم يحدد العميل التواريخ أو المدة بوضوح!
+2. **✅ متى تضع وسم البحث [SEARCH: Location, DateFrom, DateTo]؟**:
+   - تضع الوسم فقط وحصرياً إذا حدد العميل التواريخ أو المدة بوضوح مع الوجهة (مثال: "سيارات دبي من 15 إلى 20 أكتوبر" -> [SEARCH: Dubai, 2026-10-15, 2026-10-20]).
+   - تتبع سياق الحوار (Context Memory): إذا ذكر العميل الوجهة في رسالة سابقة، ثم في الرسالة التالية حدد التاريخ (مثلاً: "من 15 إلى 20 أكتوبر")، اربط الوجهة السابقة بالتواريخ وضع الوسم فوراً.
+   - اكتب اسم الوجهة بالإنجليزية المعيارية المطابقة للنظام (مثل: Dubai, Abu Dhabi, Kuwait, Turkey, Egypt, Morocco, Bahrain, Jordan, Georgia, Spain, Argentina).
+3. **الإجابة على الأسئلة العامة والاستفسارات**:
+   - إذا سأل عن عدد الشركات أو السيارات: وضّح باختصار أن أوتورز شبكة عالمية تضم مئات الموردين وآلاف السيارات المعتمدة في مختلف البلدان حول العالم.
+   - إذا سأل عن المزايا والسياسات: وضّح باختصار (إلغاء مجاني 100% حتى قبل 24 ساعة، تأمين أساسي مشمول، والدفع عند الاستلام).
+   - ⛔ لا تضع وسم [SEARCH] على الاستفسارات العامة.
 
 ${buildLearnedMemoryPrompt(userMemory)}
 
@@ -835,24 +889,6 @@ ${buildLearnedMemoryPrompt(userMemory)}
 - عدد البلدان والوجهات المتوفرة فعلياً في قاعدة البيانات الحية: ${dbContext.totalCountries} دولة
 - قائمة البلدان والمطارات المتوفرة حالياً في السيستم:
 ${dbContext.summaryStr}
-
-🎯 القواعد الصارمة للتعامل مع قاعدة البيانات:
-1. ⚠️ عندما يطلب المستخدم أو يسأل عن دولة أو وجهة من قاعدة البيانات أعلاه دون تحديد التواريخ (مثلاً: "طب الكويت", "الكوت", "عايز عربية في مسر", "ترركيا", "المغرب", "عربيات دبي", "جورجيا", "spain", "argentina"):
-   - ⛔ إياك أن تضع [SEARCH] أو تخترع تواريخ عشوائية من عندك!
-   - ⛔ إياك أن تقول إن الدولة غير مدعومة طالما هي موجودة في قاعدة البيانات الحية أعلاه!
-   - رحب به بحماس واسأله بوضوح ولطافة عن تاريخ الاستلام والمدة والمدينة/المطار المفضل في تلك الدولة.
-
-2. ✅ متى تضع وسم [SEARCH: Location, DateFrom, DateTo]؟
-   - تضع الوسم إذا حدد المستخدم التواريخ أو المدة مع الوجهة (مثلاً: "عربيات الكويت من بكرة لمدة 5 أيام" -> [SEARCH: Kuwait, ${formatDate(addDays(new Date(), 1))}, ${formatDate(addDays(new Date(), 6))}]).
-   - 🧠 تتبع سياق المحادثة (Multi-turn Context): إذا كان المستخدم في الرسالة السابقة يتكلم عن وجهة معينة (مثلاً: "طب الكويت" أو "ترركيا") وفي الرسالة الحالية قال فقط: "من بكرا لمدة خمس ايام"، تذكر فوراً أن الوجهة المقصودة هي تلك الدولة وضع الوسم فوراً: [SEARCH: Kuwait, ${formatDate(addDays(new Date(), 1))}, ${formatDate(addDays(new Date(), 6))}]!
-   - إذا طلب صراحة "أرخص سيارة اقتصادية الأسبوع ده" بدون تحديد وجهة: اعتبر دبي 'Dubai' وجهة افتراضية للأيام القادمة من ${formatDate(addDays(new Date(), 1))} إلى ${formatDate(addDays(new Date(), 4))}.
-   - اكتب اسم الوجهة في الوسم دائماً بالاسم الإنجليزي المعياري المطابق لقاعدة البيانات (مثل Kuwait, Dubai, Turkey, Egypt, Morocco, Bahrain, Jordan, Georgia, Spain, Argentina).
-
-3. لو المستخدم حيّاك أو رحب بيك (مثل "اهلا", "hello", "bonjour", "merhaba", "سلام", "صباح الخير"): رحب بيه بلطف واسأله ناوي يسافر فين ومحتاج عربية في أي بلد.
-
-4. لو طلب دولة غير متوفرة إطلاقاً في قاعدة البيانات: اعتذر بلباقة واقترح عليه بعض الوجهات المتاحة حالياً في قاعدة البيانات الحية. ولا تضع [SEARCH] على وجهة غير مدعومة.
-
-5. مزايا المنصة: إلغاء مجاني 100% حتى قبل 24 ساعة، تأمين أساسي مشمول، الدفع عند الاستلام.
 `;
 
     if (geminiApiKey) {
@@ -906,8 +942,6 @@ ${dbContext.summaryStr}
                 const dTo = normalizeDateStr(searchMatch[3].trim());
 
                 rawText = rawText.replace(/\[SEARCH:[^\]]+\]/gi, '').trim();
-
-                const userName = currentUser?.name ? ` يا مستر ${currentUser.name}` : ' يا غالي';
 
                 // 1. Resolve canonical English name if query has destination alias (e.g. "الكويت" -> "Kuwait")
                 let canonicalName: string | null = null;
@@ -979,7 +1013,12 @@ ${dbContext.summaryStr}
 
                 if (!vehicles || vehicles.length === 0) {
                   const displayLocation = targetLoc?.name || targetLoc?.city || countryName || locQuery;
-                  assistantResponseText = `عذراً${userName}! 🚗\n\nلم نعثر على سيارات شاغرة حالياً في ${displayLocation} للفترة المحددة (${dFrom} إلى ${dTo}).\n\nتقدر تجرب تغيير التواريخ أو تختار وجهة أخرى:`;
+                  if (isEnglish) {
+                    assistantResponseText = `We apologize${currentUser?.name ? ` Mr. ${currentUser.name}` : ''}, no available vehicles were found in **${displayLocation}** for the selected dates (**${dFrom} to ${dTo}**).\n\nYou may try different dates or choose from the suggested destinations below:`;
+                  } else {
+                    const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+                    assistantResponseText = `نعتذر منك${userGreeting}، لم تتوفر سيارات شاغرة حالياً في **${displayLocation}** للفترة المحددة (**${dFrom} إلى ${dTo}**).\n\nيمكنك تجربة تواريخ أخرى أو اختيار إحدى الوجهات المقترحة:`;
+                  }
                   actionButtons = getSmartActionButtons(locQuery, locations, currentUser);
                   foundVehicles = [];
                   searchCriteria = null;
@@ -1014,8 +1053,12 @@ ${dbContext.summaryStr}
     }
 
     if (!assistantResponseText) {
-      const userName = currentUser?.name ? ` يا عم ${currentUser.name}` : ' يا غالي';
-      assistantResponseText = `يا مرحب بيك${userName}! 🚗✨ أنا صديقك ومساعدك في أوتورز. قولي تحب نسافر فين أو محتاج عربية في أي بلد وتاريخ؟`;
+      if (isEnglish) {
+        assistantResponseText = `Welcome${currentUser?.name ? ` Mr. ${currentUser.name}` : ''}! 🚗✨ I am your Autours AI assistant. How can I assist you with your car rental today? Please specify your destination and preferred rental dates.`;
+      } else {
+        const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
+        assistantResponseText = `أهلاً وسهلاً بك${userGreeting}! 🚗✨ يسعدني مساعدتك في حجز أفضل سيارات الإيجار مع أوتورز. يُرجى تزويدي بوجهة السفر وتواريخ الاستلام والتسليم المفضلة لنعرض لك أفضل الخيارات المتاحة.`;
+      }
     }
 
     if (actionButtons.length === 0) {
@@ -1030,12 +1073,48 @@ ${dbContext.summaryStr}
       existingUserMemory: userMemory,
     });
 
+    // ⚡ 4. Automatically activate interactive In-Chat Search Widget if destination mentioned without dates or dates requested
+    let showSearchWidget = false;
+    let detectedLocation: string | undefined = undefined;
+
+    if (foundVehicles.length === 0) {
+      const locMatch = resolveTargetLocation(latestUserMsg, locations);
+      if (locMatch) {
+        detectedLocation = locMatch.name || locMatch.city || locMatch.country;
+        showSearchWidget = true;
+      } else {
+        for (const [alias, canonical] of Object.entries(UNIVERSAL_DESTINATION_MAP)) {
+          if (
+            normalizeText(latestUserMsg).includes(normalizeText(alias)) ||
+            isFuzzyMatch(latestUserMsg, alias)
+          ) {
+            detectedLocation = canonical;
+            showSearchWidget = true;
+            break;
+          }
+        }
+      }
+
+      if (!showSearchWidget && (
+        assistantResponseText.includes('تاريخ') ||
+        assistantResponseText.includes('تحديد') ||
+        assistantResponseText.includes('استلام') ||
+        assistantResponseText.includes('date') ||
+        assistantResponseText.includes('pickup') ||
+        assistantResponseText.includes('destination')
+      )) {
+        showSearchWidget = true;
+      }
+    }
+
     return NextResponse.json({
       reply: assistantResponseText,
       vehicles: foundVehicles.slice(0, 5),
       searchCriteria,
       actionButtons,
       userMemory: learningResult.updatedUserMemory,
+      showSearchWidget,
+      searchWidgetData: showSearchWidget ? { defaultLocation: detectedLocation } : undefined,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {

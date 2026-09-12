@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
-const isProd = process.env.NODE_ENV === 'production';
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || (isProd ? 'https://www.autours.net' : 'http://localhost:8000');
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
 const nextConfig = {
   reactStrictMode: true,
