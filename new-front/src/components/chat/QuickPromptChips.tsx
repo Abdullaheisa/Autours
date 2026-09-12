@@ -24,79 +24,79 @@ export default function QuickPromptChips({ onSelectPrompt }: QuickPromptChipsPro
   const [activeTab, setActiveTab] = useState<TabType>('booking');
 
   const tabs: { id: TabType; label: string; icon: any }[] = [
-    { id: 'booking', label: 'حجز سيارة 🚗', icon: Car },
-    { id: 'manage', label: 'الحجوزات والإلغاء 📋', icon: FileText },
-    { id: 'insurance', label: 'التأمين والأوراق 🛡️', icon: ShieldCheck },
-    { id: 'support', label: 'الدعم والموردين 🤝', icon: Headphones },
+    { id: 'booking', label: 'Book a Car 🚗', icon: Car },
+    { id: 'manage', label: 'Bookings & Cancellation 📋', icon: FileText },
+    { id: 'insurance', label: 'Insurance & Docs 🛡️', icon: ShieldCheck },
+    { id: 'support', label: 'Support & Suppliers 🤝', icon: Headphones },
   ];
 
   const promptGroups: Record<TabType, { icon: any; text: string; label: string }[]> = {
     booking: [
       {
         icon: Plane,
-        text: 'عربيات مطار دبي من بكرة لمدة 3 أيام',
-        label: 'مطار دبي (3 أيام)',
+        text: 'Cars at Dubai Airport tomorrow for 3 days',
+        label: 'Dubai Airport (3 days)',
       },
       {
         icon: Flame,
-        text: 'أرخص عربية اقتصادية متاحة الأسبوع ده',
-        label: 'أرخص سيارة اقتصادية',
+        text: 'Cheapest economy car available this week',
+        label: 'Cheapest Economy Car',
       },
       {
         icon: Car,
-        text: 'محتاج سيارة عائلية 7 راكب SUV في القاهرة',
-        label: 'سيارة عائلية SUV',
+        text: 'I need a 7-seat family SUV in Cairo',
+        label: 'Family SUV (7 seats)',
       },
       {
         icon: Sparkles,
-        text: 'عربيات فخمة VIP في الرياض',
-        label: 'سيارات VIP فاخرة',
+        text: 'Luxury VIP cars available in Riyadh',
+        label: 'Luxury VIP Cars',
       },
     ],
     manage: [
       {
         icon: FileText,
-        text: 'عايز استعلم عن تفاصيل حجزي وفاتورتي',
-        label: 'استعلام عن حجز',
+        text: 'I want to check my booking details and invoice',
+        label: 'Check My Booking',
       },
       {
         icon: ShieldCheck,
-        text: 'كيف ألغي حجزي مجاناً في Autours؟',
-        label: 'شروط الإلغاء المجاني',
+        text: 'How can I cancel my booking for free on Autours?',
+        label: 'Free Cancellation Terms',
       },
       {
         icon: UserCheck,
-        text: 'أين أجد قائمة حجوزاتي السابقة؟',
-        label: 'سجل الحجوزات',
+        text: 'Where can I find my previous bookings history?',
+        label: 'Booking History',
       },
     ],
     insurance: [
       {
         icon: ShieldCheck,
-        text: 'إيه نظام التأمين والوديعة في Autours؟',
-        label: 'التأمين والوديعة',
+        text: 'What is the insurance and deposit policy on Autours?',
+        label: 'Insurance & Deposit',
       },
       {
         icon: HelpCircle,
-        text: 'ما هي الأوراق ورخصة القيادة المطلوبة للاستلام؟',
-        label: 'الأوراق المطلوبة',
+        text: 'What documents and driving license are required for pickup?',
+        label: 'Required Documents',
       },
       {
         icon: Flame,
-        text: 'هل يتوفر خيار الدفع عند الاستلام كاش أو فيزا؟',
-        label: 'الدفع عند الاستلام',
+        text: 'Is cash or card payment available upon pickup?',
+        label: 'Payment at Pickup',
       },
     ],
     support: [
       {
         icon: Briefcase,
-        text: 'كيف أسجل شركتي كمورد سيارات شريك في Autours؟',
-        label: 'تسجيل مورد جديد',
+        text: 'How can I register my company as a car rental supplier on Autours?',
+        label: 'Register as Supplier',
       },
       {
         icon: Headphones,
-        text: 'أريد التواصل المباشر مع خدمة العملاء عبر واتساب',
-        label: 'محادثة الدعم الفني',
+        text: 'I want to contact customer support via WhatsApp',
+        label: 'WhatsApp Support',
       },
     ],
   };
@@ -131,7 +131,7 @@ export default function QuickPromptChips({ onSelectPrompt }: QuickPromptChipsPro
             <button
               key={idx}
               onClick={() => onSelectPrompt(item.text)}
-              className="bg-[#151922] hover:bg-[#1f2533] text-neutral-200 hover:text-[#f9d602] border border-neutral-800/90 hover:border-[#f9d602]/60 text-xs px-3 py-1.5 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm active:scale-95 text-right"
+              className="bg-[#151922] hover:bg-[#1f2533] text-neutral-200 hover:text-[#f9d602] border border-neutral-800/90 hover:border-[#f9d602]/60 text-xs px-3 py-1.5 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm active:scale-95 text-left"
             >
               <Icon className="w-3.5 h-3.5 text-[#f9d602] shrink-0" />
               <span className="font-medium">{item.label}</span>

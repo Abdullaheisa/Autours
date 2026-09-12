@@ -578,6 +578,102 @@ function getSmartActionButtons(
       ];
 }
 
+// ── Helper: Fetch customer bookings with fallback URLs ─────────────────────────
+async function fetchCustomerBookings(token: string): Promise<any[]> {
+  const candidateUrls = Array.from(
+    new Set([
+      'http://127.0.0.1:8000/api/get/rentals?per_page=20',
+      'http://localhost:8000/api/get/rentals?per_page=20',
+      `${BACKEND_URL}/api/backend/get/rentals?per_page=20`,
+      `${BACKEND_URL}/api/get/rentals?per_page=20`,
+      `${BACKEND_URL}/get/rentals?per_page=20`,
+      'https://www.autours.net/api/backend/get/rentals?per_page=20',
+      'https://www.autours.net/api/get/rentals?per_page=20',
+    ].filter(Boolean))
+  );
+
+  for (const url of candidateUrls) {
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) continue;
+
+      const text = await res.text();
+      if (text.trim().startsWith('<')) continue;
+
+      const data = JSON.parse(text);
+      const list = Array.isArray(data) ? data : (data?.data || []);
+      if (Array.isArray(list)) {
+        return list;
+      }
+    } catch {
+      // try next URL
+    }
+  }
+
+  return [];
+}
+
+// ── Helper: Call Cancel Booking API with fallback URLs ────────────────────────
+async function executeCancelBooking(
+  orderNumber: string,
+  token?: string | null
+): Promise<{ ok: boolean; status: number; message: string; data?: any }> {
+  const candidateUrls = Array.from(
+    new Set([
+      'http://127.0.0.1:8000/api/cancel/booking',
+      'http://localhost:8000/api/cancel/booking',
+      `${BACKEND_URL}/api/backend/cancel/booking`,
+      `${BACKEND_URL}/api/cancel/booking`,
+      'https://www.autours.net/api/backend/cancel/booking',
+      'https://www.autours.net/api/cancel/booking',
+    ].filter(Boolean))
+  );
+
+  let lastStatus = 500;
+  let lastMessage = '';
+
+  for (const url of candidateUrls) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          order_number: orderNumber,
+          fareApproval: true,
+        }),
+      });
+
+      const text = await res.text();
+      if (text.trim().startsWith('<')) continue;
+
+      const json = JSON.parse(text);
+      const isSuccess = res.ok && (json.status === true || json.status === 1);
+      const msg = json.message || json.msg || '';
+
+      if (isSuccess) {
+        return { ok: true, status: res.status, message: msg, data: json.data };
+      }
+
+      return { ok: false, status: res.status, message: msg, data: json };
+    } catch (err: any) {
+      lastMessage = err?.message || 'Connection error';
+    }
+  }
+
+  return { ok: false, status: lastStatus, message: lastMessage || 'Unable to connect to booking server' };
+}
+
 // ── Real Booking Cancellation Resolver ───────────────────────────────────────
 async function handleCancellationRequest(
   userText: string,
@@ -603,77 +699,43 @@ async function handleCancellationRequest(
   const userGreetingAr = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
   const userGreetingEn = currentUser?.name ? ` Mr. ${currentUser.name}` : '';
 
-  // If user provided an order number
-  if (matchedOrderNumber) {
+  // 1. If user gave an order number to cancel
+  if (matchedOrderNumber && (isCancelIntent || userText.includes(matchedOrderNumber))) {
     if (!customerToken && !currentUser) {
       return {
         reply: isEnglish
-          ? `Hello${userGreetingEn}! 🚗\n\nTo cancel booking **#${matchedOrderNumber}**, please sign in to your account first to verify and confirm the cancellation.`
+          ? `Hello${userGreetingEn}! 🚗\n\nTo cancel booking **#${matchedOrderNumber}**, please sign in to your account first so we can verify your booking.`
           : `أهلاً بك${userGreetingAr}! 🚗\n\nلإلغاء الحجز رقم **#${matchedOrderNumber}**، يرجى تسجيل الدخول أولاً بحسابك للتحقق وتأكيد الإلغاء.`,
-        actionButtons: isEnglish
-          ? [
-              { label: '👤 Sign In', url: '/login', actionType: 'link' },
-              { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-            ]
-          : [
-              { label: '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
-              { label: '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-            ],
+        actionButtons: [
+          { label: isEnglish ? '👤 Sign In' : '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
+          { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+        ],
       };
     }
 
     try {
-      const cancelRes = await fetch(`${BACKEND_URL}/api/cancel/booking`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(customerToken ? { Authorization: `Bearer ${customerToken}` } : {}),
-        },
-        body: JSON.stringify({
-          order_number: matchedOrderNumber,
-          fareApproval: true,
-        }),
-      });
+      const cancelRes = await executeCancelBooking(matchedOrderNumber, customerToken);
 
-      const cancelData = await cancelRes.json().catch(() => ({}));
-
-      if (cancelRes.ok && (cancelData.status === true || cancelData.status === 1)) {
+      if (cancelRes.ok) {
         return {
           reply: isEnglish
             ? `✅ **Booking #${matchedOrderNumber} has been successfully cancelled.**\n\nA confirmation notification has been sent to our team and the supplier company via email and WhatsApp. 🚗\n\nHow else may I assist you today?`
-            : `✅ **تم إلغاء الحجز رقم #${matchedOrderNumber} بنجاح** في النظام وحذفه من الحجوزات النشطة.\n\nتم إرسال إشعار فوري لإدارة المنصة وللشركة الموردة عبر البريد الإلكتروني والواتساب. 🚗\n\nهل ترغب في المساعدة بأي حجز أو استفسار آخر؟ ✨`,
-          actionButtons: isEnglish
-            ? [
-                { label: '👤 My Bookings', url: '/profile', actionType: 'link' },
-                { label: '🚗 Book a New Car', promptText: 'Show cars available at Dubai Airport for 3 days' },
-              ]
-            : [
-                { label: '👤 عرض حجوزاتي', url: '/profile', actionType: 'link' },
-                { label: '🚗 حجز سيارة جديدة', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
-              ],
-        };
-      }
-
-      const errMsg = cancelData.message || '';
-
-      if (errMsg.includes('بدأت بالفعل') || errMsg.includes('started')) {
-        return {
-          reply: isEnglish
-            ? `We apologize${userGreetingEn}. Booking **#${matchedOrderNumber}** cannot be cancelled as the rental period has already started.`
-            : `نعتذر منك${userGreetingAr}. لا يمكن إلغاء الحجز رقم **#${matchedOrderNumber}** نظراً لأن فترة الإيجار قد بدأت بالفعل.`,
+            : `✅ **تم إلغاء الحجز رقم #${matchedOrderNumber} بنجاح.**\n\nتم تحديث حالة الحجز في النظام وحذفه من الحجوزات النشطة وإرسال إشعار فوري لإدارة المنصة وللشركة الموردة عبر البريد الإلكتروني والواتساب. 🚗\n\nهل ترغب في المساعدة بأي حجز أو استفسار آخر؟ ✨`,
           actionButtons: [
-            { label: isEnglish ? '💬 Contact Support' : '💬 تواصل مع الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
             { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+            { label: isEnglish ? '🚗 Book a New Car' : '🚗 حجز سيارة جديدة', promptText: isEnglish ? 'Show cars available at Dubai Airport for 3 days' : 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
           ],
         };
       }
 
-      if (errMsg.includes('24') || errMsg.includes('أقل من 24')) {
+      const errMsg = cancelRes.message || '';
+
+      // Reason: Less than 24 hours
+      if (errMsg.includes('24') || errMsg.includes('أقل من 24') || errMsg.toLowerCase().includes('hours')) {
         return {
           reply: isEnglish
-            ? `We apologize${userGreetingEn}. Booking **#${matchedOrderNumber}** cannot be cancelled online as there are less than 24 hours remaining before pickup (per platform cancellation policy).\n\nPlease reach out to support for assistance.`
-            : `نعتذر منك${userGreetingAr}. لا يمكن إلغاء الحجز رقم **#${matchedOrderNumber}** نظراً لأنه متبقي أقل من 24 ساعة على موعد الاستلام (حسب سياسة شروط الإلغاء بالمنصة).\n\nيمكنك التواصل مع فريق الدعم للمساعدة.`,
+            ? `❌ **Cannot cancel booking #${matchedOrderNumber}**\n\n**Reason:** Less than 24 hours remain before pickup time (per platform cancellation policy).\n\nIf you have an emergency or need special assistance, please reach out directly to our support team.`
+            : `❌ **تعذر إلغاء الحجز رقم #${matchedOrderNumber}**\n\n**السبب:** متبقي أقل من 24 ساعة على موعد الاستلام المحدد (وفقاً لشروط وسياسة الإلغاء بالمنصة).\n\nإذا كان لديك ظرف طارئ، يمكنك التواصل مباشرة مع فريق الدعم عبر الواتساب للمساعدة.`,
           actionButtons: [
             { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
             { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
@@ -681,32 +743,73 @@ async function handleCancellationRequest(
         };
       }
 
-      if (errMsg.includes('ملغي بالفعل') || errMsg.includes('Already Cancelled')) {
+      // Reason: Period started
+      if (errMsg.includes('بدأت بالفعل') || errMsg.toLowerCase().includes('started')) {
         return {
           reply: isEnglish
-            ? `Booking **#${matchedOrderNumber}** is already cancelled.`
-            : `الحجز رقم **#${matchedOrderNumber}** ملغي مسبقاً في النظام.`,
+            ? `❌ **Cannot cancel booking #${matchedOrderNumber}**\n\n**Reason:** The rental period has already started.\n\nBookings cannot be cancelled after the rental period begins. Please contact support for help.`
+            : `❌ **تعذر إلغاء الحجز رقم #${matchedOrderNumber}**\n\n**السبب:** فترة إيجار السيارة قد بدأت بالفعل ولا يمكن إلغاء الحجز بعد البدء.\n\nيمكنك التواصل مع فريق الدعم للمساعدة.`,
+          actionButtons: [
+            { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+            { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+          ],
+        };
+      }
+
+      // Reason: Already cancelled
+      if (errMsg.includes('Already Cancelled') || errMsg.includes('ملغي')) {
+        return {
+          reply: isEnglish
+            ? `ℹ️ **Booking #${matchedOrderNumber} is already cancelled** in our system.`
+            : `ℹ️ **الحجز رقم #${matchedOrderNumber} ملغي بالفعل مسبقاً** في النظام.`,
           actionButtons: [
             { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
           ],
         };
       }
 
-      if (cancelRes.status === 404 || errMsg.includes('العثور')) {
+      // Reason: Unauthorized
+      if (cancelRes.status === 403 && (errMsg.includes('Unauthorized') || errMsg.includes('غير مصرح'))) {
         return {
           reply: isEnglish
-            ? `We could not find booking **#${matchedOrderNumber}** in your account. Please check the booking number in your profile.`
-            : `لم نتمكن من العثور على حجز برقم **#${matchedOrderNumber}** في حسابك. يرجى مراجعة رقم الحجز من صفحة حسابك.`,
+            ? `❌ **Cannot cancel booking #${matchedOrderNumber}**\n\n**Reason:** You are not authorized to cancel this booking or it belongs to a different account.`
+            : `❌ **تعذر إلغاء الحجز رقم #${matchedOrderNumber}**\n\n**السبب:** ليس لديك صلاحية لإلغاء هذا الحجز أو أنه مسجل بحساب آخر.`,
           actionButtons: [
             { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
           ],
         };
       }
 
+      // Reason: Not found
+      if (cancelRes.status === 404 || errMsg.includes('العثور') || errMsg.toLowerCase().includes('not found')) {
+        return {
+          reply: isEnglish
+            ? `❌ **Booking #${matchedOrderNumber} not found**\n\n**Reason:** No booking with this reference number was found in your account. Please check your booking number in your profile.`
+            : `❌ **لم نتمكن من العثور على حجز برقم #${matchedOrderNumber}**\n\n**السبب:** لم يتم العثور على حجز بهذا الرقم في حسابك. يرجى مراجعة رقم الحجز من صفحة حسابك.`,
+          actionButtons: [
+            { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+          ],
+        };
+      }
+
+      // Reason: Fare approval required
+      if (errMsg.includes('fare') || errMsg.includes('رسوم')) {
+        return {
+          reply: isEnglish
+            ? `⚠️ **Cancellation Fee Applies**\n\n**Reason:** A cancellation fee applies to booking #${matchedOrderNumber}. Please confirm the cancellation directly from your Profile page or contact support.`
+            : `⚠️ **توجد رسوم إلغاء**\n\n**السبب:** توجد رسوم إلغاء مقررة على الحجز رقم #${matchedOrderNumber}. يرجى تأكيد الإلغاء من صفحة حسابك أو التواصل مع الدعم.`,
+          actionButtons: [
+            { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
+            { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+          ],
+        };
+      }
+
+      // General error with exact reason
       return {
         reply: isEnglish
-          ? `Could not cancel booking **#${matchedOrderNumber}**: ${errMsg || 'An unexpected error occurred'}. Please try from your profile or contact support.`
-          : `تعذر إلغاء الحجز رقم **#${matchedOrderNumber}**: ${errMsg || 'حدث خطأ غير متوقع'}. يرجى المحاولة من صفحة حسابك أو التواصل مع الدعم.`,
+          ? `❌ **Could not cancel booking #${matchedOrderNumber}**\n\n**Reason:** ${errMsg || 'The booking system rejected the request'}. Please try managing it from your profile or contact support.`
+          : `❌ **تعذر إلغاء الحجز رقم #${matchedOrderNumber}**\n\n**السبب:** ${errMsg || 'حدث خطأ في النظام أثناء معالجة الإلغاء'}. يرجى المحاولة من صفحة حسابك أو التواصل مع فريق الدعم.`,
         actionButtons: [
           { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
           { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
@@ -716,81 +819,97 @@ async function handleCancellationRequest(
       console.error('Cancel booking error in chat route:', err);
       return {
         reply: isEnglish
-          ? `An error occurred while attempting to cancel booking **#${matchedOrderNumber}**. Please try from your profile.`
-          : `حدث خطأ أثناء محاولة إلغاء الحجز رقم **#${matchedOrderNumber}**. يرجى المحاولة من صفحة حسابك.`,
+          ? `❌ An unexpected error occurred while attempting to cancel booking **#${matchedOrderNumber}**. Please try from your profile.`
+          : `❌ حدث خطأ غير متوقع أثناء محاولة إلغاء الحجز رقم **#${matchedOrderNumber}**. يرجى المحاولة من صفحة حسابك.`,
         actionButtons: [{ label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' }],
       };
     }
   }
 
-  // If cancellation intent without order number
+  // 2. If user requested cancellation without providing an order number (e.g. "الغى حجز" / "cancel booking")
   if (isCancelIntent) {
-    if (customerToken) {
-      try {
-        const rentalsRes = await fetch(`${BACKEND_URL}/api/get/rentals`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${customerToken}`,
-          },
-        });
+    if (!customerToken) {
+      return {
+        reply: isEnglish
+          ? `Hello${userGreetingEn}! 🚗\n\nTo cancel a booking, please sign in to your account first so I can view your reservations and assist you.`
+          : `أهلاً بك${userGreetingAr}! 🚗\n\nلإلغاء حجز، يرجى تسجيل الدخول أولاً بحسابك حتى أتمكن من عرض حجوزاتك ومساعدتك في الإلغاء.`,
+        actionButtons: [
+          { label: isEnglish ? '👤 Sign In' : '👤 تسجيل الدخول', url: '/login', actionType: 'link' },
+          { label: isEnglish ? '💬 WhatsApp Support' : '💬 محادثة واتساب الدعم', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+        ],
+      };
+    }
 
-        if (rentalsRes.ok) {
-          const resData = await rentalsRes.json();
-          const list = Array.isArray(resData) ? resData : (resData.data || []);
-          const activeBookings = list.filter(
-            (r: any) => Number(r.order_status) === 2 || Number(r.order_status) === 1
-          );
+    try {
+      const list = await fetchCustomerBookings(customerToken);
 
-          if (activeBookings.length === 1) {
-            const single = activeBookings[0];
-            const ordNum = single.order_number || ('ATR' + single.id);
-            const carName = single.vehicle?.name || 'السيارة المحجوزة';
-            return {
-              reply: isEnglish
-                ? `You have an active booking **#${ordNum}** (${carName} - pickup ${single.start_date}).\n\nWould you like to cancel it? Click the button below:`
-                : `لديك حجز نشط برقم **#${ordNum}** (${carName} - تاريخ الاستلام ${single.start_date}).\n\nهل ترغب في إلغائه؟ يمكنك الضغط على زر الإلغاء أدناه:`,
-              actionButtons: [
-                { label: isEnglish ? `❌ Cancel #${ordNum}` : `❌ تأكيد إلغاء #${ordNum}`, promptText: isEnglish ? `Cancel booking ${ordNum}` : `إلغاء الحجز ${ordNum}` },
-                { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },
-              ],
-            };
-          } else if (activeBookings.length > 1) {
-            const buttons: ActionButton[] = activeBookings.slice(0, 3).map((r: any) => {
-              const num = r.order_number || ('ATR' + r.id);
-              return {
-                label: isEnglish ? `❌ Cancel #${num}` : `❌ إلغاء #${num} (${r.vehicle?.name || 'سيارة'})`,
-                promptText: isEnglish ? `Cancel booking ${num}` : `إلغاء الحجز ${num}`,
-              };
-            });
-            buttons.push({ label: isEnglish ? '👤 All Bookings' : '👤 كل الحجوزات', url: '/profile', actionType: 'link' });
-
-            return {
-              reply: isEnglish
-                ? `You have multiple active bookings. Please select the one you wish to cancel:`
-                : `لديك أكثر من حجز نشط، يرجى اختيار الحجز المراد إلغاؤه:`,
-              actionButtons: buttons,
-            };
-          } else {
-            return {
-              reply: isEnglish
-                ? `You have no active cancellable bookings in your account.`
-                : `لا توجد لديك أي حجوزات نشطة قابلة للإلغاء في حسابك حالياً.`,
-              actionButtons: [
-                { label: isEnglish ? '👤 My Profile' : '👤 صفحة حسابي', url: '/profile', actionType: 'link' },
-                { label: isEnglish ? '🚗 Book a Car' : '🚗 حجز سيارة جديدة', promptText: isEnglish ? 'Show cars available at Dubai Airport for 3 days' : 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
-              ],
-            };
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to query user bookings for cancellation:', e);
+      if (!list || list.length === 0) {
+        return {
+          reply: isEnglish
+            ? `You don't have any bookings in your account at the moment.`
+            : `لا توجد لديك أي حجوزات مسجلة في حسابك حالياً.`,
+          actionButtons: [
+            { label: isEnglish ? '👤 My Profile' : '👤 صفحة حسابي', url: '/profile', actionType: 'link' },
+            { label: isEnglish ? '🚗 Book a Car' : '🚗 حجز سيارة جديدة', promptText: isEnglish ? 'Show cars available at Dubai Airport for 3 days' : 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
+          ],
+        };
       }
+
+      // Bring options for the last 3 bookings
+      const last3 = list.slice(0, 3);
+
+      const formatStatus = (s: number | string) => {
+        const num = Number(s);
+        if (num === 1) return { en: 'Issued', ar: 'تم الإصدار' };
+        if (num === 2) return { en: 'Confirmed', ar: 'مؤكد' };
+        if (num === 3) return { en: 'Cancelled', ar: 'ملغي' };
+        if (num === 4) return { en: 'Pending', ar: 'قيد الانتظار' };
+        if (num === 5) return { en: 'Rejected', ar: 'مرفوض' };
+        if (num === 6) return { en: 'Pending Payment', ar: 'بانتظار الدفع' };
+        return { en: 'Active', ar: 'نشط' };
+      };
+
+      const bookingLines = last3
+        .map((r: any, idx: number) => {
+          const ord = r.order_number || ('#ATR' + r.id);
+          const cleanOrd = ord.startsWith('#') ? ord : `#${ord}`;
+          const car = r.vehicle?.name || 'Car Rental';
+          const pickupDate = r.start_date ? `${r.start_date}${r.start_time ? ` (${r.start_time})` : ''}` : 'N/A';
+          const st = formatStatus(r.order_status);
+          return isEnglish
+            ? `${idx + 1}. **${cleanOrd}** - ${car}\n   📅 Pickup: ${pickupDate} | Status: **${st.en}**`
+            : `${idx + 1}. **${cleanOrd}** - ${car}\n   📅 موعد الاستلام: ${pickupDate} | الحالة: **${st.ar}**`;
+        })
+        .join('\n\n');
+
+      const buttons: ActionButton[] = last3.map((r: any) => {
+        const ord = r.order_number || ('ATR' + r.id);
+        const cleanOrd = ord.replace(/^#/, '');
+        return {
+          label: isEnglish ? `❌ Cancel #${cleanOrd}` : `❌ إلغاء #${cleanOrd}`,
+          promptText: isEnglish ? `Cancel booking #${cleanOrd}` : `إلغاء الحجز #${cleanOrd}`,
+        };
+      });
+
+      buttons.push({
+        label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي',
+        url: '/profile',
+        actionType: 'link',
+      });
+
+      return {
+        reply: isEnglish
+          ? `Here are your last ${last3.length} bookings. Which one would you like to cancel?\n\n${bookingLines}\n\nClick one of the buttons below to proceed:`
+          : `فيما يلي آخر ${last3.length} حجوزات في حسابك، يرجى اختيار الحجز المراد إلغاؤه:\n\n${bookingLines}\n\nيمكنك الضغط على زر الإلغاء أدناه:`,
+        actionButtons: buttons,
+      };
+    } catch (e) {
+      console.warn('Failed to query user bookings for cancellation:', e);
     }
 
     return {
       reply: isEnglish
-        ? `To cancel a booking, please provide the complete booking number (e.g., **Cancel booking UNATR0024**), or manage it directly from your Profile page.`
+        ? `To cancel a booking, please provide your booking number (e.g., **Cancel booking UNATR0024**), or manage it directly from your Profile page.`
         : `لإلغاء أي حجز، يرجى تزويدي برقم الحجز كاملاً (مثال: **إلغاء الحجز UNATR0024**)، أو يمكنك الإلغاء مباشرة من صفحة حسابك.`,
       actionButtons: [
         { label: isEnglish ? '👤 My Bookings' : '👤 صفحة حجوزاتي', url: '/profile', actionType: 'link' },

@@ -72,11 +72,11 @@ interface ChatMessage {
 }
 
 const QUICK_SUGGESTIONS = [
-  { label: '🇸🇦 العربية', text: 'أريد المتابعة باللغة العربية' },
-  { label: '🇬🇧 English', text: 'Continue in English' },
-  { label: '✈️ مطار دبي (3 أيام)', text: 'سيارات متاحة في مطار دبي من الغد لمدة 3 أيام' },
-  { label: '⚡ أفضل عرض اقتصادي', text: 'ما هي أفضل السيارات الاقتصادية المتاحة هذا الأسبوع؟' },
-  { label: '🛡️ سياسة الإلغاء والتأمين', text: 'ما هي شروط وسياسة الإلغاء والتأمين؟' },
+  { label: '✈️ Dubai Airport (3 days)', text: 'Cars available at Dubai Airport tomorrow for 3 days' },
+  { label: '⚡ Best Economy Deal', text: 'What are the best economy cars available this week?' },
+  { label: '❌ Cancel a Booking', text: 'Cancel booking' },
+  { label: '🛡️ Cancellation Policy', text: 'What are the cancellation and insurance policy conditions?' },
+  { label: '🚗 Book a Car', text: 'I want to book a car' },
 ];
 
 function FormattedText({ content }: { content: string }) {
@@ -120,16 +120,17 @@ function FormattedText({ content }: { content: string }) {
 const INITIAL_MSG: ChatMessage = {
   id: 'init',
   role: 'assistant',
-  content: `مرحباً بك في **أوتورز (Autours)** لتأجير السيارات حول العالم! 🚗✨
+  content: `Welcome to **Autours**! 🚗✨
 
-أنا مساعدك الذكي، يسعدني مساعدتك في البحث عن أفضل عروض السيارات وحجزها وإدارة حجوزاتك بكل سهولة.
+I'm your AI Assistant. I can help you find and compare the best car rental deals, manage or cancel your bookings, and answer any questions.
 
-يرجى اختيار لغة المحادثة / Please choose your preferred language:`,
+How may I assist you today?`,
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   actionButtons: [
-    { label: '🇸🇦 المتابعة باللغة العربية', promptText: 'أريد المتابعة باللغة العربية' },
-    { label: '🇬🇧 Continue in English', promptText: 'Continue in English' },
-    { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
+    { label: '✈️ Dubai Airport (3 Days)', promptText: 'Show cars available at Dubai Airport for 3 days' },
+    { label: '⚡ Economy Car Deals', promptText: 'What are the best economy cars available?' },
+    { label: '❌ Cancel a Booking', promptText: 'Cancel booking' },
+    { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
   ],
 };
 
@@ -262,14 +263,14 @@ export default function AIChatAssistant() {
     if (userMemory?.frequentDestinations && userMemory.frequentDestinations.length > 0) {
       const topDest = userMemory.frequentDestinations[0].name;
       list.unshift({
-        label: `🔁 وجهتك المعتادة: ${topDest}`,
-        text: `ما هي أفضل السيارات المتاحة في ${topDest}؟`,
+        label: `🔁 Your destination: ${topDest}`,
+        text: `Best cars available in ${topDest}?`,
       });
     }
     if (userMemory?.preferredVehicleType) {
       list.unshift({
-        label: `⭐ فئتك المفضلة: ${userMemory.preferredVehicleType}`,
-        text: `ما هي أفضل سيارات ${userMemory.preferredVehicleType} المتاحة حالياً؟`,
+        label: `⭐ Preferred: ${userMemory.preferredVehicleType}`,
+        text: `Best ${userMemory.preferredVehicleType} cars available now?`,
       });
     }
     return list.slice(0, 6);
@@ -719,7 +720,7 @@ export default function AIChatAssistant() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder={isListening ? 'جارٍ الاستماع... / Listening...' : 'اكتب استفسارك أو طلبك هنا... / Type your message...'}
+                  placeholder={isListening ? 'Listening...' : 'Type your message or request here...'}
                   disabled={isLoading}
                   className="flex-1 bg-transparent text-gray-900 text-xs sm:text-[13px] placeholder-gray-400 focus:outline-none py-0.5"
                 />
