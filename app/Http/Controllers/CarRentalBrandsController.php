@@ -159,6 +159,24 @@ class CarRentalBrandsController extends Controller
             }
 
             if (!$matchedSupplier) {
+                if ($brandDetails) {
+                    $logo = $brandDetails->logo;
+                    if ($logo && !str_starts_with($logo, '/') && !str_starts_with($logo, 'http')) {
+                        $logo = '/img/' . $logo;
+                    }
+                    return [
+                        'id' => $brandDetails->slug,
+                        'user_id' => $brandDetails->user_id,
+                        'name' => $brandDetails->name,
+                        'displayName' => $brandDetails->display_name ?: ($brandDetails->name . ' Car Rental'),
+                        'logo' => $logo ?: '/img/company_logos/default.png',
+                        'rating' => (float) ($brandDetails->rating ?: 8.80),
+                        'reviewCount' => (int) ($brandDetails->review_count ?: 150),
+                        'ratingLabel' => $brandDetails->rating_label ?: 'Excellent',
+                        'description' => $brandDetails->description ?: "Rent a car with {$brandDetails->name} through Autours to get the best prices and outstanding customer support.",
+                        'countries' => [],
+                    ];
+                }
                 return null;
             }
 

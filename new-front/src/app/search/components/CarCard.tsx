@@ -159,11 +159,12 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     const trimmedName = typeof rawName === 'string' ? rawName.trim() : 'Car';
 
     const imgSource = vehicle.photo || vehicle.image || targets.map(t => t.photo || t.image || t.car_photo || t.main_image || t.thumbnail || t.car_image).find(Boolean);
-    const supplierSource = targets.map(t => t.supplier || t.company || t.rental_company).find(Boolean);
+    const supplierObj: any = vehicle.supplier && typeof vehicle.supplier === 'object' ? vehicle.supplier : {};
+    const supplierSource: any = targets.map(t => t.supplier || t.supplier_user || t.company || t.rental_company).find(t => t && typeof t === 'object') || supplierObj;
 
-    let logoStr = supplierSource?.logo || vehicle.supplier?.logo;
-    if (!logoStr && supplierSource) {
-      const sId = typeof supplierSource === 'object' ? supplierSource.id : supplierSource;
+    const sId = supplierObj?.id || (typeof v.supplier === 'number' || typeof v.supplier === 'string' ? v.supplier : supplierSource?.id);
+    let logoStr = supplierObj?.logo || supplierSource?.logo;
+    if (!logoStr && sId) {
       const foundSupplier = filteredSuppliers?.find(s => String(s.id) === String(sId));
       if (foundSupplier) {
         logoStr = foundSupplier.logo;
@@ -200,6 +201,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       fetchedCurrency
     );
 
+    const supplierName = supplierObj.company || supplierObj.name || supplierSource?.company || supplierSource?.name || (filteredSuppliers?.find(s => String(s.id) === String(sId))?.name) || 'Supplier';
+
     return {
       name: trimmedName,
       type: getSpec('type') !== 'N/A' ? getSpec('type') : (vehicle.category || 'Economy'),
@@ -211,7 +214,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       suitcases: getSpec('bags') !== 'N/A' ? getSpec('bags') : getSpec('luggage'),
       ac: getSpec('air conditioning') !== 'No' ? 'Air Conditioning' : 'No A/C',
       supplier: {
-        name: (supplierSource?.company || supplierSource?.name || vehicle.supplier?.company || 'Supplier').toString().trim(),
+        name: supplierName.toString().trim(),
         logo: getLogoUrl(logoStr),
         rating: supplierSource?.rating || supplierSource?.rate || 9,
         reviewsCount: supplierSource?.reviewsCount || supplierSource?.reviews_count || 0,

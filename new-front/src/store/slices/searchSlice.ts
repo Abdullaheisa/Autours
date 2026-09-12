@@ -57,6 +57,7 @@ interface SearchState {
   cheapestVehicles: Record<string, Record<string, { car_name: string; supplier: string; price: number; currency: string }>>;
   isFetchingCheapest: boolean;
   cheapestError: string | null;
+  currentRequestId?: string | null;
 }
 
 const initialState: SearchState = {
@@ -104,6 +105,7 @@ const initialState: SearchState = {
   cheapestVehicles: {},
   isFetchingCheapest: false,
   cheapestError: null,
+  currentRequestId: null,
 };
 
 export const initiateSearch = createAsyncThunk(
@@ -184,11 +186,14 @@ const searchSlice = createSlice({
       .addCase(fetchVehicles.pending, (state, action) => {
         state.isFiltering = true;
         state.filterError = null;
-        if (action.meta.arg.page === 1) {
-          state.vehicles = [];
-        }
+        state.currentRequestId = action.meta.requestId;
+        // Don't clear state.vehicles to prevent lag and blank screens on filter changes
       })
       .addCase(fetchVehicles.fulfilled, (state, action: any) => {
+        if (state.currentRequestId && state.currentRequestId !== action.meta.requestId) {
+          // Stale response from a previous request — discard
+          return;
+        }
         state.isFiltering = false;
         state.hasSearched = true;
 
@@ -232,6 +237,9 @@ const searchSlice = createSlice({
         }
       })
       .addCase(fetchVehicles.rejected, (state, action) => {
+        if (state.currentRequestId && state.currentRequestId !== action.meta.requestId) {
+          return;
+        }
         state.isFiltering = false;
         state.filterError = action.payload as string;
       })

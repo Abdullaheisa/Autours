@@ -259,14 +259,17 @@ function SearchPageContent() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-black text-gray-900 tracking-tight">
-                    {isFiltering && displayedVehicles.length === 0 ? 'Searching...' : `Showing ${displayedVehicles.length} of ${count || displayedVehicles.length} Cars`}
+                  <h2 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                    {`Showing ${displayedVehicles.length} of ${count || displayedVehicles.length} Cars`}
+                    {isFiltering && (
+                      <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    )}
                   </h2>
                   <p className="text-xs font-semibold text-gray-500 mt-0.5"> {/* 🚀 Accessibility Fix */}
                     {searchParams.locationLabel || searchParams.location} • {daysNumber} {daysNumber === 1 ? 'day' : 'days'}
                   </p>
                 </div>
-                {minPrice > 0 && maxPrice > 0 && !isFiltering && (
+                {minPrice > 0 && maxPrice > 0 && (
                   <div className="text-right">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Price Range</p> {/* 🚀 Accessibility Fix */}
                     <p className="text-sm font-black text-gray-900">{currencyCode} {minPrice.toFixed(0)} – {currencyCode} {maxPrice.toFixed(0)}</p>
@@ -274,7 +277,7 @@ function SearchPageContent() {
                 )}
               </div>
 
-              {isFiltering && currentPage === 1 && (
+              {isFiltering && displayedVehicles.length === 0 && (
                 <div className="space-y-4">
                   {Array.from({ length: 4 }).map((_, i) => <CarCardSkeleton key={i} />)}
                 </div>
@@ -296,36 +299,30 @@ function SearchPageContent() {
                 </div>
               )}
 
-              {!filterError && displayedVehicles.length > 0 && !(isFiltering && currentPage === 1) && (
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`vehicles-${displayedVehicles.length}-${filterParams.priceRange}`}
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}
-                    className="space-y-4"
-                  >
-                    {displayedVehicles.map((vehicle) => (
-                      <CarCard key={vehicle.id} vehicle={vehicle} daysNumber={daysNumber} />
-                    ))}
+              {!filterError && displayedVehicles.length > 0 && (
+                <div className={`space-y-4 transition-opacity duration-200 ${isFiltering ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
+                  {displayedVehicles.map((vehicle) => (
+                    <CarCard key={vehicle.id} vehicle={vehicle} daysNumber={daysNumber} />
+                  ))}
 
-                    {/* See More Button */}
-                    {currentPage < totalPages && (
-                      <div className="pt-6 pb-4 flex justify-center items-center">
-                        <button
-                          onClick={() => dispatch(setPage(currentPage + 1))}
-                          disabled={isFiltering}
-                          className="px-10 py-3.5 bg-white border border-gray-200 text-gray-800 font-bold rounded-xl shadow-sm hover:bg-gray-50 hover:text-[var(--primary)] hover:border-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                        >
-                          {isFiltering ? (
-                            <>
-                              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                              Loading...
-                            </>
-                          ) : 'See More'}
-                        </button>
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
+                  {/* See More Button */}
+                  {currentPage < totalPages && (
+                    <div className="pt-6 pb-4 flex justify-center items-center">
+                      <button
+                        onClick={() => dispatch(setPage(currentPage + 1))}
+                        disabled={isFiltering}
+                        className="px-10 py-3.5 bg-white border border-gray-200 text-gray-800 font-bold rounded-xl shadow-sm hover:bg-gray-50 hover:text-[var(--primary)] hover:border-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                      >
+                        {isFiltering ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                            Loading...
+                          </>
+                        ) : 'See More'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

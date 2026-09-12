@@ -20,27 +20,28 @@ import {
 interface PartnerConfig {
   name: string;
   logo: string;
+  slug: string;
   keys: string[];
 }
 
 const TARGET_PARTNERS: PartnerConfig[] = [
-  { name: 'SurPrice', logo: assets.suppliers.surprice, keys: ['surprice', 'sur price', 'سيربيس'] },
-  { name: 'Green Motion', logo: assets.suppliers.greenMotion, keys: ['green motion', 'greenmotion', 'جرين مويشن'] },
-  { name: 'U-Save', logo: assets.suppliers.usave, keys: ['u-save', 'usave', 'يو سيف'] },
-  { name: 'Street', logo: assets.suppliers.street, keys: ['street', 'ستريت'] },
-  { name: 'Autowill', logo: assets.suppliers.autowill, keys: ['autowill', 'auto will', 'اوتو ويل'] },
-  { name: 'DRIVUS', logo: assets.suppliers.drivus, keys: ['drivus', 'drive us', 'driveandsmile', 'drive & smile', 'درايف اس', 'درايفوس'] },
-  { name: 'XDrive Mobility', logo: assets.suppliers.xdrive, keys: ['xdrive', 'x drive', 'x-drive', 'اكس درايف'] },
-  { name: 'Nissa Car Rental', logo: assets.suppliers.nissa, keys: ['nissa', 'niss a', 'نيسا'] },
-  { name: 'North Car', logo: assets.suppliers.northCar, keys: ['north', 'north car', 'northcar', 'نورث'] },
-  { name: 'Routes', logo: assets.suppliers.routes, keys: ['routes', 'روتس'] },
+  { name: 'SurPrice', logo: assets.suppliers.surprice, slug: 'surprice', keys: ['surprice', 'sur price', 'سيربيس'] },
+  { name: 'Green Motion', logo: assets.suppliers.greenMotion, slug: 'green-motion', keys: ['green motion', 'greenmotion', 'جرين مويشن'] },
+  { name: 'U-Save', logo: assets.suppliers.usave, slug: 'u-save', keys: ['u-save', 'usave', 'يو سيف'] },
+  { name: 'Street', logo: assets.suppliers.street, slug: 'street', keys: ['street', 'ستريت'] },
+  { name: 'Autowill', logo: assets.suppliers.autowill, slug: 'autowill', keys: ['autowill', 'auto will', 'اوتو ويل'] },
+  { name: 'DRIVUS', logo: assets.suppliers.drivus, slug: 'drivus', keys: ['drivus', 'drive us', 'driveandsmile', 'drive & smile', 'درايف اس', 'درايفوس'] },
+  { name: 'XDrive Mobility', logo: assets.suppliers.xdrive, slug: 'xdrive-mobility', keys: ['xdrive', 'x drive', 'x-drive', 'اكس درايف'] },
+  { name: 'Nissa Car Rental', logo: assets.suppliers.nissa, slug: 'nissa', keys: ['nissa', 'niss a', 'نيسا'] },
+  { name: 'North Car', logo: assets.suppliers.northCar, slug: 'north-car', keys: ['north', 'north car', 'northcar', 'نورث'] },
+  { name: 'Routes', logo: assets.suppliers.routes, slug: 'routes', keys: ['routes', 'روتس'] },
 ];
 
 export default function AboutUsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [stats, setStats] = useState<StatData>(DEFAULT_STATS);
-  const [partnerLogos, setPartnerLogos] = useState<Array<{ name: string; logo: string }>>(
-    TARGET_PARTNERS.map(p => ({ name: p.name, logo: p.logo }))
+  const [partnerLogos, setPartnerLogos] = useState<Array<{ name: string; logo: string; slug: string }>>(
+    TARGET_PARTNERS.map(p => ({ name: p.name, logo: p.logo, slug: p.slug }))
   );
 
   useEffect(() => {
@@ -93,11 +94,13 @@ export default function AboutUsPage() {
               return {
                 name: dbSupplier.name || target.name,
                 logo: getLogoUrl(dbSupplier.logo),
+                slug: dbSupplier.slug || target.slug,
               };
             }
             return {
               name: target.name,
               logo: target.logo,
+              slug: target.slug,
             };
           });
 
@@ -700,22 +703,27 @@ export default function AboutUsPage() {
             {/* Logo Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4.5 max-w-5xl mx-auto">
               {partnerLogos.map((partner, idx) => (
-                <motion.div 
+                <Link
                   key={idx}
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  transition={{ duration: 0.2 }}
-                  className="bg-white rounded-2xl p-4 sm:p-5 flex items-center justify-center aspect-[16/10] shadow-sm hover:shadow-md border border-white hover:border-slate-200 transition-all group relative overflow-hidden cursor-default"
+                  href={`/car-rental-brands/${partner.slug}`}
+                  className="block group"
                 >
-                  <div className="relative w-full h-9 sm:h-11">
-                    <Image 
-                      src={partner.logo}
-                      alt={partner.name}
-                      fill
-                      sizes="(max-width: 768px) 140px, 180px"
-                      className="object-contain opacity-95 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
-                    />
-                  </div>
-                </motion.div>
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -3 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-white rounded-2xl p-3 sm:p-3.5 flex items-center justify-center aspect-[10/3] shadow-sm group-hover:shadow-md border border-white group-hover:border-slate-200 transition-all relative overflow-hidden cursor-pointer"
+                  >
+                    <div className="relative w-full h-7 sm:h-8">
+                      <Image 
+                        src={partner.logo}
+                        alt={partner.name}
+                        fill
+                        sizes="(max-width: 768px) 140px, 180px"
+                        className="object-contain opacity-95 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                      />
+                    </div>
+                  </motion.div>
+                </Link>
               ))}
             </div>
             

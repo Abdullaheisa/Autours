@@ -3,7 +3,19 @@ import { Vehicle } from "@/types";
 export const vehicleMapper = {
   toLocal: (raw: any): Vehicle => {
     const categoryName = typeof raw.category === 'object' ? raw.category?.name : (raw.category || '');
-    const supplierData = raw.supplier || {};
+    const supplierRaw = (typeof raw.supplier === 'object' && raw.supplier !== null)
+      ? raw.supplier
+      : (raw.supplier_user || raw.supplierUser || raw.supplier_data || {});
+
+    const supplierId = (typeof raw.supplier === 'number' || typeof raw.supplier === 'string')
+      ? raw.supplier
+      : (supplierRaw.id || raw.supplier_id || '');
+
+    const supplierCompany = supplierRaw.company || supplierRaw.name || raw.supplier_name || '';
+    const supplierLogo = supplierRaw.logo || raw.supplier_logo || '';
+
+    const branch = raw.branch || (raw.available_branches && raw.available_branches[0]) || {};
+
     const specs = raw.specifications || [];
     const specMap: Record<string, string> = {};
     if (Array.isArray(specs)) {
@@ -13,8 +25,6 @@ export const vehicleMapper = {
         if (val) specMap[name] = val;
       });
     }
-
-    const branch = raw.branch || (raw.available_branches && raw.available_branches[0]) || {};
 
     const mappedSpecs = Array.isArray(specs)
       ? specs.map((s: any) => ({
@@ -47,16 +57,17 @@ export const vehicleMapper = {
       ac: specMap['air conditioner'] === 'Air Conditioning' || !!(raw.ac),
       baseCurrency: branch.currency || 'AED',
       supplier: {
-        id: supplierData.id,
-        company: supplierData.company || supplierData.name || '',
-        logo: supplierData.logo || '',
-        rating: raw.supplier_rate || supplierData.rating || 0,
-        reviews_count: raw.supplier_number_of_reviews || supplierData.reviews_count || 0,
-        rentalTerms: supplierData.terms || '',
-        instant_confirmation: !!(raw.instant_confirmation ?? supplierData.instant_confirmation),
-        lat: parseFloat(branch.lat || supplierData.lat) || 0,
-        lng: parseFloat(branch.lng || supplierData.lng) || 0,
-        address: branch.address || branch.location_address || branch.adresse || supplierData.address || '',
+        id: supplierId,
+        company: supplierCompany,
+        name: supplierCompany,
+        logo: supplierLogo,
+        rating: raw.supplier_rate || supplierRaw.rating || supplierRaw.rate || 0,
+        reviews_count: raw.supplier_number_of_reviews || supplierRaw.reviews_count || 0,
+        rentalTerms: supplierRaw.terms || supplierRaw.rentalTerms || raw.rental_terms || '',
+        instant_confirmation: !!(raw.instant_confirmation ?? supplierRaw.instant_confirmation),
+        lat: parseFloat(branch.lat || supplierRaw.lat) || 0,
+        lng: parseFloat(branch.lng || supplierRaw.lng) || 0,
+        address: branch.address || branch.location_address || branch.adresse || supplierRaw.address || '',
       },
       included: (raw.included || raw.inclusions || []).map((inc: any, index: number) => ({
         id: inc.id || index,
@@ -76,8 +87,8 @@ export const vehicleMapper = {
       rental_terms: raw.rental_terms || [],
       instant_confirmation: raw.instant_confirmation !== undefined
         ? !!raw.instant_confirmation
-        : (supplierData.instant_confirmation !== undefined
-          ? !!supplierData.instant_confirmation
+        : (supplierRaw.instant_confirmation !== undefined
+          ? !!supplierRaw.instant_confirmation
           : true),
       promos: raw.promos || [],
       available_branches: raw.available_branches || [],

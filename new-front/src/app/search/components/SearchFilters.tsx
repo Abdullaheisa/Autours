@@ -29,17 +29,6 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
     setIsMounted(true);
   }, []);
 
-  // مراقبة الفلاتر لإطلاق دالة التحديث عند أي تغيير
-  const isInitialMount = useRef(true);
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    if (onFilterChange) onFilterChange();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterParams]);
-
   // 🔒 قفل الـ scroll لما الـ Filter drawer يفتح
   useEffect(() => {
     if (showMobileFilters) {
@@ -494,35 +483,29 @@ function FilterSection({ title, children, badge, expanded = false, isLast = fals
   );
 }
 
-// Checkbox Option with Micro-Animations
+// Fast, responsive Checkbox Option without Framer Motion overhead
 function FilterOption({ label, checked, onToggle }: { label: string; checked: boolean; onToggle: () => void }) {
   return (
-    <label
-      className="flex items-center justify-between group cursor-pointer py-1.5 px-1 rounded-lg"
+    <div
+      role="checkbox"
+      aria-checked={checked}
+      className="flex items-center justify-between group cursor-pointer py-1.5 px-1.5 rounded-lg select-none hover:bg-yellow-50/60 transition-colors"
       onClick={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onToggle();
       }}
     >
-      <span className="text-[13px] font-medium text-gray-600">{label}</span>
-      <div className="relative w-5 h-5">
-        <motion.div
-          className="absolute inset-0 rounded-md border-2 bg-white"
-          animate={{
-            borderColor: checked ? "#EAB308" : "#9CA3AF",
-            backgroundColor: checked ? "#EAB308" : "#FFFFFF",
-          }}
-          transition={{ duration: 0.15 }}
-        />
-        <motion.div
-          className="absolute inset-0 flex items-center justify-center"
-          initial={false}
-          animate={{ scale: checked ? 1 : 0, opacity: checked ? 1 : 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      <span className="text-[13px] font-medium text-gray-700 group-hover:text-gray-900 transition-colors">{label}</span>
+      <div className="relative w-5 h-5 shrink-0">
+        <div
+          className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${
+            checked ? 'bg-yellow-500 border-yellow-500' : 'bg-white border-gray-300 group-hover:border-yellow-400'
+          }`}
         >
-          <Check size={12} className="text-white" strokeWidth={3.5} />
-        </motion.div>
+          {checked && <Check size={12} className="text-white" strokeWidth={3.5} />}
+        </div>
       </div>
-    </label>
+    </div>
   );
 }
