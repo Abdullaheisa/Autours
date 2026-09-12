@@ -69,11 +69,24 @@ export const vehicleMapper = {
         lng: parseFloat(branch.lng || supplierRaw.lng) || 0,
         address: branch.address || branch.location_address || branch.adresse || supplierRaw.address || '',
       },
-      included: (raw.included || raw.inclusions || []).map((inc: any, index: number) => ({
-        id: inc.id || index,
-        what_is_included: typeof inc === 'string' ? inc : (inc.what_is_included || inc.name || ''),
-        description: inc.description || '',
-      })),
+      included: (raw.included || raw.inclusions || []).map((inc: any, index: number) => {
+        let what = typeof inc === 'string' ? inc : (inc.what_is_included || inc.name || '');
+        let desc = typeof inc === 'string' ? '' : (inc.description || '');
+        if (typeof inc === 'string') {
+          try {
+            const parsed = JSON.parse(inc);
+            if (parsed && typeof parsed === 'object') {
+              what = parsed.conditionName || parsed.rentalConditionName || parsed.name || parsed.what_is_included || what;
+              desc = parsed.description || desc;
+            }
+          } catch (e) {}
+        }
+        return {
+          id: inc.id || index,
+          what_is_included: what,
+          description: desc,
+        };
+      }),
       fuelPolicy: (
         (typeof raw.fuel_policy === 'object' ? (raw.fuel_policy?.name || raw.fuel_policy?.title) : null) ||
         (typeof raw.fuelPolicy === 'object' ? (raw.fuelPolicy?.name || raw.fuelPolicy?.title) : null) ||

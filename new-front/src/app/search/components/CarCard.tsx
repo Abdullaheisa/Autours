@@ -188,8 +188,14 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     const inclusions = (vehicle.included || [])
       .map((i: any) => {
         if (!i) return '';
-        if (typeof i === 'string') return i.trim();
-        return (i.what_is_included || i.description || '').toString().trim();
+        let val = typeof i === 'string' ? i : (i.what_is_included || i.description || '').toString();
+        try {
+          const parsed = JSON.parse(val);
+          if (parsed && typeof parsed === 'object') {
+            val = (parsed.conditionName || parsed.rentalConditionName || parsed.name || parsed.description || val).toString();
+          }
+        } catch (e) {}
+        return val.trim();
       })
       .filter(Boolean);
 

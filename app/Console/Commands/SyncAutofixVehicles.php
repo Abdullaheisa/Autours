@@ -397,7 +397,7 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                     return ['VEHICLEIMAGE' => $img['url'] ?? ''];
                 }, $v['vehicleImages']) : [],
                 'RENTALCONDITIONS' => !empty($v['rentalConditions']) ? array_map(function($cond) {
-                    $condString = is_array($cond) ? ($cond['rentalConditionName'] ?? $cond['name'] ?? json_encode($cond)) : $cond;
+                    $condString = is_array($cond) ? ($cond['conditionName'] ?? $cond['rentalConditionName'] ?? $cond['name'] ?? json_encode($cond)) : $cond;
                     return ['RENTALCONDITIONNAME' => $condString];
                 }, $v['rentalConditions']) : [],
                 'DEPOSITPRICE' => $v['depositPrice'] ?? null,
