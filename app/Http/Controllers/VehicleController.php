@@ -138,7 +138,7 @@ class VehicleController extends Controller
             }
             $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
             $query = $filteredVehicles->whereHas('supplierUser', function($q) use ($user) {
-                $q->whereIn('role', ['active_supplier', 'supplier']);
+                $q->where('role', 'active_supplier');
                 if (!$user || $user->role !== 'admin') {
                     $q->where(function($q2) {
                         $q2->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
@@ -188,7 +188,7 @@ class VehicleController extends Controller
                 return $vehicle->supplierUser ? $vehicle->supplierUser->id : ($vehicle->getAttributes()['supplier'] ?? null);
             })->unique()->filter()->values()->toArray();
 
-            $suppliers = User::query()->whereIn('id', $supplierIds)->whereIn('role', ['active_supplier', 'supplier'])->get();
+            $suppliers = User::query()->whereIn('id', $supplierIds)->where('role', 'active_supplier')->get();
             $paymentMethods = PaymentMethod::query()->whereIn('id', PaymentMethodSupplier::query()->whereIn('supplier_id', $supplierIds)->get()->pluck('payment_method_id')->toArray())->get();
 
             // Group vehicles to ensure sidebar aggregates only count unique models
@@ -1158,7 +1158,7 @@ class VehicleController extends Controller
         $locations = Branch::query()
             ->with(['airport', 'company:id,name,logo,company'])
             ->whereHas('company', function ($query) use ($user) {
-                $query->whereIn('role', ['active_supplier', 'supplier']);
+                $query->where('role', 'active_supplier');
                 if (!$user || $user->role !== 'admin') {
                     $query->where(function($q) {
                         $q->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
@@ -1210,7 +1210,7 @@ class VehicleController extends Controller
             ->with(['airport', 'company:id,name,logo,company'])
             ->where('activation', 1)
             ->whereHas('company', function ($query) {
-                $query->whereIn('role', ['active_supplier', 'supplier']);
+                $query->where('role', 'active_supplier');
             })
             ->where(function ($query) use ($city) {
                 $query->where('location', 'ilike', "%{$city}%")
@@ -1273,7 +1273,7 @@ class VehicleController extends Controller
             ->with(['airport', 'company:id,name,logo,company'])
             ->where('activation', 1)
             ->whereHas('company', function ($query) {
-                $query->whereIn('role', ['active_supplier', 'supplier']);
+                $query->where('role', 'active_supplier');
             })
             ->where(function ($query) use ($searchCountry) {
                 $query->where('country', 'ilike', $searchCountry)
