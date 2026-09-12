@@ -12,6 +12,7 @@ import SectionLayout from "@/components/shared/SectionLayout";
 import RichTextEditor from "@/components/shared/RichTextEditor";
 import { supplierApi } from "@/services/api/supplierApi";
 import { photoApi, vehicleManagementApi, specificationApi } from "@/services/api";
+import { BACKEND_URL } from "@/config/api";
 import toast from "react-hot-toast";
 
 // ─────────────────────────────────────────────
@@ -592,7 +593,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
                       </div>
                     ) : (
                       filteredPhotos.map((photo: any) => {
-                        const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+                        const backendBase = BACKEND_URL;
                         let photoUrl = photo.photo || photo.image || photo.url || null;
                         if (photoUrl && !photoUrl.startsWith('http') && !photoUrl.startsWith('data:') && !photoUrl.startsWith('/')) {
                           photoUrl = `${backendBase}/img/vehicles/${photoUrl}`;
@@ -638,7 +639,7 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
 
               {/* Selected preview */}
               {selectedPhoto && (() => {
-                const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+                const backendBase = BACKEND_URL;
                 let photoUrl = selectedPhoto.photo || selectedPhoto.image || selectedPhoto.url || null;
                 if (photoUrl && !photoUrl.startsWith('http') && !photoUrl.startsWith('data:') && !photoUrl.startsWith('/')) {
                   photoUrl = `${backendBase}/img/vehicles/${photoUrl}`;

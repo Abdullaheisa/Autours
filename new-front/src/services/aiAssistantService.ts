@@ -1,6 +1,6 @@
 import { Vehicle } from '@/types';
 import { vehicleMapper } from '@/services/mappers/vehicleMapper';
-import { BACKEND_URL } from '@/config/api';
+import { BACKEND_URL, CANDIDATE_BACKEND_URLS } from '@/config/api';
 import { buildLearnedMemoryPrompt, learnFromConversation, UserMemoryProfile } from './aiLearningService';
 
 export interface ActionButton {
@@ -192,8 +192,26 @@ export async function fetchLocations(): Promise<any[]> {
   }
   
   const urlsToTry = typeof window !== 'undefined'
-    ? ['/api/backend/get/locations', '/api/backend/api/get/locations', '/get/locations', `${BACKEND_URL}/api/get/locations`, `${BACKEND_URL}/get/locations`]
-    : [`${BACKEND_URL}/api/get/locations`, `${BACKEND_URL}/get/locations`, 'http://127.0.0.1:8000/api/get/locations', 'http://127.0.0.1:8000/get/locations', 'http://localhost:8000/api/get/locations', 'http://localhost:8000/get/locations'];
+    ? Array.from(new Set([
+        '/api/backend/get/locations',
+        '/api/backend/api/get/locations',
+        'https://www.autours.net/api/get/locations',
+        'https://autours.net/api/get/locations',
+        '/get/locations',
+        `${BACKEND_URL}/api/get/locations`,
+        `${BACKEND_URL}/get/locations`,
+        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/get/locations`),
+      ].filter(Boolean)))
+    : Array.from(new Set([
+        `${BACKEND_URL}/api/get/locations`,
+        `${BACKEND_URL}/get/locations`,
+        'https://www.autours.net/api/get/locations',
+        'https://autours.net/api/get/locations',
+        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/get/locations`),
+        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/get/locations`),
+        'http://127.0.0.1:8000/api/get/locations',
+        'http://localhost:8000/api/get/locations',
+      ].filter(Boolean)));
 
   for (const url of urlsToTry) {
     try {
@@ -388,8 +406,26 @@ export async function queryVehicles(params: {
   };
 
   const urlsToTry = typeof window !== 'undefined'
-    ? ['/api/backend/filter/vehicles', '/api/backend/api/filter/vehicles', '/filter/vehicles', `${BACKEND_URL}/api/filter/vehicles`, `${BACKEND_URL}/filter/vehicles`]
-    : [`${BACKEND_URL}/api/filter/vehicles`, `${BACKEND_URL}/filter/vehicles`, 'http://127.0.0.1:8000/api/filter/vehicles', 'http://127.0.0.1:8000/filter/vehicles', 'http://localhost:8000/api/filter/vehicles', 'http://localhost:8000/filter/vehicles'];
+    ? Array.from(new Set([
+        '/api/backend/filter/vehicles',
+        '/api/backend/api/filter/vehicles',
+        'https://www.autours.net/api/filter/vehicles',
+        'https://autours.net/api/filter/vehicles',
+        '/filter/vehicles',
+        `${BACKEND_URL}/api/filter/vehicles`,
+        `${BACKEND_URL}/filter/vehicles`,
+        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/filter/vehicles`),
+      ].filter(Boolean)))
+    : Array.from(new Set([
+        `${BACKEND_URL}/api/filter/vehicles`,
+        `${BACKEND_URL}/filter/vehicles`,
+        'https://www.autours.net/api/filter/vehicles',
+        'https://autours.net/api/filter/vehicles',
+        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/api/filter/vehicles`),
+        ...CANDIDATE_BACKEND_URLS.map(b => `${b}/filter/vehicles`),
+        'http://127.0.0.1:8000/api/filter/vehicles',
+        'http://localhost:8000/api/filter/vehicles',
+      ].filter(Boolean)));
 
   for (const url of urlsToTry) {
     try {

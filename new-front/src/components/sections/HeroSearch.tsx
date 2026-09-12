@@ -22,7 +22,7 @@ import { LocationBranch } from '@/types';
 import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
 import { worldCountries, WorldCountry } from '@/data/worldCountries';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+import { BACKEND_URL } from '@/config/api';
 
 function resolveImageUrl(path: string | undefined, fallback: string): string {
   if (!path) return fallback;

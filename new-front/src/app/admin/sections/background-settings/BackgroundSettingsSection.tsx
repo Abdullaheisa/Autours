@@ -8,6 +8,7 @@ import StatsCard from "@/components/ui/StatsCard";
 import { bannerApi, referenceApi, uploadApi } from "@/services/api";
 import { toast } from "react-hot-toast";
 import { getImageUrl } from "@/utils/getImageUrl";
+import { BACKEND_URL } from "@/config/api";
 
 interface Banner {
   id: number;
@@ -38,7 +39,7 @@ export default function BackgroundSettingsSection() {
       const bgs = bgRes?.data || [];
       setBanners(bgs.map((b: any) => ({
         id: b.id,
-        url: b.image_path ? `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${b.image_path}` : b.default_image_path ? `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${b.default_image_path}` : '',
+        url: b.image_path ? `${BACKEND_URL}${b.image_path}` : b.default_image_path ? `${BACKEND_URL}${b.default_image_path}` : '',
         visible: b.visible !== undefined ? b.visible : b.is_active !== undefined ? b.is_active : true,
         sectionKey: b.section_key,
         sectionName: b.section_name,

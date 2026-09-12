@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import ManageCategoriesModal from "@/components/shared/ManageCategoriesModal";
 import { blogCategoryApi } from '@/services/api';
+import { BACKEND_URL } from '@/config/api';
 
 // 🎨 تعديل نوع Blog ليشمل imageFile
 interface EditBlogProps {
@@ -78,12 +79,12 @@ export default function EditBlog({ blog, onBack, onSave, blogCategories }: EditB
   });
   const [previewAuthorImage, setPreviewAuthorImage] = useState<string | null>(() => {
     if (blog?.author_image) {
-      return blog.author_image.startsWith("http") ? blog.author_image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/img/blogs/${blog.author_image}`;
+      return blog.author_image.startsWith("http") ? blog.author_image : `${BACKEND_URL}/img/blogs/${blog.author_image}`;
     }
     if (typeof window !== "undefined") {
       const lastImage = localStorage.getItem("autours_last_author_image");
       if (lastImage) {
-        return lastImage.startsWith("http") ? lastImage : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/img/blogs/${lastImage}`;
+        return lastImage.startsWith("http") ? lastImage : `${BACKEND_URL}/img/blogs/${lastImage}`;
       }
     }
     return null;

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import { fetchContestSettings, fetchRegistrations, updateContestSettings, resetCampaign } from "@/store/slices/contestSlice";
 import { ContestApi } from "@/services/contest/contest.api";
+import { BACKEND_URL } from "@/config/api";
 import { Gift, Trash2, Power, EyeOff, RotateCcw, Download, Search, Mail, Phone, RefreshCw, Upload, Image } from "lucide-react";
 
 export default function ContestPopupControlPage() {
@@ -154,7 +155,7 @@ export default function ContestPopupControlPage() {
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Banner Preview</p>
                 <div className="relative rounded-xl overflow-hidden border border-gray-100 h-[180px] bg-gray-50 group">
                   <img
-                    src={banner.startsWith('http') || banner.startsWith('blob:') || banner.startsWith('data:') ? banner : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${banner}`}
+                    src={banner.startsWith('http') || banner.startsWith('blob:') || banner.startsWith('data:') ? banner : `${BACKEND_URL}${banner}`}
                     alt="Current Banner"
                     className="w-full h-full object-cover block"
                   />

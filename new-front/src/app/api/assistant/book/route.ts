@@ -1,16 +1,35 @@
 import { NextResponse } from 'next/server';
-import { BACKEND_URL } from '@/config/api';
+import { BACKEND_URL, CANDIDATE_BACKEND_URLS } from '@/config/api';
 
 async function getCsrf() {
-  const res = await fetch(`${BACKEND_URL}/sanctum/csrf-cookie`, { method: 'GET' });
-  const setCookie = res.headers.get('set-cookie') || '';
-  const tokenMatch = setCookie.match(/XSRF-TOKEN=([^;]+)/);
-  const sessionMatch = setCookie.match(/autours_session=([^;]+)/);
-  const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : '';
-  const parts: string[] = [];
-  if (tokenMatch) parts.push(`XSRF-TOKEN=${tokenMatch[1]}`);
-  if (sessionMatch) parts.push(`autours_session=${sessionMatch[1]}`);
-  return { cookie: parts.join('; '), token };
+  const candidateUrls = Array.from(new Set([
+    `${BACKEND_URL}/sanctum/csrf-cookie`,
+    'https://www.autours.net/sanctum/csrf-cookie',
+    'https://autours.net/sanctum/csrf-cookie',
+    ...CANDIDATE_BACKEND_URLS.map((b) => `${b}/sanctum/csrf-cookie`),
+    'http://127.0.0.1:8000/sanctum/csrf-cookie',
+    'http://localhost:8000/sanctum/csrf-cookie',
+  ]));
+
+  for (const url of candidateUrls) {
+    try {
+      const res = await fetch(url, { method: 'GET' });
+      if (res.ok) {
+        const setCookie = res.headers.get('set-cookie') || '';
+        const tokenMatch = setCookie.match(/XSRF-TOKEN=([^;]+)/);
+        const sessionMatch = setCookie.match(/autours_session=([^;]+)/);
+        const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : '';
+        const parts: string[] = [];
+        if (tokenMatch) parts.push(`XSRF-TOKEN=${tokenMatch[1]}`);
+        if (sessionMatch) parts.push(`autours_session=${sessionMatch[1]}`);
+        return { cookie: parts.join('; '), token };
+      }
+    } catch {
+      // try next
+    }
+  }
+
+  return { cookie: '', token: '' };
 }
 
 export async function POST(request: Request) {

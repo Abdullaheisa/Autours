@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { BACKEND_URL } from '@/config/api';
+import { BACKEND_URL, CANDIDATE_BACKEND_URLS } from '@/config/api';
 import { vehicleMapper } from '@/services/mappers/vehicleMapper';
 import { buildLearnedMemoryPrompt, learnFromConversation, UserMemoryProfile } from '@/services/aiLearningService';
 
@@ -49,14 +49,18 @@ async function getCachedLocations() {
     return cachedLocations;
   }
   
-  const urlsToTry = [
-    `${BACKEND_URL}/api/get/locations`,
-    `${BACKEND_URL}/get/locations`,
-    'http://127.0.0.1:8000/api/get/locations',
-    'http://127.0.0.1:8000/get/locations',
-    'http://localhost:8000/api/get/locations',
-    'http://localhost:8000/get/locations',
-  ];
+  const urlsToTry = Array.from(
+    new Set([
+      `${BACKEND_URL}/api/get/locations`,
+      `${BACKEND_URL}/get/locations`,
+      'https://www.autours.net/api/get/locations',
+      'https://autours.net/api/get/locations',
+      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/api/get/locations`),
+      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/get/locations`),
+      'http://127.0.0.1:8000/api/get/locations',
+      'http://localhost:8000/api/get/locations',
+    ].filter(Boolean))
+  );
 
   for (const url of urlsToTry) {
     try {
@@ -418,14 +422,18 @@ async function queryAutoursVehicles(params: {
     per_page: 6,
   };
 
-  const urlsToTry = [
-    `${BACKEND_URL}/api/filter/vehicles`,
-    `${BACKEND_URL}/filter/vehicles`,
-    'http://127.0.0.1:8000/api/filter/vehicles',
-    'http://127.0.0.1:8000/filter/vehicles',
-    'http://localhost:8000/api/filter/vehicles',
-    'http://localhost:8000/filter/vehicles',
-  ];
+  const urlsToTry = Array.from(
+    new Set([
+      `${BACKEND_URL}/api/filter/vehicles`,
+      `${BACKEND_URL}/filter/vehicles`,
+      'https://www.autours.net/api/filter/vehicles',
+      'https://autours.net/api/filter/vehicles',
+      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/api/filter/vehicles`),
+      ...CANDIDATE_BACKEND_URLS.map((base) => `${base}/filter/vehicles`),
+      'http://127.0.0.1:8000/api/filter/vehicles',
+      'http://localhost:8000/api/filter/vehicles',
+    ].filter(Boolean))
+  );
 
   for (const url of urlsToTry) {
     try {

@@ -7,7 +7,7 @@ import SectionDivider from '@/components/sections/SectionDivider';
 import { referenceApi, subscriberApi } from '@/services/api';
 import toast from 'react-hot-toast';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+import { BACKEND_URL } from '@/config/api';
 
 function resolveImageUrl(path: string | undefined, fallback: string): string {
   if (!path) return fallback;

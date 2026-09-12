@@ -8,6 +8,7 @@ import { registerContestUser, fetchContestSettings } from '@/store/slices/contes
 import { features } from '@/config/features';
 import { X, Gift, User, Phone, Mail, Globe, Sparkles } from 'lucide-react';
 import { countries } from '@/lib/data';
+import { BACKEND_URL } from '@/config/api';
 
 export default function ContestPopup() {
   const dispatch = useDispatch<AppDispatch>();
@@ -22,7 +23,7 @@ export default function ContestPopup() {
   const bannerUrl = banner 
     ? (banner.startsWith('http') || banner.startsWith('blob:') || banner.startsWith('data:')
         ? banner
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${banner}`)
+        : `${BACKEND_URL}${banner}`)
     : null;
 
   const [name, setName] = useState('');
