@@ -2884,7 +2884,7 @@ class SupplierIntegrationService
         // 2. Reprice
         $service->reprice($searchId, (int)$fleetrezVehicleId, $pricingId, (int)$pickupLocationId, (int)$dropOffLocationId);
 
-        // 3. Book
+        // 3. Book (all fields required per Fleetrez Swagger spec)
         $bookParams = [
             'searchId' => $searchId,
             'vehicleId' => (int)$fleetrezVehicleId,
@@ -2897,19 +2897,20 @@ class SupplierIntegrationService
                 'surname' => $nameParts['last'] ?: 'Customer',
                 'email' => $customer->email ?? 'noreply@autours.net',
                 'phone' => $customer->phone_num ?? '0000000000',
-                'remarks' => $rental->comment ?? '',
+                'driverAddressLine' => $customer->address ?? 'N/A',
+                'city' => $customer->city ?? 'N/A',
+                'postalCode' => $customer->zip_code ?? '00000',
                 'country' => $customer->country ?? 'GR',
-                'age' => $age
+                'age' => $age,
+                'remarks' => $rental->comment ?? '',
+            ],
+            'extraList' => [],
+            'flightDetail' => [
+                'flightNumber' => $rental->flight_no ?? 'N/A',
+                'airline' => 'N/A',
             ],
             'companyRef' => $rental->order_number ?? (string)$rental->id,
         ];
-        
-        if (!empty($rental->flight_no)) {
-             $bookParams['flightDetail'] = [
-                 'flightNumber' => $rental->flight_no,
-                 'airline' => 'N/A'
-             ];
-        }
 
         $bookResponse = $service->book($bookParams);
 
