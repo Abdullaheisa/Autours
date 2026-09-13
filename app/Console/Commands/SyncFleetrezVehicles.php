@@ -119,6 +119,10 @@ class SyncFleetrezVehicles extends Command
             $cars = $response['carResponseModelList'] ?? [];
             if (empty($cars)) {
                 $this->warn("No vehicles found for branch {$branch->id}");
+                if (!$this->option('dry-run')) {
+                    $this->warn("Deleting empty branch {$branch->name} (ID: {$branch->id})");
+                    $branch->delete();
+                }
                 continue;
             }
 
@@ -209,24 +213,24 @@ class SyncFleetrezVehicles extends Command
     private function resolveCategory(string $acriss, string $categoryName): int
     {
         $lower = strtolower($categoryName);
-        if (str_contains($lower, 'mini')) return 1;
-        if (str_contains($lower, 'compact')) return 2;
-        if (str_contains($lower, 'economy')) return 3;
-        if (str_contains($lower, 'suv')) return 4;
-        if (str_contains($lower, 'van') || str_contains($lower, 'minivan')) return 5;
-        if (str_contains($lower, 'luxury')) return 6;
-        if (str_contains($lower, 'standard')) return 7;
+        if (str_contains($lower, 'mini')) return 12; // Mini
+        if (str_contains($lower, 'compact')) return 3; // Small/Compact
+        if (str_contains($lower, 'economy')) return 5; // Economy
+        if (str_contains($lower, 'suv')) return 8; // SUV
+        if (str_contains($lower, 'van') || str_contains($lower, 'minivan')) return 10; // Minivan
+        if (str_contains($lower, 'luxury')) return 9; // Luxury
+        if (str_contains($lower, 'standard')) return 4; // Standard
 
         $firstChar = strtoupper(substr($acriss, 0, 1));
         return match ($firstChar) {
-            'M', 'N' => 1, // Mini
-            'E', 'H' => 3, // Economy
-            'C', 'D' => 2, // Compact
-            'I', 'J', 'S', 'R', 'F', 'G' => 7, // Standard
-            'P', 'U', 'L', 'W' => 6, // Luxury
-            'O' => 4, // SUV / Oversize
-            'V' => 5, // Minivan
-            default => 2, // Compact fallback
+            'M', 'N' => 12, // Mini
+            'E', 'H' => 5, // Economy
+            'C', 'D' => 3, // Compact / Small
+            'I', 'J', 'S', 'R', 'F', 'G' => 4, // Standard
+            'P', 'U', 'L', 'W' => 9, // Luxury
+            'O' => 8, // SUV / Oversize
+            'V' => 10, // Minivan
+            default => 3, // Compact fallback
         };
     }
 

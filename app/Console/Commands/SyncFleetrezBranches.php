@@ -67,6 +67,8 @@ class SyncFleetrezBranches extends Command
         $created = 0;
         $updated = 0;
 
+        $this->output->progressStart(count($locations));
+
         foreach ($locations as $location) {
             $locationId = (string) ($location['id'] ?? '');
             $locationCode = (string) ($location['code'] ?? '');
@@ -107,16 +109,21 @@ class SyncFleetrezBranches extends Command
             $normData = $normalizer->normalize(
                 $branch->name,
                 $branch->city ?? '',
-                $branch->country ?? '',
+                '', // Pass empty country to let normalizer fallback to IATA perfectly
                 $branch->station_id,
                 $branch->abriviation
             );
+            
+            $finalCountry = $normData['country'] ?? $branch->country;
+            $finalCurrency = CountryCurrencyResolver::resolveCurrencyByCountryName($finalCountry);
 
             $branch->update(array_filter([
                 'airport_id' => $normData['airport_id'] ?? null,
                 'name' => $normData['normalized_name'] ?? null,
                 'location' => $normData['location'] ?? null,
                 'abriviation' => $normData['abriviation'] ?? null,
+                'country' => $finalCountry,
+                'currency' => $finalCurrency,
             ]));
 
             if ($branch->wasRecentlyCreated) {
@@ -124,7 +131,11 @@ class SyncFleetrezBranches extends Command
             } else {
                 $updated++;
             }
+
+            $this->output->progressAdvance();
         }
+
+        $this->output->progressFinish();
 
         if (!$this->option('dry-run')) {
             $this->info("Sync complete. Created: {$created}, Updated: {$updated}.");
