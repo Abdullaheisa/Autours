@@ -72,6 +72,10 @@ class SupplierIntegrationService
             return $this->sendViaRently($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'fleetrez') {
+            return $this->sendViaFleetrez($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -160,6 +164,12 @@ class SupplierIntegrationService
 
         if ($supplier->integration_type === 'rently') {
             return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'fleetrez') {
+            return $supplier->integration === true
+                && !empty($supplier->api_key)
+                && !empty($supplier->api_password);
         }
 
         // For webhook suppliers, we need integration enabled + webhook URL
@@ -581,6 +591,9 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'rently') {
             $service = new RentlyApiService();
             $this->createRentlyReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'fleetrez') {
+            $service = new FleetrezApiService($supplier->api_key, $supplier->api_password);
+            $this->createFleetrezReservation($service, $rental, $supplier);
         } elseif ($supplier->integration_type === 'xdrive') {
             $service = new XdriveJsonApiService();
             $this->createXdriveReservation($service, $rental, $supplier);
@@ -2754,5 +2767,203 @@ class SupplierIntegrationService
         ]);
 
         return false;
+    }
+
+    /**
+     * Send reservation to Fleetrez API.
+     *
+     * @param Rental $rental
+     * @param User $supplier
+     * @param string $eventType
+     * @return bool
+     */
+    private function sendViaFleetrez(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new FleetrezApiService($supplier->api_key, $supplier->api_password);
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createFleetrezReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelFleetrezReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        $this->cancelFleetrezReservation($service, $rental, $supplier);
+                    }
+                    return $this->createFleetrezReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Fleetrez integration: Unknown event type '{$eventType}'");
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Fleetrez integration error for supplier {$supplier->id}", [
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Create a reservation on the Fleetrez API.
+     *
+     * @param FleetrezApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function createFleetrezReservation(FleetrezApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('Fleetrez integration: Missing vehicle or customer', ['rental_id' => $rental->id]);
+            return false;
+        }
+
+        $fleetrezVehicleId = $this->extractExternalVehicleId($vehicle->description);
+
+        if (!$fleetrezVehicleId) {
+            Log::warning('Fleetrez integration: Could not extract vehicle ID from description', [
+                'rental_id' => $rental->id,
+                'vehicle_id' => $vehicle->id,
+            ]);
+            return false;
+        }
+
+        $pickupLocationId = $branch ? $branch->station_id : '';
+        $dropOffLocationId = $pickupLocationId; // Same for now unless Dropoff branch is available
+
+        if (empty($pickupLocationId)) {
+             throw new \Exception("Fleetrez API: Branch station_id is required for location mapping.");
+        }
+
+        $nameParts = $this->splitCustomerName($customer->name ?? '');
+
+        $pickupDate = $rental->start_date ? Carbon::parse($rental->start_date)->format('Y-m-d') : '';
+        $dropOffDate = $rental->end_date ? Carbon::parse($rental->end_date)->format('Y-m-d') : '';
+        $pickupTime = $rental->start_time ? Carbon::parse($rental->start_time)->format('H:i') : '10:00';
+        $dropOffTime = $rental->end_time ? Carbon::parse($rental->end_time)->format('H:i') : '10:00';
+        $age = $rental->customer_age ?? 30;
+
+        // 1. Search
+        $searchResponse = $service->search(
+            (int)$pickupLocationId,
+            (int)$dropOffLocationId,
+            $pickupDate,
+            $dropOffDate,
+            $pickupTime,
+            $dropOffTime,
+            $age,
+            'Pay On Arrival'
+        );
+
+        $searchId = $searchResponse['searchId'] ?? null;
+        if (!$searchId) {
+            throw new \Exception("Fleetrez API: searchId not returned");
+        }
+
+        $pricingId = null;
+        foreach ($searchResponse['carResponseModelList'] ?? [] as $car) {
+            if ((string) $car['vehicleId'] === (string) $fleetrezVehicleId) {
+                $pricingId = $car['pricingId'] ?? null;
+                break;
+            }
+        }
+
+        if (!$pricingId) {
+            throw new \Exception("Fleetrez API: Requested vehicle not available for these dates");
+        }
+
+        // 2. Reprice
+        $service->reprice($searchId, (int)$fleetrezVehicleId, $pricingId, (int)$pickupLocationId, (int)$dropOffLocationId);
+
+        // 3. Book
+        $bookParams = [
+            'searchId' => $searchId,
+            'vehicleId' => (int)$fleetrezVehicleId,
+            'pricingId' => $pricingId,
+            'pickUpRentalLocationId' => (int)$pickupLocationId,
+            'dropOffRentalLocationId' => (int)$dropOffLocationId,
+            'driver' => [
+                'title' => 'Mr',
+                'firstName' => $nameParts['first'] ?: 'Customer',
+                'surname' => $nameParts['last'] ?: 'Customer',
+                'email' => $customer->email ?? 'noreply@autours.net',
+                'phone' => $customer->phone_num ?? '0000000000',
+                'remarks' => $rental->comment ?? '',
+                'country' => $customer->country ?? 'GR',
+                'age' => $age
+            ],
+            'companyRef' => $rental->order_number ?? (string)$rental->id,
+        ];
+        
+        if (!empty($rental->flight_no)) {
+             $bookParams['flightDetail'] = [
+                 'flightNumber' => $rental->flight_no,
+                 'airline' => 'N/A'
+             ];
+        }
+
+        $bookResponse = $service->book($bookParams);
+
+        $bookingRef = $bookResponse['bookingRef'] ?? null;
+
+        if (empty($bookingRef)) {
+            Log::error('Fleetrez reservation creation failed (no booking reference)', [
+                'rental_id' => $rental->id,
+                'response' => $bookResponse,
+            ]);
+            throw new \Exception("Fleetrez API: Supplier booking failed, no booking reference returned.");
+        }
+
+        $rental->update(['external_reservation_no' => (string) $bookingRef]);
+
+        Log::info('Fleetrez reservation created successfully', [
+            'rental_id' => $rental->id,
+            'reservation_no' => $bookingRef,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Cancel a reservation on the Fleetrez API.
+     *
+     * @param FleetrezApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function cancelFleetrezReservation(FleetrezApiService $service, Rental $rental, User $supplier): bool
+    {
+        $externalNo = $rental->external_reservation_no;
+
+        if (empty($externalNo)) {
+            return true;
+        }
+
+        try {
+            $response = $service->cancel((string) $externalNo);
+            Log::info('Fleetrez reservation cancelled successfully', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+                'charge' => $response['charge'] ?? null
+            ]);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Fleetrez reservation cancellation failed', [
+                'rental_id' => $rental->id,
+                'reservation_no' => $externalNo,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 }
