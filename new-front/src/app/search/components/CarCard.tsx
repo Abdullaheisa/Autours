@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
   Check, Info, X, ChevronDown, ChevronUp,
-  Globe, Fuel, Handshake, Plane, Droplets, Zap, Sparkles
+  Globe, Fuel, Handshake, Plane, Droplets, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';

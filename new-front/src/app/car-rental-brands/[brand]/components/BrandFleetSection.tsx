@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getVehicleImageUrl } from '@/utils/getImageUrl';
 import { Vehicle } from '@/types';
-import { Car, ChevronRight, Sparkles, ShieldCheck } from 'lucide-react';
+import { Car, ChevronRight, ShieldCheck } from 'lucide-react';
 import { assets } from '@/config/assets';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
@@ -280,7 +280,6 @@ export default function BrandFleetSection({ brandName, brandId, vehicles = [] }:
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-4 md:mb-6">
           <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/20 text-gray-950 text-xs font-black uppercase tracking-wider mb-2 md:mb-3 border border-primary/30">
-            <Sparkles size={14} className="text-gray-900" />
             Diverse Vehicle Options
           </span>
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-title uppercase italic mb-3">

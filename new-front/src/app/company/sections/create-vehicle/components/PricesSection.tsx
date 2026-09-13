@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import { Tag, Plus, Trash2, Sliders, Calendar, Sparkles, Save, CheckCircle2 } from "lucide-react";
+import { Tag, Plus, Trash2, Sliders, Calendar, Save, CheckCircle2 } from "lucide-react";
 import SectionCard from "./SectionCard";
 import PriceField from "./PriceField";
 import { VehicleFormData, PricingMode, CustomPriceTier } from "./types";
@@ -118,7 +118,7 @@ export const PricesSection: React.FC<PricesSectionProps> = ({
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                <Sparkles size={13} />
+                <Sliders size={13} />
                 Custom Ranges
               </button>
             </div>

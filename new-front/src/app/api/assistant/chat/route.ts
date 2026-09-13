@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { BACKEND_URL, CANDIDATE_BACKEND_URLS } from '@/config/api';
 import { vehicleMapper } from '@/services/mappers/vehicleMapper';
-import { buildLearnedMemoryPrompt, learnFromConversation, UserMemoryProfile } from '@/services/aiLearningService';
+import { buildLearnedMemoryPrompt, learnFromConversation, handleAdminDirective, UserMemoryProfile } from '@/services/aiLearningService';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -192,8 +192,9 @@ const UNIVERSAL_DESTINATION_MAP: Record<string, string> = {
   // 🇬🇪 Georgia
   'جورجيا': 'Georgia', 'georgia': 'Georgia', 'géorgie': 'Georgia', 'tbilisi': 'Tbilisi', 'تبليسي': 'Tbilisi', 'tbs': 'Tbilisi', 'باتومي': 'Batumi', 'batumi': 'Batumi', 'bus': 'Batumi', 'كوتايسي': 'Kutaisi',
 
-  // 🇶🇦 Qatar
-  'قطر': 'Qatar', 'qatar': 'Qatar', 'الدوحة': 'Doha', 'الدوحه': 'Doha', 'doha': 'Doha', 'doh': 'Doha', 'مطار حمد': 'Doha',
+  // 🇶🇦 Qatar & Hamad International Airport
+  'قطر': 'Qatar', 'qatar': 'Qatar', 'الدوحة': 'Qatar', 'الدوحه': 'Qatar', 'doha': 'Qatar', 'doh': 'Qatar',
+  'مطار حمد': 'Qatar', 'مطار حمد الدولي': 'Qatar', 'حمد الدولي': 'Qatar', 'hamad': 'Qatar', 'hamad airport': 'Qatar', 'hamad international airport': 'Qatar',
 
   // 🇴🇲 Oman
   'سلطنة عمان': 'Oman', 'سلطنه عمان': 'Oman', 'oman': 'Oman', 'مسقط': 'Muscat', 'muscat': 'Muscat', 'صلالة': 'Salalah',
@@ -273,7 +274,7 @@ function buildDynamicDatabaseContext(locations: any[]) {
   return {
     totalCountries: countryMap.size,
     countriesListStr: Array.from(countryMap.keys()).join(', '),
-    summaryStr: summaries.slice(0, 30).join('\n'),
+    summaryStr: summaries.join('\n'),
   };
 }
 
@@ -953,10 +954,29 @@ export async function POST(request: Request) {
       cleanUserMsg === 'انجليزي' ||
       cleanUserMsg === 'إنجليزي';
 
+    // Helper for clean, respectful greeting without robotic admin or company names
+    const getCleanGreeting = (name?: string, isEn?: boolean) => {
+      if (!name) return '';
+      const clean = name.trim();
+      const lower = clean.toLowerCase();
+      if (
+        lower.includes('admin') ||
+        lower === 'autours' ||
+        lower.includes('autours admin') ||
+        lower.includes('administrator') ||
+        lower === 'surprice' ||
+        lower.includes('company') ||
+        lower.includes('supplier')
+      ) {
+        return '';
+      }
+      return isEn ? ` ${clean}` : ` أستاذ ${clean}`;
+    };
+
     if (isArabicSelection) {
-      const userGreeting = currentUser?.name ? ` يا ${currentUser.name}` : ' يا غالي';
+      const userGreeting = getCleanGreeting(currentUser?.name, false);
       return NextResponse.json({
-        reply: `أهلاً وسهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nأنا صديقك ومساعدك الشخصي للرحلات، ومعاك خطوة بخطوة عشان تختار السيارة الأنسب لك بأفضل سعر وبدون أي تعقيد.\n\nحابب تسافر فين أو إيه المدينة أو المطار اللي ناوي تزورها؟`,
+        reply: `أهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nيسعدني مساعدتك في العثور على أفضل سيارة لرحلتك بأفضل الأسعار.\n\nما هي المدينة أو المطار الذي ترغب في استلام السيارة منه؟`,
         vehicles: [],
         searchCriteria: null,
         actionButtons: [],
@@ -966,9 +986,9 @@ export async function POST(request: Request) {
     }
 
     if (isEnglishSelection) {
-      const userGreeting = currentUser?.name ? ` ${currentUser.name}` : '';
+      const userGreeting = getCleanGreeting(currentUser?.name, true);
       return NextResponse.json({
-        reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm your personal assistant and travel companion. I'll guide you step-by-step to find the perfect car for your trip at the best rate.\n\nWhere are you planning to travel, or which city/airport do you have in mind for pick-up?`,
+        reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm here to help you find the best rental car at the best rate.\n\nWhich city or airport would you like to pick up your car from?`,
         vehicles: [],
         searchCriteria: null,
         actionButtons: [],
@@ -985,7 +1005,7 @@ export async function POST(request: Request) {
     if (isGeneralBookingIntent) {
       if (isEnglish) {
         return NextResponse.json({
-          reply: `With pleasure! Which city or airport would you like to pick up the car from? (e.g. Dubai, Istanbul, Cairo, Kuwait...)`,
+          reply: `With pleasure! Which city or airport would you like to pick up your vehicle from? (e.g. Dubai, Istanbul, Cairo, Kuwait, Doha...)`,
           vehicles: [],
           searchCriteria: null,
           actionButtons: [],
@@ -994,7 +1014,7 @@ export async function POST(request: Request) {
         });
       } else {
         return NextResponse.json({
-          reply: `من عيوني يا غالي! تحب تستلم السيارة في أي مدينة أو مطار؟ (مثلاً: دبي، إسطنبول، القاهرة، الكويت...)`,
+          reply: `بكل سرور! في أي مدينة أو مطار ترغب باستلام السيارة؟ (مثال: دبي، إسطنبول، القاهرة، الكويت، الدوحة...)`,
           vehicles: [],
           searchCriteria: null,
           actionButtons: [],
@@ -1004,7 +1024,130 @@ export async function POST(request: Request) {
       }
     }
 
-    // ⚡ 1. Try Real Booking Cancellation First (if cancel intent or order number present)
+    // ⚡ 1. Admin Direct Training Mode ("احفظ عندك", "قاعدة جديدة", "اعرض القواعد", "احذف قاعدة")
+    const adminResolution = handleAdminDirective(latestUserMsg, currentUser);
+    if (adminResolution) {
+      return NextResponse.json({
+        reply: adminResolution.reply,
+        vehicles: [],
+        searchCriteria: null,
+        actionButtons: adminResolution.actionButtons || [],
+        showSearchWidget: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // ⚡ 2. Deterministic In-Chat Search Widget Interception (Zero Hallucination / Instant Execution)
+    // Matches widget submission:
+    // English: "Available cars at Hamad International Airport - DOH from 2026-09-27 to 2026-09-30"
+    // Arabic:  "أريد سيارات في مطار حمد الدولي - DOH من 2026-09-27 إلى 2026-09-30"
+    const directSearchWidgetMatch =
+      latestUserMsg.match(/^(?:Available cars at|Cars at|Find cars in|Search cars in)\s+(.+?)\s+from\s+(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\s+to\s+(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i) ||
+      latestUserMsg.match(/^(?:أريد سيارات في|اريد سيارات في|سيارات في|ابحث عن سيارات في|عربيات في)\s+(.+?)\s+من\s+(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\s+(?:إلى|الي)\s+(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i);
+
+    if (directSearchWidgetMatch) {
+      const rawLocQuery = directSearchWidgetMatch[1].trim();
+      const dFrom = normalizeDateStr(directSearchWidgetMatch[2].trim());
+      const dTo = normalizeDateStr(directSearchWidgetMatch[3].trim());
+
+      const locations = await getCachedLocations();
+
+      // Clean location string (e.g. "Hamad International Airport - DOH" -> "Hamad International Airport")
+      const cleanLocQuery = rawLocQuery.replace(/\s*-\s*[A-Za-z0-9]{3}$/, '').trim();
+
+      let canonicalName: string | null = null;
+      for (const [alias, canonical] of Object.entries(UNIVERSAL_DESTINATION_MAP)) {
+        if (
+          cleanLocQuery.toLowerCase().includes(alias.toLowerCase()) ||
+          alias.toLowerCase().includes(cleanLocQuery.toLowerCase())
+        ) {
+          canonicalName = canonical;
+          break;
+        }
+      }
+
+      let targetLoc = resolveTargetLocation(cleanLocQuery, locations);
+      if (!targetLoc && canonicalName) {
+        targetLoc = resolveTargetLocation(canonicalName, locations);
+      }
+
+      const primarySearchTerm =
+        targetLoc?.id || targetLoc?.name || targetLoc?.country || canonicalName || cleanLocQuery;
+
+      let vehicles = await queryAutoursVehicles({
+        locationIdOrName: primarySearchTerm,
+        dateFrom: dFrom,
+        dateTo: dTo,
+        currency,
+      });
+
+      const countryName = targetLoc?.country || canonicalName || cleanLocQuery;
+      if ((!vehicles || vehicles.length === 0) && countryName && countryName !== primarySearchTerm) {
+        const countryVehicles = await queryAutoursVehicles({
+          locationIdOrName: countryName,
+          dateFrom: dFrom,
+          dateTo: dTo,
+          currency,
+        });
+        if (countryVehicles && countryVehicles.length > 0) {
+          vehicles = countryVehicles;
+        }
+      }
+
+      if ((!vehicles || vehicles.length === 0) && rawLocQuery && rawLocQuery !== primarySearchTerm && rawLocQuery !== countryName) {
+        const directVehicles = await queryAutoursVehicles({
+          locationIdOrName: rawLocQuery,
+          dateFrom: dFrom,
+          dateTo: dTo,
+          currency,
+        });
+        if (directVehicles && directVehicles.length > 0) {
+          vehicles = directVehicles;
+        }
+      }
+
+      const displayLocation = targetLoc?.name || targetLoc?.city || countryName || cleanLocQuery;
+
+      if (!vehicles || vehicles.length === 0) {
+        const apologyText = isEnglish
+          ? `We apologize${currentUser?.name ? ` Mr. ${currentUser.name}` : ''}, no vacant vehicles were found in **${displayLocation}** for the selected dates (**${dFrom} to ${dTo}**).\n\nYou may try adjusting your travel dates or choosing one of the suggested destinations below:`
+          : `نعتذر منك${currentUser?.name ? ` أستاذ ${currentUser.name}` : ''}، لا تتوفر سيارات شاغرة حالياً في **${displayLocation}** للفترة المحددة (**${dFrom} إلى ${dTo}**).\n\nيمكنك تجربة تواريخ أخرى أو اختيار إحدى الوجهات المقترحة:`;
+
+        return NextResponse.json({
+          reply: apologyText,
+          vehicles: [],
+          searchCriteria: null,
+          actionButtons: getSmartActionButtons(cleanLocQuery, locations, currentUser),
+          showSearchWidget: false,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const successReply = isEnglish
+        ? `Here are the available vehicles at **${displayLocation}** for your rental dates (**${dFrom} to ${dTo}**):`
+        : `إليك أفضل السيارات المتاحة في **${displayLocation}** للفترة المحددة (**${dFrom} إلى ${dTo}**):`;
+
+      const searchCriteria = {
+        location: targetLoc?.id || targetLoc?.name || countryName || cleanLocQuery,
+        locationName: displayLocation,
+        dateFrom: dFrom,
+        dateTo: dTo,
+        startTime: '10:00',
+        endTime: '10:00',
+        currency,
+      };
+
+      return NextResponse.json({
+        reply: successReply,
+        vehicles: vehicles.slice(0, 6),
+        searchCriteria,
+        actionButtons: [],
+        showSearchWidget: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // ⚡ 3. Try Real Booking Cancellation First (if cancel intent or order number present)
     const cancelResolution = await handleCancellationRequest(latestUserMsg, currentUser, effectiveToken);
     if (cancelResolution) {
       return NextResponse.json({
@@ -1043,14 +1186,16 @@ export async function POST(request: Request) {
 
 💎 قواعد الأسلوب، اللباقة، واللغة (Tone, Politeness & Strict Professionalism):
 1. **أسلوب راقي ومهذب**: تحدث بلغة عربية فصحى مبسطة، أنيقة ومهذبة للغاية (تليق بخدمة عملاء المنصات العالمية المرموقة)، وخالية تماماً من الألفاظ العامية أو الشعبية أو الابتذال.
-2. **الالتزام الصارم باللغة**: 
-   - إذا اختار العميل أو تحدث باللغة العربية، أكمل الحوار باللغة العربية الفصحى المهذبة.
-   - إذا اختار العميل أو تحدث بالإنجليزية، التزم باللغة الإنجليزية الاحترافية واللبقة (Polite, concise, and articulate customer support English).
-   - لأي لغة أخرى (فرنسي، تركي، روسي)، أجب بنفس لغة العميل باحترافية.
-3. **الإيجاز والتنظيم**:
-   - اجعل ردودك مختصرة، مرتبة وواضحة (استخدم النقاط والعلامات المنظمة).
-   - تجنب الإطالة والنصوص الإنشائية المكررة أو أسلوب "س/ج" الآلي الجامد.
-   - تحاور بذكاء وتفاعل باحترام مع العميل.
+2. **الالتزام الصارم بلغة رسالة العميل (Strict Matching Language)**: 
+   - لغة العميل في هذه الرسالة: ${isEnglish ? 'الإنجليزية (ENGLISH) - يجب أن يكون ردك كاملاً باللغة الإنجليزية الراقية والمحترفة فقط (English Only)!' : 'العربية - رد باللغة العربية الفصحى الأنيقة والمهذبة.'}
+   - إذا كتب العميل بالإنجليزية (مثل "qatar", "cars in qatar")، يجب أن يكون الرد بالإنجليزية الاحترافية، حتى لو كانت القواعد الإدارية مكتوبة بالعربية (قم بترجمتها وتطبيقها بلغة العميل).
+   - لأي لغة أخرى، أجب بنفس لغة العميل باحترافية.
+3. **الإيجاز والاحترافية العالمية (Ultra-Concise & Professional Tone)**:
+   - اجعل ردودك مختصرة جداً، مرتبة وواضحة (2 إلى 4 أسطر كحد أقصى).
+   - تجنب تماماً الإطالة، التملق، أو سرد عبارات مجاملة مفرطة.
+   - في الإنجليزية: التزم باللغة الإنجليزية العصرية المباشرة والمهذبة (Concise, executive customer service English. E.g. "Welcome to Autours! I'd be glad to assist you in arranging your car rental...").
+   - لا تخاطب أسماء الشركات أو الأدمن كأشخاص شخصيين (تجنب كلياً مثل "Dear SurPrice" أو "Mr. Autours Admin").
+   - ركز فوراً على تلبية طلب العميل وتحديد المدينة والتواريخ وعرض السيارات المناسبة.
 
 🧠 قواعد التعامل مع الوجهات والتواريخ (Strict No-Guessing & Realistic Travel Dates):
 1. **⛔ ممنوع التخمين العشوائي (Strictly No Guessing)**:
@@ -1238,11 +1383,12 @@ ${dbContext.summaryStr}
     }
 
     if (!assistantResponseText) {
+      const greetingEn = getCleanGreeting(currentUser?.name, true);
+      const greetingAr = getCleanGreeting(currentUser?.name, false);
       if (isEnglish) {
-        assistantResponseText = `Welcome${currentUser?.name ? ` Mr. ${currentUser.name}` : ''}! 🚗✨ I am your Autours AI assistant. How can I assist you with your car rental today? Please specify your destination and preferred rental dates.`;
+        assistantResponseText = `Welcome${greetingEn} to **Autours**! 🚗✨\n\nHow can I assist you with your car rental today? Please let me know your preferred destination and travel dates.`;
       } else {
-        const userGreeting = currentUser?.name ? ` أستاذ ${currentUser.name}` : '';
-        assistantResponseText = `أهلاً وسهلاً بك${userGreeting}! 🚗✨ يسعدني مساعدتك في حجز أفضل سيارات الإيجار مع أوتورز. يُرجى تزويدي بوجهة السفر وتواريخ الاستلام والتسليم المفضلة لنعرض لك أفضل الخيارات المتاحة.`;
+        assistantResponseText = `أهلاً بك${greetingAr} في **Autours**! 🚗✨\n\nيسعدني مساعدتك في اختيار أفضل سيارة لرحلتك. يُرجى تزويدي بوجهتك وتواريخ الاستلام والتسليم لنعرض لك أفضل الخيارات المتاحة.`;
       }
     }
 

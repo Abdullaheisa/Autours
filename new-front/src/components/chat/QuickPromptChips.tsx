@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import {
-  Sparkles,
+  Crown,
   Car,
   Plane,
   ShieldCheck,
@@ -48,7 +48,7 @@ export default function QuickPromptChips({ onSelectPrompt }: QuickPromptChipsPro
         label: 'Family SUV (7 seats)',
       },
       {
-        icon: Sparkles,
+        icon: Crown,
         text: 'Luxury VIP cars available in Riyadh',
         label: 'Luxury VIP Cars',
       },

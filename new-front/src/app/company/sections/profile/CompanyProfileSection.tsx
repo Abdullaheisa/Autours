@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { updateUser } from "@/store/slices/authSlice";
 import { normalizeAuthRole } from "@/utils/auth";
-import { User, Mail, Phone, MapPin, Camera, Save, Building, Globe, Languages, Sliders, Plus, Trash2, Tag, Sparkles, Calendar } from "lucide-react";
+import { User, Mail, Phone, MapPin, Camera, Save, Building, Globe, Languages, Sliders, Plus, Trash2, Tag, Calendar } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import ImageUploader from "@/components/ui/ImageUploader";
@@ -421,7 +421,7 @@ export default function CompanyProfileSection() {
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
-                <Sparkles size={13} /> Custom Ranges
+                <Sliders size={13} /> Custom Ranges
               </button>
             </div>
 

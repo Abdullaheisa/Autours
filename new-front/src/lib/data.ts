@@ -181,7 +181,7 @@ export const specifications: Specification[] = [
   { id: 3, name: "Doors", key: "doors", options: ["2", "4", "5"], icon: "DoorOpen" },
   { id: 4, name: "Seats", key: "seats", options: ["2", "4", "5", "7"], icon: "Users" },
   { id: 5, name: "Fuel Type", key: "fuel", options: ["Petrol", "Diesel", "Electric", "Hybrid"], icon: "Fuel" },
-  { id: 6, name: "Condition", key: "condition", options: ["New", "Used"], icon: "Sparkles" },
+  { id: 6, name: "Condition", key: "condition", options: ["New", "Used"], icon: "CheckCircle2" },
 ];
 export const specsData: Specification[] = [
   { id: 1, name: "Air Conditioner", key: "ac", options: ["Air Conditioning"], icon: "Wind" },

@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   ArrowRight,
   ShieldAlert,
-  Sparkles,
   X,
   LogOut,
   LogIn,
@@ -472,7 +471,6 @@ export default function InChatBookingForm({
       <div className="flex items-center justify-between pb-1 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200/90 text-amber-900 px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold shadow-2xs">
-            <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
             <span>
               {activeStep === 'dates' ? 'Step 1 of 2' : activeStep === 'confirm' ? 'Step 2 of 2' : 'Reservation'}
             </span>

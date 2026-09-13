@@ -13,7 +13,7 @@ import CalendarRangePicker from "@/components/shared/CalendarRangePicker";
 import { format } from "date-fns";
 import { 
   Calendar, TrendingUp, TrendingDown, ArrowLeftRight, 
-  ChevronLeft, Loader2, Sparkles, AlertCircle, Maximize2, X 
+  ChevronLeft, Loader2, Sliders, AlertCircle, Maximize2, X 
 } from "lucide-react";
 
 // Dropdowns helper for Months/Years selection
@@ -373,7 +373,7 @@ export default function MonthlyBookingsChart({ isMaximized = false, onMaximize, 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
               <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-1.5">
-                <Sparkles size={16} className="text-blue-500 animate-pulse" /> Custom Comparison Tool
+                <Sliders size={16} className="text-blue-500" /> Custom Comparison Tool
               </h3>
               <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Select and compare any two custom months, years or arbitrary days</p>
             </div>

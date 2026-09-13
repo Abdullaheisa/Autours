@@ -49,6 +49,7 @@ const TIME_OPTIONS = [
 
 const POPULAR_COUNTRIES = [
   { label: 'All', en: null, flag: '🌐' },
+  { label: '🇶🇦 Qatar', en: 'Qatar', flag: '🇶🇦' },
   { label: '🇹🇷 Turkey', en: 'Turkey', flag: '🇹🇷' },
   { label: '🇦🇪 UAE', en: 'United Arab Emirates', flag: '🇦🇪' },
   { label: '🇪🇬 Egypt', en: 'Egypt', flag: '🇪🇬' },
@@ -60,6 +61,8 @@ const POPULAR_COUNTRIES = [
 ];
 
 const AIRPORT_CODE_MAP: Record<string, string> = {
+  doh: 'doha',
+  dia: 'doha',
   dxb: 'dubai',
   auh: 'abu dhabi',
   shj: 'sharjah',

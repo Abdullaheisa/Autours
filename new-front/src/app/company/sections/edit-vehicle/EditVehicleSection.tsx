@@ -5,7 +5,7 @@ import {
   Car, MapPin, Tag, DollarSign, ShieldCheck, Settings,
   ChevronDown, ChevronUp, Check, X, Info, Image as ImageIcon,
   Wind, DoorOpen, Fuel, Users, Luggage, Settings2, Loader2,
-  Gauge, Cog, Palette, Sparkles, Briefcase, Search
+  Gauge, Cog, Palette, CheckCircle2, Briefcase, Search
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -230,7 +230,7 @@ const AirConditionIcon = ({ size = 14, className = "" }: { size?: number; classN
 const SpecIcon = ({ name }: { name: string }) => {
   if (name === "Armchair") return <CarSeat size={14} />;
   if (name === "Wind") return <AirConditionIcon size={14} />;
-  const icons: Record<string, any> = { DoorOpen, Fuel, Users, Luggage, Settings2, Gauge, Cog, Palette, Sparkles, Briefcase, Car };
+  const icons: Record<string, any> = { DoorOpen, Fuel, Users, Luggage, Settings2, Gauge, Cog, Palette, CheckCircle2, Sparkles: CheckCircle2, Briefcase, Car };
   const Icon = icons[name] || Settings;
   return <Icon size={14} />;
 };

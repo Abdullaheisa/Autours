@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import {
   X,
   Send,
-  Sparkles,
   RotateCcw,
   Bot,
   User,
@@ -20,6 +19,9 @@ import {
   Calendar,
   Clock,
   ShieldCheck,
+  History,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { RootState } from '@/store';
 import ChatCarCard from './ChatCarCard';
@@ -122,7 +124,45 @@ const INITIAL_MSG: ChatMessage = {
   ],
 };
 
+export interface ChatSession {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  searchCriteria?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const STORAGE_KEY = 'autours_ai_chat_history_v3';
+const SESSIONS_STORAGE_KEY = 'autours_ai_chat_sessions_v2';
+const ACTIVE_SESSION_STORAGE_KEY = 'autours_ai_active_session_id_v2';
+
+function generateSessionTitle(msgs: ChatMessage[]): string {
+  const firstUser = msgs.find((m) => m.role === 'user');
+  if (!firstUser) return 'محادثة جديدة / New Chat';
+
+  const clean = firstUser.content.trim();
+  const searchMatch = clean.match(/(?:Available cars at|سيارات في|أريد سيارات في|ابحث عن سيارات في)\s+([^-\n,]+)/i);
+  if (searchMatch) {
+    return `🚗 ${searchMatch[1].trim()}`;
+  }
+  if (clean.includes('المتابعة باللغة العربية') || clean.includes('عربي')) {
+    const secondUser = msgs.filter((m) => m.role === 'user')[1];
+    if (secondUser) {
+      return secondUser.content.slice(0, 30).trim() + (secondUser.content.length > 30 ? '...' : '');
+    }
+    return 'محادثة بالعربية';
+  }
+  if (clean.includes('Continue in English') || clean.includes('English')) {
+    const secondUser = msgs.filter((m) => m.role === 'user')[1];
+    if (secondUser) {
+      return secondUser.content.slice(0, 30).trim() + (secondUser.content.length > 30 ? '...' : '');
+    }
+    return 'English Chat';
+  }
+
+  return clean.slice(0, 30).trim() + (clean.length > 30 ? '...' : '');
+}
 
 export default function AIChatAssistant() {
   const router = useRouter();
@@ -130,6 +170,9 @@ export default function AIChatAssistant() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MSG]);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string>('');
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState<boolean>(false);
   const [isListening, setIsListening] = useState(false);
   const [activeBookingVehicle, setActiveBookingVehicle] = useState<Vehicle | null>(null);
   const [currentSearchCriteria, setCurrentSearchCriteria] = useState<any>(null);
@@ -144,71 +187,133 @@ export default function AIChatAssistant() {
   const recognitionRef = useRef<any>(null);
   const isLoadedRef = useRef(false);
 
-  // 💾 1. استعادة الرسائل والذاكرة التراكمية من LocalStorage عند تحميل الصفحة
+  // 💾 1. استعادة جلسات المحادثة والذاكرة التراكمية من LocalStorage عند تحميل الصفحة
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setMessages(parsed);
+        const savedSessions = localStorage.getItem(SESSIONS_STORAGE_KEY);
+        const savedActiveId = localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+        let parsedSessions: ChatSession[] = [];
+        if (savedSessions) {
+          try {
+            parsedSessions = JSON.parse(savedSessions);
+          } catch {
+            parsedSessions = [];
           }
         }
-        const savedCriteria = localStorage.getItem('autours_ai_search_criteria_v1');
-        if (savedCriteria) {
-          setCurrentSearchCriteria(JSON.parse(savedCriteria));
+
+        // Migrate from legacy single-session storage if exists
+        if (!Array.isArray(parsedSessions) || parsedSessions.length === 0) {
+          const legacySaved = localStorage.getItem(STORAGE_KEY);
+          let legacyMessages: ChatMessage[] | null = null;
+          if (legacySaved) {
+            try {
+              legacyMessages = JSON.parse(legacySaved);
+            } catch {}
+          }
+          const initialId = `session-${Date.now()}`;
+          const newInitialSession: ChatSession = {
+            id: initialId,
+            title: legacyMessages && legacyMessages.length > 1 ? generateSessionTitle(legacyMessages) : 'محادثة جديدة / New Chat',
+            messages: Array.isArray(legacyMessages) && legacyMessages.length > 0 ? legacyMessages : [INITIAL_MSG],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          parsedSessions = [newInitialSession];
         }
+
+        setSessions(parsedSessions);
+
+        const targetSession =
+          parsedSessions.find((s) => s.id === savedActiveId) || parsedSessions[0];
+
+        setActiveSessionId(targetSession.id);
+        setMessages(targetSession.messages || [INITIAL_MSG]);
+        if (targetSession.searchCriteria) {
+          setCurrentSearchCriteria(targetSession.searchCriteria);
+        }
+
         const savedMemory = localStorage.getItem('autours_ai_user_memory_v1');
         if (savedMemory) {
           setUserMemory(JSON.parse(savedMemory));
         }
       } catch (e) {
-        console.warn('Could not restore chat history/memory:', e);
+        console.warn('Could not restore chat history/sessions:', e);
       } finally {
         isLoadedRef.current = true;
       }
     }
   }, []);
 
-  // 💾 2. حفظ الرسائل في LocalStorage فقط بعد اكتمال الاستعادة
+  // 💾 2. حفظ الجلسة النشطة وجميع الجلسات في LocalStorage
   useEffect(() => {
-    if (!isLoadedRef.current) return;
-    if (typeof window !== 'undefined' && messages.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-      } catch (e) {
-        console.warn('Could not save chat history:', e);
-      }
-    }
-  }, [messages]);
-
-  // 💾 3. حفظ معايير البحث الحالية
-  useEffect(() => {
-    if (!isLoadedRef.current) return;
+    if (!isLoadedRef.current || !activeSessionId) return;
     if (typeof window !== 'undefined') {
-      try {
-        if (currentSearchCriteria) {
-          localStorage.setItem('autours_ai_search_criteria_v1', JSON.stringify(currentSearchCriteria));
-        } else {
-          localStorage.removeItem('autours_ai_search_criteria_v1');
+      setSessions((prevSessions) => {
+        const updated = prevSessions.map((s) => {
+          if (s.id === activeSessionId) {
+            const hasUserMsg = messages.some((m) => m.role === 'user');
+            const autoTitle =
+              s.title === 'محادثة جديدة / New Chat' || s.title === 'New Chat' || s.title.startsWith('محادثة')
+                ? (hasUserMsg ? generateSessionTitle(messages) : s.title)
+                : s.title;
+
+            return {
+              ...s,
+              title: autoTitle,
+              messages,
+              searchCriteria: currentSearchCriteria,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return s;
+        });
+
+        try {
+          localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(updated));
+          localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+        } catch (e) {
+          console.warn('Could not save chat sessions:', e);
         }
-      } catch (e) {
-        console.warn('Could not save search criteria:', e);
-      }
+
+        return updated;
+      });
     }
-  }, [currentSearchCriteria]);
+  }, [messages, activeSessionId, currentSearchCriteria]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Helper to detect touch / mobile screen
+  const isTouchDevice = () => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.innerWidth < 768 ||
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia('(pointer: coarse)').matches
+    );
+  };
+
+  // 📜 Scroll to bottom smoothly when messages change or booking form opens
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
-      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [messages, isOpen, activeBookingVehicle]);
+
+  // ⌨️ Auto-focus input ONLY on desktop when the user manually opens the chat dialog
+  // On mobile devices, NEVER auto-focus to prevent virtual keyboard from popping up and covering the chat!
+  useEffect(() => {
+    if (isOpen && !isTouchDevice()) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   // Voice setup
   useEffect(() => {
@@ -438,14 +543,130 @@ export default function AIChatAssistant() {
     ]);
   };
 
-  const handleResetChat = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('autours_ai_search_criteria_v1');
+  const handleStartNewChat = () => {
+    const currentSession = sessions.find((s) => s.id === activeSessionId);
+    if (
+      currentSession &&
+      currentSession.messages.length === 1 &&
+      currentSession.messages[0].id === 'init'
+    ) {
+      setShowHistoryDrawer(false);
+      return;
     }
+
+    const newId = `session-${Date.now()}`;
+    const newSession: ChatSession = {
+      id: newId,
+      title: 'محادثة جديدة / New Chat',
+      messages: [INITIAL_MSG],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedSessions = [newSession, ...sessions];
+    setSessions(updatedSessions);
+    setActiveSessionId(newId);
     setMessages([INITIAL_MSG]);
     setCurrentSearchCriteria(null);
     setActiveBookingVehicle(null);
+    setShowHistoryDrawer(false);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(updatedSessions));
+        localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, newId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([INITIAL_MSG]));
+        localStorage.removeItem('autours_ai_search_criteria_v1');
+      } catch (e) {
+        console.warn('Failed to save new session:', e);
+      }
+    }
+  };
+
+  const handleSelectSession = (session: ChatSession) => {
+    setActiveSessionId(session.id);
+    setMessages(session.messages || [INITIAL_MSG]);
+    setCurrentSearchCriteria(session.searchCriteria || null);
+    setActiveBookingVehicle(null);
+    setShowHistoryDrawer(false);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, session.id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(session.messages || [INITIAL_MSG]));
+        if (session.searchCriteria) {
+          localStorage.setItem('autours_ai_search_criteria_v1', JSON.stringify(session.searchCriteria));
+        } else {
+          localStorage.removeItem('autours_ai_search_criteria_v1');
+        }
+      } catch (e) {
+        console.warn('Failed to persist active session switch:', e);
+      }
+    }
+  };
+
+  const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const remaining = sessions.filter((s) => s.id !== sessionId);
+
+    if (remaining.length === 0) {
+      const newId = `session-${Date.now()}`;
+      const newSession: ChatSession = {
+        id: newId,
+        title: 'محادثة جديدة / New Chat',
+        messages: [INITIAL_MSG],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setSessions([newSession]);
+      setActiveSessionId(newId);
+      setMessages([INITIAL_MSG]);
+      setCurrentSearchCriteria(null);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify([newSession]));
+        localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, newId);
+      }
+      return;
+    }
+
+    setSessions(remaining);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(remaining));
+    }
+
+    if (sessionId === activeSessionId) {
+      const nextSession = remaining[0];
+      setActiveSessionId(nextSession.id);
+      setMessages(nextSession.messages || [INITIAL_MSG]);
+      setCurrentSearchCriteria(nextSession.searchCriteria || null);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, nextSession.id);
+      }
+    }
+  };
+
+  const handleClearAllHistory = () => {
+    const newId = `session-${Date.now()}`;
+    const newSession: ChatSession = {
+      id: newId,
+      title: 'محادثة جديدة / New Chat',
+      messages: [INITIAL_MSG],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setSessions([newSession]);
+    setActiveSessionId(newId);
+    setMessages([INITIAL_MSG]);
+    setCurrentSearchCriteria(null);
+    setActiveBookingVehicle(null);
+    setShowHistoryDrawer(false);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify([newSession]));
+      localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, newId);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('autours_ai_search_criteria_v1');
+    }
   };
 
   return (
@@ -460,7 +681,8 @@ export default function AIChatAssistant() {
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.15 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-5 right-5 z-[9999] group flex items-center justify-center w-14 h-14 rounded-full bg-[#f9d602] hover:bg-[#ffe54c] text-neutral-950 shadow-[0_10px_28px_rgba(249,214,2,0.5),0_3px_12px_rgba(0,0,0,0.15)] hover:scale-105 active:scale-95 transition-transform duration-150 cursor-pointer"
+            className="fixed bottom-5 right-4 sm:right-5 sm:bottom-5 z-[9999] group flex items-center justify-center w-14 h-14 rounded-full bg-[#f9d602] hover:bg-[#ffe54c] text-neutral-950 shadow-[0_10px_28px_rgba(249,214,2,0.5),0_3px_12px_rgba(0,0,0,0.15)] hover:scale-105 active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation"
+            style={{ bottom: 'max(1.25rem, calc(0.75rem + env(safe-area-inset-bottom, 0px)))' }}
             title="Autours AI Assistant"
           >
             <span className="absolute -inset-1 rounded-full bg-[#f9d602]/35 animate-ping pointer-events-none" />
@@ -470,7 +692,7 @@ export default function AIChatAssistant() {
         )}
       </AnimatePresence>
 
-      {/* ── Sleek Modern Light Chat Window ────────────────────────────────── */}
+      {/* ── Sleek Modern Light Chat Window (Full Screen on Mobile, Floating on Desktop) ──────────────── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -479,12 +701,15 @@ export default function AIChatAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.96 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="fixed bottom-5 right-5 z-[9999] w-[94vw] sm:w-[420px] h-[600px] max-h-[88vh] bg-white border border-gray-300/80 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.22),0_6px_20px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden text-gray-900"
+            className="fixed inset-0 sm:inset-auto sm:bottom-5 sm:right-5 z-[9999] w-full sm:w-[425px] h-[100dvh] sm:h-[620px] sm:max-h-[88vh] bg-white sm:border sm:border-gray-300/80 sm:rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.25),0_6px_20px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden text-gray-900"
             style={{ overscrollBehavior: 'contain' }}
             onWheel={(e) => e.stopPropagation()}
           >
             {/* ── Header (Website Brand Yellow Matching Screenshot) ──────────── */}
-            <div className="bg-[#f9d602] border-b border-amber-300/90 px-4 py-3 flex items-center justify-between shrink-0 select-none text-neutral-950 shadow-xs">
+            <div
+              className="bg-[#f9d602] border-b border-amber-300/90 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shrink-0 select-none text-neutral-950 shadow-xs"
+              style={{ paddingTop: 'max(0.65rem, env(safe-area-inset-top, 0px))' }}
+            >
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full bg-neutral-950 text-[#f9d602] flex items-center justify-center font-bold shadow-sm shrink-0">
                   <Bot className="w-5 h-5" />
@@ -502,23 +727,158 @@ export default function AIChatAssistant() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-neutral-900">
+              <div className="flex items-center gap-1.5 text-neutral-900">
+                {/* Chat History Button with Counter */}
                 <button
-                  onClick={handleResetChat}
-                  title="New Chat"
-                  className="p-1.5 hover:bg-black/10 rounded-lg transition-colors font-bold"
+                  onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
+                  title="سجل المحادثات / Chat History"
+                  className={`px-2 py-1 rounded-lg transition-colors font-bold flex items-center gap-1.5 cursor-pointer text-xs ${
+                    showHistoryDrawer ? 'bg-black/20 text-neutral-950' : 'hover:bg-black/10 text-neutral-900'
+                  }`}
                 >
-                  <RotateCcw className="w-4 h-4 text-neutral-900 stroke-[2.2]" />
+                  <History className="w-3.5 h-3.5 stroke-[2.4]" />
+                  <span className="hidden sm:inline text-[11px] font-black">السجل</span>
+                  {sessions.length > 1 && (
+                    <span className="text-[9.5px] bg-neutral-950 text-[#f9d602] font-black px-1.5 py-0.5 rounded-full leading-none">
+                      {sessions.length}
+                    </span>
+                  )}
                 </button>
+
+                {/* + New Chat Button */}
+                <button
+                  onClick={handleStartNewChat}
+                  title="محادثة جديدة / New Chat"
+                  className="p-1.5 hover:bg-black/10 rounded-lg transition-colors font-bold cursor-pointer flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4 text-neutral-900 stroke-[2.6]" />
+                </button>
+
+                {/* Close Button */}
                 <button
                   onClick={() => setIsOpen(false)}
                   title="Close"
-                  className="p-1.5 hover:bg-black/10 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-black/10 rounded-lg transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5 text-neutral-900 stroke-[2.2]" />
                 </button>
               </div>
             </div>
+
+            {/* ── Slide-in Chat History Drawer ───────────────────────────────── */}
+            <AnimatePresence>
+              {showHistoryDrawer && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute inset-x-0 top-[57px] bottom-0 z-50 bg-white flex flex-col overflow-hidden"
+                >
+                  {/* Drawer Header */}
+                  <div className="p-3 border-b border-gray-200 bg-amber-50/80 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-amber-400 text-neutral-950 flex items-center justify-center font-bold">
+                        <History className="w-3.5 h-3.5" />
+                      </div>
+                      <h4 className="text-xs font-black text-gray-950">سجل المحادثات (Chat History)</h4>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handleStartNewChat}
+                        className="flex items-center gap-1 bg-[#f9d602] hover:bg-amber-400 text-neutral-950 font-black text-[11px] px-2.5 py-1 rounded-lg transition-all shadow-xs cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>شات جديد</span>
+                      </button>
+                      <button
+                        onClick={() => setShowHistoryDrawer(false)}
+                        className="p-1 hover:bg-gray-200 text-gray-500 rounded-lg transition-colors cursor-pointer"
+                        title="إغلاق السجل"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sessions List */}
+                  <div className="flex-1 overflow-y-auto p-2.5 space-y-2 bg-[#f8f9fa] scrollbar-thin">
+                    {sessions.map((s) => {
+                      const isActive = s.id === activeSessionId;
+                      const userMsgsCount = (s.messages || []).filter((m) => m.role === 'user').length;
+                      const lastMsg = s.messages && s.messages.length > 0 ? s.messages[s.messages.length - 1].content : '';
+                      const formattedDate = new Date(s.updatedAt || s.createdAt).toLocaleDateString([], {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => handleSelectSession(s)}
+                          className={`group relative p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                            isActive
+                              ? 'bg-amber-50/95 border-amber-400 shadow-xs ring-1 ring-amber-400/40'
+                              : 'bg-white border-gray-200 hover:border-amber-300 hover:shadow-xs'
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="font-extrabold text-xs text-gray-900 truncate block">
+                                {s.title || 'محادثة جديدة'}
+                              </span>
+                              {isActive && (
+                                <span className="bg-amber-400 text-neutral-950 text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0">
+                                  الحالي
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-500 truncate mb-1">
+                              {lastMsg.slice(0, 45) || 'بدء المحادثة...'}
+                            </p>
+                            <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
+                              <span>{formattedDate}</span>
+                              <span>•</span>
+                              <span>{userMsgsCount} رسائل</span>
+                            </div>
+                          </div>
+
+                          {/* Delete Session button */}
+                          {sessions.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteSession(s.id, e)}
+                              title="حذف هذه المحادثة من السجل"
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Drawer Footer */}
+                  {sessions.length > 1 && (
+                    <div className="p-2.5 bg-white border-t border-gray-200 flex items-center justify-between shrink-0">
+                      <span className="text-[11px] text-gray-500 font-medium">
+                        إجمالي المحادثات: <strong>{sessions.length}</strong>
+                      </span>
+                      <button
+                        onClick={handleClearAllHistory}
+                        className="text-[11px] text-red-600 hover:text-red-700 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>مسح السجل بالكامل</span>
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* ── Messages List (Contrasting Crisp Feed) ─────────────────────── */}
             <div
@@ -685,7 +1045,10 @@ export default function AIChatAssistant() {
 
 
             {/* ── Input Bar (Light Theme) ────────────────────────────────────── */}
-            <div className="p-2.5 bg-white border-t border-gray-200 shrink-0">
+            <div
+              className="p-2 sm:p-2.5 bg-white border-t border-gray-200 shrink-0"
+              style={{ paddingBottom: 'max(0.65rem, env(safe-area-inset-bottom, 0px))' }}
+            >
               <div className="flex items-center gap-1.5 bg-[#f8f9fa] border border-gray-300 focus-within:border-amber-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-400/25 rounded-xl px-2.5 py-1.5 transition-all shadow-2xs">
                 <input
                   ref={inputRef}
@@ -695,13 +1058,13 @@ export default function AIChatAssistant() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder={isListening ? 'Listening...' : 'Type your message or request here...'}
                   disabled={isLoading}
-                  className="flex-1 bg-transparent text-gray-900 text-xs sm:text-[13px] placeholder-gray-400 focus:outline-none py-0.5"
+                  className="flex-1 bg-transparent text-gray-900 text-base sm:text-[13px] placeholder-gray-400 focus:outline-none py-1 sm:py-0.5"
                 />
 
                 <button
                   type="button"
                   onClick={toggleVoice}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-1.5 rounded-lg transition-colors touch-manipulation ${
                     isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-gray-700'
                   }`}
                   title="Voice input"
@@ -712,9 +1075,9 @@ export default function AIChatAssistant() {
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!inputMessage.trim() || isLoading}
-                  className="w-8 h-8 rounded-xl bg-[#f9d602] hover:bg-[#ffe54c] disabled:opacity-30 text-neutral-950 font-bold flex items-center justify-center transition-all shrink-0 active:scale-90 shadow-[0_2px_8px_rgba(249,214,2,0.4)]"
+                  className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-[#f9d602] hover:bg-[#ffe54c] disabled:opacity-30 text-neutral-950 font-bold flex items-center justify-center transition-all shrink-0 active:scale-90 shadow-[0_2px_8px_rgba(249,214,2,0.4)] touch-manipulation cursor-pointer"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  <Send className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 </button>
               </div>
             </div>

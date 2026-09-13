@@ -30,7 +30,7 @@ export const defaultBrandExtra: Omit<BrandExtra, 'brandId'> = {
   benefits: [
     { icon: 'ShieldCheck',  title: 'Comprehensive Insurance & Flexible Options', description: 'We provide various insurance options including full coverage with zero excess for your peace of mind.' },
     { icon: 'Zap',          title: 'Fast & Digital Pickup',                      description: 'Streamlined and quick counter procedures so you can start your journey right away without long waiting times.' },
-    { icon: 'Sparkles',     title: 'Modern & Sanitized Fleet',                  description: 'All vehicles undergo thorough inspection and sanitization before delivery, featuring recent annual models.' },
+    { icon: 'Car',          title: 'Modern & Sanitized Fleet',                  description: 'All vehicles undergo thorough inspection and sanitization before delivery, featuring recent annual models.' },
     { icon: 'MapPin',       title: 'Multiple Pickup Locations',                 description: 'Convenient branches at major airports and city centres for easy vehicle pickup and drop-off anywhere you are.' },
     { icon: 'Headphones',   title: '24/7 Roadside Assistance & Support',        description: 'Our customer support and roadside assistance teams are available around the clock to help in emergencies or breakdowns.' },
     { icon: 'Calendar',     title: 'Flexible Booking & Easy Cancellation',       description: 'Modify your reservation details or cancel easily in accordance with clear, flexible cancellation policies.' },
@@ -71,7 +71,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // Auto Nation
   'auto-nation': {
     benefits: [
-      { icon: 'Star',         title: 'Wide Vehicle Selection',  description: 'Auto Nation offers a diverse fleet from compact city cars to spacious family SUVs.' },
+      { icon: 'Car',          title: 'Wide Vehicle Selection',  description: 'Auto Nation offers a diverse fleet from compact city cars to spacious family SUVs.' },
       { icon: 'BadgePercent', title: 'Best Autours Price',      description: 'We always show Auto Nation\'s lowest available rate â€” no booking fees added.' },
       { icon: 'ShieldCheck',  title: 'Quality Assured',         description: 'Every Auto Nation vehicle is regularly serviced and inspected before your rental.' },
       { icon: 'MapPin',       title: 'Convenient Locations',    description: 'Auto Nation branches are positioned at key travel hubs for seamless pickup.' },
@@ -90,7 +90,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // SOVOYCARS
   'sovoycars': {
     benefits: [
-      { icon: 'Star',         title: 'Premium Experience',      description: 'SOVOYCARS delivers a premium car rental experience with hand-picked quality vehicles.' },
+      { icon: 'Award',        title: 'Premium Experience',      description: 'SOVOYCARS delivers a premium car rental experience with hand-picked quality vehicles.' },
       { icon: 'Zap',          title: 'Fast Pickup',             description: 'SOVOYCARS\'s streamlined process means less waiting and more time enjoying your trip.' },
       { icon: 'BadgePercent', title: 'Best Price via Autours',  description: 'Book SOVOYCARS through Autours and get the best daily rate with zero booking fees.' },
       { icon: 'ShieldCheck',  title: 'Well-Maintained Fleet',   description: 'Each SOVOYCARS vehicle undergoes a full pre-rental inspection for your safety.' },
@@ -110,7 +110,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'european': {
     benefits: [
       { icon: 'Globe',        title: 'European Standards',      description: 'EUROPEAN brings European-quality service to the Middle East car rental market.' },
-      { icon: 'Star',         title: 'Modern Fleet',            description: 'EUROPEAN maintains a consistently modern, well-equipped vehicle fleet.' },
+      { icon: 'Car',          title: 'Modern Fleet',            description: 'EUROPEAN maintains a consistently modern, well-equipped vehicle fleet.' },
       { icon: 'BadgePercent', title: 'Value Rates',             description: 'Autours ensures you always access EUROPEAN\'s best available pricing.' },
       { icon: 'ShieldCheck',  title: 'Safety First',            description: 'All EUROPEAN vehicles meet strict safety and maintenance standards.' },
       { icon: 'MapPin',       title: 'Strategic Locations',     description: 'EUROPEAN branches are situated at airports and business districts for maximum convenience.' },
@@ -129,7 +129,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'u-save': {
     benefits: [
       { icon: 'BadgePercent', title: 'You Save, Always',        description: 'U-SAVE lives up to its name â€” competitive rates without sacrificing vehicle quality.' },
-      { icon: 'Star',         title: 'Reliable Fleet',          description: 'U-SAVE\'s vehicles are well-maintained and regularly updated for your comfort.' },
+      { icon: 'ShieldCheck',  title: 'Reliable Fleet',          description: 'U-SAVE\'s vehicles are well-maintained and regularly updated for your comfort.' },
       { icon: 'Clock',        title: 'Quick Booking',           description: 'Complete your U-SAVE booking through Autours in under 2 minutes.' },
       { icon: 'ShieldCheck',  title: 'No Hidden Costs',         description: 'All U-SAVE charges are shown upfront â€” no surprises at the counter.' },
       { icon: 'MapPin',       title: 'Airport Pickup',          description: 'U-SAVE branches at key airports make arrival and departure seamless.' },
@@ -147,7 +147,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // RAMA
   'rama': {
     benefits: [
-      { icon: 'Star',         title: 'Trusted Local Brand',     description: 'RAMA is a well-established local rental company with a strong regional reputation.' },
+      { icon: 'Award',        title: 'Trusted Local Brand',     description: 'RAMA is a well-established local rental company with a strong regional reputation.' },
       { icon: 'BadgePercent', title: 'Affordable Rates',        description: 'RAMA provides competitive pricing that suits both short and long-term rentals.' },
       { icon: 'ShieldCheck',  title: 'Quality Vehicles',        description: 'RAMA\'s fleet is regularly maintained to ensure a safe and comfortable journey.' },
       { icon: 'MapPin',       title: 'Local Expertise',         description: 'RAMA\'s local knowledge means better branch locations and responsive service.' },
@@ -166,7 +166,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // KTC
   'ktc': {
     benefits: [
-      { icon: 'Star',         title: 'Established & Reliable',  description: 'KTC is a trusted car rental brand with a strong track record of customer satisfaction.' },
+      { icon: 'ShieldCheck',  title: 'Established & Reliable',  description: 'KTC is a trusted car rental brand with a strong track record of customer satisfaction.' },
       { icon: 'Zap',          title: 'Fast Processing',         description: 'KTC\'s efficient counter process ensures you\'re on the road without unnecessary delays.' },
       { icon: 'BadgePercent', title: 'Best KTC Rate',           description: 'Autours compares all KTC options to surface the lowest available rate for your dates.' },
       { icon: 'ShieldCheck',  title: 'Safe & Maintained Fleet', description: 'KTC vehicles are inspected and serviced regularly for maximum safety and comfort.' },
@@ -186,7 +186,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'highway': {
     benefits: [
       { icon: 'Zap',          title: 'Hit the Highway Ready',   description: 'HIGHWAY ensures every vehicle is road-ready so you can start your journey immediately.' },
-      { icon: 'Star',         title: 'Quality Assured',         description: 'HIGHWAY\'s fleet goes through rigorous checks to keep you safe on every road.' },
+      { icon: 'ShieldCheck',  title: 'Quality Assured',         description: 'HIGHWAY\'s fleet goes through rigorous checks to keep you safe on every road.' },
       { icon: 'BadgePercent', title: 'Great Value',             description: 'Competitive rates and transparent pricing â€” what you see on Autours is what you pay.' },
       { icon: 'MapPin',       title: 'Easy to Find',            description: 'HIGHWAY branches are in prime locations at airports and city centres.' },
       { icon: 'ShieldCheck',  title: 'Full Coverage Options',   description: 'Add comprehensive insurance cover at checkout for complete peace of mind.' },
@@ -205,7 +205,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'safety': {
     benefits: [
       { icon: 'ShieldCheck',  title: 'Safety is Our Priority', description: 'SAFETY puts your wellbeing first â€” every vehicle is thoroughly inspected before rental.' },
-      { icon: 'Star',         title: 'Certified Vehicles',      description: 'SAFETY\'s fleet meets all local safety regulations and is regularly renewed.' },
+      { icon: 'ShieldCheck',  title: 'Certified Vehicles',      description: 'SAFETY\'s fleet meets all local safety regulations and is regularly renewed.' },
       { icon: 'BadgePercent', title: 'Transparent Pricing',     description: 'No surprises at the counter â€” SAFETY\'s full rate is shown clearly on Autours.' },
       { icon: 'Clock',        title: 'Reliable Punctuality',    description: 'SAFETY prides itself on having your vehicle ready exactly when and where you need it.' },
       { icon: 'MapPin',       title: 'Key Locations',           description: 'SAFETY branches are at airports and city hubs for maximum convenience.' },
@@ -225,7 +225,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
     benefits: [
       { icon: 'Zap',          title: 'Simple & Speedy',         description: 'AUTORENT keeps the rental process simple â€” book in minutes, pick up fast.' },
       { icon: 'BadgePercent', title: 'Best Value Rates',        description: 'Autours ensures you always see AUTORENT\'s lowest available rate.' },
-      { icon: 'Star',         title: 'Varied Fleet',            description: 'AUTORENT offers a broad selection of vehicles to match every need and budget.' },
+      { icon: 'Car',          title: 'Varied Fleet',            description: 'AUTORENT offers a broad selection of vehicles to match every need and budget.' },
       { icon: 'ShieldCheck',  title: 'Maintained & Verified',   description: 'AUTORENT vehicles are regularly inspected and cleaned before every rental.' },
       { icon: 'MapPin',       title: 'Airport Accessible',      description: 'Find AUTORENT at major airports for a smooth start to your journey.' },
       { icon: 'Clock',        title: 'Flexible Pickup Times',   description: 'AUTORENT accommodates early morning and late-night pickups at select branches.' },
@@ -245,7 +245,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
       { icon: 'Zap',          title: 'Effortlessly Easy',       description: 'EASY RENTAL makes car hire genuinely simple â€” from booking to drop-off.' },
       { icon: 'BadgePercent', title: 'Affordable for All',      description: 'EASY RENTAL provides great value rates suitable for every type of traveller.' },
       { icon: 'ShieldCheck',  title: 'Hassle-Free Process',     description: 'Clear terms, transparent pricing, and a smooth pickup â€” no complications.' },
-      { icon: 'Star',         title: 'Clean & Ready',           description: 'Every EASY RENTAL vehicle is cleaned and prepared before you collect it.' },
+      { icon: 'CheckCircle2', title: 'Clean & Ready',           description: 'Every EASY RENTAL vehicle is cleaned and prepared before you collect it.' },
       { icon: 'MapPin',       title: 'Accessible Locations',    description: 'EASY RENTAL branches at airports and city centres for your convenience.' },
       { icon: 'Clock',        title: 'Quick Confirmation',      description: 'Book and confirm your EASY RENTAL in seconds through Autours.' },
     ],
@@ -264,7 +264,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
       { icon: 'MapPin',       title: 'Street-Smart Locations',  description: 'STREET branches are placed in the most practical spots for urban travellers.' },
       { icon: 'Zap',          title: 'Ready When You Are',      description: 'STREET\'s fast counter process means your car is ready the moment you arrive.' },
       { icon: 'BadgePercent', title: 'City-Friendly Rates',     description: 'Competitive pricing tailored for short city stays and weekend getaways.' },
-      { icon: 'Star',         title: 'Urban Fleet',             description: 'STREET offers compact and midsize cars perfect for navigating busy city streets.' },
+      { icon: 'Car',          title: 'Urban Fleet',             description: 'STREET offers compact and midsize cars perfect for navigating busy city streets.' },
       { icon: 'ShieldCheck',  title: 'Trusted & Reviewed',      description: 'Verified customer feedback confirms STREET\'s consistent service quality.' },
       { icon: 'HeadphonesIcon', title: 'Autours Backup',        description: 'Autours support is available 24/7 for any STREET booking need.' },
     ],
@@ -280,7 +280,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // EMR
   'emr': {
     benefits: [
-      { icon: 'Star',         title: 'Expert Mobility',         description: 'EMR provides expert-level car rental services backed by years of regional experience.' },
+      { icon: 'Award',        title: 'Expert Mobility',         description: 'EMR provides expert-level car rental services backed by years of regional experience.' },
       { icon: 'Zap',          title: 'Efficient Pickup',        description: 'EMR\'s organised counter process means you spend less time waiting and more time exploring.' },
       { icon: 'BadgePercent', title: 'Autours Best Price',      description: 'Book EMR through Autours for the most competitive rate available â€” no extra fees.' },
       { icon: 'ShieldCheck',  title: 'Well-Maintained Cars',    description: 'EMR vehicles are serviced on a strict schedule to ensure reliability.' },
@@ -299,7 +299,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // MAHD Car Rental
   'mahd-car-rental': {
     benefits: [
-      { icon: 'Star',         title: 'Premium Regional Service', description: 'MAHD Car Rental delivers a premium-quality rental experience across the region.' },
+      { icon: 'Award',        title: 'Premium Regional Service', description: 'MAHD Car Rental delivers a premium-quality rental experience across the region.' },
       { icon: 'ShieldCheck',  title: 'Inspected Fleet',         description: 'Every MAHD vehicle passes a pre-rental inspection for your safety and comfort.' },
       { icon: 'BadgePercent', title: 'Competitive Pricing',     description: 'MAHD offers fair, transparent rates with no hidden charges at the counter.' },
       { icon: 'MapPin',       title: 'Strategic Branches',      description: 'MAHD locations are positioned at airports and high-traffic city spots.' },
@@ -319,7 +319,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'drivus': {
     benefits: [
       { icon: 'Zap',          title: 'Drive with Confidence',   description: 'DRIVUS puts you in control with a reliable, well-maintained vehicle and clear terms.' },
-      { icon: 'Star',         title: 'Modern Fleet',            description: 'DRIVUS keeps its fleet current â€” enjoy newer models with the latest features.' },
+      { icon: 'Car',          title: 'Modern Fleet',            description: 'DRIVUS keeps its fleet current â€” enjoy newer models with the latest features.' },
       { icon: 'BadgePercent', title: 'Fair Pricing',            description: 'DRIVUS rates are transparent and competitive across all booking durations.' },
       { icon: 'ShieldCheck',  title: 'Safety Certified',        description: 'Every DRIVUS vehicle is certified and maintained to the highest local standards.' },
       { icon: 'MapPin',       title: 'Airport Pickup',          description: 'DRIVUS offers convenient airport pickup and drop-off at all served locations.' },
@@ -338,7 +338,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'routes': {
     benefits: [
       { icon: 'MapPin',       title: 'Routes for Every Journey', description: 'Routes covers all the destinations you need with branches in prime locations.' },
-      { icon: 'Star',         title: 'Trusted Partner',          description: 'Routes is a verified Autours partner with consistent customer satisfaction scores.' },
+      { icon: 'Award',        title: 'Trusted Partner',          description: 'Routes is a verified Autours partner with consistent customer satisfaction scores.' },
       { icon: 'BadgePercent', title: 'Best Routes Rate',         description: 'Autours always shows Routes\'s lowest available rate â€” no booking fees added.' },
       { icon: 'ShieldCheck',  title: 'Safe Vehicles',            description: 'Routes maintains its fleet to rigorous safety and cleanliness standards.' },
       { icon: 'Clock',        title: 'On-Time Delivery',         description: 'Routes ensures your vehicle is ready at the agreed time and location.' },
@@ -356,7 +356,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // Essence
   'essence': {
     benefits: [
-      { icon: 'Star',         title: 'Refined Experience',       description: 'Essence offers a refined, upscale car rental experience at accessible prices.' },
+      { icon: 'Award',        title: 'Refined Experience',       description: 'Essence offers a refined, upscale car rental experience at accessible prices.' },
       { icon: 'Zap',          title: 'Smooth Pickup',            description: 'Essence\'s organised handover means you spend more time on your journey and less at the counter.' },
       { icon: 'BadgePercent', title: 'Great Value',              description: 'Autours ensures you always book Essence at the best available price.' },
       { icon: 'ShieldCheck',  title: 'Premium Condition',        description: 'Essence vehicles are cleaned, inspected, and prepared to the highest standard.' },
@@ -376,7 +376,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'surprice': {
     benefits: [
       { icon: 'BadgePercent', title: 'Surprising Prices',        description: 'SurPrice lives up to its name â€” consistently low rates that surprise even seasoned travellers.' },
-      { icon: 'Star',         title: 'Quality Fleet',            description: 'SurPrice maintains a diverse, well-serviced vehicle fleet at every location.' },
+      { icon: 'Car',          title: 'Quality Fleet',            description: 'SurPrice maintains a diverse, well-serviced vehicle fleet at every location.' },
       { icon: 'ShieldCheck',  title: 'Transparent Terms',        description: 'No hidden fees â€” SurPrice\'s full pricing is shown clearly before you confirm.' },
       { icon: 'Zap',          title: 'Fast Pickup',              description: 'SurPrice\'s efficient counter process gets you behind the wheel without delay.' },
       { icon: 'MapPin',       title: 'Airport & City Branches',  description: 'SurPrice branches are located at key airports and city centres for maximum convenience.' },
@@ -395,7 +395,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'autowill': {
     benefits: [
       { icon: 'Zap',          title: 'Where There\'s a Willâ€¦',  description: 'Autowill is driven by a commitment to get you the right vehicle, every time.' },
-      { icon: 'Star',         title: 'Reliable & Consistent',   description: 'Autowill customers return again and again for the dependable service quality.' },
+      { icon: 'ShieldCheck',  title: 'Reliable & Consistent',   description: 'Autowill customers return again and again for the dependable service quality.' },
       { icon: 'BadgePercent', title: 'Value Rates',             description: 'Autours ensures you always access Autowill\'s most competitive pricing.' },
       { icon: 'ShieldCheck',  title: 'Well-Maintained Fleet',   description: 'Autowill vehicles are thoroughly inspected before every handover.' },
       { icon: 'MapPin',       title: 'Convenient Pickup',       description: 'Autowill branches at airports and city centres for a seamless start.' },
@@ -413,7 +413,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // Nissa
   'nissa': {
     benefits: [
-      { icon: 'Star',         title: 'Smooth & Stylish',        description: 'Nissa offers a smooth, stylish rental experience with a curated vehicle selection.' },
+      { icon: 'Car',          title: 'Smooth & Stylish',        description: 'Nissa offers a smooth, stylish rental experience with a curated vehicle selection.' },
       { icon: 'BadgePercent', title: 'Great Daily Rates',       description: 'Competitive pricing for every duration â€” from day trips to extended stays.' },
       { icon: 'ShieldCheck',  title: 'Inspected & Clean',       description: 'Each Nissa vehicle is cleaned and checked before your arrival.' },
       { icon: 'Zap',          title: 'Quick Booking',           description: 'Book your Nissa car on Autours in seconds â€” instant confirmation every time.' },
@@ -433,7 +433,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'my-mobirent': {
     benefits: [
       { icon: 'Zap',          title: 'Mobile-First Rental',     description: 'MY Mobirent is built for the modern traveller â€” book, manage, and return with ease.' },
-      { icon: 'Star',         title: 'Flexible Options',        description: 'MY Mobirent offers a wide range of vehicles and rental durations to fit any plan.' },
+      { icon: 'Car',          title: 'Flexible Options',        description: 'MY Mobirent offers a wide range of vehicles and rental durations to fit any plan.' },
       { icon: 'BadgePercent', title: 'Best Mobirent Rate',      description: 'Autours always surfaces MY Mobirent\'s lowest available rate for your dates.' },
       { icon: 'ShieldCheck',  title: 'Verified & Safe',         description: 'MY Mobirent vehicles are inspected and certified for safety before every rental.' },
       { icon: 'MapPin',       title: 'Accessible Locations',    description: 'MY Mobirent branches at airports and city hubs for seamless access.' },
@@ -452,7 +452,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'xdrive-mobility': {
     benefits: [
       { icon: 'Zap',          title: 'Drive to the Extreme',    description: 'XDrive Mobility delivers high-performance vehicles for those who demand more from their drive.' },
-      { icon: 'Star',         title: 'Premium Vehicles',        description: 'XDrive Mobility\'s fleet features top-tier models for a truly elevated rental experience.' },
+      { icon: 'Car',          title: 'Premium Vehicles',        description: 'XDrive Mobility\'s fleet features top-tier models for a truly elevated rental experience.' },
       { icon: 'BadgePercent', title: 'Autours Pricing',         description: 'Access XDrive Mobility\'s best rates exclusively through Autours.' },
       { icon: 'ShieldCheck',  title: 'Fully Maintained',        description: 'Every XDrive Mobility vehicle is meticulously serviced and inspected.' },
       { icon: 'Globe',        title: 'Performance Meets Travel', description: 'Whether business or leisure, XDrive Mobility elevates every journey.' },
@@ -470,7 +470,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   // SKYES CAR RENTAL
   'skyes-car-rental': {
     benefits: [
-      { icon: 'Star',         title: 'Sky\'s the Limit',        description: 'SKYES CAR RENTAL reaches for the highest standards in every aspect of your rental.' },
+      { icon: 'Award',        title: 'Sky\'s the Limit',        description: 'SKYES CAR RENTAL reaches for the highest standards in every aspect of your rental.' },
       { icon: 'BadgePercent', title: 'Competitive Rates',       description: 'SKYES offers great value pricing across all vehicle categories and rental durations.' },
       { icon: 'ShieldCheck',  title: 'Inspected & Ready',       description: 'Every SKYES vehicle goes through a full pre-rental check for safety and cleanliness.' },
       { icon: 'Zap',          title: 'Efficient Service',       description: 'SKYES\'s streamlined process ensures a quick and smooth pickup every time.' },
@@ -490,7 +490,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'sharr-express': {
     benefits: [
       { icon: 'Zap',          title: 'Express Service',         description: 'Sharr Express delivers fast, no-fuss car rental for travellers on the move.' },
-      { icon: 'Star',         title: 'Reliable Fleet',          description: 'Sharr Express vehicles are well-maintained and consistently rated highly by customers.' },
+      { icon: 'ShieldCheck',  title: 'Reliable Fleet',          description: 'Sharr Express vehicles are well-maintained and consistently rated highly by customers.' },
       { icon: 'BadgePercent', title: 'Express Value',           description: 'Competitive pricing across all Sharr Express categories, shown clearly on Autours.' },
       { icon: 'ShieldCheck',  title: 'Safety First',            description: 'Sharr Express inspects every vehicle before handover for your safety on the road.' },
       { icon: 'MapPin',       title: 'Strategic Locations',     description: 'Sharr Express branches at airports and key city points for easy access.' },
@@ -509,7 +509,7 @@ const brandExtrasMap: Record<string, Omit<BrandExtra, 'brandId'>> = {
   'allmeet-rent-a-car': {
     benefits: [
       { icon: 'Globe',        title: 'All Meets',               description: 'ALLMEET Rent A Car is built to meet every traveller\'s needs â€” business, family, or solo.' },
-      { icon: 'Star',         title: 'Diverse Fleet',           description: 'ALLMEET offers a wide vehicle range to suit every preference and budget.' },
+      { icon: 'Car',          title: 'Diverse Fleet',           description: 'ALLMEET offers a wide vehicle range to suit every preference and budget.' },
       { icon: 'BadgePercent', title: 'Best Autours Price',      description: 'Autours always shows ALLMEET\'s most competitive rate â€” zero booking fees.' },
       { icon: 'ShieldCheck',  title: 'Quality Assured',         description: 'ALLMEET vehicles are rigorously maintained and inspected before every rental.' },
       { icon: 'MapPin',       title: 'All-Location Access',     description: 'ALLMEET branches at airports and city centres make any pickup convenient.' },

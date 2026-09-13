@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { RootState, AppDispatch } from '@/store';
 import { setCurrency, fetchExchangeRates } from '@/store/slices/currencySlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Check, Search, X, Globe, Sparkles } from 'lucide-react';
+import { ChevronDown, Check, Search, X, Globe } from 'lucide-react';
 
 export interface CurrencyItem {
   code: string;
@@ -331,7 +331,6 @@ export default function CurrencySelector({
               {/* TOP CURRENCIES */}
               <div>
                 <div className="flex items-center gap-1.5 px-1 mb-2">
-                  <Sparkles size={12} className="text-[#f9d602]" />
                   <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Top Currencies</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -553,7 +552,6 @@ export default function CurrencySelector({
                   {/* TOP CURRENCIES */}
                   <div>
                     <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <Sparkles size={11} className="text-[#f9d602]" />
                       <span>Top currencies</span>
                     </div>
                     <div className="space-y-0.5 mt-0.5">
@@ -825,7 +823,6 @@ function MobileDropdownCurrency({
                   {/* TOP CURRENCIES */}
                   <div>
                     <div className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <Sparkles size={11} className="text-[#f9d602]" />
                       <span>Top currencies</span>
                     </div>
                     <div className="space-y-0.5 mt-0.5">

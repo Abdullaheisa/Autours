@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
 import { registerContestUser, fetchContestSettings } from '@/store/slices/contestSlice';
 import { features } from '@/config/features';
-import { X, Gift, User, Phone, Mail, Globe, Sparkles } from 'lucide-react';
+import { X, Gift, User, Phone, Mail, Globe } from 'lucide-react';
 import { countries } from '@/lib/data';
 import { BACKEND_URL } from '@/config/api';
 
@@ -146,8 +146,8 @@ export default function ContestPopup() {
               <Gift className="w-8 h-8 text-primary" strokeWidth={2} />
             </div>
             
-            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight font-title mb-2 flex items-center gap-2 relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white via-primary to-amber-400">
-              Win Exclusive Rewards <Sparkles className="w-5 h-5 text-primary shrink-0 animate-pulse" />
+            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight font-title mb-2 flex items-center justify-center gap-2 relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white via-primary to-amber-400">
+              Win Exclusive Rewards
             </h2>
             
             <p className="text-xs md:text-sm text-gray-300 font-medium max-w-sm relative z-10 leading-relaxed">

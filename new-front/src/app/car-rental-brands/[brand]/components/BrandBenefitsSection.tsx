@@ -103,7 +103,7 @@ export default function BrandBenefitsSection({ brandName, benefits }: BrandBenef
 function BenefitCard({ benefit, index }: { benefit: BrandBenefit; index: number }) {
   const IconComponent = useMemo(() => {
     const icons = LucideIcons as Record<string, any>;
-    return icons[benefit.icon] || icons['Star'];
+    return icons[benefit.icon] || icons['ShieldCheck'];
   }, [benefit.icon]);
 
   return (

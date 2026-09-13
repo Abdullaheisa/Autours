@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import {
   Search, Pencil, Trash2, X, Settings2, Gauge, Fuel, Users, Briefcase,
-  Car, Wind, DoorOpen, Luggage, Palette, Cog, Sparkles, CheckCircle2, Armchair
+  Car, Wind, DoorOpen, Luggage, Palette, Cog, CheckCircle2, Armchair
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import Pagination from "@/components/ui/Pagination";
@@ -68,7 +68,7 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Luggage,
   Palette,
   Cog,
-  Sparkles,
+  Sparkles: CheckCircle2,
   CheckCircle2,
   CarSeat,
   Armchair,
@@ -88,7 +88,7 @@ const iconNameMap: Record<string, string> = {
   "🪑": "Armchair",
   "🧳": "Luggage",
   "🚪": "DoorOpen",
-  "✨": "Sparkles",
+  "✨": "CheckCircle2",
 };
 
 interface SpecificationsTableProps {

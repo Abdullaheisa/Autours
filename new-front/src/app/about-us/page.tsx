@@ -13,8 +13,8 @@ import { assets } from '@/config/assets';
 import { 
   Search, ArrowRight, Check, X, ChevronDown, Globe, 
   Building2, Plane, ShieldCheck, TrendingUp, Coins, 
-  Clock, Sparkles, HelpCircle, Info, Star, Award, 
-  ShieldAlert, ArrowUpRight, Car, Users, Gem
+  Clock, HelpCircle, Info, Star, Award, 
+  ShieldAlert, ArrowUpRight, Car, Users, Gem, Eye, CheckCircle2
 } from 'lucide-react';
 
 interface PartnerConfig {
@@ -187,7 +187,6 @@ export default function AboutUsPage() {
                 transition={{ duration: 0.5 }}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary/20 border border-primary/30 text-primary text-xs font-black uppercase tracking-wider shadow-3xs mx-auto"
               >
-                <Sparkles size={13} className="text-primary animate-pulse" />
                 Car Comparison Marketplace
               </motion.div>
               
@@ -292,7 +291,7 @@ export default function AboutUsPage() {
               >
                 <div className="flex items-start justify-between">
                   <div className="bg-blue-50 border border-blue-100 p-2.5 rounded-xl text-blue-600 shadow-2xs">
-                    <Sparkles size={18} />
+                    <Car size={18} />
                   </div>
                   <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-50 px-2.5 py-0.5 rounded-lg border border-slate-100">03</span>
                 </div>
@@ -390,7 +389,7 @@ export default function AboutUsPage() {
               {[
                 { step: '01', title: 'Search', desc: 'Choose your destination, travel dates, and preferred pickup location.', icon: Search },
                 { step: '02', title: 'Compare', desc: 'Instantly compare prices, vehicles, and rental conditions from multiple trusted suppliers.', icon: ArrowRight },
-                { step: '03', title: 'Choose', desc: 'Select the vehicle that best fits your budget, size, and travel needs.', icon: Sparkles },
+                { step: '03', title: 'Choose', desc: 'Select the vehicle that best fits your budget, size, and travel needs.', icon: CheckCircle2 },
                 { step: '04', title: 'Book', desc: 'Complete your reservation and enjoy a smooth pickup experience at your selected location.', icon: Check }
               ].map((item, idx) => (
                 <motion.div 
@@ -421,7 +420,7 @@ export default function AboutUsPage() {
               {[
                 { step: '01', title: 'Search', desc: 'Choose your destination, travel dates, and preferred pickup location.', icon: Search },
                 { step: '02', title: 'Compare', desc: 'Instantly compare prices, vehicles, and rental conditions from multiple trusted suppliers.', icon: ArrowRight },
-                { step: '03', title: 'Choose', desc: 'Select the vehicle that best fits your budget, size, and travel needs.', icon: Sparkles },
+                { step: '03', title: 'Choose', desc: 'Select the vehicle that best fits your budget, size, and travel needs.', icon: CheckCircle2 },
                 { step: '04', title: 'Book', desc: 'Complete your reservation and enjoy a smooth pickup experience at your selected location.', icon: Check }
               ].map((item, idx) => (
                 <div key={idx} className="flex gap-4 relative z-10 items-start">
@@ -482,7 +481,7 @@ export default function AboutUsPage() {
                 <div className="absolute -right-12 -top-12 w-24 h-24 bg-primary/10 rounded-full filter blur-xl group-hover:bg-primary/20 transition-colors" />
                 <div className="space-y-3.5 relative z-10">
                   <div className="bg-primary/10 border border-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary-800 shadow-2xs">
-                    <Sparkles size={22} />
+                    <Eye size={22} />
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-slate-950">Our Vision</h3>
                   <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-[1.8] font-semibold">
@@ -682,7 +681,7 @@ export default function AboutUsPage() {
                 </div>
 
                 <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-950 p-4 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-3 shadow-3xs">
-                  <Star size={18} className="text-emerald-600 shrink-0" fill="currentColor" />
+                  <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
                   <span>Ready for business trips, family vacations, or airport pickups.</span>
                 </div>
               </div>

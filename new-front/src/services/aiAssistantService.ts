@@ -143,8 +143,9 @@ export const UNIVERSAL_DESTINATION_MAP: Record<string, string> = {
   // 🇬🇪 Georgia
   'جورجيا': 'Georgia', 'georgia': 'Georgia', 'géorgie': 'Georgia', 'tbilisi': 'Tbilisi', 'تبليسي': 'Tbilisi', 'tbs': 'Tbilisi', 'باتومي': 'Batumi', 'batumi': 'Batumi', 'bus': 'Batumi', 'كوتايسي': 'Kutaisi',
 
-  // 🇶🇦 Qatar
-  'قطر': 'Qatar', 'qatar': 'Qatar', 'الدوحة': 'Doha', 'الدوحه': 'Doha', 'doha': 'Doha', 'doh': 'Doha', 'مطار حمد': 'Doha',
+  // 🇶🇦 Qatar & Hamad International Airport
+  'قطر': 'Qatar', 'qatar': 'Qatar', 'الدوحة': 'Qatar', 'الدوحه': 'Qatar', 'doha': 'Qatar', 'doh': 'Qatar',
+  'مطار حمد': 'Qatar', 'مطار حمد الدولي': 'Qatar', 'حمد الدولي': 'Qatar', 'hamad': 'Qatar', 'hamad airport': 'Qatar', 'hamad international airport': 'Qatar',
 
   // 🇴🇲 Oman
   'سلطنة عمان': 'Oman', 'سلطنه عمان': 'Oman', 'oman': 'Oman', 'مسقط': 'Muscat', 'muscat': 'Muscat', 'صلالة': 'Salalah',
@@ -599,10 +600,28 @@ export async function processChatWithGemini(params: {
     cleanUserMsg === 'انجليزي' ||
     cleanUserMsg === 'إنجليزي';
 
+  const getCleanGreeting = (name?: string, isEn?: boolean) => {
+    if (!name) return '';
+    const clean = name.trim();
+    const lower = clean.toLowerCase();
+    if (
+      lower.includes('admin') ||
+      lower === 'autours' ||
+      lower.includes('autours admin') ||
+      lower.includes('administrator') ||
+      lower === 'surprice' ||
+      lower.includes('company') ||
+      lower.includes('supplier')
+    ) {
+      return '';
+    }
+    return isEn ? ` ${clean}` : ` أستاذ ${clean}`;
+  };
+
   if (isArabicSelection) {
-    const userGreeting = currentUser?.name ? ` يا ${currentUser.name}` : ' يا غالي';
+    const userGreeting = getCleanGreeting(currentUser?.name, false);
     return {
-      reply: `أهلاً وسهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nأنا صديقك ومساعدك الشخصي للرحلات، ومعاك خطوة بخطوة عشان تختار السيارة الأنسب لك بأفضل سعر وبدون أي تعقيد.\n\nحابب تسافر فين أو إيه المدينة أو المطار اللي ناوي تزورها؟`,
+      reply: `أهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nيسعدني مساعدتك في العثور على أفضل سيارة لرحلتك بأفضل الأسعار.\n\nما هي المدينة أو المطار الذي ترغب في استلام السيارة منه؟`,
       vehicles: [],
       searchCriteria: null,
       actionButtons: [],
@@ -612,9 +631,9 @@ export async function processChatWithGemini(params: {
   }
 
   if (isEnglishSelection) {
-    const userGreeting = currentUser?.name ? ` ${currentUser.name}` : '';
+    const userGreeting = getCleanGreeting(currentUser?.name, true);
     return {
-      reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm your personal assistant and travel companion. I'll guide you step-by-step to find the perfect car for your trip at the best rate.\n\nWhere are you planning to travel, or which city/airport do you have in mind for pick-up?`,
+      reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm here to help you find the best rental car at the best rate.\n\nWhich city or airport would you like to pick up your car from?`,
       vehicles: [],
       searchCriteria: null,
       actionButtons: [],
@@ -631,7 +650,7 @@ export async function processChatWithGemini(params: {
   if (isGeneralBookingIntent) {
     if (isEnglish) {
       return {
-        reply: `With pleasure! Which city or airport would you like to pick up the car from? (e.g. Dubai, Istanbul, Cairo, Kuwait...)`,
+        reply: `With pleasure! Which city or airport would you like to pick up your vehicle from? (e.g. Dubai, Istanbul, Cairo, Kuwait, Doha...)`,
         vehicles: [],
         searchCriteria: null,
         actionButtons: [],
@@ -640,7 +659,7 @@ export async function processChatWithGemini(params: {
       };
     } else {
       return {
-        reply: `من عيوني يا غالي! تحب تستلم السيارة في أي مدينة أو مطار؟ (مثلاً: دبي، إسطنبول، القاهرة، الكويت...)`,
+        reply: `بكل سرور! في أي مدينة أو مطار ترغب باستلام السيارة؟ (مثال: دبي، إسطنبول، القاهرة، الكويت، الدوحة...)`,
         vehicles: [],
         searchCriteria: null,
         actionButtons: [],

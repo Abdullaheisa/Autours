@@ -1,5 +1,5 @@
 'use client';
-import { Sparkles, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { getVehicleImageUrl } from '@/utils/getImageUrl';
 import { assets } from '@/config/assets';
 
@@ -16,7 +16,6 @@ export default function FleetSection({ cheapest, locationName }: Props) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/20 text-black text-xs font-black uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
             Best Deals in {locationName}
           </span>
           <h2 className="text-3xl md:text-5xl font-black text-black tracking-tight uppercase italic font-title">

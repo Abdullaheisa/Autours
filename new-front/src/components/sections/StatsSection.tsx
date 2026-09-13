@@ -125,7 +125,7 @@ export default function StatsSection({ stats: propStats }: { stats?: StatData } 
   return (
     <section
       ref={containerRef}
-      className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-slate-950 border-y border-white/10"
+      className="relative pt-10 sm:pt-14 lg:pt-16 pb-16 sm:pb-24 lg:pb-32 overflow-hidden bg-slate-950 border-y border-white/10"
     >
       {/* Background Banner Image */}
       <div
@@ -139,7 +139,7 @@ export default function StatsSection({ stats: propStats }: { stats?: StatData } 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14 md:mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 md:mb-12">
           <motion.h2
             initial={{ opacity: 0, y: 14 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
