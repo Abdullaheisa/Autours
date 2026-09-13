@@ -154,7 +154,13 @@ class SyncFleetrezVehicles extends Command
         $normalizedName = $this->normalizeVehicleName($name);
         
         $totalPrice = (float) ($car['price']['amount'] ?? 0);
-        $dayPrice = $days > 0 ? $totalPrice / $days : $totalPrice;
+        $apiCurrency = $car['price']['currency'] ?? 'EUR'; // Fleetrez API always returns EUR
+        $dayPrice = $days > 0 ? round($totalPrice / $days, 2) : $totalPrice;
+
+        // Ensure branch currency matches API currency (Fleetrez always returns EUR)
+        if ($branch->currency !== $apiCurrency) {
+            $branch->update(['currency' => $apiCurrency]);
+        }
 
         if ($this->option('dry-run')) {
             $this->line("  [DRY RUN] Would sync vehicle '{$normalizedName}' ({$acriss}) - Day Price: {$dayPrice}");
@@ -172,8 +178,8 @@ class SyncFleetrezVehicles extends Command
                 'description' => $descriptionTag . ' ' . $name,
                 'category' => $categoryId,
                 'price' => $dayPrice,
-                'week_price' => $dayPrice * 7,
-                'month_price' => $dayPrice * 30,
+                'week_price' => $dayPrice,
+                'month_price' => $dayPrice,
                 'activation' => true,
             ]);
             $this->updatedCount++;
@@ -191,8 +197,8 @@ class SyncFleetrezVehicles extends Command
                 'category' => $categoryId,
                 'fuel_policy_id' => null,
                 'price' => $dayPrice,
-                'week_price' => $dayPrice * 7,
-                'month_price' => $dayPrice * 30,
+                'week_price' => $dayPrice,
+                'month_price' => $dayPrice,
                 'instant_confirmation' => 1,
             ]);
             
