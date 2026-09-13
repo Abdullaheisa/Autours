@@ -367,6 +367,11 @@ class VehicleController extends Controller
                 $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicleId]);
                 $vehicleArr['promos'] = array_map(function($p) { return $p->promotion; }, $promos);
 
+                // Map included relation to flat array for frontend
+                $vehicleArr['what_is_included'] = array_map(function($inc) {
+                    return is_array($inc) ? ($inc['what_is_included'] ?? '') : ($inc->what_is_included ?? '');
+                }, $vehicleArr['included'] ?? []);
+
                 $country = null;
                 if (isset($vehicleArr['branch']) && is_array($vehicleArr['branch'])) {
                     $country = $vehicleArr['branch']['country'] ?? null;
