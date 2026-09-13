@@ -216,6 +216,7 @@ class SyncFleetrezVehicles extends Command
         }
 
         $this->syncSpecifications($vehicle->id, $car);
+        $this->syncIncluded($vehicle->id, $car, $supplierUserId);
     }
 
     private function resolveCategory(string $acriss, string $categoryName): int
@@ -289,6 +290,36 @@ class SyncFleetrezVehicles extends Command
                     'icon' => $sp['icon']
                 ]);
             }
+        }
+    }
+
+    private function syncIncluded(int $vehicleId, array $car, int $supplierUserId): void
+    {
+        $inclusions = $car['inclusionList'] ?? [];
+        $includedIds = [];
+
+        foreach ($inclusions as $inclusion) {
+            $name = trim($inclusion['name'] ?? '');
+            $description = trim($inclusion['description'] ?? '');
+            
+            if (empty($name)) continue;
+
+            $includedModel = \App\Models\Included::firstOrCreate(
+                ['what_is_included' => $name, 'supplier_id' => $supplierUserId],
+                ['description' => $description, 'status' => 'approved']
+            );
+
+            // Update description if missing
+            if (!empty($description) && empty($includedModel->description)) {
+                $includedModel->update(['description' => $description]);
+            }
+
+            $includedIds[] = $includedModel->id;
+        }
+
+        $vehicle = Vehicle::find($vehicleId);
+        if ($vehicle && !empty($includedIds)) {
+            $vehicle->included()->sync($includedIds);
         }
     }
 
