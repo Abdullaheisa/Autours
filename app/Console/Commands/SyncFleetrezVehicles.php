@@ -26,7 +26,7 @@ class SyncFleetrezVehicles extends Command
                             {--date= : Pickup date (YYYY-MM-DD), defaults to tomorrow}
                             {--days=1 : Number of rental days to search}
                             {--pickup-date= : Pickup date (yyyy-MM-dd HH:mm), defaults to 30 days in the future}
-                            {--dropoff-date= : Dropoff date (yyyy-MM-dd HH:mm), defaults to 35 days in the future}
+                            {--dropoff-date= : Dropoff date (yyyy-MM-dd HH:mm), defaults to 44 days in the future}
                             {--limit=0 : Limit the number of branches to process (0 = all)}
                             {--dry-run : Only fetch from API and print what would be done}
                             {--real : Perform the actual synchronization to the database}';
@@ -85,8 +85,8 @@ class SyncFleetrezVehicles extends Command
             $branches = $branches->take($limit);
         }
 
-        $pickupDateStr = $this->option('pickup-date') ?: \Carbon\Carbon::now()->addDays(7)->format('Y-m-d 10:00');
-        $dropoffDateStr = $this->option('dropoff-date') ?: \Carbon\Carbon::now()->addDays(9)->format('Y-m-d 10:00');
+        $pickupDateStr = $this->option('pickup-date') ?: \Carbon\Carbon::now()->addDays(30)->format('Y-m-d 10:00');
+        $dropoffDateStr = $this->option('dropoff-date') ?: \Carbon\Carbon::now()->addDays(44)->format('Y-m-d 10:00');
 
         $pickupDate = Carbon::parse($pickupDateStr);
         $dropoffDate = Carbon::parse($dropoffDateStr);

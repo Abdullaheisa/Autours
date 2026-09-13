@@ -88,7 +88,7 @@ class SyncFleetrezBranches extends Command
             $resolvedCountry = CountryCurrencyResolver::normalizeCountryName($countryName) ?? $countryName;
             $currency = CountryCurrencyResolver::resolveCurrencyByCountryName($countryName);
 
-            $branch = Branch::updateOrCreate(
+            $branch = Branch::withTrashed()->updateOrCreate(
                 [
                     'company_id' => $supplierUserId,
                     'station_id' => $locationId,
@@ -104,6 +104,10 @@ class SyncFleetrezBranches extends Command
                     'abriviation' => $locationCode ?: $locationId,
                 ]
             );
+
+            if ($branch->trashed()) {
+                $branch->restore();
+            }
 
             $normalizer = new BranchNormalizationService();
             $normData = $normalizer->normalize(
