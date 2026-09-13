@@ -466,6 +466,12 @@ function getSmartActionButtons(
   const clean = userText.toLowerCase();
   const isEnglish = !/[\u0600-\u06FF]/.test(userText);
 
+  // ⛔ Rule & Teaching Protection: NEVER show random car buttons when teaching or managing rules
+  const isRuleRelated = /(?:تعليمات|قاعدة|قواعد|توجيهات|قولتهولك|قولته|قلتلك|قلته|اديتهالك|علمتهالك|علمتك|حفظته|حفظتها|ذاكرة|ادمن|أدمن|rule|instruction|directive|taught|memory|teach|train)/i.test(userText);
+  if (isRuleRelated) {
+    return [];
+  }
+
   // 1. Account intent
   if (clean.includes('حسابي') || clean.includes('تسجيل') || clean.includes('دخول') || clean.includes('بروفايل') || clean.includes('account') || clean.includes('login') || clean.includes('profile')) {
     if (!currentUser) {
@@ -485,28 +491,17 @@ function getSmartActionButtons(
     }
   }
 
-  // 2. Policy / Contact intent
-  if (clean.includes('تأمين') || clean.includes('تامين') || clean.includes('شروط') || clean.includes('إلغاء') || clean.includes('دعم') || clean.includes('insurance') || clean.includes('policy') || clean.includes('cancel') || clean.includes('support')) {
+  // 2. Policy / Support intent
+  if (clean.includes('دعم') || clean.includes('واتساب') || clean.includes('مساعدة') || clean.includes('تواصل') || clean.includes('اتصال') || clean.includes('whatsapp') || clean.includes('support') || clean.includes('help')) {
     return isEnglish
-      ? [
-          { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-          { label: '✈️ Dubai Airport Cars', promptText: 'Show cars available at Dubai Airport for 3 days' },
-          { label: '⚡ Economy Car Deals', promptText: 'What are the best economy rental deals?' },
-        ]
-      : [
-          { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-          { label: '✈️ سيارات مطار دبي (3 أيام)', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
-          { label: '⚡ أفضل السيارات الاقتصادية', promptText: 'ما هي أفضل السيارات الاقتصادية المتاحة؟' },
-        ];
+      ? [{ label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' }]
+      : [{ label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' }];
   }
 
   // 3. Dynamic Destination Extraction from Live DB Locations
   let matchedCountry: string | null = null;
   for (const [alias, canonical] of Object.entries(UNIVERSAL_DESTINATION_MAP)) {
-    if (
-      clean.includes(alias.toLowerCase()) ||
-      alias.toLowerCase().includes(clean)
-    ) {
+    if (clean.includes(alias.toLowerCase())) {
       matchedCountry = canonical;
       break;
     }
@@ -554,29 +549,11 @@ function getSmartActionButtons(
           : `سيارات متاحة في ${b.city || b.name} لمدة 3 أيام`,
       });
     }
-    buttons.push({
-      label: isEnglish ? `⚡ Best deals in ${matchedCountry}` : `⚡ أفضل عروض ${matchedCountry}`,
-      promptText: isEnglish
-        ? `Best car rental deals in ${matchedCountry}`
-        : `أفضل عروض تأجير السيارات في ${matchedCountry}`,
-    });
-    return buttons.slice(0, 4);
+    return buttons.slice(0, 3);
   }
 
-  // Default dynamic top suggestions
-  return isEnglish
-    ? [
-        { label: '✈️ Dubai Airport (3 Days)', promptText: 'Show cars available at Dubai Airport for 3 days' },
-        { label: '⚡ Economy Car Deals', promptText: 'What are the best economy cars available?' },
-        { label: '🇹🇷 Turkey Car Rentals', promptText: 'Car rental options in Turkey' },
-        { label: '💬 WhatsApp Support', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-      ]
-    : [
-        { label: '✈️ مطار دبي (3 أيام)', promptText: 'سيارات متاحة في مطار دبي لمدة 3 أيام' },
-        { label: '⚡ أفضل السيارات الاقتصادية', promptText: 'ما هي أفضل السيارات الاقتصادية المتاحة؟' },
-        { label: '🇹🇷 سيارات تركيا', promptText: 'عروض تأجير السيارات في تركيا' },
-        { label: '💬 خدمة العملاء (واتساب)', url: 'https://wa.me/96560480382', actionType: 'whatsapp' },
-      ];
+  // ⛔ IF NO CONTEXT MATCHES: DO NOT SHOW RANDOM/IRRELEVANT BUTTONS!
+  return [];
 }
 
 // ── Helper: Fetch customer bookings with fallback URLs ─────────────────────────
@@ -681,6 +658,12 @@ async function handleCancellationRequest(
   currentUser: CurrentUser | null | undefined,
   customerToken?: string | null
 ): Promise<{ reply: string; actionButtons?: ActionButton[] } | null> {
+  // ⛔ Rule & Teaching Protection: If user is talking about rules, directives, instructions, or teaching, NEVER cancel booking!
+  const isRuleRelated = /(?:تعليمات|قاعدة|قواعد|توجيهات|قولتهولك|قولته|قلتلك|قلته|اديتهالك|علمتهالك|علمتك|حفظته|حفظتها|ذاكرة|ادمن|أدمن|rule|instruction|directive|taught|memory|teach|train)/i.test(userText);
+  if (isRuleRelated) {
+    return null;
+  }
+
   const isCancelIntent =
     userText.match(/(الغي|إلغاء|الغاء|الغى|ألغي|كنسل|cancel|cancelling|cancellation)/i) !== null;
 

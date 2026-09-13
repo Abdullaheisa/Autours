@@ -298,14 +298,18 @@ export default function AIChatAssistant() {
   };
 
   // 📜 Scroll to bottom smoothly when messages change or booking form opens
+  // On desktop computers only, re-focus input so user can continue typing immediately without clicking!
+  // On mobile touch devices, NEVER auto-focus to prevent virtual keyboard from popping up!
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
+      if (!isTouchDevice()) {
+        setTimeout(() => inputRef.current?.focus(), 150);
+      }
     }
   }, [messages, isOpen, activeBookingVehicle]);
 
-  // ⌨️ Auto-focus input ONLY on desktop when the user manually opens the chat dialog
-  // On mobile devices, NEVER auto-focus to prevent virtual keyboard from popping up and covering the chat!
+  // ⌨️ Auto-focus input on initial open on desktop
   useEffect(() => {
     if (isOpen && !isTouchDevice()) {
       const timer = setTimeout(() => {

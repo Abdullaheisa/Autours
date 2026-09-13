@@ -179,17 +179,49 @@ export function saveGlobalMemory(state: GlobalMemoryState): void {
 export function handleAdminDirective(
   message: string,
   currentUser?: { name?: string; email?: string; role?: string } | null
-): { reply: string; actionButtons?: Array<{ label: string; promptText?: string }> } | null {
-  if (!currentUser) return null;
-  const isAdmin =
-    currentUser.role === 'admin' ||
-    currentUser.role === 'administrator' ||
-    (currentUser.email && currentUser.email.toLowerCase().includes('admin'));
-
-  if (!isAdmin) return null;
-
+): { reply: string; actionButtons?: Array<{ label: string; promptText?: string; url?: string; actionType?: string }> } | null {
   const cleanMsg = message.trim();
   const lowerMsg = cleanMsg.toLowerCase();
+  const isEnglish = !/[\u0600-\u06FF]/.test(cleanMsg);
+
+  const isAdmin = Boolean(
+    currentUser &&
+      (currentUser.role === 'admin' ||
+        currentUser.role === 'administrator' ||
+        (currentUser.email && currentUser.email.toLowerCase().includes('admin')))
+  );
+
+  // ⚡ 0. Check if user is asking how to teach/train the bot ("عاوز اعلمك", "عايز اعلمك", "كيف اعلمك", "how to teach you")
+  const isTeachingQuery =
+    /(?:عاوز|عايز|اريد|أريد|حابب|نبي|كيف|ازاي|إزاي|طريقة|ودّي|ودي|ابغى|ابغي)\s*(?:اعلمك|أعلمك|ادربك|أدربك|تتعلم|اعطيك\s+قواعد|اضيف\s+قاعدة|أضيف\s+قاعدة|احفظك)/i.test(cleanMsg) ||
+    /(?:how\s+to|i\s+want\s+to|can\s+i|how\s+can\s+i)\s*(?:teach|train|instruct|add\s+rules?\s+to)\s*(?:you|the\s+bot|ai)/i.test(cleanMsg) ||
+    /^(?:تعليمك|تدريبك|تدريب البوت|تعليم البوت|train bot|teach bot)$/i.test(cleanMsg);
+
+  if (isTeachingQuery) {
+    if (!isAdmin) {
+      return {
+        reply: isEnglish
+          ? `🔒 **Admin Access Required**\n\nTo train or teach the AI assistant new platform policies or rules, you must be signed in with an **Admin Account**.\n\n📌 **How an Admin teaches the AI:**\nOnce logged into an Admin account, you can talk to me directly and naturally in English or Arabic without complex syntax. For example:\n- *"From now on, car delivery is free in Dubai"*\n- *"Minimum driver age in Turkey is 21"*\n- *"No bookings allowed without full insurance"*\n\nI will instantly save the rule in central memory and apply it across all customer chats worldwide! 🚗✨`
+          : `🔒 **يتطلب حساب مسؤول (Admin)**\n\nلتدريب المساعد الذكي وتلقينه تعليمات وقواعد جديدة للمنصة، يجب أن تكون مسجلاً الدخول بـ **حساب مدير النظام (Admin)**.\n\n📌 **كيف يقوم الأدمن بتعليم المساعد؟**\nبمجرد تسجيل الدخول بحساب الأدمن، يمكنك التحدث معي مباشرة وبطريقة طبيعية تماماً (بالعربية أو الإنجليزية) دون الحاجة لأوامر أو صياغات معقدة، مثل:\n- *"من هنا ورايح التوصيل مجاني في دبي"*\n- *"عمر السائق المسموح في تركيا يبدأ من 21 سنة"*\n- *"لا نقدم تأجير بدون رخصة دولية"*\n\nوسأقوم فوراً بحفظها في الذاكرة المركزية وتطبيقها كقواعد عليا مع جميع العملاء حول العالم! 🚗✨`,
+        actionButtons: [
+          { label: isEnglish ? '👤 Sign In as Admin' : '👤 تسجيل الدخول كمسؤول', url: '/login', actionType: 'link' },
+        ],
+      };
+    } else {
+      return {
+        reply: isEnglish
+          ? `👋 **Hello Admin!** You can teach me new policies or instructions naturally in English or Arabic at any time.\n\nSimply talk to me normally, for example:\n- *"From now on, free delivery in Dubai"*\n- *"Minimum driver age in Turkey is 21"*\n- *"Our policy is free cancellation up to 24 hours"*\n\nI will immediately record the rule in central memory and enforce it across all customer chats.\n\n💡 To delete a rule anytime, just tell me: *"delete the rule about [topic]"*.`
+          : `👋 **أهلاً بك يا أدمن!** يمكنك توجيهي وتعليمي مباشرة وبطريقة طبيعية تماماً (بالعربية أو الإنجليزية) في أي وقت.\n\nفقط تحدث معي بشكل عادي واذكر التعليمات، مثل:\n- *"من هنا ورايح التوصيل مجاني في دبي"*\n- *"التعليمات الجديدة: عمر السائق يبدأ من 21 سنة"*\n- *"ممنوع الحجز بدون فيزا في قطر"*\n\nوسأقوم فوراً بتسجيلها وتطبيقها مع جميع العملاء حول العالم.\n\n💡 ولحذف أي قاعدة لاحقاً، فقط قل لي: *"احذف التعليمات بتاعة [الموضوع]"* أو *"الغى قاعدة كذا"*.`,
+        actionButtons: [
+          { label: isEnglish ? '📋 View Active Rules' : '📋 عرض القواعد الحالية', promptText: isEnglish ? 'Show rules' : 'اعرض القواعد' },
+        ],
+      };
+    }
+  }
+
+  // If not admin, do not process directive commands
+  if (!isAdmin) return null;
+
   const memory = loadGlobalMemory();
 
   // 1. Show all admin rules ("اعرض القواعد", "قواعد النظام", "show rules")
@@ -204,9 +236,11 @@ export function handleAdminDirective(
     const rules = memory.adminRules || [];
     if (rules.length === 0) {
       return {
-        reply: `📋 **لا توجد قواعد إدارية مسجلة حالياً.**\n\nلإضافة قاعدة وتدريب المساعد، اكتب:\n> **احفظ عندك:** [نص القاعدة أو المعلومة التي تريد تطبيقها مع جميع العملاء]`,
+        reply: isEnglish
+          ? `📋 **No administrative rules registered yet.**\n\nTo teach the AI a rule, simply talk to me naturally, e.g.:\n> *"From now on, car delivery is free in Dubai"*`
+          : `📋 **لا توجد قواعد إدارية مسجلة حالياً.**\n\nلتدريب المساعد وإضافة قاعدة، تحدث معي بشكل طبيعي، مثلاً:\n> *"من هنا ورايح التوصيل مجاني في دبي"*`,
         actionButtons: [
-          { label: '➕ مثال إضافة قاعدة', promptText: 'احفظ عندك: تأجير السيارات في قطر متاح ومشمول بالتأمين الشامل' },
+          { label: isEnglish ? '➕ Example: Add Rule' : '➕ مثال إضافة قاعدة', promptText: isEnglish ? 'From now on, car rental in Qatar includes full insurance' : 'من هنا ورايح تأجير السيارات في قطر يشمل التأمين الشامل' },
         ],
       };
     }
@@ -214,15 +248,17 @@ export function handleAdminDirective(
     const rulesList = rules
       .map(
         (r, idx) =>
-          `${idx + 1}. **[#${r.id}]**: ${r.rule}\n   👤 *أضيفت بواسطة: ${r.addedBy} بتاريخ ${r.date}*`
+          `${idx + 1}. **[#${r.id}]**: ${r.rule}\n   👤 *${isEnglish ? 'Added by' : 'أضيفت بواسطة'}: ${r.addedBy} - ${r.date}*`
       )
       .join('\n\n');
 
     return {
-      reply: `📋 **قواعد وتوجيهات إدارة النظام المعتمدة المطبقة على جميع العملاء (${rules.length} قواعد):**\n\n${rulesList}\n\n━━━━━━━━━━━━━━━\n💡 **لإضافة قاعدة جديدة:** اكتب \`احفظ عندك: [نص القاعدة]\`\n💡 **لحذف قاعدة:** اكتب \`احذف قاعدة [رقم القاعدة، مثلاً #${rules[0]?.id}]\``,
+      reply: isEnglish
+        ? `📋 **Active System Admin Directives Enforced Globally (${rules.length} rules):**\n\n${rulesList}\n\n━━━━━━━━━━━━━━━\n💡 **To add a new rule:** Speak naturally, e.g. \`From now on, [rule]\`\n💡 **To delete a rule:** Say \`delete rule #${rules[0]?.id}\` or \`delete rule about [topic]\``
+        : `📋 **قواعد وتوجيهات إدارة النظام المعتمدة المطبقة على جميع العملاء (${rules.length} قواعد):**\n\n${rulesList}\n\n━━━━━━━━━━━━━━━\n💡 **لإضافة قاعدة جديدة:** تحدث معي بشكل طبيعي، مثلاً: \`من هنا ورايح [القاعدة]\`\n💡 **لحذف قاعدة:** قل \`احذف قاعدة #${rules[0]?.id}\` أو \`احذف التعليمات بتاعة [الموضوع]\``,
       actionButtons: rules.slice(0, 3).map((r) => ({
-        label: `🗑️ حذف #${r.id}`,
-        promptText: `احذف قاعدة #${r.id}`,
+        label: isEnglish ? `🗑️ Delete #${r.id}` : `🗑️ حذف #${r.id}`,
+        promptText: isEnglish ? `delete rule #${r.id}` : `احذف قاعدة #${r.id}`,
       })),
     };
   }
@@ -236,45 +272,55 @@ export function handleAdminDirective(
     memory.adminRules = [];
     saveGlobalMemory(memory);
     return {
-      reply: `🗑️ **تم مسح جميع القواعد الإدارية بنجاح.** الذاكرة الإدارية أصبحت فارغة الآن.`,
+      reply: isEnglish
+        ? `🗑️ **All administrative rules cleared.** AI memory is now reset.`
+        : `🗑️ **تم مسح جميع القواعد الإدارية بنجاح.** الذاكرة الإدارية أصبحت فارغة الآن.`,
     };
   }
 
   // 3. Smart Rule Deletion (By ID, By Keyword, By Description, By Subject)
-  // الصيغ المدعومة:
+  // الصيغ المدعومة بمرونة تامة:
+  // - "الغى التعليمات ال اديتهالك بتاع مفيش"
+  // - "الغي التعليمات اللي قولتهالك عن عمر السائق"
   // - "احذف قاعدة R-1"
   // - "احذف قاعدة قطر والتوصيل"
   // - "امسح اللي قولتهولك عن الفنادق"
   // - "امسح قاعدة التوصيل المجاني"
   // - "انسى موضوع سن 23 سنة"
   // - "delete rule qatar delivery"
-  const isBookingWord = /(?:حجز|حجزي|booking|order|reservation)/i.test(cleanMsg);
+  // - "cancel the instructions about no visa"
   const deleteDirectiveMatch =
-    !isBookingWord &&
-    (cleanMsg.match(
-      /^(?:احذف|امسح|إلغاء|الغاء|حذف|شيل|انسى|الغِ|الغ)\s+(?:القاعدة|قاعدة|المعلومة|معلومة|التوجيهات|التعليمات|اللي\s+قولتهولك|اللي\s+قولته|كلامي|اللي\s+اتعلمته)\s*(?:عن|في|بخصوص|بتاعت|بتاعة|الخاصة\s+بـ|الخاصة\s+ب|رقم)?\s*[:：\-]?\s*([\s\S]+)$/i
+    cleanMsg.match(
+      /^(?:احذف|امسح|إلغاء|الغاء|حذف|شيل|انسى|الغِ|الغ|الغي|الغى|كنسل|delete|remove|forget|cancel)\s+(?:القاعدة|قاعدة|المعلومة|معلومة|التوجيهات|التعليمات|توجيهات|تعليمات|القواعد|قواعد)?\s*(?:اللي\s+قولتهولك|اللي\s+قولته|اللي\s+قلته|ال\s+اديتهالك|اللي\s+اديتهالك|كلامي|اللي\s+اتعلمته|rule|instructions?|directives?|what\s+i\s+told\s+you)?\s*(?:عن|في|بخصوص|بتاعت|بتاعة|بتاع|الخاصة\s+بـ|الخاصة\s+ب|رقم|about)?\s*[:：\-]?\s*([\s\S]+)$/i
     ) ||
-      cleanMsg.match(/^(?:احذف|امسح|شيل|انسى)\s+(?:عن\s+)?([\s\S]+)$/i) ||
-      cleanMsg.match(/^(?:delete|remove|forget)\s+(?:rule|instruction|directive|about)?\s*[:：\-]?\s*([\s\S]+)$/i));
+    cleanMsg.match(
+      /^(?:احذف|امسح|شيل|انسى|الغي|الغى|الغ|الغِ)\s+(?:قاعدة\s+|تعليمات\s+|عن\s+|موضوع\s+)?([\s\S]+)$/i
+    ) ||
+    cleanMsg.match(
+      /^(?:delete|remove|forget|cancel)\s+(?:the\s+)?(?:rule|instruction|directive|what\s+i\s+told\s+you\s+about|about)?\s*[:：\-]?\s*([\s\S]+)$/i
+    );
 
   if (deleteDirectiveMatch) {
     const rawTarget = deleteDirectiveMatch[1].trim();
-    const cleanTarget = rawTarget.replace(/^(?:قاعدة|القاعدة|المعلومة|معلومة)\s*/i, '').trim();
+    const cleanTarget = rawTarget
+      .replace(/^(?:قاعدة|القاعدة|المعلومة|معلومة|تعليمات|التعليمات|بتاع|بتاعة|بتاعت|عن|في|about)\s*/i, '')
+      .trim();
 
     // A. Check if user provided an ID (e.g. "R-1", "#R-1", "1")
     let matchedRule: AdminRule | undefined;
     const cleanId = cleanTarget.toUpperCase().replace(/^#/, '');
-    matchedRule = memory.adminRules.find(
+    matchedRule = (memory.adminRules || []).find(
       (r) => r.id.toUpperCase() === cleanId || r.id.toUpperCase() === `R-${cleanId}`
     );
 
     // B. Keyword & Substring Search if not matched by ID
-    if (!matchedRule) {
+    if (!matchedRule && (memory.adminRules || []).length > 0) {
       const normTarget = normalizeText(cleanTarget);
       const stopWords = new Set([
         'عن', 'في', 'من', 'إلى', 'الي', 'على', 'علي', 'بتاعت', 'بتاعة', 'بتاع', 'الخاصة', 'بـ', 'ب',
-        'قاعدة', 'القاعدة', 'معلومة', 'المعلومة', 'اللي', 'قولتهولك', 'قولته', 'رقم', 'ده', 'دي',
-        'rule', 'about', 'the', 'of', 'in', 'for'
+        'قاعدة', 'القاعدة', 'معلومة', 'المعلومة', 'اللي', 'قولتهولك', 'قولته', 'قلته', 'رقم', 'ده', 'دي',
+        'اديتهالك', 'تعليمات', 'التعليمات', 'توجيهات', 'التوجيهات',
+        'rule', 'about', 'the', 'of', 'in', 'for', 'instruction'
       ]);
 
       const searchWords = normTarget
@@ -289,14 +335,14 @@ export function handleAdminDirective(
         let score = 0;
 
         // Exact full phrase match
-        if (normRule.includes(normTarget)) {
+        if (normTarget.length >= 2 && normRule.includes(normTarget)) {
           score += 100;
         }
 
         // Word matches
         for (const word of searchWords) {
           if (normRule.includes(word)) {
-            score += 20;
+            score += 25;
           }
         }
 
@@ -318,10 +364,12 @@ export function handleAdminDirective(
           .join('\n\n');
 
         return {
-          reply: `🔍 **وجدت أكثر من قاعدة مرتبطة بـ "${cleanTarget}":**\n\n${optionsList}\n\nيرجى تحديد القاعدة المراد حذفها بالضغط على أحد الأزرار أدناه:`,
+          reply: isEnglish
+            ? `🔍 **Multiple matching rules found for "${cleanTarget}":**\n\n${optionsList}\n\nPlease click one of the buttons below to confirm which rule to delete:`
+            : `🔍 **وجدت أكثر من قاعدة مرتبطة بـ "${cleanTarget}":**\n\n${optionsList}\n\nيرجى تحديد القاعدة المراد حذفها بالضغط على أحد الأزرار أدناه:`,
           actionButtons: scoredRules.slice(0, 4).map((item) => ({
-            label: `🗑️ حذف #${item.rule.id}`,
-            promptText: `احذف قاعدة #${item.rule.id}`,
+            label: isEnglish ? `🗑️ Delete #${item.rule.id}` : `🗑️ حذف #${item.rule.id}`,
+            promptText: isEnglish ? `delete rule #${item.rule.id}` : `احذف قاعدة #${item.rule.id}`,
           })),
         };
       }
@@ -331,60 +379,100 @@ export function handleAdminDirective(
     if (matchedRule) {
       const deletedId = matchedRule.id;
       const deletedText = matchedRule.rule;
-      memory.adminRules = memory.adminRules.filter((r) => r.id !== deletedId);
+      memory.adminRules = (memory.adminRules || []).filter((r) => r.id !== deletedId);
       saveGlobalMemory(memory);
 
       return {
-        reply: `🗑️ **تم حذف القاعدة الإدارية بنجاح من ذاكرة النظام المركزية!**\n\n📌 **القاعدة المحذوفة [#${deletedId}]:**\n> "${deletedText}"\n\n✨ تم إلغاء العمل بهذه التوجيهات فوراً ولن يتم تطبيقها بعد الآن في محادثات العملاء.`,
-        actionButtons: [{ label: '📋 عرض القواعد المتبقية', promptText: 'اعرض القواعد' }],
+        reply: isEnglish
+          ? `🗑️ **Administrative rule successfully deleted from central AI memory!**\n\n📌 **Deleted Rule [#${deletedId}]:**\n> "${deletedText}"\n\n✨ This directive has been revoked immediately and will no longer apply to customer conversations.`
+          : `🗑️ **تم حذف التعليمات الإدارية بنجاح من ذاكرة النظام المركزية!**\n\n📌 **القاعدة المحذوفة [#${deletedId}]:**\n> "${deletedText}"\n\n✨ تم إلغاء العمل بهذه التوجيهات فوراً ولن يتم تطبيقها بعد الآن في محادثات العملاء.`,
+        actionButtons: [{ label: isEnglish ? '📋 View Remaining Rules' : '📋 عرض القواعد المتبقية', promptText: isEnglish ? 'Show rules' : 'اعرض القواعد' }],
       };
     } else {
       return {
-        reply: `⚠️ لم أجد أي قاعدة تطابق: **"${cleanTarget}"**.\n\n💡 يمكنك كتابة **"اعرض القواعد"** للاطلاع على قائمة القواعد المسجلة حالياً وتحديدها.`,
-        actionButtons: [{ label: '📋 استعراض القواعد الحالية', promptText: 'اعرض القواعد' }],
+        reply: isEnglish
+          ? `⚠️ No matching rule found for: **"${cleanTarget}"**.\n\n💡 Type **"show rules"** to review the list of active registered rules.`
+          : `⚠️ لم أجد أي قاعدة أو تعليمات مسجلة تطابق: **"${cleanTarget}"**.\n\n💡 يمكنك كتابة **"اعرض القواعد"** للاطلاع على قائمة القواعد المسجلة حالياً وتحديدها.`,
+        actionButtons: [{ label: isEnglish ? '📋 View Active Rules' : '📋 استعراض القواعد الحالية', promptText: isEnglish ? 'Show rules' : 'اعرض القواعد' }],
       };
     }
   }
 
-  // 4. Add / Teach new rule to AI
-  // Formats supported:
-  // - "احفظ عندك: [القاعدة]"
-  // - "قاعدة: [القاعدة]"
-  // - "تعليمات: [القاعدة]"
-  // - "تعلم: [القاعدة]"
-  // - "سجل عندك: [القاعدة]"
-  // - "تذكر: [القاعدة]"
-  // - "admin: [rule]"
-  // - "learn: [rule]"
-  // - "لما حد يسألك عن X قوله Y" / "لو حد سأل عن X جاوبه Y"
-  // - "عاوزك تعرف ان [المعلومة]"
+  // 4. Add / Teach new rule naturally to AI (Arabic & English Conversational Directives)
+  // لا يشترط قول "احفظ عندك:" - يمكن للأدمن التحدث بشكل طبيعي تماماً:
+  // - "من هنا ورايح التوصيل مجاني في دبي"
+  // - "التعليمات الجديدة عمر السائق 21 سنة"
+  // - "قاعدتنا في قطر الدفع بالفيزا فقط"
+  // - "عاوزك تعرف ان تأجير السيارات يشمل التأمين الشامل"
+  // - "خلي بالك اننا مش بنأجر بدون رخصة دولية"
+  // - "لما حد يسألك عن X قوله Y"
+  // - "ممنوع تأجير السيارات بدون فيزا"
+  // - "From now on, car delivery is free in Dubai"
+  // - "New rule: minimum driver age is 21"
+  // - "Our policy is free cancellation up to 24 hours"
+  // - "Remember that all cars have comprehensive insurance"
   let extractedRule: string | null = null;
 
+  // Pattern A: Common prefixes with or without colon
   const directivePrefixMatch = cleanMsg.match(
-    /^(?:احفظ عندك|احفظ|سجل عندك|ضيف قاعدة|قاعدة جديدة|قاعدة|تعليمات|توجيهات|معلومة هامة|معلومة|تعلم|اتعلم|علمتك|من هنا ورايح|تذكر دائماً|تذكر|admin|learn|rule|instruction)\s*[:：\-]\s*([\s\S]+)$/i
+    /^(?:احفظ عندك|احفظ|سجل عندك|سجل|ضيف قاعدة|ضيف عندك|قاعدة جديدة|قاعدة|تعليمات جديدة|تعليمات|توجيهات الإدارة|توجيهات|معلومة هامة|معلومة|تعلم|اتعلم|علمتك|admin|learn|rule|instruction|policy)\s*[:：\-]?\s*([\s\S]+)$/i
+  );
+
+  // Pattern B: Natural starting phrases ("من هنا ورايح", "التعليمات الجديدة", "من الآن فصاعداً")
+  const fromNowOnMatch = cleanMsg.match(
+    /^(?:من هنا ورايح|من الآن فصاعداً|من هنا ورايح بقى|من دلوقتي|التعليمات الجديدة|توجيهات الإدارة|السياسة الجديدة|سياستنا|قاعدتنا)\s*[:：\-]?\s*([\s\S]+)$/i
+  );
+
+  // Pattern C: "عاوزك تعرف", "خلي بالك", "تذكر دائماً"
+  const noticeMatch = cleanMsg.match(
+    /^(?:عاوزك|عايزك|ابيك|ودّي|ودي)\s+(?:تعرف|تحفظ|تتعلم|تقول|تفهم)\s+(?:ان|أن|إن)?\s*([\s\S]+)$/i
+  ) || cleanMsg.match(
+    /^(?:خلي بالك|خلى بالك|خد بالك|انتبه|اعلم|تذكر دائماً|تذكر)\s+(?:ان|أن|إن)?\s*([\s\S]+)$/i
+  );
+
+  // Pattern D: Conditional "لما حد يسأل عن X قوله Y"
+  const conditionalMatch = cleanMsg.match(
+    /^(?:لازم لما|لما|لو|إذا|اذا)\s+(?:حد|العميل|اي عميل|زبون|شخص|واحد)\s+(?:يسألك|يسأل|طلب|يطلب|يستفسر)\s+(?:عن|في|على)?\s*([\s\S]+?)\s+(?:جاوبه|قوله|وضح له|رد عليه|انصحه|تخبره)\s+([\s\S]+)$/i
+  );
+
+  // Pattern E: Prohibitions & Strict Policies ("ممنوع ...", "غير مسموح ...", "لا يمكن ...")
+  const prohibitionMatch = cleanMsg.match(
+    /^(?:ممنوع|غير مسموح|لا يجوز|لا يمكن)\s+([\s\S]+)$/i
+  );
+
+  // Pattern F: English natural phrasing ("From now on ...", "New rule ...", "Our policy is ...", "Remember that ...")
+  const englishNaturalMatch = cleanMsg.match(
+    /^(?:from now on|starting now|new rule|new policy|new instruction|our policy is|our rule is|remember that|keep in mind that|please note that|note that|make sure to)\s*[:：\-]?\s*([\s\S]+)$/i
+  );
+
+  const englishConditionalMatch = cleanMsg.match(
+    /^(?:when|if)\s+(?:a\s+customer|customers?|anyone|someone)\s+(?:asks?|inquires?)\s+(?:about\s+)?([\s\S]+?)\s+(?:tell them|answer them|reply that)\s+([\s\S]+)$/i
   );
 
   if (directivePrefixMatch) {
     extractedRule = directivePrefixMatch[1].trim();
-  } else {
-    const conditionalMatch = cleanMsg.match(
-      /^(?:لما|لو|إذا|اذا)\s+(?:حد|العميل|اي عميل|زبون|شخص)\s+(?:يسألك|يسأل|طلب|يطلب)\s+(?:عن|في|على)\s+([\s\S]+?)\s+(?:جاوبه|قوله|وضح له|رد عليه|انصحه)\s+([\s\S]+)$/i
-    );
-    if (conditionalMatch) {
-      extractedRule = `إذا سأل العميل أو استفسر عن (${conditionalMatch[1].trim()})، يجب الرد عليه وتوضيح: (${conditionalMatch[2].trim()})`;
-    } else {
-      const wantToLearnMatch = cleanMsg.match(
-        /^(?:عاوزك|عايزك|ابيك|ودي)\s+(?:تعرف|تحفظ|تتعلم|تقول)\s+(?:ان|أن|إن)?\s*([\s\S]+)$/i
-      );
-      if (wantToLearnMatch && wantToLearnMatch[1].length > 10) {
-        extractedRule = wantToLearnMatch[1].trim();
-      }
-    }
+  } else if (fromNowOnMatch) {
+    extractedRule = fromNowOnMatch[1].trim();
+  } else if (noticeMatch) {
+    extractedRule = noticeMatch[1].trim();
+  } else if (conditionalMatch) {
+    extractedRule = `إذا سأل العميل أو استفسر عن (${conditionalMatch[1].trim()})، يجب الرد عليه وتوضيح: (${conditionalMatch[2].trim()})`;
+  } else if (prohibitionMatch && prohibitionMatch[1].length >= 8) {
+    extractedRule = `ممنوع ${prohibitionMatch[1].trim()}`;
+  } else if (englishNaturalMatch) {
+    extractedRule = englishNaturalMatch[1].trim();
+  } else if (englishConditionalMatch) {
+    extractedRule = `When customer asks about (${englishConditionalMatch[1].trim()}), explain: (${englishConditionalMatch[2].trim()})`;
   }
 
-  if (extractedRule && extractedRule.length >= 4) {
+  if (extractedRule) {
+    // Clean leading conjunctions
+    extractedRule = extractedRule.replace(/^(?:ان|أن|إن|that)\s+/i, '').trim();
+  }
+
+  if (extractedRule && extractedRule.length >= 5) {
     const newId = `R-${Date.now().toString().slice(-4)}`;
-    const adminName = currentUser.name || currentUser.email || 'Admin';
+    const adminName = currentUser?.name || currentUser?.email || 'Admin';
     const todayStr = new Date().toISOString().split('T')[0];
 
     const newRule: AdminRule = {
@@ -402,10 +490,12 @@ export function handleAdminDirective(
     saveGlobalMemory(memory);
 
     return {
-      reply: `✅ **تم تسجيل وتثبيت القاعدة الإدارية بنجاح في الذاكرة المركزية!**\n\n📌 **القاعدة رقم [#${newId}]:**\n> "${extractedRule}"\n\n✨ **تم اعتماد هذه التوجيهات فوراً كقواعد عليا إلزامية (Super Admin Directives)**، وسيتم تطبيقها والالتزام التام بها مع كافة العملاء والزوار في كل المحادثات حول العالم!\n\n💡 يمكنك كتابة **"اعرض القواعد"** لمراجعة ما تم حفظه، أو **"احذف قاعدة #${newId}"** لحذفها لاحقاً.`,
+      reply: isEnglish
+        ? `✅ **New Directive Adopted & Saved to Central AI Memory!**\n\n📌 **Rule [#${newId}]:**\n> "${extractedRule}"\n\n✨ **Enforced immediately as a Super Admin Policy** across all customer chats and search sessions worldwide! 🚗✨\n\n💡 To review all rules, type **"show rules"**, or say **"delete the rule about ${extractedRule.slice(0, 25)}..."** to remove it.`
+        : `✅ **تم فهم واعتماد التعليمات الجديدة وتثبيتها في ذاكرة النظام!**\n\n📌 **القاعدة المعتمدة [#${newId}]:**\n> "${extractedRule}"\n\n✨ **تم تفعيلها فوراً وتطبيقها كقواعد عليا إلزامية (Super Admin Directives)**، وسألتزم بها في جميع محادثات العملاء والزوار حول العالم! 🚗✨\n\n💡 يمكنك كتابة **"اعرض القواعد"** للمراجعة، أو قول **"احذف التعليمات بتاعة ${extractedRule.slice(0, 25)}..."** لحذفها لاحقاً.`,
       actionButtons: [
-        { label: '📋 استعراض كافة القواعد', promptText: 'اعرض القواعد' },
-        { label: `🗑️ حذف هذه القاعدة (#${newId})`, promptText: `احذف قاعدة #${newId}` },
+        { label: isEnglish ? '📋 View All Rules' : '📋 استعراض كافة القواعد', promptText: isEnglish ? 'Show rules' : 'اعرض القواعد' },
+        { label: isEnglish ? `🗑️ Delete Rule #${newId}` : `🗑️ حذف هذه القاعدة (#${newId})`, promptText: isEnglish ? `delete rule #${newId}` : `احذف قاعدة #${newId}` },
       ],
     };
   }
