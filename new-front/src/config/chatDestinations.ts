@@ -1,29 +1,40 @@
-// Structured destinations, flags, and sorted airports for Autours AI Assistant
+// Structured destinations, official ISO flag codes, airports, and city branches for Autours AI Assistant
 
 export interface AirportDestination {
   iata: string;
   nameAr: string;
   nameEn: string;
-  searchLabel: string; // Used to match InChatSearchWidget locations and database
+  searchLabel: string;
+  aliases: string[];
+}
+
+export interface CityDestination {
+  key: string;
+  nameAr: string;
+  nameEn: string;
+  searchLabel: string;
   aliases: string[];
 }
 
 export interface CountryDestination {
   key: string;
-  flag: string;
+  iso: string; // 2-letter ISO code for FlagCDN official images
+  flagEmoji: string;
   nameAr: string;
   nameEn: string;
   aliases: string[];
   airports: AirportDestination[];
+  cities: CityDestination[];
 }
 
 export const COUNTRY_DESTINATIONS: CountryDestination[] = [
   {
     key: 'uae',
-    flag: '🇦🇪',
+    iso: 'ae',
+    flagEmoji: '🇦🇪',
     nameAr: 'الإمارات',
     nameEn: 'UAE',
-    aliases: ['الإمارات', 'الامارات', 'uae', 'united arab emirates', 'امارات'],
+    aliases: ['الإمارات', 'الامارات', 'uae', 'united arab emirates', 'امارات', 'دولة الامارات'],
     airports: [
       {
         iata: 'DXB',
@@ -61,10 +72,41 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         aliases: ['رأس الخيمة', 'راس الخيمه', 'rkt', 'ras al khaimah'],
       },
     ],
+    cities: [
+      {
+        key: 'dubai_city',
+        nameAr: 'دبي (وسط المدينة / ديرة / مارينا)',
+        nameEn: 'Downtown Dubai / Marina',
+        searchLabel: 'Dubai',
+        aliases: ['دبي مدينة', 'وسط دبي', 'مارينا', 'ديرة', 'بر دبي', 'downtown dubai', 'dubai marina'],
+      },
+      {
+        key: 'abudhabi_city',
+        nameAr: 'أبوظبي (المدينة / الكورنيش)',
+        nameEn: 'Abu Dhabi City Center',
+        searchLabel: 'Abu Dhabi',
+        aliases: ['أبوظبي مدينة', 'مدينة ابوظبي', 'abu dhabi city'],
+      },
+      {
+        key: 'sharjah_city',
+        nameAr: 'الشارقة (المدينة)',
+        nameEn: 'Sharjah City Center',
+        searchLabel: 'Sharjah',
+        aliases: ['الشارقة مدينة', 'مدينة الشارقة', 'sharjah city'],
+      },
+      {
+        key: 'rak_city',
+        nameAr: 'رأس الخيمة (المدينة)',
+        nameEn: 'Ras Al Khaimah City',
+        searchLabel: 'Ras Al Khaimah',
+        aliases: ['راس الخيمة مدينة', 'مدينة راس الخيمة'],
+      },
+    ],
   },
   {
     key: 'saudi',
-    flag: '🇸🇦',
+    iso: 'sa',
+    flagEmoji: '🇸🇦',
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     aliases: ['السعودية', 'السعوديه', 'saudi arabia', 'ksa', 'المملكة', 'سعودية'],
@@ -104,25 +146,42 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         searchLabel: 'Abha International Airport - AHB',
         aliases: ['أبها', 'ابها', 'abha', 'ahb'],
       },
+    ],
+    cities: [
       {
-        iata: 'TIF',
-        nameAr: 'مطار الطائف الدولي TIF',
-        nameEn: 'Taif International Airport TIF',
-        searchLabel: 'Taif International Airport - TIF',
-        aliases: ['الطائف', 'الطايف', 'taif', 'tif'],
+        key: 'riyadh_city',
+        nameAr: 'الرياض (وسط المدينة / العليا)',
+        nameEn: 'Riyadh City Center',
+        searchLabel: 'Riyadh',
+        aliases: ['الرياض مدينة', 'وسط الرياض', 'العليا'],
       },
       {
-        iata: 'ULH',
-        nameAr: 'مطار العلا الدولي ULH',
-        nameEn: 'AlUla International Airport ULH',
-        searchLabel: 'AlUla International Airport - ULH',
-        aliases: ['العلا', 'alula', 'ulh', 'العُلا'],
+        key: 'jeddah_city',
+        nameAr: 'جدة (المدينة / الكورنيش)',
+        nameEn: 'Jeddah City Center',
+        searchLabel: 'Jeddah',
+        aliases: ['جدة مدينة', 'كورنيش جدة'],
+      },
+      {
+        key: 'dammam_city',
+        nameAr: 'الدمام والخبر (المدينة)',
+        nameEn: 'Dammam & Khobar City',
+        searchLabel: 'Dammam',
+        aliases: ['الدمام مدينة', 'الخبر'],
+      },
+      {
+        key: 'makkah_city',
+        nameAr: 'مكة المكرمة',
+        nameEn: 'Makkah',
+        searchLabel: 'Makkah',
+        aliases: ['مكة', 'مكه'],
       },
     ],
   },
   {
     key: 'qatar',
-    flag: '🇶🇦',
+    iso: 'qa',
+    flagEmoji: '🇶🇦',
     nameAr: 'قطر',
     nameEn: 'Qatar',
     aliases: ['قطر', 'qatar', 'الدوحة', 'الدوحه', 'doha'],
@@ -132,13 +191,23 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         nameAr: 'مطار حمد الدولي DOH',
         nameEn: 'Hamad International Airport DOH',
         searchLabel: 'Hamad International Airport - DOH',
-        aliases: ['حمد', 'مطار حمد', 'hamad', 'doh', 'doha', 'الدوحة', 'قطر'],
+        aliases: ['حمد', 'مطار حمد', 'hamad', 'doh', 'hamad airport'],
+      },
+    ],
+    cities: [
+      {
+        key: 'doha_city',
+        nameAr: 'الدوحة (وسط المدينة / الخليج الغربي / لوسيل)',
+        nameEn: 'Doha City Center / Lusail',
+        searchLabel: 'Doha',
+        aliases: ['الدوحة مدينة', 'لوسيل', 'الخليج الغربي', 'doha city', 'west bay'],
       },
     ],
   },
   {
     key: 'kuwait',
-    flag: '🇰🇼',
+    iso: 'kw',
+    flagEmoji: '🇰🇼',
     nameAr: 'الكويت',
     nameEn: 'Kuwait',
     aliases: ['الكويت', 'كويت', 'kuwait', 'kwi'],
@@ -151,10 +220,20 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         aliases: ['الكويت', 'مطار الكويت', 'kuwait airport', 'kwi'],
       },
     ],
+    cities: [
+      {
+        key: 'kuwait_city',
+        nameAr: 'مدينة الكويت (السالمية / حولي / الفروانية)',
+        nameEn: 'Kuwait City / Salmiya',
+        searchLabel: 'Kuwait',
+        aliases: ['السالمية', 'حولي', 'الفروانية', 'مدينة الكويت'],
+      },
+    ],
   },
   {
     key: 'bahrain',
-    flag: '🇧🇭',
+    iso: 'bh',
+    flagEmoji: '🇧🇭',
     nameAr: 'البحرين',
     nameEn: 'Bahrain',
     aliases: ['البحرين', 'بحرين', 'bahrain', 'bah', 'المنامة'],
@@ -167,10 +246,20 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         aliases: ['البحرين', 'مطار البحرين', 'bahrain airport', 'bah', 'المنامة'],
       },
     ],
+    cities: [
+      {
+        key: 'manama_city',
+        nameAr: 'المنامة (السيف / الجفير)',
+        nameEn: 'Manama City Center / Seef',
+        searchLabel: 'Manama',
+        aliases: ['المنامة', 'السيف', 'الجفير', 'manama city'],
+      },
+    ],
   },
   {
     key: 'oman',
-    flag: '🇴🇲',
+    iso: 'om',
+    flagEmoji: '🇴🇲',
     nameAr: 'سلطنة عُمان',
     nameEn: 'Oman',
     aliases: ['سلطنة عمان', 'سلطنة عُمان', 'عمان', 'عُمان', 'oman'],
@@ -190,10 +279,27 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         aliases: ['صلالة', 'صلاله', 'salalah', 'sll'],
       },
     ],
+    cities: [
+      {
+        key: 'muscat_city',
+        nameAr: 'مسقط (الخوير / السيب)',
+        nameEn: 'Muscat City Center',
+        searchLabel: 'Muscat',
+        aliases: ['مسقط مدينة', 'الخوير', 'السيب', 'muscat city'],
+      },
+      {
+        key: 'salalah_city',
+        nameAr: 'صلالة (المدينة)',
+        nameEn: 'Salalah City',
+        searchLabel: 'Salalah',
+        aliases: ['صلالة مدينة', 'مدينة صلالة'],
+      },
+    ],
   },
   {
     key: 'turkey',
-    flag: '🇹🇷',
+    iso: 'tr',
+    flagEmoji: '🇹🇷',
     nameAr: 'تركيا',
     nameEn: 'Turkey',
     aliases: ['تركيا', 'ترركيا', 'توركيا', 'turkey', 'turkiye', 'türkiye'],
@@ -226,39 +332,42 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         searchLabel: 'Trabzon Airport - TZX',
         aliases: ['طرابزون', 'ترابزون', 'trabzon', 'tzx'],
       },
+    ],
+    cities: [
       {
-        iata: 'ESB',
-        nameAr: 'مطار أنقرة إيسنبوغا ESB',
-        nameEn: 'Ankara Esenboğa Airport ESB',
-        searchLabel: 'Ankara Esenboğa Airport - ESB',
-        aliases: ['أنقرة', 'انقرة', 'ankara', 'esb'],
+        key: 'istanbul_city',
+        nameAr: 'إسطنبول (تقسيم / الفاتح / شيشلي)',
+        nameEn: 'Istanbul City (Taksim / Sisli)',
+        searchLabel: 'Istanbul',
+        aliases: ['تقسيم', 'الفاتح', 'شيشلي', 'taksim', 'istanbul city'],
       },
       {
-        iata: 'ADB',
-        nameAr: 'مطار إزمير عدنان مندريس ADB',
-        nameEn: 'Adnan Menderes Airport (Izmir) ADB',
-        searchLabel: 'Adnan Menderes Airport - ADB',
-        aliases: ['إزمير', 'ازمير', 'izmir', 'adb'],
+        key: 'trabzon_city',
+        nameAr: 'طرابزون (المدينة / الميدان)',
+        nameEn: 'Trabzon City Center',
+        searchLabel: 'Trabzon',
+        aliases: ['طرابزون مدينة', 'ميدان طرابزون'],
       },
       {
-        iata: 'DLM',
-        nameAr: 'مطار دالامان الدولي DLM',
-        nameEn: 'Dalaman Airport DLM',
-        searchLabel: 'Dalaman Airport - DLM',
-        aliases: ['دالامان', 'dalaman', 'dlm'],
+        key: 'antalya_city',
+        nameAr: 'أنطاليا (المدينة / لارا)',
+        nameEn: 'Antalya City Center',
+        searchLabel: 'Antalya',
+        aliases: ['أنطاليا مدينة', 'لارا أنطاليا'],
       },
       {
-        iata: 'BJV',
-        nameAr: 'مطار ميلاس بودروم BJV',
-        nameEn: 'Milas-Bodrum Airport BJV',
-        searchLabel: 'Milas-Bodrum Airport - BJV',
-        aliases: ['بودروم', 'bodrum', 'bjv'],
+        key: 'bursa_city',
+        nameAr: 'بورصة',
+        nameEn: 'Bursa',
+        searchLabel: 'Bursa',
+        aliases: ['بورصه', 'bursa'],
       },
     ],
   },
   {
     key: 'egypt',
-    flag: '🇪🇬',
+    iso: 'eg',
+    flagEmoji: '🇪🇬',
     nameAr: 'مصر',
     nameEn: 'Egypt',
     aliases: ['مصر', 'egypt', 'أم الدنيا', 'ام الدنيا', 'misr'],
@@ -269,13 +378,6 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         nameEn: 'Cairo International Airport CAI',
         searchLabel: 'Cairo International Airport - CAI',
         aliases: ['القاهرة', 'القاهره', 'cairo', 'cai', 'مطار القاهرة'],
-      },
-      {
-        iata: 'SPX',
-        nameAr: 'مطار سفنكس الدولي SPX',
-        nameEn: 'Sphinx International Airport SPX',
-        searchLabel: 'Sphinx International Airport - SPX',
-        aliases: ['سفنكس', 'sphinx', 'spx'],
       },
       {
         iata: 'SSH',
@@ -293,53 +395,87 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
       },
       {
         iata: 'HBE',
-        nameAr: 'مطار برج العرب الدولي (الإسكندرية) HBE',
+        nameAr: 'مطار برج العرب (الإسكندرية) HBE',
         nameEn: 'Borg El Arab Airport (Alexandria) HBE',
         searchLabel: 'Borg El Arab International Airport - HBE',
         aliases: ['برج العرب', 'الإسكندرية', 'الاسكندرية', 'alexandria', 'hbe'],
       },
+    ],
+    cities: [
       {
-        iata: 'LXR',
-        nameAr: 'مطار الأقصر الدولي LXR',
-        nameEn: 'Luxor International Airport LXR',
-        searchLabel: 'Luxor International Airport - LXR',
-        aliases: ['الأقصر', 'الاقصر', 'luxor', 'lxr'],
+        key: 'cairo_city',
+        nameAr: 'القاهرة (وسط البلد / المعادي / التجمع)',
+        nameEn: 'Cairo City / New Cairo / Maadi',
+        searchLabel: 'Cairo',
+        aliases: ['القاهرة مدينة', 'وسط البلد', 'المعادي', 'التجمع', 'مدينة نصر'],
       },
       {
-        iata: 'ASW',
-        nameAr: 'مطار أسوان الدولي ASW',
-        nameEn: 'Aswan International Airport ASW',
-        searchLabel: 'Aswan International Airport - ASW',
-        aliases: ['أسوان', 'اسوان', 'aswan', 'asw'],
+        key: 'alex_city',
+        nameAr: 'الإسكندرية (المدينة / الكورنيش)',
+        nameEn: 'Alexandria City Center',
+        searchLabel: 'Alexandria',
+        aliases: ['الاسكندرية مدينة', 'كورنيش الاسكندرية'],
+      },
+      {
+        key: 'sharm_city',
+        nameAr: 'شرم الشيخ (المدينة / خليج نعمة)',
+        nameEn: 'Sharm El Sheikh City',
+        searchLabel: 'Sharm El Sheikh',
+        aliases: ['خليج نعمة', 'شرم مدينة'],
+      },
+      {
+        key: 'hurghada_city',
+        nameAr: 'الغردقة (المدينة / الممشى)',
+        nameEn: 'Hurghada City',
+        searchLabel: 'Hurghada',
+        aliases: ['الغردقة مدينة', 'ممشى الغردقة'],
       },
     ],
   },
   {
     key: 'jordan',
-    flag: '🇯🇴',
+    iso: 'jo',
+    flagEmoji: '🇯🇴',
     nameAr: 'الأردن',
     nameEn: 'Jordan',
     aliases: ['الأردن', 'الاردن', 'jordan', 'اردن'],
     airports: [
       {
         iata: 'AMM',
-        nameAr: 'مطار الملكة علياء الدولي (عمان) AMM',
-        nameEn: 'Queen Alia International Airport (Amman) AMM',
+        nameAr: 'مطار الملكة علياء الدولي AMM',
+        nameEn: 'Queen Alia International Airport AMM',
         searchLabel: 'Queen Alia International Airport - AMM',
         aliases: ['عمان', 'عمّان', 'الملكة علياء', 'amman', 'amm'],
       },
       {
         iata: 'AQJ',
-        nameAr: 'مطار الملك حسين الدولي (العقبة) AQJ',
-        nameEn: 'King Hussein International Airport (Aqaba) AQJ',
+        nameAr: 'مطار الملك حسين الدولي AQJ',
+        nameEn: 'King Hussein International Airport AQJ',
         searchLabel: 'King Hussein International Airport - AQJ',
         aliases: ['العقبة', 'العقبه', 'aqaba', 'aqj', 'الملك حسين'],
+      },
+    ],
+    cities: [
+      {
+        key: 'amman_city',
+        nameAr: 'عمان (العبدلي / الشميساني)',
+        nameEn: 'Amman City Center / Abdali',
+        searchLabel: 'Amman',
+        aliases: ['عمان مدينة', 'العبدلي', 'الشميساني'],
+      },
+      {
+        key: 'aqaba_city',
+        nameAr: 'العقبة (المدينة)',
+        nameEn: 'Aqaba City',
+        searchLabel: 'Aqaba',
+        aliases: ['العقبة مدينة'],
       },
     ],
   },
   {
     key: 'georgia',
-    flag: '🇬🇪',
+    iso: 'ge',
+    flagEmoji: '🇬🇪',
     nameAr: 'جورجيا',
     nameEn: 'Georgia',
     aliases: ['جورجيا', 'georgia'],
@@ -358,63 +494,90 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         searchLabel: 'Batumi International Airport - BUS',
         aliases: ['باتومي', 'batumi', 'bus'],
       },
+    ],
+    cities: [
       {
-        iata: 'KUT',
-        nameAr: 'مطار كوتايسي الدولي KUT',
-        nameEn: 'Kutaisi International Airport KUT',
-        searchLabel: 'Kutaisi International Airport - KUT',
-        aliases: ['كوتايسي', 'kutaisi', 'kut'],
+        key: 'tbilisi_city',
+        nameAr: 'تبليسي (وسط المدينة)',
+        nameEn: 'Tbilisi City Center',
+        searchLabel: 'Tbilisi',
+        aliases: ['تبليسي مدينة', 'وسط تبليسي'],
+      },
+      {
+        key: 'batumi_city',
+        nameAr: 'باتومي (الكورنيش)',
+        nameEn: 'Batumi City Center',
+        searchLabel: 'Batumi',
+        aliases: ['باتومي مدينة'],
       },
     ],
   },
   {
     key: 'morocco',
-    flag: '🇲🇦',
+    iso: 'ma',
+    flagEmoji: '🇲🇦',
     nameAr: 'المغرب',
     nameEn: 'Morocco',
     aliases: ['المغرب', 'المغريب', 'morocco', 'maroc'],
     airports: [
       {
         iata: 'CMN',
-        nameAr: 'مطار محمد الخامس الدولي (الدار البيضاء) CMN',
-        nameEn: 'Mohammed V International Airport (Casablanca) CMN',
+        nameAr: 'مطار محمد الخامس الدولي CMN',
+        nameEn: 'Mohammed V International Airport CMN',
         searchLabel: 'Mohammed V International Airport - CMN',
         aliases: ['الدار البيضاء', 'كازابلانكا', 'محمد الخامس', 'casablanca', 'cmn'],
       },
       {
         iata: 'RAK',
-        nameAr: 'مطار مراكش المنارة الدولي RAK',
+        nameAr: 'مطار مراكش المنارة RAK',
         nameEn: 'Marrakesh Menara Airport RAK',
         searchLabel: 'Marrakesh Menara Airport - RAK',
-        aliases: ['مراكش', 'marrakech', 'marrakesh', 'rak', 'المنارة'],
+        aliases: ['مراكش', 'marrakech', 'marrakesh', 'rak'],
       },
       {
         iata: 'AGA',
-        nameAr: 'مطار أكادير المسيرة الدولي AGA',
+        nameAr: 'مطار أكادير المسيرة AGA',
         nameEn: 'Agadir Al Massira Airport AGA',
         searchLabel: 'Agadir Al Massira Airport - AGA',
         aliases: ['أكادير', 'اكادير', 'agadir', 'aga'],
       },
+    ],
+    cities: [
       {
-        iata: 'TNG',
-        nameAr: 'مطار طنجة ابن بطوطة الدولي TNG',
-        nameEn: 'Tangier Ibn Battouta Airport TNG',
-        searchLabel: 'Tangier Ibn Battouta Airport - TNG',
-        aliases: ['طنجة', 'طنجه', 'ابن بطوطة', 'tangier', 'tng'],
+        key: 'casablanca_city',
+        nameAr: 'الدار البيضاء (كازابلانكا)',
+        nameEn: 'Casablanca City',
+        searchLabel: 'Casablanca',
+        aliases: ['كازا', 'الدار البيضاء مدينة'],
+      },
+      {
+        key: 'marrakech_city',
+        nameAr: 'مراكش (المدينة / جيليز)',
+        nameEn: 'Marrakech City',
+        searchLabel: 'Marrakech',
+        aliases: ['مراكش مدينة', 'جيليز'],
+      },
+      {
+        key: 'tangier_city',
+        nameAr: 'طنجة (المدينة)',
+        nameEn: 'Tangier City',
+        searchLabel: 'Tangier',
+        aliases: ['طنجة مدينة', 'طنجه'],
       },
     ],
   },
   {
     key: 'spain',
-    flag: '🇪🇸',
+    iso: 'es',
+    flagEmoji: '🇪🇸',
     nameAr: 'إسبانيا',
     nameEn: 'Spain',
     aliases: ['إسبانيا', 'اسبانيا', 'spain', 'españa'],
     airports: [
       {
         iata: 'MAD',
-        nameAr: 'مطار مدريد باراخاس الدولي MAD',
-        nameEn: 'Adolfo Suárez Madrid–Barajas Airport MAD',
+        nameAr: 'مطار مدريد باراخاس MAD',
+        nameEn: 'Madrid–Barajas Airport MAD',
         searchLabel: 'Madrid-Barajas Airport - MAD',
         aliases: ['مدريد', 'madrid', 'mad', 'باراخاس'],
       },
@@ -433,6 +596,22 @@ export const COUNTRY_DESTINATIONS: CountryDestination[] = [
         aliases: ['ملقة', 'ملقه', 'malaga', 'agp'],
       },
     ],
+    cities: [
+      {
+        key: 'madrid_city',
+        nameAr: 'مدريد (المدينة)',
+        nameEn: 'Madrid City Center',
+        searchLabel: 'Madrid',
+        aliases: ['مدريد مدينة', 'وسط مدريد'],
+      },
+      {
+        key: 'barcelona_city',
+        nameAr: 'برشلونة (المدينة)',
+        nameEn: 'Barcelona City Center',
+        searchLabel: 'Barcelona',
+        aliases: ['برشلونة مدينة', 'وسط برشلونة'],
+      },
+    ],
   },
 ];
 
@@ -445,11 +624,13 @@ export function toArabicNumber(num: number): string {
     .join('');
 }
 
-// Generate country flag action buttons for initial welcome
+// Generate country flag action buttons - NO text abbreviations, with official flagIso for rendering real flag image!
 export function getCountryFlagButtons(isEnglish: boolean) {
   return COUNTRY_DESTINATIONS.map((c) => ({
-    label: `${c.flag} ${isEnglish ? c.nameEn : c.nameAr}`,
+    label: isEnglish ? c.nameEn : c.nameAr,
     promptText: isEnglish ? c.nameEn : c.nameAr,
+    flagIso: c.iso,
+    actionType: 'prompt' as const,
   }));
 }
 
@@ -459,6 +640,9 @@ export function matchCountry(query: string): CountryDestination | null {
   const q = query.trim().toLowerCase();
 
   for (const c of COUNTRY_DESTINATIONS) {
+    if (q === c.nameAr.toLowerCase() || q === c.nameEn.toLowerCase() || q === c.iso.toLowerCase()) {
+      return c;
+    }
     if (q.includes(c.nameAr.toLowerCase()) || q.includes(c.nameEn.toLowerCase())) {
       return c;
     }
@@ -471,32 +655,107 @@ export function matchCountry(query: string): CountryDestination | null {
   return null;
 }
 
-// Check if a message matches any specific airport
-export function matchAirport(query: string): { airport: AirportDestination; country: CountryDestination } | null {
+export interface MatchedDestination {
+  type: 'airport' | 'city';
+  nameAr: string;
+  nameEn: string;
+  searchLabel: string;
+  iata?: string;
+  country: CountryDestination;
+}
+
+// Check if a message matches any specific airport OR city
+export function matchLocationOrAirport(query: string): MatchedDestination | null {
   if (!query) return null;
   const q = query.trim().toLowerCase();
 
-  // First check IATA codes exact token match (e.g. DXB, SHJ, AUH, DOH, KWI, etc.)
+  // 1. Check IATA codes exact token match (e.g. DXB, SHJ, AUH, DOH, KWI, etc.)
   for (const c of COUNTRY_DESTINATIONS) {
     for (const a of c.airports) {
       const iata = a.iata.toLowerCase();
-      // Match IATA as distinct word or token
       const iataRegex = new RegExp(`(^|[^a-zA-Z0-9])${iata}([^a-zA-Z0-9]|$)`, 'i');
       if (iataRegex.test(q)) {
-        return { airport: a, country: c };
+        return {
+          type: 'airport',
+          nameAr: a.nameAr,
+          nameEn: a.nameEn,
+          searchLabel: a.searchLabel,
+          iata: a.iata,
+          country: c,
+        };
       }
     }
   }
 
-  // Next check specific airport names and aliases
+  // 2. Check full city branch names (e.g. "Doha City Center / Lusail", "دبي (وسط المدينة)", "Downtown Dubai")
+  for (const c of COUNTRY_DESTINATIONS) {
+    for (const city of c.cities) {
+      if (
+        q.includes(city.nameAr.toLowerCase()) ||
+        q.includes(city.nameEn.toLowerCase()) ||
+        (city.searchLabel && q.includes(city.searchLabel.toLowerCase()))
+      ) {
+        return {
+          type: 'city',
+          nameAr: city.nameAr,
+          nameEn: city.nameEn,
+          searchLabel: city.searchLabel,
+          country: c,
+        };
+      }
+    }
+  }
+
+  // 3. Check full airport names (e.g. "مطار دبي الدولي DXB", "Hamad International Airport")
   for (const c of COUNTRY_DESTINATIONS) {
     for (const a of c.airports) {
-      if (q.includes(a.nameAr.toLowerCase()) || q.includes(a.nameEn.toLowerCase()) || q.includes(a.searchLabel.toLowerCase())) {
-        return { airport: a, country: c };
+      if (
+        q.includes(a.nameAr.toLowerCase()) ||
+        q.includes(a.nameEn.toLowerCase()) ||
+        q.includes(a.searchLabel.toLowerCase())
+      ) {
+        return {
+          type: 'airport',
+          nameAr: a.nameAr,
+          nameEn: a.nameEn,
+          searchLabel: a.searchLabel,
+          iata: a.iata,
+          country: c,
+        };
       }
+    }
+  }
+
+  // 4. Check city aliases
+  for (const c of COUNTRY_DESTINATIONS) {
+    for (const city of c.cities) {
+      for (const alias of city.aliases) {
+        if (alias.length >= 3 && q.includes(alias.toLowerCase())) {
+          return {
+            type: 'city',
+            nameAr: city.nameAr,
+            nameEn: city.nameEn,
+            searchLabel: city.searchLabel,
+            country: c,
+          };
+        }
+      }
+    }
+  }
+
+  // 5. Check airport aliases
+  for (const c of COUNTRY_DESTINATIONS) {
+    for (const a of c.airports) {
       for (const alias of a.aliases) {
         if (alias.length >= 3 && q.includes(alias.toLowerCase())) {
-          return { airport: a, country: c };
+          return {
+            type: 'airport',
+            nameAr: a.nameAr,
+            nameEn: a.nameEn,
+            searchLabel: a.searchLabel,
+            iata: a.iata,
+            country: c,
+          };
         }
       }
     }
@@ -505,25 +764,60 @@ export function matchAirport(query: string): { airport: AirportDestination; coun
   return null;
 }
 
-// Format the organized and numbered airport list
-export function formatAirportsText(country: CountryDestination, isEnglish: boolean): string {
+// Format the organized list containing BOTH Airports AND Cities!
+export function formatLocationsAndAirportsText(country: CountryDestination, isEnglish: boolean): string {
   if (isEnglish) {
-    const list = country.airports
-      .map((a, idx) => `${idx + 1}- ${a.nameEn}`)
-      .join('\n');
-    return `Great! Here are the available airports in **${country.nameEn}** ${country.flag}:\n\n${list}\n\nPlease select your airport to proceed:`;
+    let text = `Great! Here are the available pickup locations in ${country.nameEn}:\n\n`;
+
+    text += `✈️ International Airports:\n`;
+    text += country.airports.map((a, idx) => `${idx + 1}- ${a.nameEn}`).join('\n');
+
+    if (country.cities && country.cities.length > 0) {
+      const offset = country.airports.length;
+      text += `\n\n🏙️ Available Cities & Branches:\n`;
+      text += country.cities.map((city, idx) => `${offset + idx + 1}- ${city.nameEn}`).join('\n');
+    }
+
+    text += `\n\nPlease select your preferred airport or city to proceed:`;
+    return text;
   }
 
-  const list = country.airports
-    .map((a, idx) => `${toArabicNumber(idx + 1)}- ${a.nameAr}`)
-    .join('\n');
-  return `ممتاز! إليك المطارات المتاحة في **${country.nameAr}** ${country.flag}:\n\n${list}\n\nيرجى اختيار المطار المناسب لك:`;
+  let text = `ممتاز! إليك أهم وجهات وفروع الاستلام المتاحة في ${country.nameAr}:\n\n`;
+
+  text += `✈️ المطارات المتاحة:\n`;
+  text += country.airports.map((a, idx) => `${toArabicNumber(idx + 1)}- ${a.nameAr}`).join('\n');
+
+  if (country.cities && country.cities.length > 0) {
+    const offset = country.airports.length;
+    text += `\n\n🏙️ المدن وفروع الاستلام:\n`;
+    text += country.cities.map((city, idx) => `${toArabicNumber(offset + idx + 1)}- ${city.nameAr}`).join('\n');
+  }
+
+  text += `\n\nيرجى اختيار المطار أو المدينة المناسبة لك:`;
+  return text;
 }
 
-// Generate action buttons for airports in a country
-export function getAirportButtons(country: CountryDestination, isEnglish: boolean) {
-  return country.airports.map((a) => ({
-    label: `✈️ ${isEnglish ? a.nameEn : a.nameAr}`,
-    promptText: isEnglish ? a.nameEn : a.nameAr,
-  }));
+// Generate action buttons for BOTH airports and cities
+export function getLocationsAndAirportsButtons(country: CountryDestination, isEnglish: boolean) {
+  const buttons: { label: string; promptText: string; actionType: 'prompt' }[] = [];
+
+  // 1. Airports
+  for (const a of country.airports) {
+    buttons.push({
+      label: `✈️ ${isEnglish ? a.nameEn : a.nameAr}`,
+      promptText: isEnglish ? a.nameEn : a.nameAr,
+      actionType: 'prompt',
+    });
+  }
+
+  // 2. Cities
+  for (const city of country.cities) {
+    buttons.push({
+      label: `🏙️ ${isEnglish ? city.nameEn : city.nameAr}`,
+      promptText: isEnglish ? city.nameEn : city.nameAr,
+      actionType: 'prompt',
+    });
+  }
+
+  return buttons;
 }

@@ -36,6 +36,7 @@ interface ActionButton {
   url?: string;
   actionType?: 'link' | 'prompt' | 'whatsapp' | 'call';
   promptText?: string;
+  flagIso?: string;
 }
 
 interface ConfirmedBookingVoucher {
@@ -77,7 +78,9 @@ interface ChatMessage {
 
 
 function FormattedText({ content }: { content: string }) {
-  const lines = content.split('\n');
+  // Strip rogue single asterisks or stars so they never show as raw "*"
+  const cleanContent = (content || '').replace(/\*(?!\*)/g, '');
+  const lines = cleanContent.split('\n');
   return (
     <div className="space-y-1 text-[13px] leading-relaxed text-gray-800">
       {lines.map((line, idx) => {
@@ -120,8 +123,8 @@ const INITIAL_MSG: ChatMessage = {
   content: `Please choose your preferred language / يرجى اختيار لغة المحادثة:`,
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   actionButtons: [
-    { label: '🇸🇦 العربية', promptText: 'المتابعة باللغة العربية' },
-    { label: '🇬🇧 English', promptText: 'Continue in English' },
+    { label: 'العربية', promptText: 'المتابعة باللغة العربية', flagIso: 'sa', actionType: 'prompt' },
+    { label: 'English', promptText: 'Continue in English', flagIso: 'gb', actionType: 'prompt' },
   ],
 };
 
@@ -963,13 +966,22 @@ export default function AIChatAssistant() {
                             <button
                               key={bIdx}
                               onClick={() => handleActionClick(btn)}
-                              className="bg-white hover:bg-amber-50 hover:border-amber-400 text-gray-900 border border-gray-200 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_8px_rgba(249,214,2,0.25)]"
+                              className="bg-white hover:bg-amber-50 hover:border-amber-400 text-gray-900 border border-gray-200 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_8px_rgba(249,214,2,0.25)] cursor-pointer"
                             >
-                              {btn.actionType === 'whatsapp' ? (
-                                <PhoneCall className="w-3 h-3 text-emerald-600" />
-                              ) : (
-                                <ExternalLink className="w-3 h-3 text-amber-500" />
-                              )}
+                              {btn.flagIso ? (
+                                <img
+                                  src={`https://flagcdn.com/w40/${btn.flagIso.toLowerCase()}.png`}
+                                  alt=""
+                                  className="w-4 h-3 object-cover rounded shadow-2xs shrink-0"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLElement).style.display = 'none';
+                                  }}
+                                />
+                              ) : btn.actionType === 'whatsapp' ? (
+                                <PhoneCall className="w-3 h-3 text-emerald-600 shrink-0" />
+                              ) : btn.actionType === 'link' ? (
+                                <ExternalLink className="w-3 h-3 text-amber-500 shrink-0" />
+                              ) : null}
                               <span>{btn.label}</span>
                             </button>
                           ))}
