@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { RootState } from '@/store';
 import ChatCarCard from './ChatCarCard';
+import InChatVehicleResults from './InChatVehicleResults';
 import InChatBookingForm from './InChatBookingForm';
 import InChatSearchWidget from './InChatSearchWidget';
 import { Vehicle } from '@/types';
@@ -139,7 +140,7 @@ const ACTIVE_SESSION_STORAGE_KEY = 'autours_ai_active_session_id_v2';
 
 function generateSessionTitle(msgs: ChatMessage[]): string {
   const firstUser = msgs.find((m) => m.role === 'user');
-  if (!firstUser) return 'محادثة جديدة / New Chat';
+  if (!firstUser) return 'New Chat';
 
   const clean = firstUser.content.trim();
   const searchMatch = clean.match(/(?:Available cars at|سيارات في|أريد سيارات في|ابحث عن سيارات في)\s+([^-\n,]+)/i);
@@ -151,7 +152,7 @@ function generateSessionTitle(msgs: ChatMessage[]): string {
     if (secondUser) {
       return secondUser.content.slice(0, 30).trim() + (secondUser.content.length > 30 ? '...' : '');
     }
-    return 'محادثة بالعربية';
+    return 'Arabic Chat';
   }
   if (clean.includes('Continue in English') || clean.includes('English')) {
     const secondUser = msgs.filter((m) => m.role === 'user')[1];
@@ -214,7 +215,7 @@ export default function AIChatAssistant() {
           const initialId = `session-${Date.now()}`;
           const newInitialSession: ChatSession = {
             id: initialId,
-            title: legacyMessages && legacyMessages.length > 1 ? generateSessionTitle(legacyMessages) : 'محادثة جديدة / New Chat',
+            title: legacyMessages && legacyMessages.length > 1 ? generateSessionTitle(legacyMessages) : 'New Chat',
             messages: Array.isArray(legacyMessages) && legacyMessages.length > 0 ? legacyMessages : [INITIAL_MSG],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -561,7 +562,7 @@ export default function AIChatAssistant() {
     const newId = `session-${Date.now()}`;
     const newSession: ChatSession = {
       id: newId,
-      title: 'محادثة جديدة / New Chat',
+      title: 'New Chat',
       messages: [INITIAL_MSG],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -735,13 +736,13 @@ export default function AIChatAssistant() {
                 {/* Chat History Button with Counter */}
                 <button
                   onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
-                  title="سجل المحادثات / Chat History"
+                  title="Chat History"
                   className={`px-2 py-1 rounded-lg transition-colors font-bold flex items-center gap-1.5 cursor-pointer text-xs ${
                     showHistoryDrawer ? 'bg-black/20 text-neutral-950' : 'hover:bg-black/10 text-neutral-900'
                   }`}
                 >
                   <History className="w-3.5 h-3.5 stroke-[2.4]" />
-                  <span className="hidden sm:inline text-[11px] font-black">السجل</span>
+                  <span className="hidden sm:inline text-[11px] font-black">History</span>
                   {sessions.length > 1 && (
                     <span className="text-[9.5px] bg-neutral-950 text-[#f9d602] font-black px-1.5 py-0.5 rounded-full leading-none">
                       {sessions.length}
@@ -752,7 +753,7 @@ export default function AIChatAssistant() {
                 {/* + New Chat Button */}
                 <button
                   onClick={handleStartNewChat}
-                  title="محادثة جديدة / New Chat"
+                  title="New Chat"
                   className="p-1.5 hover:bg-black/10 rounded-lg transition-colors font-bold cursor-pointer flex items-center gap-1"
                 >
                   <Plus className="w-4 h-4 text-neutral-900 stroke-[2.6]" />
@@ -769,7 +770,7 @@ export default function AIChatAssistant() {
               </div>
             </div>
 
-            {/* ── Slide-in Chat History Drawer ───────────────────────────────── */}
+            {/* ── Slide-in Chat History Drawer (100% in English) ─────────────── */}
             <AnimatePresence>
               {showHistoryDrawer && (
                 <motion.div
@@ -785,7 +786,7 @@ export default function AIChatAssistant() {
                       <div className="w-6 h-6 rounded-lg bg-amber-400 text-neutral-950 flex items-center justify-center font-bold">
                         <History className="w-3.5 h-3.5" />
                       </div>
-                      <h4 className="text-xs font-black text-gray-950">سجل المحادثات (Chat History)</h4>
+                      <h4 className="text-xs font-black text-gray-950">Chat History</h4>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
@@ -793,12 +794,12 @@ export default function AIChatAssistant() {
                         className="flex items-center gap-1 bg-[#f9d602] hover:bg-amber-400 text-neutral-950 font-black text-[11px] px-2.5 py-1 rounded-lg transition-all shadow-xs cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>شات جديد</span>
+                        <span>+ New Chat</span>
                       </button>
                       <button
                         onClick={() => setShowHistoryDrawer(false)}
                         className="p-1 hover:bg-gray-200 text-gray-500 rounded-lg transition-colors cursor-pointer"
-                        title="إغلاق السجل"
+                        title="Close History"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -831,21 +832,21 @@ export default function AIChatAssistant() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 mb-1">
                               <span className="font-extrabold text-xs text-gray-900 truncate block">
-                                {s.title || 'محادثة جديدة'}
+                                {s.title || 'New Chat'}
                               </span>
                               {isActive && (
                                 <span className="bg-amber-400 text-neutral-950 text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0">
-                                  الحالي
+                                  Active
                                 </span>
                               )}
                             </div>
                             <p className="text-[11px] text-gray-500 truncate mb-1">
-                              {lastMsg.slice(0, 45) || 'بدء المحادثة...'}
+                              {lastMsg.slice(0, 45) || 'Start conversation...'}
                             </p>
                             <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
                               <span>{formattedDate}</span>
                               <span>•</span>
-                              <span>{userMsgsCount} رسائل</span>
+                              <span>{userMsgsCount} {userMsgsCount === 1 ? 'message' : 'messages'}</span>
                             </div>
                           </div>
 
@@ -854,7 +855,7 @@ export default function AIChatAssistant() {
                             <button
                               type="button"
                               onClick={(e) => handleDeleteSession(s.id, e)}
-                              title="حذف هذه المحادثة من السجل"
+                              title="Delete chat"
                               className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -869,14 +870,14 @@ export default function AIChatAssistant() {
                   {sessions.length > 1 && (
                     <div className="p-2.5 bg-white border-t border-gray-200 flex items-center justify-between shrink-0">
                       <span className="text-[11px] text-gray-500 font-medium">
-                        إجمالي المحادثات: <strong>{sessions.length}</strong>
+                        Total chats: <strong>{sessions.length}</strong>
                       </span>
                       <button
                         onClick={handleClearAllHistory}
                         className="text-[11px] text-red-600 hover:text-red-700 font-bold hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        <span>مسح السجل بالكامل</span>
+                        <span>Clear All History</span>
                       </button>
                     </div>
                   )}
@@ -990,18 +991,13 @@ export default function AIChatAssistant() {
                         </div>
                       )}
 
-                      {/* Car Cards */}
+                      {/* Car Cards with Persona Filters, Load More & Full Search Navigation */}
                       {msg.vehicles && msg.vehicles.length > 0 && (
-                        <div className="flex flex-col gap-2.5 mt-2">
-                          {msg.vehicles.map((v) => (
-                            <ChatCarCard
-                              key={v.id}
-                              vehicle={v}
-                              searchCriteria={msg.searchCriteria || currentSearchCriteria}
-                              onStartBooking={(vehicle) => handleStartBooking(vehicle)}
-                            />
-                          ))}
-                        </div>
+                        <InChatVehicleResults
+                          vehicles={msg.vehicles}
+                          searchCriteria={msg.searchCriteria || currentSearchCriteria}
+                          onStartBooking={(vehicle) => handleStartBooking(vehicle)}
+                        />
                       )}
 
                       <span

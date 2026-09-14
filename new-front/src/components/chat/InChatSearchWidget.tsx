@@ -219,8 +219,17 @@ export default function InChatSearchWidget({
         const city = ((l as any).city || l.location || '').toLowerCase();
         const country = (l.country || '').toLowerCase();
         const loc = (l.location || '').toLowerCase();
+        const abbr = (l.abriviation || (l as any).abbreviation || '').toLowerCase();
         const s = searchTerm.toLowerCase();
-        return name.includes(s) || city.includes(s) || country.includes(s) || loc.includes(s);
+        const init = initialLocation.toLowerCase();
+        return (
+          (abbr && abbr.length >= 2 && (init.includes(abbr) || s.includes(abbr))) ||
+          name.includes(s) ||
+          city.includes(s) ||
+          country.includes(s) ||
+          loc.includes(s) ||
+          (init.includes(name) && name.length >= 3)
+        );
       });
 
       if (match) {

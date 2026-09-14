@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import { BACKEND_URL, CANDIDATE_BACKEND_URLS } from '@/config/api';
 import { vehicleMapper } from '@/services/mappers/vehicleMapper';
 import { buildLearnedMemoryPrompt, learnFromConversation, handleAdminDirective, UserMemoryProfile } from '@/services/aiLearningService';
+import {
+  getCountryFlagButtons,
+  matchCountry,
+  formatAirportsText,
+  getAirportButtons,
+  matchAirport,
+} from '@/config/chatDestinations';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -418,7 +425,7 @@ async function queryAutoursVehicles(params: {
     time_to: '10:00',
     currency: params.currency || 'AED',
     page: 1,
-    per_page: 6,
+    per_page: 50,
   };
 
   const urlsToTry = Array.from(
@@ -959,10 +966,10 @@ export async function POST(request: Request) {
     if (isArabicSelection) {
       const userGreeting = getCleanGreeting(currentUser?.name, false);
       return NextResponse.json({
-        reply: `أهلاً بك${userGreeting} في **Autours**! 🚗✨\n\nيسعدني مساعدتك في العثور على أفضل سيارة لرحلتك بأفضل الأسعار.\n\nما هي المدينة أو المطار الذي ترغب في استلام السيارة منه؟`,
+        reply: `أهلاً وسهلاً بك${userGreeting} في **Autours**! 🚗✨\nيسعدني مساعدتك لاختيار سيارتك الأنسب بأفضل سعر.\n\nما هي وجهتك؟ يرجى اختيار الدولة بالضغط على العلم:`,
         vehicles: [],
         searchCriteria: null,
-        actionButtons: [],
+        actionButtons: getCountryFlagButtons(false),
         showSearchWidget: false,
         timestamp: new Date().toISOString(),
       });
@@ -971,36 +978,41 @@ export async function POST(request: Request) {
     if (isEnglishSelection) {
       const userGreeting = getCleanGreeting(currentUser?.name, true);
       return NextResponse.json({
-        reply: `Welcome${userGreeting} to **Autours**! 🚗✨\n\nI'm here to help you find the best rental car at the best rate.\n\nWhich city or airport would you like to pick up your car from?`,
+        reply: `Welcome${userGreeting} to **Autours**! 🚗✨\nGlad to help you choose the best rental car at top rates.\n\nWhere are you traveling? Please select your destination country:`,
         vehicles: [],
         searchCriteria: null,
-        actionButtons: [],
+        actionButtons: getCountryFlagButtons(true),
         showSearchWidget: false,
         timestamp: new Date().toISOString(),
       });
     }
 
-    // ⚡ General booking intent without destination (e.g. "عاوز حجز", "محتاج سيارة", "book a car")
+    // ⚡ General booking intent or general greetings without destination
     const isGeneralBookingIntent =
       /^(عاوز|عايز|اريد|أريد|محتاج|ودي|ابغى|ابغي|نبي|book|rent|i want to book|i want to rent)\s*(حجز|احجز|أحجز|سيارة|عربية|تأجير|استئجار|سياره|a car|car)?$/i.test(latestUserMsg.trim()) ||
       ['عاوز حجز', 'عايز حجز', 'اريد حجز', 'أريد حجز', 'حجز سيارة', 'حجز', 'احجز سيارة', 'book a car', 'rent a car', 'book car'].includes(cleanUserMsg);
 
-    if (isGeneralBookingIntent) {
+    const isGeneralGreeting =
+      /^(مرحبا|مرحباً|أهلا|اهلا|أهلاً|سلام|السلام عليكم|مساء الخير|صباح الخير|هاي|hello|hi|hey|greetings)$/i.test(cleanUserMsg) ||
+      isGeneralBookingIntent;
+
+    if (isGeneralGreeting) {
+      const userGreeting = getCleanGreeting(currentUser?.name, isEnglish);
       if (isEnglish) {
         return NextResponse.json({
-          reply: `With pleasure! Which city or airport would you like to pick up your vehicle from? (e.g. Dubai, Istanbul, Cairo, Kuwait, Doha...)`,
+          reply: `Welcome${userGreeting} to **Autours**! 🚗✨\nGlad to help you choose the best rental car at top rates.\n\nWhere are you traveling? Please select your destination country:`,
           vehicles: [],
           searchCriteria: null,
-          actionButtons: [],
+          actionButtons: getCountryFlagButtons(true),
           showSearchWidget: false,
           timestamp: new Date().toISOString(),
         });
       } else {
         return NextResponse.json({
-          reply: `بكل سرور! في أي مدينة أو مطار ترغب باستلام السيارة؟ (مثال: دبي، إسطنبول، القاهرة، الكويت، الدوحة...)`,
+          reply: `أهلاً وسهلاً بك${userGreeting} في **Autours**! 🚗✨\nيسعدني مساعدتك لاختيار سيارتك الأنسب بأفضل سعر.\n\nما هي وجهتك؟ يرجى اختيار الدولة بالضغط على العلم:`,
           vehicles: [],
           searchCriteria: null,
-          actionButtons: [],
+          actionButtons: getCountryFlagButtons(false),
           showSearchWidget: false,
           timestamp: new Date().toISOString(),
         });
@@ -1015,6 +1027,46 @@ export async function POST(request: Request) {
         vehicles: [],
         searchCriteria: null,
         actionButtons: adminResolution.actionButtons || [],
+        showSearchWidget: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // ⚡ Check Airport Selection Directly (e.g. "مطار دبي الدولي DXB", "DXB", "مطار الشارقة الدولي SHJ", "مطار حمد الدولي DOH")
+    const matchedAirport = matchAirport(latestUserMsg);
+    if (matchedAirport && !latestUserMsg.includes('from') && !latestUserMsg.includes('من')) {
+      const airportName = isEnglish ? matchedAirport.airport.nameEn : matchedAirport.airport.nameAr;
+      const confirmReply = isEnglish
+        ? `**${airportName}** selected! 🛫\n\nPlease select your pickup & return dates/times to view available cars:`
+        : `تم اختيار **${airportName}** بنجاح! 🛫\n\nيرجى تحديد تواريخ وأوقات الاستلام والتسليم للبحث عن أفضل العروض:`;
+
+      return NextResponse.json({
+        reply: confirmReply,
+        vehicles: [],
+        searchCriteria: {
+          location: matchedAirport.airport.searchLabel,
+          locationName: matchedAirport.airport.searchLabel,
+          country: matchedAirport.country.nameEn,
+          currency,
+        },
+        actionButtons: [],
+        showSearchWidget: true,
+        searchWidgetData: {
+          defaultLocation: matchedAirport.airport.searchLabel,
+          dateFrom: todayStr,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // ⚡ Check Country Selection (e.g. "الإمارات", "UAE", "السعودية", "Saudi Arabia", "قطر", "Qatar", "الكويت", "Kuwait", "البحرين", "عمان", "تركيا", "مصر", "الأردن", "جورجيا", "المغرب", "إسبانيا")
+    const matchedCountry = matchCountry(latestUserMsg);
+    if (matchedCountry && !latestUserMsg.includes('from') && !latestUserMsg.includes('من')) {
+      return NextResponse.json({
+        reply: formatAirportsText(matchedCountry, isEnglish),
+        vehicles: [],
+        searchCriteria: null,
+        actionButtons: getAirportButtons(matchedCountry, isEnglish),
         showSearchWidget: false,
         timestamp: new Date().toISOString(),
       });
@@ -1122,7 +1174,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         reply: successReply,
-        vehicles: vehicles.slice(0, 6),
+        vehicles: vehicles.slice(0, 40),
         searchCriteria,
         actionButtons: [],
         showSearchWidget: false,
@@ -1417,7 +1469,7 @@ ${dbContext.summaryStr}
 
     return NextResponse.json({
       reply: assistantResponseText,
-      vehicles: foundVehicles.slice(0, 5),
+      vehicles: foundVehicles.slice(0, 40),
       searchCriteria,
       actionButtons,
       userMemory: learningResult.updatedUserMemory,

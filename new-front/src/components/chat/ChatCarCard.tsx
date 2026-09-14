@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import {
   Info,
   MapPin,
   ArrowLeft,
+  ExternalLink,
 } from 'lucide-react';
 import { RootState } from '@/store';
 import { Vehicle, Currency } from '@/types';
@@ -33,12 +35,35 @@ export default function ChatCarCard({
   onStartBooking,
 }: ChatCarCardProps) {
   const [imgError, setImgError] = useState(false);
+  const router = useRouter();
 
   // Connect to active currency in Redux store
   const { code: reduxCurrencyCode, allRates } = useSelector((state: RootState) => state.currency);
 
   const dateFrom = searchCriteria?.dateFrom || '';
   const dateTo = searchCriteria?.dateTo || '';
+
+  const handleGoToSearch = () => {
+    const params = new URLSearchParams();
+    const loc = searchCriteria?.location ? String(searchCriteria.location) : '';
+    const locLabel = searchCriteria?.locationName || loc;
+    const start = searchCriteria?.dateFrom || '';
+    const end = searchCriteria?.dateTo || '';
+    const st = searchCriteria?.startTime || '10:00';
+    const et = searchCriteria?.endTime || '10:00';
+    const curr = reduxCurrencyCode || searchCriteria?.currency || vehicle.baseCurrency || 'AED';
+
+    if (loc) params.set('location', loc);
+    if (locLabel) params.set('locationLabel', locLabel);
+    if (start) params.set('start', start);
+    if (end) params.set('end', end);
+    if (st) params.set('st', st);
+    if (et) params.set('et', et);
+    if (curr) params.set('currency', curr);
+    params.set('selectedVehicle', String(vehicle.id));
+
+    router.push(`/search?${params.toString()}`);
+  };
   
   // Calculate rental days
   let days = 3;
@@ -171,13 +196,17 @@ export default function ChatCarCard({
         </span>
       </div>
 
-      {/* ── Car Image Showcase (Compact Centered Frame) ────────────────────── */}
-      <div className="w-full h-28 bg-gray-50/90 rounded-xl p-1.5 flex items-center justify-center border border-gray-100 overflow-hidden relative">
+      {/* ── Car Image Showcase (Clickable to full search page) ────────────── */}
+      <div
+        onClick={handleGoToSearch}
+        title="View full car details & all offers on search page"
+        className="w-full h-28 bg-gray-50/90 rounded-xl p-1.5 flex items-center justify-center border border-gray-100 overflow-hidden relative cursor-pointer group/img hover:border-amber-300 transition-colors"
+      >
         {!imgError && vehicleImageUrl ? (
           <img
             src={vehicleImageUrl}
             alt={vehicle.name}
-            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-200 drop-shadow-sm"
+            className="max-h-full max-w-full object-contain group-hover/img:scale-105 transition-transform duration-200 drop-shadow-sm"
             onError={() => setImgError(true)}
           />
         ) : (
@@ -185,18 +214,23 @@ export default function ChatCarCard({
         )}
       </div>
 
-      {/* ── Car Title + Category ─────────────────────────────────────────── */}
+      {/* ── Car Title + Category + Link to Search Page ───────────────────────── */}
       <div className="flex items-baseline justify-between gap-1 -mt-0.5">
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div
+          onClick={handleGoToSearch}
+          title="View full car details & all offers on search page"
+          className="flex items-center gap-1.5 min-w-0 cursor-pointer group/title"
+        >
           <span
             className="inline-flex items-center text-amber-500 shrink-0"
             title="Car specifications and info"
           >
             <Info className="w-3.5 h-3.5 fill-amber-500 text-white" />
           </span>
-          <h4 className="font-black text-gray-900 text-xs sm:text-sm leading-tight truncate">
+          <h4 className="font-black text-gray-900 text-xs sm:text-sm leading-tight truncate group-hover/title:text-amber-600 transition-colors">
             {vehicle.name}
           </h4>
+          <ExternalLink className="w-3 h-3 text-gray-400 group-hover/title:text-amber-600 shrink-0" />
         </div>
         <span className="text-blue-600 font-bold text-[10px] uppercase tracking-wide shrink-0">
           {categoryName}
