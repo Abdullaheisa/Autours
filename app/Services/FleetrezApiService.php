@@ -52,8 +52,8 @@ class FleetrezApiService
         
         $data = $response->json();
         
-        // FleetRez typically returns status = "Success" or "Error" for some calls, check it
-        if (isset($data['status']) && strtolower($data['status']) !== 'success') {
+        // FleetRez typically returns status = "Success", "On Request", or "Error" for some calls, check it
+        if (isset($data['status']) && !in_array(strtolower($data['status']), ['success', 'on request'])) {
             $errorMsg = $data['message'] ?? 'API returned error status';
             Log::error("Fleetrez API returned error: {$errorMsg}");
             throw new \Exception("Fleetrez API error: {$errorMsg}");
