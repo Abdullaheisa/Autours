@@ -214,7 +214,7 @@ export default function CustomerBookings() {
                       )}
                       {rental.external_reservation_no && (
                         <span className="text-emerald-600 text-xs font-semibold">
-                          Supplier Ref: {rental.external_reservation_no}
+                          Supplier Ref: {rental.external_reservation_no.split('|')[0]}
                         </span>
                       )}
                     </div>

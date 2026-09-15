@@ -76,6 +76,10 @@ class SupplierIntegrationService
             return $this->sendViaFleetrez($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'expy') {
+            return $this->sendViaExpy($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -170,6 +174,10 @@ class SupplierIntegrationService
             return $supplier->integration === true
                 && !empty($supplier->api_key)
                 && !empty($supplier->api_password);
+        }
+
+        if ($supplier->integration_type === 'expy') {
+            return $supplier->integration === true;
         }
 
         // For webhook suppliers, we need integration enabled + webhook URL
