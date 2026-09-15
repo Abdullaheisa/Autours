@@ -273,12 +273,12 @@ class PriveleApiService
      * @param string $orderId
      * @return array<string, mixed>
      */
-    public function cancelReservation(string $orderId): array
+    public function cancelReservation(string $orderId, array $params = []): array
     {
         $response = Http::timeout(60)
             ->withHeaders($this->authHeaders())
             ->withOptions(['verify' => false])
-            ->put(self::BASE_URL . "/v1/reservation/{$orderId}/cancel");
+            ->put(self::BASE_URL . "/v1/reservation/{$orderId}/cancel", $params);
 
         if (! $response->successful()) {
             Log::error('Privele API: Failed to cancel reservation', [

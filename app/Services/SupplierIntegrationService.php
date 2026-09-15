@@ -2123,7 +2123,7 @@ class SupplierIntegrationService
         
         $groupId = null;
         $rateCode = null;
-        if (preg_match('/\[SURPRICE-GROUP-ID:([^|\]]+)\|RATE:([^\]]+)\]/', $description, $m)) {
+        if (preg_match('/\[PRIVELE-GROUP-ID:([^|\]]+)\|RATE:([^\]]+)\]/', $description, $m)) {
             $groupId = $m[1];
             $rateCode = $m[2];
         } else {
@@ -2138,20 +2138,47 @@ class SupplierIntegrationService
         $dropoffBranchCode = $rental->dropoff_branch ? $rental->dropoff_branch->location_code : ($branch ? $branch->location_code : null);
         $pickupBranchCode = $branch ? $branch->location_code : null;
 
+        $pickupDateTime = \Carbon\Carbon::parse($rental->start_date . ' ' . ($rental->start_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
+        $dropoffDateTime = \Carbon\Carbon::parse($rental->end_date . ' ' . ($rental->end_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
+        $driverAge = $rental->customer_age ?? 30;
+
+        // Fetch availability to get the vendorRateID
+        $availability = $service->getAvailability($pickupBranchCode, $pickupDateTime, $dropoffDateTime, $driverAge, $rateCode);
+        
+        $vendorRateID = null;
+        if (isset($availability['vehAvails']) && is_array($availability['vehAvails'])) {
+            foreach ($availability['vehAvails'] as $avail) {
+                if (($avail['vehicle']['code'] ?? '') === $groupId) {
+                    $vendorRateID = $avail['rentalDetails'][0]['rentalRate']['rateQualifier']['vendorRateID'] ?? null;
+                    break;
+                }
+            }
+        }
+        
+        if (!$vendorRateID) {
+            throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates. Please select another vehicle.");
+        }
+
         $reservationData = [
-            'stationCode'     => $pickupBranchCode,
-            'dropoffLocation' => $dropoffBranchCode,
-            'rateCode'        => $rateCode,
-            'carGroup'        => $groupId,
-            'pickupTime'      => \Carbon\Carbon::parse($rental->pickup_date)->format('Y-m-d\TH:i:s'),
-            'dropoffTime'     => \Carbon\Carbon::parse($rental->dropoff_date)->format('Y-m-d\TH:i:s'),
-            'firstname'       => $customer->first_name,
-            'lastname'        => $customer->last_name,
-            'email'           => $customer->email,
-            'telephone'       => $customer->phone,
-            'flightNumber'    => $rental->flight_number ?? '',
-            'remarks'         => $rental->notes ?? '',
-            'extras'          => [],
+            'pickUpDateTime'             => $pickupDateTime,
+            'returnDateTime'             => $dropoffDateTime,
+            'pickUpLocationCode'         => $pickupBranchCode,
+            'pickUpExtendedLocationCode' => $pickupBranchCode,
+            'returnLocationCode'         => $dropoffBranchCode,
+            'returnExtendedLocationCode' => $dropoffBranchCode,
+            'vehicleGroupPrefAccriss'    => $groupId,
+            'rateCode'                   => $rateCode,
+            'vendorRateID'               => $vendorRateID,
+            'flightNo'                   => $rental->flight_number ?? '',
+            'notes'                      => $rental->notes ?? '',
+            'partnerId'                  => $rental->order_number ?? '',
+            'customerInfo'               => [
+                'customer' => [
+                    'name'  => trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')),
+                    'email' => $customer->email ?? '',
+                    'phone' => $customer->phone_num ?? $customer->phone ?? '',
+                ]
+            ],
         ];
 
         try {
@@ -2164,7 +2191,7 @@ class SupplierIntegrationService
             throw $e;
         }
 
-        $reservationNo = $response['reservationNo'] ?? null;
+        $reservationNo = $response['orderInfo']['id'] ?? null;
         if (!empty($response['error'])) {
              Log::error('Privele reservation creation returned error', [
                  'rental_id' => $rental->id,
@@ -2322,10 +2349,12 @@ class SupplierIntegrationService
         $description = $vehicle->description ?? '';
         
         $groupId = null;
-        if (preg_match('/\[SURPRICE-GROUP-ID:([^|\]]+)\|RATE:([^\]]+)\]/', $description, $m)) {
+        $rateCode = null;
+        if (preg_match('/\[PRIVELE-GROUP-ID:([^|\]]+)\|RATE:([^\]]+)\]/', $description, $m)) {
             $groupId = $m[1];
+            $rateCode = $m[2];
         } else {
-            Log::warning('Privele integration: Could not extract groupId from description for amend', [
+            Log::warning('Privele integration: Could not extract groupId and rateCode from description for amend', [
                 'rental_id'   => $rental->id,
                 'vehicle_id'  => $vehicle->id,
             ]);
@@ -2336,24 +2365,49 @@ class SupplierIntegrationService
         $pickupBranchCode = $branch ? $branch->location_code : null;
         $dropoffBranchCode = $rental->dropoff_branch ? $rental->dropoff_branch->location_code : $pickupBranchCode;
 
+        $pickupDateTime = \Carbon\Carbon::parse($rental->start_date . ' ' . ($rental->start_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
+        $dropoffDateTime = \Carbon\Carbon::parse($rental->end_date . ' ' . ($rental->end_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
+        $driverAge = $rental->customer_age ?? 30;
+
+        $availability = $service->getAvailability($pickupBranchCode, $pickupDateTime, $dropoffDateTime, $driverAge, $rateCode);
+        $vendorRateID = null;
+        if (isset($availability['vehAvails']) && is_array($availability['vehAvails'])) {
+            foreach ($availability['vehAvails'] as $avail) {
+                if (($avail['vehicle']['code'] ?? '') === $groupId) {
+                    $vendorRateID = $avail['rentalDetails'][0]['rentalRate']['rateQualifier']['vendorRateID'] ?? null;
+                    break;
+                }
+            }
+        }
+        
+        if (!$vendorRateID) {
+            throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates.");
+        }
+
         $amendData = [
-            'reservationNo'   => $orderId,
-            'stationCode'     => $pickupBranchCode,
-            'dropoffLocation' => $dropoffBranchCode,
-            'carGroup'        => $groupId,
-            'pickupTime'      => \Carbon\Carbon::parse($rental->pickup_date)->format('Y-m-d\TH:i:s'),
-            'dropoffTime'     => \Carbon\Carbon::parse($rental->dropoff_date)->format('Y-m-d\TH:i:s'),
-            'firstname'       => $customer->first_name,
-            'lastname'        => $customer->last_name,
-            'email'           => $customer->email,
-            'telephone'       => $customer->phone,
-            'flightNumber'    => $rental->flight_number ?? '',
-            'remarks'         => $rental->notes ?? '',
-            'extras'          => [],
+            'pickUpDateTime'             => $pickupDateTime,
+            'returnDateTime'             => $dropoffDateTime,
+            'pickUpLocationCode'         => $pickupBranchCode,
+            'pickUpExtendedLocationCode' => $pickupBranchCode,
+            'returnLocationCode'         => $dropoffBranchCode,
+            'returnExtendedLocationCode' => $dropoffBranchCode,
+            'vehicleGroupPrefAccriss'    => $groupId,
+            'rateCode'                   => $rateCode,
+            'vendorRateID'               => $vendorRateID,
+            'flightNo'                   => $rental->flight_number ?? '',
+            'notes'                      => $rental->notes ?? '',
+            'partnerId'                  => $rental->order_number ?? '',
+            'customerInfo'               => [
+                'customer' => [
+                    'name'  => trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')),
+                    'email' => $customer->email ?? '',
+                    'phone' => $customer->phone_num ?? $customer->phone ?? '',
+                ]
+            ],
         ];
 
         try {
-            $response = $service->amendReservation($amendData);
+            $response = $service->amendReservation($orderId, $amendData);
         } catch (\Exception $e) {
             Log::error('Privele reservation amendment threw exception', [
                 'rental_id' => $rental->id,
@@ -2369,18 +2423,6 @@ class SupplierIntegrationService
              ]);
              $errorMsg = $response['error']['message'] ?? 'Unknown error';
              throw new \Exception("Supplier booking update failed: " . $errorMsg);
-        }
-        
-        if (isset($response['id'])) {
-            $commitResponse = $service->commitReservation($response['id']);
-            if (isset($commitResponse['success']) && $commitResponse['success'] === false) {
-                Log::error('Privele reservation commit failed after amend', [
-                    'rental_id' => $rental->id,
-                    'response'  => $commitResponse,
-                ]);
-                $errorMsg = $commitResponse['error']['message'] ?? 'Unknown error during commit';
-                throw new \Exception("Supplier booking commit failed: " . $errorMsg);
-            }
         }
 
         Log::info('Privele reservation amended successfully', [
@@ -2453,7 +2495,7 @@ class SupplierIntegrationService
             return false;
         }
 
-        $response = $service->cancelReservation($reservationNo);
+        $response = $service->cancelReservation($reservationNo, ['cancellation_reason' => 'cancelled by customer']);
 
         if (!empty($response) && (!isset($response['success']) || $response['success'] !== false)) {
             Log::info('Privele reservation cancelled successfully', [
