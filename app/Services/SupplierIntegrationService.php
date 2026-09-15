@@ -2135,21 +2135,27 @@ class SupplierIntegrationService
             return false;
         }
 
-        $dropoffBranchCode = $rental->dropoff_branch ? $rental->dropoff_branch->location_code : ($branch ? $branch->location_code : null);
-        $pickupBranchCode = $branch ? $branch->location_code : null;
+        $pickupBranchCode = $branch ? $branch->station_id : null;
+        $dropoffBranch = $rental->dropoff_branch;
+        $dropoffBranchCode = $dropoffBranch ? $dropoffBranch->station_id : $pickupBranchCode;
 
-        $pickupDateTime = \Carbon\Carbon::parse($rental->start_date . ' ' . ($rental->start_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
-        $dropoffDateTime = \Carbon\Carbon::parse($rental->end_date . ' ' . ($rental->end_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
+        $startDate = \Carbon\Carbon::parse($rental->getRawOriginal('start_date'))->format('Y-m-d');
+        $startTime = $rental->getRawOriginal('start_time') ?: '10:00:00';
+        $endDate = \Carbon\Carbon::parse($rental->getRawOriginal('end_date'))->format('Y-m-d');
+        $endTime = $rental->getRawOriginal('end_time') ?: '10:00:00';
+        $pickupDateTime = "{$startDate}T{$startTime}";
+        $dropoffDateTime = "{$endDate}T{$endTime}";
         $driverAge = $rental->customer_age ?? 30;
 
         // Fetch availability to get the vendorRateID
         $availability = $service->getAvailability($pickupBranchCode, $pickupDateTime, $dropoffDateTime, $driverAge, $rateCode);
         
         $vendorRateID = null;
-        if (isset($availability['vehAvails']) && is_array($availability['vehAvails'])) {
-            foreach ($availability['vehAvails'] as $avail) {
-                if (($avail['vehicle']['code'] ?? '') === $groupId) {
-                    $vendorRateID = $avail['rentalDetails'][0]['rentalRate']['rateQualifier']['vendorRateID'] ?? null;
+        $offerings = $availability['productOfferings'] ?? [];
+        if (is_array($offerings)) {
+            foreach ($offerings as $offering) {
+                if (($offering['vehicle']['code'] ?? '') === $groupId) {
+                    $vendorRateID = $offering['rentalDetails'][0]['rentalRate']['rateQualifier']['vendorRateID'] ?? null;
                     break;
                 }
             }
@@ -2159,22 +2165,25 @@ class SupplierIntegrationService
             throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates. Please select another vehicle.");
         }
 
+        // Extract extended location codes from availability response
+        $pickupExtCode = $availability['pickupStationInfo']['extendedLocationCode'] ?? $pickupBranchCode;
+        $returnExtCode = $availability['returnStationInfo']['extendedLocationCode'] ?? $dropoffBranchCode;
+
         $reservationData = [
             'pickUpDateTime'             => $pickupDateTime,
             'returnDateTime'             => $dropoffDateTime,
             'pickUpLocationCode'         => $pickupBranchCode,
-            'pickUpExtendedLocationCode' => $pickupBranchCode,
+            'pickUpExtendedLocationCode' => $pickupExtCode,
             'returnLocationCode'         => $dropoffBranchCode,
-            'returnExtendedLocationCode' => $dropoffBranchCode,
+            'returnExtendedLocationCode' => $returnExtCode,
             'vehicleGroupPrefAccriss'    => $groupId,
             'rateCode'                   => $rateCode,
             'vendorRateID'               => $vendorRateID,
             'flightNo'                   => $rental->flight_number ?? '',
             'notes'                      => $rental->notes ?? '',
-            'partnerId'                  => $rental->order_number ?? '',
             'customerInfo'               => [
                 'customer' => [
-                    'name'  => trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')),
+                    'name'  => trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')) ?: ($customer->name ?? 'Customer'),
                     'email' => $customer->email ?? '',
                     'phone' => $customer->phone_num ?? $customer->phone ?? '',
                 ]
@@ -2362,19 +2371,25 @@ class SupplierIntegrationService
         }
 
         $branch = $vehicle->branch;
-        $pickupBranchCode = $branch ? $branch->location_code : null;
-        $dropoffBranchCode = $rental->dropoff_branch ? $rental->dropoff_branch->location_code : $pickupBranchCode;
+        $pickupBranchCode = $branch ? $branch->station_id : null;
+        $dropoffBranch = $rental->dropoff_branch;
+        $dropoffBranchCode = $dropoffBranch ? $dropoffBranch->station_id : $pickupBranchCode;
 
-        $pickupDateTime = \Carbon\Carbon::parse($rental->start_date . ' ' . ($rental->start_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
-        $dropoffDateTime = \Carbon\Carbon::parse($rental->end_date . ' ' . ($rental->end_time ?: '10:00:00'))->format('Y-m-d\TH:i:s\Z');
+        $startDate = \Carbon\Carbon::parse($rental->getRawOriginal('start_date'))->format('Y-m-d');
+        $startTime = $rental->getRawOriginal('start_time') ?: '10:00:00';
+        $endDate = \Carbon\Carbon::parse($rental->getRawOriginal('end_date'))->format('Y-m-d');
+        $endTime = $rental->getRawOriginal('end_time') ?: '10:00:00';
+        $pickupDateTime = "{$startDate}T{$startTime}";
+        $dropoffDateTime = "{$endDate}T{$endTime}";
         $driverAge = $rental->customer_age ?? 30;
 
         $availability = $service->getAvailability($pickupBranchCode, $pickupDateTime, $dropoffDateTime, $driverAge, $rateCode);
         $vendorRateID = null;
-        if (isset($availability['vehAvails']) && is_array($availability['vehAvails'])) {
-            foreach ($availability['vehAvails'] as $avail) {
-                if (($avail['vehicle']['code'] ?? '') === $groupId) {
-                    $vendorRateID = $avail['rentalDetails'][0]['rentalRate']['rateQualifier']['vendorRateID'] ?? null;
+        $offerings = $availability['productOfferings'] ?? [];
+        if (is_array($offerings)) {
+            foreach ($offerings as $offering) {
+                if (($offering['vehicle']['code'] ?? '') === $groupId) {
+                    $vendorRateID = $offering['rentalDetails'][0]['rentalRate']['rateQualifier']['vendorRateID'] ?? null;
                     break;
                 }
             }
@@ -2384,22 +2399,25 @@ class SupplierIntegrationService
             throw new \Exception("Sorry, this vehicle is no longer available on the supplier's end for the requested dates.");
         }
 
+        // Extract extended location codes from availability response
+        $pickupExtCode = $availability['pickupStationInfo']['extendedLocationCode'] ?? $pickupBranchCode;
+        $returnExtCode = $availability['returnStationInfo']['extendedLocationCode'] ?? $dropoffBranchCode;
+
         $amendData = [
             'pickUpDateTime'             => $pickupDateTime,
             'returnDateTime'             => $dropoffDateTime,
             'pickUpLocationCode'         => $pickupBranchCode,
-            'pickUpExtendedLocationCode' => $pickupBranchCode,
+            'pickUpExtendedLocationCode' => $pickupExtCode,
             'returnLocationCode'         => $dropoffBranchCode,
-            'returnExtendedLocationCode' => $dropoffBranchCode,
+            'returnExtendedLocationCode' => $returnExtCode,
             'vehicleGroupPrefAccriss'    => $groupId,
             'rateCode'                   => $rateCode,
             'vendorRateID'               => $vendorRateID,
             'flightNo'                   => $rental->flight_number ?? '',
             'notes'                      => $rental->notes ?? '',
-            'partnerId'                  => $rental->order_number ?? '',
             'customerInfo'               => [
                 'customer' => [
-                    'name'  => trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')),
+                    'name'  => trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')) ?: ($customer->name ?? 'Customer'),
                     'email' => $customer->email ?? '',
                     'phone' => $customer->phone_num ?? $customer->phone ?? '',
                 ]
