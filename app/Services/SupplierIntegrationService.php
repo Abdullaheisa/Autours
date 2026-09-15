@@ -52,6 +52,10 @@ class SupplierIntegrationService
             return $this->sendViaSurprice($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'privele') {
+            return $this->sendViaPrivele($rental, $supplier, $eventType);
+        }
+
         if ($supplier->integration_type === 'wheelsys') {
             return $this->sendViaWheelsys($rental, $supplier, $eventType);
         }
@@ -147,6 +151,10 @@ class SupplierIntegrationService
         }
 
         if ($supplier->integration_type === 'surprice') {
+            return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'privele') {
             return $supplier->integration === true;
         }
 
@@ -611,6 +619,9 @@ class SupplierIntegrationService
         } elseif ($supplier->integration_type === 'surprice') {
             $service = new SurpriceApiService();
             $this->createSurpriceReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'privele') {
+            $service = new PriveleApiService();
+            $this->createPriveleReservation($service, $rental, $supplier);
         } elseif ($supplier->integration_type === 'wheelsys') {
             $service = new WheelsysApiService();
             $this->createWheelsysReservation($service, $rental, $supplier);
@@ -1898,6 +1909,49 @@ class SupplierIntegrationService
     }
 
     /**
+     * Send reservation to Privele API.
+     *
+     * @param Rental $rental
+     * @param User $supplier
+     * @param string $eventType
+     * @return bool
+     */
+    private function sendViaPrivele(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new PriveleApiService();
+
+            switch ($eventType) {
+                case 'new_rental':
+                case 'rental_request':
+                    return $this->createPriveleReservation($service, $rental, $supplier);
+
+                case 'rental_cancelled':
+                    return $this->cancelPriveleReservation($service, $rental, $supplier);
+
+                case 'rental_updated':
+                    if (!empty($rental->external_reservation_no)) {
+                        return $this->amendPriveleReservation($service, $rental, $supplier);
+                    }
+                    return $this->createPriveleReservation($service, $rental, $supplier);
+
+                default:
+                    Log::warning("Privele integration: Unknown event type '{$eventType}'", [
+                        'rental_id' => $rental->id,
+                    ]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Privele integration error for supplier {$supplier->id}", [
+                'event'     => $eventType,
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Create a reservation on the Surprice API.
      *
      * @param SurpriceApiService $service
@@ -2045,6 +2099,105 @@ class SupplierIntegrationService
     }
 
     /**
+     * Create a reservation on the Privele API.
+     *
+     * @param PriveleApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function createPriveleReservation(PriveleApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $branch = $vehicle ? $vehicle->branch : null;
+
+        if (!$vehicle || !$customer) {
+            Log::error('Privele integration: Missing vehicle or customer', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        $description = $vehicle->description ?? '';
+        
+        $groupId = null;
+        $rateCode = null;
+        if (preg_match('/\[SURPRICE-GROUP-ID:([^|\]]+)\|RATE:([^\]]+)\]/', $description, $m)) {
+            $groupId = $m[1];
+            $rateCode = $m[2];
+        } else {
+            Log::warning('Privele integration: Could not extract groupId and rateCode from description', [
+                'rental_id'   => $rental->id,
+                'vehicle_id'  => $vehicle->id,
+                'description' => $description,
+            ]);
+            return false;
+        }
+
+        $dropoffBranchCode = $rental->dropoff_branch ? $rental->dropoff_branch->location_code : ($branch ? $branch->location_code : null);
+        $pickupBranchCode = $branch ? $branch->location_code : null;
+
+        $reservationData = [
+            'stationCode'     => $pickupBranchCode,
+            'dropoffLocation' => $dropoffBranchCode,
+            'rateCode'        => $rateCode,
+            'carGroup'        => $groupId,
+            'pickupTime'      => \Carbon\Carbon::parse($rental->pickup_date)->format('Y-m-d\TH:i:s'),
+            'dropoffTime'     => \Carbon\Carbon::parse($rental->dropoff_date)->format('Y-m-d\TH:i:s'),
+            'firstname'       => $customer->first_name,
+            'lastname'        => $customer->last_name,
+            'email'           => $customer->email,
+            'telephone'       => $customer->phone,
+            'flightNumber'    => $rental->flight_number ?? '',
+            'remarks'         => $rental->notes ?? '',
+            'extras'          => [],
+        ];
+
+        try {
+            $response = $service->createReservation($reservationData);
+        } catch (\Exception $e) {
+            Log::error('Privele reservation creation threw exception', [
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        $reservationNo = $response['reservationNo'] ?? null;
+        if (!empty($response['error'])) {
+             Log::error('Privele reservation creation returned error', [
+                 'rental_id' => $rental->id,
+                 'error'     => $response['error'],
+             ]);
+             $errorMsg = $response['error']['message'] ?? 'Unknown error';
+             throw new \Exception("Supplier booking failed: " . $errorMsg);
+        }
+
+        if (empty($reservationNo)) {
+            Log::error('Privele reservation creation failed (no reservation number)', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+                'response'    => $response,
+            ]);
+            throw new \Exception("Supplier booking failed: No booking reference returned.");
+        }
+
+        $rental->update([
+            'external_reservation_no' => (string) $reservationNo,
+        ]);
+
+        Log::info('Privele reservation created successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+        ]);
+
+        return true;
+    }
+
+    /**
      * Amend a reservation on the Surprice API.
      *
      * @param SurpriceApiService $service
@@ -2146,6 +2299,100 @@ class SupplierIntegrationService
     }
 
     /**
+     * Amend a reservation on the Privele API.
+     *
+     * @param PriveleApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function amendPriveleReservation(PriveleApiService $service, Rental $rental, User $supplier): bool
+    {
+        $vehicle = $rental->vehicle;
+        $customer = $rental->customer;
+        $orderId = $rental->external_reservation_no;
+
+        if (!$vehicle || !$customer || empty($orderId)) {
+            Log::error('Privele integration: Missing vehicle, customer or orderId for amend', [
+                'rental_id' => $rental->id,
+            ]);
+            return false;
+        }
+
+        $description = $vehicle->description ?? '';
+        
+        $groupId = null;
+        if (preg_match('/\[SURPRICE-GROUP-ID:([^|\]]+)\|RATE:([^\]]+)\]/', $description, $m)) {
+            $groupId = $m[1];
+        } else {
+            Log::warning('Privele integration: Could not extract groupId from description for amend', [
+                'rental_id'   => $rental->id,
+                'vehicle_id'  => $vehicle->id,
+            ]);
+            return false;
+        }
+
+        $branch = $vehicle->branch;
+        $pickupBranchCode = $branch ? $branch->location_code : null;
+        $dropoffBranchCode = $rental->dropoff_branch ? $rental->dropoff_branch->location_code : $pickupBranchCode;
+
+        $amendData = [
+            'reservationNo'   => $orderId,
+            'stationCode'     => $pickupBranchCode,
+            'dropoffLocation' => $dropoffBranchCode,
+            'carGroup'        => $groupId,
+            'pickupTime'      => \Carbon\Carbon::parse($rental->pickup_date)->format('Y-m-d\TH:i:s'),
+            'dropoffTime'     => \Carbon\Carbon::parse($rental->dropoff_date)->format('Y-m-d\TH:i:s'),
+            'firstname'       => $customer->first_name,
+            'lastname'        => $customer->last_name,
+            'email'           => $customer->email,
+            'telephone'       => $customer->phone,
+            'flightNumber'    => $rental->flight_number ?? '',
+            'remarks'         => $rental->notes ?? '',
+            'extras'          => [],
+        ];
+
+        try {
+            $response = $service->amendReservation($amendData);
+        } catch (\Exception $e) {
+            Log::error('Privele reservation amendment threw exception', [
+                'rental_id' => $rental->id,
+                'error'     => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        if (isset($response['success']) && $response['success'] === false) {
+             Log::error('Privele reservation amendment returned error', [
+                 'rental_id' => $rental->id,
+                 'response'  => $response,
+             ]);
+             $errorMsg = $response['error']['message'] ?? 'Unknown error';
+             throw new \Exception("Supplier booking update failed: " . $errorMsg);
+        }
+        
+        if (isset($response['id'])) {
+            $commitResponse = $service->commitReservation($response['id']);
+            if (isset($commitResponse['success']) && $commitResponse['success'] === false) {
+                Log::error('Privele reservation commit failed after amend', [
+                    'rental_id' => $rental->id,
+                    'response'  => $commitResponse,
+                ]);
+                $errorMsg = $commitResponse['error']['message'] ?? 'Unknown error during commit';
+                throw new \Exception("Supplier booking commit failed: " . $errorMsg);
+            }
+        }
+
+        Log::info('Privele reservation amended successfully', [
+            'rental_id'      => $rental->id,
+            'order_number'   => $rental->order_number,
+            'reservation_no' => $orderId,
+        ]);
+
+        return true;
+    }
+
+    /**
      * Cancel a reservation on the Surprice API.
      *
      * @param SurpriceApiService $service
@@ -2177,6 +2424,47 @@ class SupplierIntegrationService
         }
 
         Log::error('Surprice reservation cancellation failed', [
+            'rental_id'      => $rental->id,
+            'reservation_no' => $reservationNo,
+            'supplier_id'    => $supplier->id,
+            'response'       => $response,
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Cancel a reservation on the Privele API.
+     *
+     * @param PriveleApiService $service
+     * @param Rental $rental
+     * @param User $supplier
+     * @return bool
+     */
+    private function cancelPriveleReservation(PriveleApiService $service, Rental $rental, User $supplier): bool
+    {
+        $reservationNo = $rental->external_reservation_no;
+
+        if (empty($reservationNo)) {
+            Log::warning('Privele cancellation: No external reservation number found', [
+                'rental_id'   => $rental->id,
+                'supplier_id' => $supplier->id,
+            ]);
+            return false;
+        }
+
+        $response = $service->cancelReservation($reservationNo);
+
+        if (!empty($response) && (!isset($response['success']) || $response['success'] !== false)) {
+            Log::info('Privele reservation cancelled successfully', [
+                'rental_id'      => $rental->id,
+                'reservation_no' => $reservationNo,
+                'supplier_id'    => $supplier->id,
+            ]);
+            return true;
+        }
+
+        Log::error('Privele reservation cancellation failed', [
             'rental_id'      => $rental->id,
             'reservation_no' => $reservationNo,
             'supplier_id'    => $supplier->id,
