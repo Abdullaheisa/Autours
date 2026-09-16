@@ -2140,9 +2140,11 @@ class SupplierIntegrationService
         $dropoffBranchCode = $dropoffBranch ? $dropoffBranch->station_id : $pickupBranchCode;
 
         $startDate = \Carbon\Carbon::parse($rental->getRawOriginal('start_date'))->format('Y-m-d');
-        $startTime = $rental->getRawOriginal('start_time') ?: '10:00:00';
+        $startTimeRaw = $rental->getRawOriginal('start_time') ?: '10:00:00';
+        $startTime = \Carbon\Carbon::parse($startTimeRaw)->format('H:i:s');
         $endDate = \Carbon\Carbon::parse($rental->getRawOriginal('end_date'))->format('Y-m-d');
-        $endTime = $rental->getRawOriginal('end_time') ?: '10:00:00';
+        $endTimeRaw = $rental->getRawOriginal('end_time') ?: '10:00:00';
+        $endTime = \Carbon\Carbon::parse($endTimeRaw)->format('H:i:s');
         $pickupDateTime = "{$startDate}T{$startTime}";
         $dropoffDateTime = "{$endDate}T{$endTime}";
         $driverAge = $rental->customer_age ?? 30;
@@ -2376,9 +2378,11 @@ class SupplierIntegrationService
         $dropoffBranchCode = $dropoffBranch ? $dropoffBranch->station_id : $pickupBranchCode;
 
         $startDate = \Carbon\Carbon::parse($rental->getRawOriginal('start_date'))->format('Y-m-d');
-        $startTime = $rental->getRawOriginal('start_time') ?: '10:00:00';
+        $startTimeRaw = $rental->getRawOriginal('start_time') ?: '10:00:00';
+        $startTime = \Carbon\Carbon::parse($startTimeRaw)->format('H:i:s');
         $endDate = \Carbon\Carbon::parse($rental->getRawOriginal('end_date'))->format('Y-m-d');
-        $endTime = $rental->getRawOriginal('end_time') ?: '10:00:00';
+        $endTimeRaw = $rental->getRawOriginal('end_time') ?: '10:00:00';
+        $endTime = \Carbon\Carbon::parse($endTimeRaw)->format('H:i:s');
         $pickupDateTime = "{$startDate}T{$startTime}";
         $dropoffDateTime = "{$endDate}T{$endTime}";
         $driverAge = $rental->customer_age ?? 30;
