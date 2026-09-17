@@ -41,10 +41,10 @@ class SyncWheelsysBranches extends Command
         $supplierUser = User::firstOrCreate(
             ['email' => 'milva.supe@autowill-rentacar.hr'],
             [
-                'name' => 'Wheelsys',
+                'name' => 'Autowill',
                 'role' => 'active_supplier',
                 'password' => Hash::make('Qrentals@12345'),
-                'company' => 'Wheelsys',
+                'company' => 'Autowill',
             ]
         );
 

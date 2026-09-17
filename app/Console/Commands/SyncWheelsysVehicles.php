@@ -66,10 +66,10 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
         $supplierUser = User::firstOrCreate(
             ['email' => 'milva.supe@autowill-rentacar.hr'],
             [
-                'name' => 'Wheelsys',
+                'name' => 'Autowill',
                 'role' => 'active_supplier',
                 'password' => Hash::make('Qrentals@12345'),
-                'company' => 'Wheelsys',
+                'company' => 'Autowill',
             ]
         );
 
@@ -94,7 +94,7 @@ class SyncWheelsysVehicles extends AbstractVehicleSyncCommand
         // Wheelsys format requires DD/MM/YYYY
         $pickupDateObj = $this->option('pickup-date') 
             ? Carbon::parse($this->option('pickup-date')) 
-            : Carbon::now()->addDay();
+            : Carbon::now()->addDays(10);
 
         $pickupDateStr = $pickupDateObj->format('d/m/Y');
         $dropoffDate1Str = $pickupDateObj->copy()->addDay()->format('d/m/Y');
