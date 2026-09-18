@@ -547,16 +547,14 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           )}
 
           <div className="flex items-end justify-between gap-3 md:gap-4">
-            <div>
-              <span className="text-[10px] md:text-[11px] font-bold text-gray-500 block mb-0.5">for {carData.price.totalDays} days</span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl md:text-3xl font-black text-gray-950 tracking-tight leading-none">
-                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
-                </span>
-                <span className="text-xs md:text-sm font-extrabold text-gray-600 uppercase tracking-wide">
-                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}
-                </span>
+            <div className="text-left">
+              <div className="text-xl md:text-2xl font-bold text-gray-950 tracking-tight leading-none">
+                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
+                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
               </div>
+              <span className="text-sm text-gray-600 font-normal block mt-1.5">
+                Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+              </span>
             </div>
 
             {!hideBookingControls && (
@@ -862,16 +860,14 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             )}
 
             <div className="flex flex-row lg:flex-col items-end lg:items-start justify-between w-full lg:gap-3 mt-auto gap-3">
-              <div className="flex flex-col lg:items-start items-start">
-                <span className="text-[10px] lg:text-[11px] xl:text-xs font-bold text-gray-500 block mb-1">for {carData.price.totalDays} days</span>
-                <div className="flex items-baseline gap-1.5 text-left">
-                  <span className="text-2xl lg:text-3xl xl:text-[2rem] font-black text-gray-950 tracking-tight leading-none">
-                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
-                  </span>
-                  <span className="text-xs lg:text-sm font-extrabold text-gray-600 uppercase tracking-wide">
-                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}
-                  </span>
+              <div className="flex flex-col lg:items-start items-start text-left">
+                <div className="text-2xl lg:text-[26px] font-bold text-gray-950 tracking-tight leading-none">
+                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
+                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
                 </div>
+                <span className="text-sm lg:text-[15px] text-gray-600 font-normal block mt-1.5">
+                  Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+                </span>
               </div>
 
               {!hideBookingControls && (

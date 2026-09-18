@@ -10,16 +10,12 @@ export const formatNumberOnly = (
   locale: string = 'en-US'
 ): string => {
   try {
-    const isThreeDecimal = currency === 'KWD' || currency === 'BHD' || currency === 'OMR' || currency === 'TND' || currency === 'LYD' || currency === 'JOD';
-    const isZeroDecimal = currency === 'JPY' || currency === 'KRW' || currency === 'IDR' || currency === 'CLP' || currency === 'IQD' || currency === 'LBP' || currency === 'SYP' || currency === 'VND';
-    const maxFrac = isThreeDecimal ? 3 : (isZeroDecimal ? 0 : 2);
-
     const numFormatter = new Intl.NumberFormat(locale, {
       minimumFractionDigits: 0,
-      maximumFractionDigits: maxFrac,
+      maximumFractionDigits: 0,
     });
 
-    return numFormatter.format(amount);
+    return numFormatter.format(Math.round(amount));
   } catch (e) {
     return Math.round(amount).toLocaleString();
   }
@@ -40,8 +36,8 @@ export const formatPriceParts = (
 };
 
 /**
- * Formats a price as: [amount] [currency_code]
- * e.g. 250 AED | 1,500 SAR | 0.310 KWD
+ * Formats a price as: [currency_code] [amount]
+ * e.g. KWD 14.12 | AED 250.00 | USD 45.00
  */
 export const formatPrice = (
   amount: number,
@@ -49,7 +45,7 @@ export const formatPrice = (
   locale: string = 'en-US'
 ): string => {
   const formattedNumber = formatNumberOnly(amount, currency, locale);
-  return `${formattedNumber} ${currency}`;
+  return `${(currency || 'USD').toUpperCase()} ${formattedNumber}`;
 };
 
 /**
