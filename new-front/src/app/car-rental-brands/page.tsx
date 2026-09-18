@@ -6,7 +6,6 @@ import Footer from '@/components/shared/layout/Footer';
 import CarRentalBrandsHero from '@/app/car-rental-brands/components/CarRentalBrandsHero';
 import CarRentalCard from '@/app/car-rental-brands/components/CarRentalCard';
 import { SERVER_API_BASE, BACKEND_URL } from '@/config/api';
-import { getStaticCountryCountMap } from '@/data/carRentalBrands';
 export const metadata: Metadata = {
   title: 'All Car Rental Brands | Autours',
   description:
@@ -17,13 +16,14 @@ export const metadata: Metadata = {
 export default async function CarRentalBrandsPage() {
   const res = await fetch(`${SERVER_API_BASE}/get/car-rental-brands`, { next: { revalidate: 60 } });
   const data = res.ok ? await res.json() : { brands: [], stats: { totalBrands: 0, totalCountries: 0, totalBranches: 0 } };
-  // Sort: most countries first → most branches as tiebreaker
-  const countryCountMap = getStaticCountryCountMap();
+  // Sort dynamically based on actual server data: most countries first → most branches as tiebreaker
   const carRentalBrands = (data.brands || []).slice().sort((a: any, b: any) => {
-    const aData = countryCountMap[a.id] ?? { countries: 0, branches: 0 };
-    const bData = countryCountMap[b.id] ?? { countries: 0, branches: 0 };
-    if (bData.countries !== aData.countries) return bData.countries - aData.countries;
-    return bData.branches - aData.branches;
+    const aCountries = a.countriesCount ?? 0;
+    const bCountries = b.countriesCount ?? 0;
+    if (bCountries !== aCountries) return bCountries - aCountries;
+    const aBranches = a.branchesCount ?? 0;
+    const bBranches = b.branchesCount ?? 0;
+    return bBranches - aBranches;
   });
   const { totalBrands, totalCountries, totalBranches } = data.stats || { totalBrands: 0, totalCountries: 0, totalBranches: 0 };
 

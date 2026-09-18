@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { RootState, AppDispatch } from '@/store';
-import { setSearchParams, initiateSearch } from '@/store/slices/searchSlice';
+import { setSearchParams, initiateSearch, resetFilters } from '@/store/slices/searchSlice';
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
 import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
@@ -135,6 +135,7 @@ export default function ResultsSearchBar({
     );
     const pickup = matched ? getLocationPickupValue(matched) : searchParams.location || location.trim();
 
+    dispatch(resetFilters());
     dispatch(setSearchParams({
       location: pickup,
       locationLabel: location.trim(),

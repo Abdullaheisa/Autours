@@ -154,7 +154,22 @@ const searchSlice = createSlice({
       state.currentPage = action.payload;
     },
     resetFilters: (state) => {
-      state.filterParams = initialState.filterParams;
+      state.filterParams = {
+        priceRange: null,
+        category: [],
+        supplier: [],
+        locationType: [],
+        seats: [],
+        doors: [],
+        transmission: [],
+        fuelType: [],
+        airConditioning: null,
+        suitcases: [],
+        paymentType: [],
+        rating: null,
+        sortBy: 'price_low',
+      };
+      state.currentPage = 1;
     },
     resetSearch: () => initialState,
     clearErrors: (state) => {

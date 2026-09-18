@@ -200,48 +200,46 @@ export default function OurFleetPage() {
 
                         </div>
 
-                        {/* ───── RIGHT: Car Photo + Model + Specs — as a box ───── */}
-                        <div className="flex flex-col items-center p-5 sm:p-6 bg-slate-50/60">
+                        {/* ───── RIGHT: Car Photo + Model + Specs ───── */}
+                        <div className="flex flex-col items-center justify-between p-5 sm:p-6 bg-slate-50/50 gap-4">
 
                           {/* Category Badge */}
-                          <span className="self-start bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm mb-3">
-                            {item.category_name}
-                          </span>
+                          <div className="w-full flex items-center justify-start">
+                            <span className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
+                              {item.category_name}
+                            </span>
+                          </div>
 
-                          {/* Inner box containing image + model + specs */}
-                          <div className="bg-[#f8fafc] border border-slate-200/70 rounded-2xl flex flex-col items-center gap-3 p-4 w-full">
-                            {/* Car Image */}
+                          {/* Car Image */}
+                          <div className="w-full flex items-center justify-center py-1">
                             <img
                               src={getCarImageUrl(item.photo)}
                               alt={item.car_name}
-                              className="h-[110px] sm:h-[130px] w-full object-contain hover:scale-105 transition-transform duration-500 drop-shadow-sm"
+                              className="h-[120px] sm:h-[135px] max-w-[90%] object-contain hover:scale-105 transition-transform duration-500 drop-shadow-sm"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = assets.hero.background;
                               }}
                             />
+                          </div>
 
-                            {/* Divider */}
-                            <div className="w-full h-px bg-slate-200/80" />
+                          {/* Model Name */}
+                          <h4 className="text-sm sm:text-base font-black text-slate-900 tracking-tight text-center leading-snug">
+                            {item.car_name}
+                          </h4>
 
-                            {/* Model Name */}
-                            <h4 className="text-sm sm:text-[15px] font-black text-slate-900 tracking-tight text-center leading-snug">
-                              {item.car_name}
-                            </h4>
-
-                            {/* Specs Pills */}
-                            <div className="flex flex-nowrap items-center justify-center gap-1.5 w-full">
-                              <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-sm shrink-0">
-                                <img src={assets.icons.seats} alt="Seats" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] object-contain shrink-0" style={yellowIconStyle} />
-                                <span className="text-[11px] sm:text-xs font-bold text-slate-800 whitespace-nowrap">{seatsText}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-sm shrink-0">
-                                <img src={assets.icons.doors} alt="Doors" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] object-contain shrink-0" style={yellowIconStyle} />
-                                <span className="text-[11px] sm:text-xs font-bold text-slate-800 whitespace-nowrap">{doorsText}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-sm shrink-0">
-                                <img src={assets.icons.bags} alt="Luggage" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] object-contain shrink-0" style={yellowIconStyle} />
-                                <span className="text-[11px] sm:text-xs font-bold text-slate-800 whitespace-nowrap">{luggageText}</span>
-                              </div>
+                          {/* Specs Pills */}
+                          <div className="flex flex-nowrap items-center justify-center gap-1.5 sm:gap-2 w-full">
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-xl px-2.5 py-1.5 shadow-sm shrink-0">
+                              <img src={assets.icons.seats} alt="Seats" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] object-contain shrink-0" style={yellowIconStyle} />
+                              <span className="text-[11px] sm:text-xs font-bold text-slate-800 whitespace-nowrap">{seatsText}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-xl px-2.5 py-1.5 shadow-sm shrink-0">
+                              <img src={assets.icons.doors} alt="Doors" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] object-contain shrink-0" style={yellowIconStyle} />
+                              <span className="text-[11px] sm:text-xs font-bold text-slate-800 whitespace-nowrap">{doorsText}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-xl px-2.5 py-1.5 shadow-sm shrink-0">
+                              <img src={assets.icons.bags} alt="Luggage" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] object-contain shrink-0" style={yellowIconStyle} />
+                              <span className="text-[11px] sm:text-xs font-bold text-slate-800 whitespace-nowrap">{luggageText}</span>
                             </div>
                           </div>
 

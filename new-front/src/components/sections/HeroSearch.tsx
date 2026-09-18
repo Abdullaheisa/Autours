@@ -14,7 +14,7 @@ import { format, differenceInDays } from 'date-fns';
 import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { assets } from '@/config/assets';
 import { RootState, AppDispatch } from '@/store';
-import { setSearchParams } from '@/store/slices/searchSlice';
+import { setSearchParams, resetFilters } from '@/store/slices/searchSlice';
 import { setCurrency } from '@/store/slices/currencySlice';
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { referenceApi } from '@/services/api';
@@ -233,6 +233,7 @@ export default function HeroSearch({
     const finalAge = driverAge25to70 ? 30 : driverAge;
     const activeCurrency = (selectedCountry.currency || currencyCode) as string;
 
+    dispatch(resetFilters());
     dispatch(setSearchParams({
       location: pickup,
       locationLabel: label,

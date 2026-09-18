@@ -154,7 +154,7 @@ function SearchPageContent() {
     }
   }, [buildFilterPayload, dispatch]);
 
-  const lastUrlLocation = useRef<string>('');
+  const lastProcessedUrlSearch = useRef<string>('');
 
   useEffect(() => {
     const location = urlParams.get('location');
@@ -162,44 +162,56 @@ function SearchPageContent() {
     const start = urlParams.get('start');
     const end = urlParams.get('end');
     const supplierParam = urlParams.get('supplier');
+    const st = urlParams.get('st') || '10:00';
+    const et = urlParams.get('et') || '10:00';
 
     if (location && start && end) {
-      // إذا تغيّرت الـ location في الـ URL (بحث جديد في دولة تانية)، نمسح الفلاتر القديمة أولاً
-      if (lastUrlLocation.current && lastUrlLocation.current !== location) {
+      const urlSearchKey = `${location}|${start}|${end}|${st}|${et}`;
+
+      // إذا كان هذا بحثاً جديداً من الـ URL (أو أول تحميل للصفحة):
+      if (lastProcessedUrlSearch.current !== urlSearchKey) {
+        lastProcessedUrlSearch.current = urlSearchKey;
+
+        // تصفير جميع الفلاتر السابقة فوراً لضمان عدم تسريب أي شركة أو فلتر من بحث سابق
         dispatch(resetFilters());
+
+        dispatch(setSearchParams({
+          location,
+          locationLabel: locationLabel || location,
+          dateFrom: start,
+          dateTo: end,
+          startTime: st,
+          endTime: et,
+        }));
+
+        if (supplierParam) {
+          dispatch(setFilterParams({ supplier: [supplierParam] }));
+        }
       }
-      lastUrlLocation.current = location;
-
-      dispatch(setSearchParams({
-        location, locationLabel: locationLabel || location, dateFrom: start, dateTo: end,
-        startTime: urlParams.get('st') || '10:00', endTime: urlParams.get('et') || '10:00',
-      }));
-    }
-
-    if (supplierParam) {
-      dispatch(setFilterParams({ supplier: [supplierParam] }));
     }
   }, [urlParams, dispatch]);
 
-  const lastSearchQuery = useRef<string>('');
+  const lastFetchedSignature = useRef<string>('');
 
   const backendFiltersStr = useMemo(() => {
     return JSON.stringify(filterParams);
   }, [filterParams]);
 
   useEffect(() => {
-    if (searchParams.location && searchParams.dateFrom && searchParams.dateTo) {
-      const currentQuery = `${searchParams.location}|${searchParams.dateFrom}|${searchParams.dateTo}|${searchParams.startTime}|${searchParams.endTime}`;
-      
-      if (lastSearchQuery.current && lastSearchQuery.current !== currentQuery) {
-        lastSearchQuery.current = currentQuery;
-        dispatch(resetFilters());
-        return; // The filter reset will trigger the next run
-      }
-      
-      lastSearchQuery.current = currentQuery;
-      doFetchVehicles();
+    if (!searchParams.location || !searchParams.dateFrom || !searchParams.dateTo) return;
+
+    // حماية: التأكد من تطابق searchParams مع الـ URL لمنع طلبات ببيانات قديمة أثناء الانتقال
+    const urlLoc = urlParams.get('location');
+    if (urlLoc && searchParams.location !== urlLoc) return;
+
+    const querySignature = `${searchParams.location}|${searchParams.dateFrom}|${searchParams.dateTo}|${searchParams.startTime}|${searchParams.endTime}|${backendFiltersStr}|${currencyCode}|${currentPage}|${perPage}`;
+
+    if (lastFetchedSignature.current === querySignature) {
+      return;
     }
+
+    lastFetchedSignature.current = querySignature;
+    doFetchVehicles();
   }, [
     searchParams.location,
     searchParams.dateFrom,
@@ -209,8 +221,9 @@ function SearchPageContent() {
     backendFiltersStr,
     currencyCode,
     currentPage,
+    perPage,
+    urlParams,
     doFetchVehicles,
-    dispatch
   ]);
 
   const handleFilterChange = useCallback(() => {

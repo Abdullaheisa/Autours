@@ -98,16 +98,36 @@ class CarRentalBrandsController extends Controller
 
     public function index()
     {
-        return \Illuminate\Support\Facades\Cache::remember('car_rental_brands_index_v2', 300, function () {
+        return \Illuminate\Support\Facades\Cache::remember('car_rental_brands_index_v3', 300, function () {
             // Get only active suppliers with real data (branches and vehicles)
             $suppliers = $this->getActiveSuppliersWithData();
-            
-            $formatted = $suppliers->map(function ($user) {
-                return $this->resolveBrand($user);
+            $activeSupplierIds = $suppliers->pluck('id')->toArray();
+
+            // Calculate active branches & countries count per supplier dynamically
+            $supplierStats = Branch::whereIn('company_id', $activeSupplierIds)
+                ->where('activation', 1)
+                ->selectRaw('company_id, COUNT(DISTINCT country) as countries_count, COUNT(*) as branches_count')
+                ->groupBy('company_id')
+                ->get()
+                ->keyBy('company_id');
+
+            $formatted = $suppliers->map(function ($user) use ($supplierStats) {
+                $brand = $this->resolveBrand($user);
+                $stat = $supplierStats->get($user->id);
+                $brand['countriesCount'] = $stat ? (int) $stat->countries_count : 0;
+                $brand['branchesCount'] = $stat ? (int) $stat->branches_count : 0;
+                return $brand;
+            });
+
+            // Sort: most countries first -> most branches as tiebreaker
+            $sorted = $formatted->sort(function ($a, $b) {
+                if ($b['countriesCount'] !== $a['countriesCount']) {
+                    return $b['countriesCount'] - $a['countriesCount'];
+                }
+                return $b['branchesCount'] - $a['branchesCount'];
             })->values();
 
             // Calculate global stats dynamically based on filtered suppliers
-            $activeSupplierIds = $suppliers->pluck('id')->toArray();
             $totalBrands = $suppliers->count();
             $totalCountries = Branch::whereIn('company_id', $activeSupplierIds)
                 ->where('activation', 1)
@@ -118,7 +138,7 @@ class CarRentalBrandsController extends Controller
                 ->count();
 
             return [
-                'brands' => $formatted,
+                'brands' => $sorted,
                 'stats' => [
                     'totalBrands' => $totalBrands,
                     'totalCountries' => $totalCountries,
