@@ -27,13 +27,11 @@ export default function CategoriesSection() {
   const [currentCategory, setCurrentCategory] = useState<{
     id?: number;
     name: string;
-    description: string;
     active: boolean;
     existingPhotoUrl: string; 
     photoFile: File | null;   
   }>({ 
     name: "", 
-    description: "",
     active: true, 
     existingPhotoUrl: "", 
     photoFile: null 
@@ -57,7 +55,6 @@ export default function CategoriesSection() {
     setCurrentCategory({ 
       id: category.id, 
       name: category.name,
-      description: category.description || "",
       active: category.active !== undefined ? category.active : true,
       existingPhotoUrl: fullPhotoUrl,
       photoFile: null 
@@ -92,15 +89,9 @@ export default function CategoriesSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (currentCategory.description.length > 1000) {
-      toast.error("Description is too long! (Max 1000 characters)");
-      return;
-    }
 
     const payloadData = {
       name: currentCategory.name,
-      description: currentCategory.description,
       photoFile: currentCategory.photoFile 
     };
 
@@ -124,7 +115,7 @@ export default function CategoriesSection() {
   };
 
   const resetForm = () => {
-    setCurrentCategory({ name: "", description: "", active: true, existingPhotoUrl: "", photoFile: null });
+    setCurrentCategory({ name: "", active: true, existingPhotoUrl: "", photoFile: null });
     setIsEditing(false);
   };
 
@@ -168,28 +159,10 @@ export default function CategoriesSection() {
                 required
               />
             </div>
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Description</label>
-                <span className={`text-xs font-bold ${currentCategory.description.length > 1000 ? 'text-red-500 font-extrabold' : 'text-gray-400'}`}>
-                  {currentCategory.description.length} / 1000 chars
-                </span>
-              </div>
-              <textarea 
-                value={currentCategory.description}
-                onChange={(e) => setCurrentCategory(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all min-h-[120px] resize-y"
-                placeholder="Write a description for this category..."
-              />
-              {currentCategory.description.length > 1000 && (
-                <p className="text-xs text-red-500 font-bold mt-1.5">Description cannot exceed 1000 characters.</p>
-              )}
-            </div>
             <div className="flex gap-2 pt-2">
               <button 
                 type="submit"
-                disabled={currentCategory.description.length > 1000}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-100"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-100"
               >
                 <Save size={18} />
                 {isEditing ? "Update" : "Save"}

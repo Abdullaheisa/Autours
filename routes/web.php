@@ -221,6 +221,8 @@ Route::inertia('index', 'Dashboard/Index')->middleware('admin_or_supplier');
 Route::inertia('suppliers', 'Dashboard/Suppliers');
 
 Route::get('get/categories', [VehicleController::class, 'getCategories']);
+Route::get('get/fleet', [\App\Http\Controllers\FleetVehicleController::class, 'index']);
+Route::get('api/fleet', [\App\Http\Controllers\FleetVehicleController::class, 'index']);
 Route::get('get/specifications', [SpecificationsController::class, 'index']);
 Route::post('get/filtered/specifications', [VehicleController::class, 'getFilteredSpecifications']);
 

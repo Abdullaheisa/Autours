@@ -232,6 +232,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
     Route::post('/background-settings/{id}', [\App\Http\Controllers\BackgroundSettingsController::class, 'update']);
     Route::post('/background-settings/{id}/reset', [\App\Http\Controllers\BackgroundSettingsController::class, 'resetToDefault']);
 
+    // Fleet Vehicles
+    Route::get('/fleet', [\App\Http\Controllers\FleetVehicleController::class, 'index']);
+    Route::post('/fleet', [\App\Http\Controllers\FleetVehicleController::class, 'store']);
+    Route::post('/fleet/{id}', [\App\Http\Controllers\FleetVehicleController::class, 'update']);
+    Route::put('/fleet/{id}', [\App\Http\Controllers\FleetVehicleController::class, 'update']);
+    Route::delete('/fleet/{id}', [\App\Http\Controllers\FleetVehicleController::class, 'destroy']);
+    Route::patch('/fleet/{id}/toggle', [\App\Http\Controllers\FleetVehicleController::class, 'toggleActive']);
+
     // Company & Requests
     Route::post('/impersonate/{userId}', [\App\Http\Controllers\Api\AuthController::class, 'impersonate']);
     Route::get('/get/companies', [\App\Http\Controllers\UserController::class, 'Companies']);
@@ -394,6 +402,14 @@ Route::get('get/currencies', [\App\Http\Controllers\CurrencyController::class, '
 Route::get('get/fuel-policies', [\App\Http\Controllers\FuelPolicyController::class, 'index']);
 Route::get('get/included', [\App\Http\Controllers\IncludedController::class, 'index']);
 Route::post('send-email', [\App\Http\Controllers\SubscriberController::class, 'sendEmail']);
+
+// Fleet Vehicles (Public & Fallback)
+Route::get('get/fleet', [\App\Http\Controllers\FleetVehicleController::class, 'index']);
+Route::get('/fleet', [\App\Http\Controllers\FleetVehicleController::class, 'index']);
+Route::post('/fleet', [\App\Http\Controllers\FleetVehicleController::class, 'store']);
+Route::post('/fleet/{id}', [\App\Http\Controllers\FleetVehicleController::class, 'update']);
+Route::delete('/fleet/{id}', [\App\Http\Controllers\FleetVehicleController::class, 'destroy']);
+Route::patch('/fleet/{id}/toggle', [\App\Http\Controllers\FleetVehicleController::class, 'toggleActive']);
 
 // Rating / Reviews
 Route::get('/get/rating/questions', [\App\Http\Controllers\RatesController::class, 'index']);

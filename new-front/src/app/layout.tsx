@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 
-import { Tajawal } from "next/font/google";
+import { Inter, Tajawal } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import "./globals.css";
 import StoreProvider from "@/components/shared/StoreProvider";
 import RootLayoutContent from "@/components/shared/layout/RootLayoutContent";
 import { siteConfig } from "@/config/site";
 
-// 🔢 خط Tajawal للأرقام فقط - يتطبق تلقائياً على كل الأرقام في المشروع
+// 🔤 Inter للإنجليزية والأرقام - خط حديث وفائق الوضوح والأناقة للأرقام
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+// 🔤 Tajawal للنصوص واللغة العربية
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
   variable: "--font-tajawal",
@@ -68,7 +76,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${tajawal.variable} antialiased font-sans`}>
+      <body className={`${inter.variable} ${tajawal.variable} antialiased font-sans`}>
         <Script id="meta-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)

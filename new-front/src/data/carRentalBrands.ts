@@ -621,3 +621,24 @@ export function getBrandCountry(brandSlug: string, countrySlug: string): BrandCo
 export function getTotalBranches(country: BrandCountry): number {
   return country.airportBranches.length + country.cityBranches.length;
 }
+
+/**
+ * Returns a map of brand slug → { countries, branches } from the static data.
+ * Used to sort brands on the listing page:
+ *   1. By number of countries (descending)
+ *   2. Then by total number of branches (descending) as a tiebreaker
+ */
+export function getStaticCountryCountMap(): Record<string, { countries: number; branches: number }> {
+  return Object.fromEntries(
+    carRentalBrands.map((b) => [
+      b.id,
+      {
+        countries: b.countries.length,
+        branches: b.countries.reduce(
+          (sum, c) => sum + c.airportBranches.length + c.cityBranches.length,
+          0
+        ),
+      },
+    ])
+  );
+}

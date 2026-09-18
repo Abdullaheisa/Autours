@@ -154,6 +154,8 @@ function SearchPageContent() {
     }
   }, [buildFilterPayload, dispatch]);
 
+  const lastUrlLocation = useRef<string>('');
+
   useEffect(() => {
     const location = urlParams.get('location');
     const locationLabel = urlParams.get('locationLabel');
@@ -162,6 +164,12 @@ function SearchPageContent() {
     const supplierParam = urlParams.get('supplier');
 
     if (location && start && end) {
+      // إذا تغيّرت الـ location في الـ URL (بحث جديد في دولة تانية)، نمسح الفلاتر القديمة أولاً
+      if (lastUrlLocation.current && lastUrlLocation.current !== location) {
+        dispatch(resetFilters());
+      }
+      lastUrlLocation.current = location;
+
       dispatch(setSearchParams({
         location, locationLabel: locationLabel || location, dateFrom: start, dateTo: end,
         startTime: urlParams.get('st') || '10:00', endTime: urlParams.get('et') || '10:00',

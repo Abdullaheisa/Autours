@@ -42,6 +42,7 @@ const DEFAULT_COUNTRY: WorldCountry = {
 };
 
 const TRUST_BADGES = [
+  'Instant Confirmation',
   'Free Cancelation',
   'Free Amendment',
   'No Credit Card Fees',
@@ -319,7 +320,7 @@ export default function HeroSearch({
                   }}
                   onFocus={() => location.length > 0 && setShowLocations(true)}
                   placeholder="Enter airport, city or location"
-                  className="w-full pr-3 text-xs sm:text-sm md:text-[15px] font-extrabold text-gray-900 placeholder:text-gray-400 placeholder:font-medium outline-none bg-transparent"
+                  className="w-full pr-3 text-sm sm:text-base md:text-[16px] font-bold text-gray-900 placeholder:text-gray-400 placeholder:font-semibold outline-none bg-transparent"
                 />
                 {location ? (
                   <button
@@ -405,18 +406,18 @@ export default function HeroSearch({
                     setShowEndTime(false);
                     if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                   }}
-                  className={`w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 transition-all px-3.5 sm:px-4 flex items-center justify-between text-left shadow-xs cursor-pointer ${
+                  className={`relative w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 transition-all px-3.5 sm:px-4 flex items-center justify-center text-center shadow-xs cursor-pointer group ${
                     errors.dates 
                       ? 'border-red-400 ring-4 ring-red-400/20' 
                       : 'border-white hover:border-[#f9d602]'
                   }`}
                 >
-                  <span className={`text-xs sm:text-sm font-extrabold truncate ${
+                  <span className={`w-full text-center text-sm sm:text-base md:text-[16px] font-bold select-none -translate-x-2.5 sm:-translate-x-3 truncate ${
                     startDate ? 'text-gray-900' : 'text-gray-400'
                   }`}>
                     {startDate ? format(startDate, 'dd/MM/yyyy') : 'From'}
                   </span>
-                  <Calendar size={17} className="text-gray-400 shrink-0" />
+                  <Calendar size={18} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>
               </div>
 
@@ -434,10 +435,10 @@ export default function HeroSearch({
                   }}
                   className="relative w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all flex items-center justify-center shadow-xs cursor-pointer group"
                 >
-                  <span className="w-full text-center text-xs sm:text-sm font-extrabold text-gray-900 select-none -translate-x-2.5 sm:-translate-x-3">
+                  <span className="w-full text-center text-sm sm:text-base md:text-[16px] font-bold text-gray-900 select-none -translate-x-2.5 sm:-translate-x-3">
                     {startTime}
                   </span>
-                  <Clock size={16} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Clock size={17} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>
 
                 {showStartTime && (
@@ -450,8 +451,8 @@ export default function HeroSearch({
                           setStartTime(time);
                           setShowStartTime(false);
                         }}
-                        className={`w-full px-3.5 py-2 text-center text-xs font-extrabold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
-                          startTime === time ? 'bg-[#f9d602] text-gray-950 font-black' : 'text-gray-700'
+                        className={`w-full px-3.5 py-2 text-center text-xs font-bold hover:bg-[#f9d602]/20 transition-all cursor-pointer ${
+                          startTime === time ? 'bg-[#f9d602] text-gray-950 font-extrabold' : 'text-gray-700'
                         }`}
                       >
                         {time}
@@ -474,18 +475,18 @@ export default function HeroSearch({
                     setShowEndTime(false);
                     if (errors.dates) setErrors(prev => ({ ...prev, dates: undefined }));
                   }}
-                  className={`w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 transition-all px-3.5 sm:px-4 flex items-center justify-between text-left shadow-xs cursor-pointer ${
+                  className={`relative w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 transition-all px-3.5 sm:px-4 flex items-center justify-center text-center shadow-xs cursor-pointer group ${
                     errors.dates 
                       ? 'border-red-400 ring-4 ring-red-400/20' 
                       : 'border-white hover:border-[#f9d602]'
                   }`}
                 >
-                  <span className={`text-xs sm:text-sm font-extrabold truncate ${
+                  <span className={`w-full text-center text-sm sm:text-base md:text-[16px] font-bold select-none -translate-x-2.5 sm:-translate-x-3 truncate ${
                     endDate ? 'text-gray-900' : 'text-gray-400'
                   }`}>
                     {endDate ? format(endDate, 'dd/MM/yyyy') : 'To'}
                   </span>
-                  <Calendar size={17} className="text-gray-400 shrink-0" />
+                  <Calendar size={18} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>
               </div>
 
@@ -503,10 +504,10 @@ export default function HeroSearch({
                   }}
                   className="relative w-full h-11 sm:h-12 md:h-12.5 bg-white rounded-xl sm:rounded-2xl border-2 border-white hover:border-[#f9d602] transition-all flex items-center justify-center shadow-xs cursor-pointer group"
                 >
-                  <span className="w-full text-center text-xs sm:text-sm font-extrabold text-gray-900 select-none -translate-x-2.5 sm:-translate-x-3">
+                  <span className="w-full text-center text-sm sm:text-base md:text-[16px] font-bold text-gray-900 select-none -translate-x-2.5 sm:-translate-x-3">
                     {endTime}
                   </span>
-                  <Clock size={16} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Clock size={17} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>
 
                 {showEndTime && (
@@ -719,22 +720,30 @@ export default function HeroSearch({
             </div>
 
             {/* 5. Trust Badges */}
-            <div className="pt-3.5 border-t border-white/15 flex flex-wrap items-center justify-center gap-y-2.5">
-              {TRUST_BADGES.map((text, i) => (
-                <div key={i} className="flex items-center">
-                  <div className="flex items-center gap-2 px-2.5 sm:px-3.5 md:px-4 text-white drop-shadow-sm">
-                    <div className="w-4.5 h-4.5 rounded-full bg-[#f9d602] flex items-center justify-center shrink-0 shadow-xs">
-                      <Check size={11} strokeWidth={3.5} className="text-gray-950" />
+            <div className="pt-3.5 border-t border-white/15 grid grid-cols-2 lg:flex lg:flex-nowrap lg:items-center lg:justify-center gap-y-2 gap-x-1 sm:gap-x-3 md:gap-x-4 lg:gap-2 px-0.5">
+              {TRUST_BADGES.map((text, i) => {
+                const isLastAndOdd = TRUST_BADGES.length % 2 !== 0 && i === TRUST_BADGES.length - 1;
+                return (
+                  <div
+                    key={i}
+                    className={`flex items-center ${
+                      isLastAndOdd ? 'col-span-2 justify-center' : 'justify-center'
+                    } lg:col-auto lg:shrink-0`}
+                  >
+                    <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-0.5 sm:px-1.5 md:px-2 text-white drop-shadow-sm">
+                      <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5 rounded-full bg-[#f9d602] flex items-center justify-center shrink-0 shadow-xs">
+                        <Check size={9} strokeWidth={3.5} className="text-gray-950 sm:size-[10px] md:size-[11px]" />
+                      </div>
+                      <span className="text-[10.5px] min-[380px]:text-[11px] sm:text-xs md:text-[12.5px] lg:text-[13px] xl:text-[13.5px] font-black tracking-tight whitespace-nowrap">
+                        {text}
+                      </span>
                     </div>
-                    <span className="text-xs sm:text-sm font-extrabold tracking-tight whitespace-nowrap">
-                      {text}
-                    </span>
+                    {i < TRUST_BADGES.length - 1 && (
+                      <div className="hidden lg:block h-3.5 w-px bg-white/25 shrink-0 ml-1.5 lg:ml-2.5" />
+                    )}
                   </div>
-                  {i < TRUST_BADGES.length - 1 && (
-                    <div className="hidden md:block h-3.5 w-px bg-white/25" />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
           </form>

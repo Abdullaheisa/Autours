@@ -68,6 +68,15 @@ export const categoryApi = {
   delete: (id: number) => apiClient.post("/api/admin/delete/categories", { id }),
 };
 
+// Fleet Vehicles API
+export const fleetApi = {
+  getAll: (params?: { active_only?: boolean }) => apiClient.get("/get/fleet", { params }),
+  create: (data: unknown) => apiClient.post("/api/admin/fleet", data),
+  update: (id: number, data: unknown) => apiClient.post(`/api/admin/fleet/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/api/admin/fleet/${id}`),
+  toggleActive: (id: number) => apiClient.patch(`/api/admin/fleet/${id}/toggle`, {}),
+};
+
 // Notification API
 export const notificationApi = {
   getAll: () => apiClient.get("/notifications"),

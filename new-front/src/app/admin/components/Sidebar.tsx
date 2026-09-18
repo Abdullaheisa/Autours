@@ -61,6 +61,7 @@ const adminSidebarStructure: SidebarEntry[] = [
       { id: "vehicles", label: "Vehicles Photos", icon: "Car" },
       { id: "bulk", label: "Vehicles Bulk Upload", icon: "Upload" },
       { id: "categories", label: "Categories", icon: "Grid3X3" },
+      { id: "fleet", label: "Our Fleet", icon: "Car" },
       { id: "specs", label: "Specifications", icon: "Settings2" },
     ]
   },

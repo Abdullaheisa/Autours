@@ -18,3 +18,4 @@ export { default as SubscribersSection } from "./subscribers/SubscribersSection"
 export { default as BackgroundSettingsSection } from "./background-settings/BackgroundSettingsSection";
 export { default as LogoutSection } from "./logout/LogoutSection";
 export { default as PromosSection } from "./promos/PromosSection";
+export { default as FleetSection } from "./fleet/FleetSection";

@@ -64,7 +64,7 @@ export default function CalendarRangePicker({
     }
 
     if ((tempStart && isSameDay(dayDate, tempStart)) || (tempEnd && isSameDay(dayDate, tempEnd))) {
-      classes += 'bg-[#f9d602] text-gray-950 rounded-xl font-black shadow-xs';
+      classes += 'bg-[#f9d602] text-gray-950 rounded-xl font-bold shadow-xs';
       return classes;
     }
 
@@ -79,7 +79,7 @@ export default function CalendarRangePicker({
     }
 
     if (isToday(dayDate)) {
-      classes += 'text-[#d4a000] font-black ring-2 ring-[#f9d602] rounded-xl';
+      classes += 'text-[#d4a000] font-bold ring-2 ring-[#f9d602] rounded-xl';
       return classes;
     }
 
@@ -134,7 +134,7 @@ export default function CalendarRangePicker({
             <div className="w-8" />
           )}
 
-          <span className="font-black text-gray-900 text-sm sm:text-base tracking-tight">
+          <span className="font-bold text-gray-900 text-sm sm:text-base tracking-tight">
             {monthName} {monthYear}
           </span>
 
@@ -154,7 +154,7 @@ export default function CalendarRangePicker({
         {/* Weekday Headers */}
         <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-            <div key={i} className="text-[11px] sm:text-xs font-black text-gray-400 h-6 flex items-center justify-center">
+            <div key={i} className="text-[11px] sm:text-xs font-bold text-gray-400 h-6 flex items-center justify-center">
               {d}
             </div>
           ))}

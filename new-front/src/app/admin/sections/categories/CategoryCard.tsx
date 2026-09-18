@@ -74,13 +74,6 @@ export default function CategoryCard({ category, onEdit, onDelete }: CategoryCar
             <h3 className="text-lg font-bold text-white">{category.name}</h3>
           </div>
         </div>
-        {category.description && (
-          <div className="p-4 border-b border-gray-100">
-            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed" title={category.description}>
-              {category.description}
-            </p>
-          </div>
-        )}
       </div>
       <div className="p-4 flex items-center justify-between bg-gray-50/50">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${category.active ? "bg-emerald-100 text-emerald-700" : "bg-gray-200 text-gray-600"}`}>

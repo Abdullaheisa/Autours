@@ -29,9 +29,9 @@ const config: Config = {
         '3xl': '1400px',
       },
       fontFamily: {
-        sans: ["TajawalNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
-        title: ["TajawalNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
-        body: ["TajawalNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
+        sans: ["AppNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
+        title: ["AppNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
+        body: ["AppNumbers", "-apple-system", "system-ui", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "var(--font-tajawal)", "sans-serif"],
         arabic: ["var(--font-tajawal)", "system-ui", "sans-serif"],
       },
     },
