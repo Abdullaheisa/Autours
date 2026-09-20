@@ -52,8 +52,11 @@ export const vehicleMapper = {
       transmission: specMap['transmission'] || specMap['gear'] || raw.transmission || 'Automatic',
       fuelType: specMap['fuel'] || raw.fuel_type || raw.fuelType || 'Petrol',
       seats: parseInt(specMap['number of seats'] || specMap['seats']) || raw.seats || 5,
-      doors: parseInt(specMap['doors']) || raw.doors || 4,
-      suitcases: specMap['suitcase'] || specMap['suitcases'] || specMap['luggage'] || raw.suitcases || '',
+      suitcases: (() => {
+        const val = specMap['suitcase'] || specMap['suitcases'] || specMap['luggage'] || specMap['number of luggages'] || raw.suitcases || '';
+        if (!val || val === '0' || val === 0) return 'Medium';
+        return val;
+      })(),
       ac: specMap['air conditioner'] === 'Air Conditioning' || specMap['air conditioner'] === 'Yes' || !!(raw.ac),
       baseCurrency: branch.currency || 'AED',
       supplier: {

@@ -99,6 +99,19 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   const { code: currencyCode, allRates } = useSelector((state: RootState) => state.currency);
   const { filteredSuppliers, fetchedCurrency } = useSelector((state: RootState) => state.search);
 
+  const formatSpecDisplay = (val: any, label: string) => {
+    const sVal = String(val ?? '').trim();
+    if (!label) return sVal;
+    if (!sVal || sVal === '0' || sVal === 'N/A') {
+      if (label.toLowerCase().includes('suitcase') || label.toLowerCase().includes('bag')) {
+        return `Medium ${label}`;
+      }
+      return label;
+    }
+    if (sVal.toLowerCase().includes(label.toLowerCase())) return sVal;
+    return `${sVal} ${label}`;
+  };
+
   const getSpec = (name: string) => {
     const safeString = (val: any) => {
       if (val === null || val === undefined) return null;
@@ -111,11 +124,14 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     const specItem = (vehicle.specifications as any[])?.find((s: any) => {
       const sName = s.name?.toLowerCase() || '';
       const target = name.toLowerCase();
+      const isAc = (target.includes('air') || target.includes('ac')) && (sName.includes('air') || sName.includes('ac'));
+      const isLuggage = (target.includes('bag') || target.includes('luggage') || target.includes('suitcase')) &&
+                        (sName.includes('bag') || sName.includes('luggage') || sName.includes('suitcase'));
       return (
         sName.includes(target) ||
         target.includes(sName) ||
-        (target.includes('air') && sName.includes('air')) ||
-        (target.includes('ac') && (sName.includes('ac') || sName.includes('air')))
+        isAc ||
+        isLuggage
       );
     });
 
@@ -143,7 +159,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       else if (key.includes('fuel')) {
         result = t.fuelType ?? t.fuel_type ?? t.fuel ?? t.engine_type ?? t.fuel_policy;
       }
-      else if (key.includes('luggage') || key.includes('bag')) {
+      else if (key.includes('luggage') || key.includes('bag') || key.includes('suitcase')) {
         result = t.luggage ?? t.bags ?? t.baggage ?? t.suitcases ?? t.luggage_capacity ?? t.suitcasesCount;
       }
       else if (key.includes('air conditioning') || key.includes('ac')) {
@@ -226,7 +242,15 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       fuelType: getSpec('fuel'),
       seats: getSpec('seats'),
       doors: getSpec('doors'),
-      suitcases: getSpec('bags') !== 'N/A' ? getSpec('bags') : getSpec('luggage'),
+      suitcases: (() => {
+        const s = getSpec('suitcase') !== 'N/A'
+          ? getSpec('suitcase')
+          : (getSpec('bags') !== 'N/A' ? getSpec('bags') : getSpec('luggage'));
+        if (!s || s === '0' || s === 0 || s === 'N/A') {
+          return (vehicle as any)?.suitcases || 'Medium';
+        }
+        return s;
+      })(),
       ac: getSpec('air conditioning') !== 'No' ? 'Air Conditioning' : 'No A/C',
       supplier: {
         name: supplierName.toString().trim(),
@@ -378,7 +402,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div key={i} className="flex flex-col items-center gap-1 bg-gray-50 rounded-lg py-2 md:py-2.5">
                 <img src={feat.icon} alt="" className={` object-contain shrink-0 text-center  ${(i + 1) % 2 !== 0 ? 'w-7 h-7' : 'w-6 h-6'}`} aria-hidden="true" />
                 <span className="text-[11px] md:text-[9px] font-semibold text-center text-gray-700">
-                  {feat.val} {feat.label}
+                  {formatSpecDisplay(feat.val, feat.label)}
                 </span>
               </div>
             ))}
@@ -696,7 +720,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     className="flex items-center gap-2 w-full min-w-0"
                   >
                     <img src={feat.icon} alt="" className={`object-contain shrink-0 ${(i + 1) % 2 !== 0 ? 'w-8 h-8' : 'w-6 h-6'}`} aria-hidden="true" />
-                    <span className="text-xs xl:text-sm font-semibold lg:font-bold text-gray-700 truncate">{feat.val} {feat.label}</span>
+                    <span className="text-xs xl:text-sm font-semibold lg:font-bold text-gray-700 truncate">{formatSpecDisplay(feat.val, feat.label)}</span>
                   </div>
                 ))}
               </div>

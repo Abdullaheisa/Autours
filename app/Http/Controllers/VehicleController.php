@@ -176,7 +176,24 @@ class VehicleController extends Controller
                             if ($specification['name'] === 'Air Conditioner' && in_array('Air Conditioning', $options)) {
                                 $options = array_unique(array_merge($options, ['Yes', 'Air Conditioning']));
                             }
-                            $q->where('name', $specification['name'])
+                            if ($specification['name'] === 'Suitcase') {
+                                if (in_array('Large', $options) || in_array('large', $options)) {
+                                    $options = array_unique(array_merge($options, ['Large', 'large']));
+                                }
+                            }
+
+                            $specNames = [$specification['name']];
+                            if ($specification['name'] === 'Suitcase') {
+                                $specNames = ['Suitcase', 'Number of Luggages'];
+                            } elseif ($specification['name'] === 'Doors') {
+                                $specNames = ['Doors', 'Number of Doors'];
+                            } elseif ($specification['name'] === 'Number of seats') {
+                                $specNames = ['Number of seats', 'Number of Adults'];
+                            } elseif ($specification['name'] === 'Fuel') {
+                                $specNames = ['Fuel', 'Fuel Type'];
+                            }
+
+                            $q->whereIn('name', $specNames)
                               ->whereIn('value', $options);
                         });
                     }

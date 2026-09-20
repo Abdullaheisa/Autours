@@ -104,11 +104,14 @@ export default function ChatCarCard({
     const specItem = (vehicle.specifications as any[])?.find((s: any) => {
       const sName = s.name?.toLowerCase() || '';
       const target = name.toLowerCase();
+      const isAc = (target.includes('air') || target.includes('ac')) && (sName.includes('air') || sName.includes('ac'));
+      const isLuggage = (target.includes('bag') || target.includes('luggage') || target.includes('suitcase')) &&
+                        (sName.includes('bag') || sName.includes('luggage') || sName.includes('suitcase'));
       return (
         sName.includes(target) ||
         target.includes(sName) ||
-        (target.includes('air') && sName.includes('air')) ||
-        (target.includes('ac') && (sName.includes('ac') || sName.includes('air')))
+        isAc ||
+        isLuggage
       );
     });
 
@@ -158,10 +161,15 @@ export default function ChatCarCard({
     ? (String(rawDoors).toLowerCase().includes('door') ? rawDoors : `${rawDoors} Doors`)
     : (vehicle.doors ? `${vehicle.doors} Doors` : '5 Doors');
 
-  const rawSuitcase = getSpec('suitcase');
-  const suitcases = rawSuitcase !== 'N/A'
+  const rawSuitcase = getSpec('suitcase') !== 'N/A'
+    ? getSpec('suitcase')
+    : (getSpec('bags') !== 'N/A' ? getSpec('bags') : getSpec('luggage'));
+  const validSuitcase = (rawSuitcase && rawSuitcase !== '0' && rawSuitcase !== 0 && rawSuitcase !== 'N/A')
     ? rawSuitcase
-    : (vehicle.suitcases || 'Small Suitcase');
+    : (vehicle.suitcases || 'Medium');
+  const suitcases = String(validSuitcase).toLowerCase().includes('suitcase') || String(validSuitcase).toLowerCase().includes('bag')
+    ? validSuitcase
+    : `${validSuitcase} Suitcase`;
 
   const rawAc = getSpec('ac');
   const acText = rawAc !== 'N/A' ? rawAc : (vehicle.ac !== false ? 'Air Conditioning' : 'No A/C');

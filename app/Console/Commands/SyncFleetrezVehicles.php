@@ -221,7 +221,7 @@ class SyncFleetrezVehicles extends Command
             $this->createdCount++;
         }
 
-        $this->syncSpecifications($vehicle->id, $car, $transValue);
+        $this->syncSpecifications($vehicle->id, $car, $transValue, $categoryId);
         $this->syncIncluded($vehicle->id, $car, $supplierUserId);
     }
 
@@ -280,7 +280,23 @@ class SyncFleetrezVehicles extends Command
         return 'Manual';
     }
 
-    private function syncSpecifications(int $vehicleId, array $car, string $transValue = 'Manual'): void
+    private function normalizeTransmission(string $acriss, array $attributes): string
+    {
+        foreach ($attributes as $attr) {
+            $key = strtolower($attr['attribute'] ?? '');
+            $val = strtolower($attr['value'] ?? '');
+            if (str_contains($key, 'trans') || str_contains($key, 'gear')) {
+                if (str_contains($val, 'auto')) return 'Automatic';
+                if (str_contains($val, 'manual')) return 'Manual';
+            }
+        }
+
+        $transChar = strtoupper(substr($acriss, 2, 1));
+        if ($transChar === 'A') return 'Automatic';
+        return 'Manual';
+    }
+
+    private function syncSpecifications(int $vehicleId, array $car, string $transValue = 'Manual', int $categoryId = 3): void
     {
         $specsToAttach = [];
 
@@ -300,23 +316,52 @@ class SyncFleetrezVehicles extends Command
 
         $seats = (int)($car['adult'] ?? 5) + (int)($car['child'] ?? 0) + (int)($car['infant'] ?? 0);
         $seats = $seats > 0 ? (string)$seats : '5';
-        $baggage = (string)((int)($car['largeBag'] ?? 0) + (int)($car['mediumBag'] ?? 0) + (int)($car['smallBag'] ?? 0));
+
+        $rawBaggage = (int)($car['largeBag'] ?? 0) + (int)($car['mediumBag'] ?? 0) + (int)($car['smallBag'] ?? 0);
+        if ($rawBaggage <= 0) {
+            if ($categoryId === 12 || $categoryId === 5) {
+                $suitValue = 'Small';
+                $baggage = '1';
+            } elseif ($categoryId === 3) {
+                $suitValue = 'Medium';
+                $baggage = '2';
+            } elseif (in_array($categoryId, [4, 6, 7, 8, 9, 10])) {
+                $suitValue = 'Large';
+                $baggage = '3';
+            } else {
+                $suitValue = 'Medium';
+                $baggage = '2';
+            }
+        } else {
+            $baggage = (string) $rawBaggage;
+            if ($rawBaggage <= 1) {
+                $suitValue = 'Small';
+            } elseif ($rawBaggage <= 3) {
+                $suitValue = 'Medium';
+            } else {
+                $suitValue = 'Large';
+            }
+        }
 
         if ($trans === 'Automatic' || stripos($trans, 'Auto') !== false) {
-            $specsToAttach[] = ['name' => 'Transmission', 'value' => 'Automatic', 'icon' => 'las la-cogs'];
+            $specsToAttach[] = ['name' => 'Transmission', 'value' => 'Automatic', 'icon' => 'Settings2'];
             $specsToAttach[] = ['name' => 'Automatic', 'value' => 'Yes', 'icon' => 'las la-cogs'];
             $specsToAttach[] = ['name' => 'Manual', 'value' => 'No', 'icon' => 'las la-cogs'];
         } else {
-            $specsToAttach[] = ['name' => 'Transmission', 'value' => 'Manual', 'icon' => 'las la-cogs'];
+            $specsToAttach[] = ['name' => 'Transmission', 'value' => 'Manual', 'icon' => 'Settings2'];
             $specsToAttach[] = ['name' => 'Manual', 'value' => 'Yes', 'icon' => 'las la-cogs'];
             $specsToAttach[] = ['name' => 'Automatic', 'value' => 'No', 'icon' => 'las la-cogs'];
         }
 
+        $specsToAttach[] = ['name' => 'Suitcase', 'value' => $suitValue, 'icon' => 'Luggage'];
+        $specsToAttach[] = ['name' => 'Number of Luggages', 'value' => $baggage, 'icon' => 'las la-suitcase'];
+        $specsToAttach[] = ['name' => 'Doors', 'value' => $doors, 'icon' => 'DoorOpen'];
+        $specsToAttach[] = ['name' => 'Number of Doors', 'value' => $doors, 'icon' => 'las la-door-open'];
+        $specsToAttach[] = ['name' => 'Number of seats', 'value' => $seats, 'icon' => 'Armchair'];
+        $specsToAttach[] = ['name' => 'Number of Adults', 'value' => $seats, 'icon' => 'las la-user'];
+        $specsToAttach[] = ['name' => 'Fuel', 'value' => $fuel, 'icon' => 'Fuel'];
         $specsToAttach[] = ['name' => 'Fuel Type', 'value' => $fuel, 'icon' => 'las la-gas-pump'];
         $specsToAttach[] = ['name' => 'Air Conditioner', 'value' => (stripos($ac, 'no') !== false) ? 'No AC' : 'Air Conditioning', 'icon' => 'Wind'];
-        $specsToAttach[] = ['name' => 'Number of Doors', 'value' => $doors, 'icon' => 'las la-door-open'];
-        $specsToAttach[] = ['name' => 'Number of Adults', 'value' => $seats, 'icon' => 'las la-user'];
-        $specsToAttach[] = ['name' => 'Number of Luggages', 'value' => $baggage, 'icon' => 'las la-suitcase'];
 
         VehicleSpecification::where('vehicle_id', $vehicleId)->delete();
         foreach ($specsToAttach as $sp) {
