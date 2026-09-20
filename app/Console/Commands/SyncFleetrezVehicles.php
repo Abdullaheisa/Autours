@@ -313,7 +313,7 @@ class SyncFleetrezVehicles extends Command
         }
 
         $specsToAttach[] = ['name' => 'Fuel Type', 'value' => $fuel, 'icon' => 'las la-gas-pump'];
-        $specsToAttach[] = ['name' => 'Air Conditioner', 'value' => (stripos($ac, 'yes') !== false) ? 'Yes' : 'No', 'icon' => 'las la-snowflake'];
+        $specsToAttach[] = ['name' => 'Air Conditioner', 'value' => (stripos($ac, 'no') !== false) ? 'No AC' : 'Air Conditioning', 'icon' => 'Wind'];
         $specsToAttach[] = ['name' => 'Number of Doors', 'value' => $doors, 'icon' => 'las la-door-open'];
         $specsToAttach[] = ['name' => 'Number of Adults', 'value' => $seats, 'icon' => 'las la-user'];
         $specsToAttach[] = ['name' => 'Number of Luggages', 'value' => $baggage, 'icon' => 'las la-suitcase'];

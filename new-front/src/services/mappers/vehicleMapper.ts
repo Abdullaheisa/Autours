@@ -54,7 +54,7 @@ export const vehicleMapper = {
       seats: parseInt(specMap['number of seats'] || specMap['seats']) || raw.seats || 5,
       doors: parseInt(specMap['doors']) || raw.doors || 4,
       suitcases: specMap['suitcase'] || specMap['suitcases'] || specMap['luggage'] || raw.suitcases || '',
-      ac: specMap['air conditioner'] === 'Air Conditioning' || !!(raw.ac),
+      ac: specMap['air conditioner'] === 'Air Conditioning' || specMap['air conditioner'] === 'Yes' || !!(raw.ac),
       baseCurrency: branch.currency || 'AED',
       supplier: {
         id: supplierId,

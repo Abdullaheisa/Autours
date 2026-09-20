@@ -108,11 +108,20 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       return null;
     };
 
-    const fromSpec = vehicle.specifications?.find(s =>
-      s.name?.toLowerCase().includes(name.toLowerCase())
-    )?.option;
+    const specItem = (vehicle.specifications as any[])?.find((s: any) => {
+      const sName = s.name?.toLowerCase() || '';
+      const target = name.toLowerCase();
+      return (
+        sName.includes(target) ||
+        target.includes(sName) ||
+        (target.includes('air') && sName.includes('air')) ||
+        (target.includes('ac') && (sName.includes('ac') || sName.includes('air')))
+      );
+    });
 
-    if (fromSpec) return safeString(fromSpec) || fromSpec;
+    const fromSpec = specItem?.option ?? specItem?.value;
+
+    if (fromSpec !== undefined && fromSpec !== null) return safeString(fromSpec) || fromSpec;
 
     const key = name.toLowerCase();
     const v = vehicle as any;

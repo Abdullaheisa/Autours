@@ -172,8 +172,12 @@ class VehicleController extends Controller
                 foreach ($specifications as $specification) {
                     if ($specification && isset($specification['option']) && is_array($specification['option']) && count($specification['option']) > 0) {
                         $query->whereHas('specifications', function ($q) use ($specification) {
+                            $options = $specification['option'];
+                            if ($specification['name'] === 'Air Conditioner' && in_array('Air Conditioning', $options)) {
+                                $options = array_unique(array_merge($options, ['Yes', 'Air Conditioning']));
+                            }
                             $q->where('name', $specification['name'])
-                              ->whereIn('value', $specification['option']);
+                              ->whereIn('value', $options);
                         });
                     }
                 }
