@@ -117,11 +117,8 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
             }
 
             foreach ($allVehiclesByTag as $tag => $carData) {
-                $vehicleName = str_replace(',', '', (string) ($carData['@attributes']['name'] ?? ''));
-                if (str_contains($vehicleName, '/')) {
-                    $vehicleName = trim(explode('/', $vehicleName)[0]);
-                }
-                if (empty($vehicleName)) {
+                $rawVehicleName = (string) ($carData['@attributes']['name'] ?? '');
+                if (empty(trim($rawVehicleName))) {
                     continue;
                 }
 
@@ -130,7 +127,7 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 $seats = (int) filter_var($this->extractString($carData['adults'] ?? null, '4'), FILTER_SANITIZE_NUMBER_INT);
                 
                 // Estimate doors
-                $doors = str_contains(strtolower($vehicleName), '5') ? 5 : (str_contains(strtolower($vehicleName), '3') ? 3 : 4);
+                $doors = str_contains(strtolower($rawVehicleName), '5') ? 5 : (str_contains(strtolower($rawVehicleName), '3') ? 3 : 4);
                 
                 $baggageSmall = (int) filter_var($this->extractString($carData['luggageSmall'] ?? null, '0'), FILTER_SANITIZE_NUMBER_INT);
                 $baggageLarge = (int) filter_var($this->extractString($carData['luggageLarge'] ?? null, '0'), FILTER_SANITIZE_NUMBER_INT);
@@ -148,12 +145,8 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                     continue;
                 }
 
-                $normalizedName = $this->normalizeVehicleName($vehicleName);
                 $transValue = $transmission ? $this->normalizeTransmission($transmission) : 'Manual';
-
-                if (stripos($normalizedName, 'Automatic') === false && stripos($normalizedName, 'Manual') === false) {
-                    $normalizedName .= ' ' . $transValue;
-                }
+                $normalizedName = $this->extractFirstVehicleName($rawVehicleName, $transValue);
 
                 $groupName = $this->extractString($carData['groupName'] ?? null, '');
                 $acriss = $this->extractString($carData['acriss'] ?? null, '');
@@ -171,9 +164,13 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                     ->where('description', 'LIKE', "%{$descriptionTag}%")
                     ->first();
 
+                $image = $carData['@attributes']['image'] ?? '';
+                $localPhotoUrl = $this->resolveLocalPhoto($normalizedName) ?: $image;
+
                 if ($vehicle) {
                     $vehicle->update([
                         'name' => $normalizedName,
+                        'photo' => $localPhotoUrl ?: $vehicle->photo,
                         'category' => $categoryId,
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
@@ -190,12 +187,9 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                         continue;
                     }
 
-                    $image = $carData['@attributes']['image'] ?? '';
-                    $localPhotoUrl = $this->resolveLocalPhoto($normalizedName) ?: $image;
-
                     $vehicle = Vehicle::create([
                         'name' => $normalizedName,
-                        'description' => $descriptionTag . ' ' . $vehicleName,
+                        'description' => $descriptionTag . ' ' . $rawVehicleName,
                         'photo' => $localPhotoUrl,
                         'supplier' => $supplierUserId,
                         'activation' => true,

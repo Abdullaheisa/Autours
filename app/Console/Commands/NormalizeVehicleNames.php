@@ -6,10 +6,11 @@ use Illuminate\Console\Command;
 use App\Models\Vehicle;
 use App\Models\VehicleSpecification;
 use App\Console\Commands\Traits\NormalizesVehicleNames as NormalizesVehicleNamesTrait;
+use App\Console\Commands\Traits\ResolvesLocalVehiclePhoto;
 
 class NormalizeVehicleNames extends Command
 {
-    use NormalizesVehicleNamesTrait;
+    use NormalizesVehicleNamesTrait, ResolvesLocalVehiclePhoto;
 
     /**
      * The name and signature of the console command.
@@ -64,12 +65,30 @@ class NormalizeVehicleNames extends Command
         foreach ($vehicles as $vehicle) {
             $processedCount++;
             $originalName = $vehicle->getRawOriginal('name') ?? $vehicle->name;
-            $normalizedName = $this->normalizeVehicleName((string) $originalName);
 
+            // Prefer raw uncorrupted API string from description tag if available
+            $sourceString = $originalName;
+            if (!empty($vehicle->description) && preg_match('/^\[[A-Z0-9_-]+:\d+\]\s*(.+)$/is', $vehicle->description, $m)) {
+                $sourceString = $m[1];
+            }
+
+            $normalizedName = $this->normalizeVehicleName((string) $sourceString);
+
+            $updates = [];
             if ($originalName !== $normalizedName) {
-                Vehicle::where('id', $vehicle->id)->update(['name' => $normalizedName]);
+                $updates['name'] = $normalizedName;
+            }
+
+            // Also check if local photo can be resolved/updated for the clean vehicle name
+            $localPhoto = $this->resolveLocalPhoto($normalizedName);
+            if ($localPhoto && $vehicle->photo !== $localPhoto) {
+                $updates['photo'] = $localPhoto;
+            }
+
+            if (!empty($updates)) {
+                Vehicle::where('id', $vehicle->id)->update($updates);
                 $updatedCount++;
-                $this->line("\nUpdated: '{$originalName}' -> '{$normalizedName}'");
+                $this->line("\nUpdated [ID: {$vehicle->id}]: '{$originalName}' -> '{$normalizedName}'");
             }
             $bar->advance();
         }

@@ -16,9 +16,7 @@ class Vehicle extends Model
     public function setNameAttribute($value)
     {
         if ($value !== null) {
-            // Remove "or similar" suffix from supplier names
-            $value = trim(preg_replace('/(?i)\s*-?\s*\(?or similar\)?\s*/', '', $value));
-            // Apply consistent title-case and transmission normalization
+            // Apply consistent cleaning of multi-vehicle names, noise phrases, and title-case normalization
             $value = $this->normalizeVehicleName($value);
         }
         $this->attributes['name'] = $value;
@@ -27,6 +25,12 @@ class Vehicle extends Model
     public function getNameAttribute($value)
     {
         if (empty($value)) return $value;
+
+        // Clean any leftover "model" or merged "Manualmodel" artifacts
+        if (stripos($value, 'model') !== false) {
+            $value = preg_replace('/(Manual|Automatic)model\b/i', '$1', $value);
+            $value = trim(preg_replace('/\bmodel\b/i', '', $value));
+        }
 
         if (stripos($value, 'Automatic') === false && stripos($value, 'Manual') === false) {
             if ($this->relationLoaded('specifications')) {
