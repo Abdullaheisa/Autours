@@ -152,6 +152,13 @@ class RentalTermsController extends Controller
                 return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
             }
 
+            if ($this->isPlaceholderTerm((string)$request->title, (string)($request->description ?? ''))) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Placeholder terms like "Title (العنوان)" cannot be added.'
+                ], 422);
+            }
+
             $rental = new RentalTerms();
             $rental->title = $request->title;
             $rental->description = $request->description;
@@ -209,6 +216,7 @@ class RentalTermsController extends Controller
             $created = [];
             foreach ($items as $item) {
                 if (empty($item['title'])) continue;
+                if ($this->isPlaceholderTerm($item['title'], $item['description'] ?? '')) continue;
                 $term = RentalTerms::create([
                     'title' => $item['title'],
                     'description' => $item['description'],
@@ -231,6 +239,44 @@ class RentalTermsController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function isPlaceholderTerm(string $title, string $desc): bool
+    {
+        $normalizedTitle = mb_strtolower(trim($title));
+        $normalizedDesc = mb_strtolower(trim($desc));
+
+        $placeholderTitles = [
+            'title',
+            'title (العنوان)',
+            'عنوان',
+            'العنوان',
+            'term title',
+            'sample title',
+            'term_title',
+        ];
+
+        if (in_array($normalizedTitle, $placeholderTitles, true)) {
+            return true;
+        }
+
+        if (
+            str_contains($normalizedTitle, 'العنوان') ||
+            str_contains($normalizedTitle, 'عنوان') ||
+            str_contains($normalizedDesc, 'الوصف والتفاصيل') ||
+            str_contains($normalizedDesc, 'الوصف')
+        ) {
+            return true;
+        }
+
+        if (
+            (str_starts_with($normalizedTitle, 'title') || $normalizedTitle === 'name') &&
+            (str_starts_with($normalizedDesc, 'description') || $normalizedDesc === 'desc')
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     public function downloadTemplate(Request $request)

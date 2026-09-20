@@ -16,7 +16,7 @@ class NormalizeVehicleNames extends Command
      *
      * @var string
      */
-    protected $signature = 'vehicles:normalize-names';
+    protected $signature = 'vehicles:normalize-names {--supplier= : Optional supplier ID, email, or company name to filter}';
 
     /**
      * The console command description.
@@ -30,12 +30,32 @@ class NormalizeVehicleNames extends Command
      */
     public function handle()
     {
+        $supplierOption = $this->option('supplier');
+        $supplierId = null;
+        if ($supplierOption) {
+            if (is_numeric($supplierOption)) {
+                $supplierId = (int) $supplierOption;
+            } else {
+                $user = \App\Models\User::where('email', $supplierOption)
+                    ->orWhere('company', 'like', "%{$supplierOption}%")
+                    ->orWhere('name', 'like', "%{$supplierOption}%")
+                    ->first();
+                if ($user) {
+                    $supplierId = $user->id;
+                } else {
+                    $this->error("Supplier '{$supplierOption}' not found.");
+                    return self::FAILURE;
+                }
+            }
+            $this->info("Filtering by supplier ID: {$supplierId}");
+        }
+
         $this->info('Starting vehicle name normalization...');
 
         // ------------------------------------------------------------------
         // Step 1: Title-case normalization
         // ------------------------------------------------------------------
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::when($supplierId, fn($q) => $q->where('supplier', $supplierId))->get();
         $updatedCount = 0;
         $processedCount = 0;
 
@@ -67,13 +87,29 @@ class NormalizeVehicleNames extends Command
         $this->newLine();
         $this->info('Appending transmission to vehicle names that are missing it...');
 
+        // Reload vehicles to get the freshly normalized names
+        $vehicles = Vehicle::when($supplierId, fn($q) => $q->where('supplier', $supplierId))->get();
+        $vehicleIds = $vehicles->pluck('id')->toArray();
+
         // Pre-load all transmission specs in one query: vehicle_id => value
         $transmissionSpecs = VehicleSpecification::where('name', 'Transmission')
+            ->whereIn('vehicle_id', $vehicleIds)
             ->pluck('value', 'vehicle_id')
             ->toArray();
 
-        // Reload vehicles to get the freshly normalized names
-        $vehicles = Vehicle::all();
+        // Also preload Automatic and Manual boolean specs as fallback
+        $autoSpecs = VehicleSpecification::where('name', 'Automatic')
+            ->where('value', 'Yes')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->pluck('vehicle_id', 'vehicle_id')
+            ->toArray();
+
+        $manualSpecs = VehicleSpecification::where('name', 'Manual')
+            ->where('value', 'Yes')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->pluck('vehicle_id', 'vehicle_id')
+            ->toArray();
+
         $transmissionCount = 0;
 
         $bar2 = $this->output->createProgressBar(count($vehicles));
@@ -90,6 +126,14 @@ class NormalizeVehicleNames extends Command
             // Look up the transmission from specs
             $specValue = $transmissionSpecs[$vehicle->id] ?? null;
             if (empty($specValue)) {
+                if (isset($autoSpecs[$vehicle->id])) {
+                    $specValue = 'Automatic';
+                } elseif (isset($manualSpecs[$vehicle->id])) {
+                    $specValue = 'Manual';
+                }
+            }
+
+            if (empty($specValue)) {
                 $bar2->advance();
                 continue;
             }
@@ -103,6 +147,13 @@ class NormalizeVehicleNames extends Command
 
             $newName = $currentName . ' ' . $transmission;
             Vehicle::where('id', $vehicle->id)->update(['name' => $newName]);
+
+            // Ensure Transmission spec exists
+            VehicleSpecification::firstOrCreate(
+                ['vehicle_id' => $vehicle->id, 'name' => 'Transmission'],
+                ['value' => $transmission, 'icon' => 'las la-cogs']
+            );
+
             $transmissionCount++;
             $this->line("\nAppended: '{$currentName}' -> '{$newName}'");
 

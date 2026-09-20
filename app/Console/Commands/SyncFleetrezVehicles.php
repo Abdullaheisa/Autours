@@ -152,6 +152,11 @@ class SyncFleetrezVehicles extends Command
         $categoryName = $car['category'] ?? '';
         $categoryId = $this->resolveCategory($acriss, $categoryName);
         $normalizedName = $this->normalizeVehicleName($name);
+
+        $transValue = $this->resolveTransmission($car);
+        if (stripos($normalizedName, 'Automatic') === false && stripos($normalizedName, 'Manual') === false) {
+            $normalizedName .= ' ' . $transValue;
+        }
         
         $totalPrice = (float) ($car['price']['amount'] ?? 0);
         $apiCurrency = $car['price']['currency'] ?? 'EUR'; // Fleetrez API always returns EUR
@@ -215,7 +220,7 @@ class SyncFleetrezVehicles extends Command
             $this->createdCount++;
         }
 
-        $this->syncSpecifications($vehicle->id, $car);
+        $this->syncSpecifications($vehicle->id, $car, $transValue);
         $this->syncIncluded($vehicle->id, $car, $supplierUserId);
     }
 
@@ -243,11 +248,42 @@ class SyncFleetrezVehicles extends Command
         };
     }
 
-    private function syncSpecifications(int $vehicleId, array $car): void
+    private function resolveTransmission(array $car): string
+    {
+        $name = $car['name'] ?? '';
+        if (preg_match('/\b(auto|automatic|aut)\b/i', $name)) {
+            return 'Automatic';
+        }
+        if (preg_match('/\bmanual\b/i', $name)) {
+            return 'Manual';
+        }
+
+        foreach ($car['vehicleAttributeList'] ?? [] as $attr) {
+            $key = strtolower($attr['attribute'] ?? '');
+            $val = $attr['value'] ?? '';
+            if (str_contains($key, 'transmission')) {
+                if (stripos($val, 'auto') !== false) {
+                    return 'Automatic';
+                }
+                if (stripos($val, 'manual') !== false) {
+                    return 'Manual';
+                }
+            }
+        }
+
+        $acriss = (string) ($car['acriss'] ?? '');
+        if (!empty($acriss)) {
+            return \App\Services\SippDecoder::getLocalTransmissionName($acriss);
+        }
+
+        return 'Manual';
+    }
+
+    private function syncSpecifications(int $vehicleId, array $car, string $transValue = 'Manual'): void
     {
         $specsToAttach = [];
 
-        $trans = 'Manual';
+        $trans = $transValue;
         $fuel = 'Petrol';
         $ac = 'Yes';
         $doors = '4';
@@ -256,7 +292,6 @@ class SyncFleetrezVehicles extends Command
             $key = strtolower($attr['attribute'] ?? '');
             $val = $attr['value'] ?? '';
             
-            if (str_contains($key, 'transmission')) $trans = $val;
             if (str_contains($key, 'fuel')) $fuel = $val;
             if (str_contains($key, 'ac') || str_contains($key, 'air')) $ac = $val;
             if (str_contains($key, 'door')) $doors = $val;
@@ -266,10 +301,12 @@ class SyncFleetrezVehicles extends Command
         $seats = $seats > 0 ? (string)$seats : '5';
         $baggage = (string)((int)($car['largeBag'] ?? 0) + (int)($car['mediumBag'] ?? 0) + (int)($car['smallBag'] ?? 0));
 
-        if (stripos($trans, 'Auto') !== false) {
+        if ($trans === 'Automatic' || stripos($trans, 'Auto') !== false) {
+            $specsToAttach[] = ['name' => 'Transmission', 'value' => 'Automatic', 'icon' => 'las la-cogs'];
             $specsToAttach[] = ['name' => 'Automatic', 'value' => 'Yes', 'icon' => 'las la-cogs'];
             $specsToAttach[] = ['name' => 'Manual', 'value' => 'No', 'icon' => 'las la-cogs'];
         } else {
+            $specsToAttach[] = ['name' => 'Transmission', 'value' => 'Manual', 'icon' => 'las la-cogs'];
             $specsToAttach[] = ['name' => 'Manual', 'value' => 'Yes', 'icon' => 'las la-cogs'];
             $specsToAttach[] = ['name' => 'Automatic', 'value' => 'No', 'icon' => 'las la-cogs'];
         }
