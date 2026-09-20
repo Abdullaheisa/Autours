@@ -16,7 +16,8 @@ class RefreshVehiclePhotos extends Command
      * @var string
      */
     protected $signature = 'vehicles:refresh-photos
-                            {--clear-external : Null out all externally-downloaded supplier photos before refreshing}';
+                            {--clear-external : Null out all externally-downloaded supplier photos before refreshing}
+                            {--supplier= : Filter vehicles by supplier name (e.g. h-lead)}';
 
     /**
      * The console command description.
@@ -55,8 +56,28 @@ class RefreshVehiclePhotos extends Command
         $csvFile = fopen($reportPath, 'w');
         fputcsv($csvFile, ['Vehicle ID', 'Vehicle Name', 'Supplier ID', 'Pickup Loc', 'Old Photo', 'New Photo', 'Status']);
 
-        // Fetch all vehicles across all suppliers to refresh their local photos from VehiclesPhotos mapping
-        $vehicles = Vehicle::all();
+        $query = Vehicle::query();
+        
+        $supplierFilter = $this->option('supplier');
+        if ($supplierFilter) {
+            $supplierUser = \App\Models\User::whereIn('role', ['supplier', 'active_supplier'])
+                ->where(function($q) use ($supplierFilter) {
+                    $q->where('company', 'like', "%{$supplierFilter}%")
+                      ->orWhere('name', 'like', "%{$supplierFilter}%")
+                      ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower(str_replace('-', ' ', $supplierFilter)) . '%']);
+                })
+                ->first();
+
+            if (!$supplierUser) {
+                $this->error("Supplier matching '{$supplierFilter}' not found.");
+                return self::FAILURE;
+            }
+
+            $query->where('supplier', $supplierUser->id);
+            $this->info("Filtering by supplier: {$supplierUser->name} (ID: {$supplierUser->id})");
+        }
+
+        $vehicles = $query->get();
         $updatedCount = 0;
         $unchangedCount = 0;
         $notFoundCount = 0;

@@ -177,10 +177,14 @@ class SyncFleetrezVehicles extends Command
             ->where('description', 'LIKE', "%{$descriptionTag}%")
             ->first();
 
+        $image = $car['image'] ?? '';
+        $localPhotoUrl = $this->resolveLocalPhoto($normalizedName) ?: $image;
+
         if ($vehicle) {
             $vehicle->update([
                 'name' => $normalizedName,
                 'description' => $descriptionTag . ' ' . $name,
+                'photo' => $localPhotoUrl,
                 'category' => $categoryId,
                 'price' => $dayPrice,
                 'week_price' => $dayPrice,
@@ -189,9 +193,6 @@ class SyncFleetrezVehicles extends Command
             ]);
             $this->updatedCount++;
         } else {
-            $image = $car['image'] ?? '';
-            $localPhotoUrl = $this->resolveLocalPhoto($normalizedName, $acriss, $categoryId) ?: $image;
-
             $vehicle = Vehicle::create([
                 'name' => $normalizedName,
                 'description' => $descriptionTag . ' ' . $name,
