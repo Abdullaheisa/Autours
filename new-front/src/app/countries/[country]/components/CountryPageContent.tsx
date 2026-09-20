@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
 import { fetchCheapestVehicles } from '@/store/slices/searchSlice';
 import { fallbackRates } from '@/store/slices/currencySlice';
-import { getLocationDisplayLabel } from '@/utils/location';
+import { getLocationDisplayLabel, stripLocationAbbreviation } from '@/utils/location';
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
 
@@ -174,9 +174,7 @@ export default function CountryPageContent({ data }: Props) {
       }
 
       const cleanLabel = getLocationDisplayLabel(loc);
-      const cleanAirportName = loc.abriviation
-        ? cleanLabel.replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`, 'i'), '')
-        : cleanLabel;
+      const cleanAirportName = stripLocationAbbreviation(cleanLabel, loc.abriviation);
 
       const displayCode = code || 'APT';
       const uniqueKey = code || name.toLowerCase().trim();

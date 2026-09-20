@@ -240,12 +240,13 @@ export default function InChatSearchWidget({
       }
     }
 
+    const displaySearchTerm = searchTerm.replace(/\s*[-–—]\s*([A-Za-z]{3})$/, ' ($1)');
     setSelectedLocation({
       id: searchTerm,
-      name: searchTerm,
+      name: displaySearchTerm,
       country: canonicalCountry || searchTerm,
     });
-    setLocationSearchInput(searchTerm);
+    setLocationSearchInput(displaySearchTerm);
     if (canonicalCountry) setSelectedCountryFilter(canonicalCountry);
   }, [initialLocation, locations]);
 

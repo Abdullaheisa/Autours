@@ -141,7 +141,8 @@ export default function HeroSearch({
             locationLabel: display,
           }));
         } else {
-          setLocation(decodeURIComponent(pickupParam));
+          const rawParam = decodeURIComponent(pickupParam);
+          setLocation(rawParam.replace(/\s*[-–—]\s*([A-Za-z]{3})$/, ' ($1)'));
         }
       }
     }

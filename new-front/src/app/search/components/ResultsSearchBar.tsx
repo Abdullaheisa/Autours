@@ -13,7 +13,7 @@ import { RootState, AppDispatch } from '@/store';
 import { setSearchParams, initiateSearch, resetFilters } from '@/store/slices/searchSlice';
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
-import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
+import { getLocationDisplayLabel, getLocationPickupValue, stripLocationAbbreviation } from '@/utils/location';
 
 const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) =>
   `${i.toString().padStart(2, '0')}:00`
@@ -244,7 +244,7 @@ export default function ResultsSearchBar({
                     <div className="flex flex-col min-w-0 text-left">
                       <div className="flex items-center flex-wrap gap-1.5">
                         <span className="text-xs font-bold text-gray-800 line-clamp-2">
-                          {getLocationDisplayLabel(loc).replace(new RegExp(`\\s*-\\s*${loc.abriviation}$`), '')}
+                          {stripLocationAbbreviation(getLocationDisplayLabel(loc), loc.abriviation)}
                         </span>
                         {loc.abriviation && (
                           <span className="text-[9px] font-black text-gray-600 bg-gray-200 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">

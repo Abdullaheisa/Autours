@@ -53,7 +53,22 @@ const AIRPORT_NAMES: Record<string, string> = {
   'DOH': 'Hamad International Airport'
 };
 
-/** Full address line shown in dropdowns (not country / city summary). */
+/** Helper to strip any trailing airport abbreviation (e.g. " (DXB)", " - DXB") from a location label */
+export function stripLocationAbbreviation(label: string, abbreviation?: string): string {
+  if (!label) return '';
+  let cleaned = label;
+  if (abbreviation && abbreviation.trim()) {
+    const escaped = abbreviation.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    cleaned = cleaned.replace(new RegExp(`(?:\\s*[-–—]?\\s*\\(?${escaped}\\)?|\\s+${escaped})\\s*$`, 'i'), '').trim();
+  }
+  // Also strip generic trailing 3-letter IATA code if present with dash or parentheses:
+  cleaned = cleaned.replace(/\s*[-–—]\s*[A-Za-z]{3}\s*$/, '').trim();
+  cleaned = cleaned.replace(/\s*\([A-Za-z]{3}\)\s*$/, '').trim();
+  cleaned = cleaned.replace(/\s*[-–—]\s*$/, '').trim();
+  return cleaned;
+}
+
+/** Full address line shown in dropdowns and search inputs (e.g. "Dubai International Airport (DXB)"). */
 export function getLocationDisplayLabel(loc: LocationBranch): string {
   let label = '';
 
@@ -81,10 +96,34 @@ export function getLocationDisplayLabel(loc: LocationBranch): string {
     }
   }
 
-  return loc.abriviation && !label.includes(loc.abriviation) ? `${label} - ${loc.abriviation}` : label;
+  const abbr = (loc.abriviation || '').trim().toUpperCase();
+
+  // If a valid 3-letter IATA abbreviation exists, standardize display to "Name (CODE)"
+  if (abbr && /^[A-Z]{3}$/.test(abbr)) {
+    const baseLabel = stripLocationAbbreviation(label, abbr);
+    return baseLabel ? `${baseLabel} (${abbr})` : `(${abbr})`;
+  }
+
+  // If loc.abriviation is not present, check if label has a trailing 3-letter code like " - DXB" or "(DXB)"
+  const trailingDashCodeMatch = label.match(/^(.*?)\s*[-–—]\s*([A-Za-z]{3})\s*$/);
+  if (trailingDashCodeMatch) {
+    const baseLabel = trailingDashCodeMatch[1].trim();
+    const code = trailingDashCodeMatch[2].toUpperCase();
+    return `${baseLabel} (${code})`;
+  }
+
+  const trailingParenCodeMatch = label.match(/^(.*?)\s*\(([A-Za-z]{3})\)\s*$/);
+  if (trailingParenCodeMatch) {
+    const baseLabel = trailingParenCodeMatch[1].trim();
+    const code = trailingParenCodeMatch[2].toUpperCase();
+    return `${baseLabel} (${code})`;
+  }
+
+  return label;
 }
 
 /** Value sent to /filter/vehicles as pickupLoc. */
 export function getLocationPickupValue(loc: LocationBranch): string {
   return loc.name?.trim() || loc.location?.trim() || getLocationDisplayLabel(loc);
 }
+
