@@ -1342,6 +1342,7 @@ class VehicleController extends Controller
 
     public function show(Request $request)
     {
+        ini_set('memory_limit', '512M');
         $vehicles = Vehicle::query();
 
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
@@ -1413,7 +1414,7 @@ class VehicleController extends Controller
         $sortOrder = $request->get('sort_order', 'asc');
 
         if ($request->get('compact') === 'true') {
-            $query = $vehicles->select('id', 'name', 'supplier', 'pickup_loc')
+            $query = $vehicles->select('id', 'name', 'supplier', 'pickup_loc', 'activation')
                 ->with([
                     'supplierUser' => function($q) { $q->select('id', 'company', 'name'); },
                     'branch' => function($q) { $q->select('id', 'name'); }
@@ -1441,11 +1442,6 @@ class VehicleController extends Controller
                     $query->where('order_status', 1);
                 }]);
                 $vehicle->setAttribute('rentals_count', $vehicle->rentals->count());
-            });
-        } else {
-            $data->each(function ($vehicle) {
-                $vehicle->activation = $vehicle->activation == 1;
-                $vehicle->setAttribute('rentals_count', 0);
             });
         }
 

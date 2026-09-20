@@ -131,7 +131,7 @@ class Vehicle extends Model
 
         // جلب الفرع والدولة المحددة للسيارة
         $branch = $this->branch;
-        $country = $branch ? trim($branch->country) : null;
+        $country = ($branch && $branch->country) ? trim($branch->country) : null;
         $pickupLocId = $this->pickup_loc ?? ($branch ? $branch->id : null);
 
         if ($pickupLocId) {

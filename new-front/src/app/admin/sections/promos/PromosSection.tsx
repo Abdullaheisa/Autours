@@ -41,6 +41,14 @@ export default function PromosSection() {
 
   // Modal Search & Filter States
   const [modalSearchQuery, setModalSearchQuery] = useState("");
+  const [debouncedModalSearchQuery, setDebouncedModalSearchQuery] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedModalSearchQuery(modalSearchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [modalSearchQuery]);
   const [modalSupplierFilter, setModalSupplierFilter] = useState("All");
   const [modalCountryFilter, setModalCountryFilter] = useState("All");
   const [modalBranchFilter, setModalBranchFilter] = useState("All");
@@ -163,9 +171,14 @@ export default function PromosSection() {
       if (search) params.search = search;
 
       const res: any = await apiClient.get("/get/vehicles", { params });
-      const list = res?.data || res || [];
-      const dataArray = Array.isArray(list) ? list : [];
-      setAllFilteredVehicles(dataArray);
+      const list = Array.isArray(res?.data?.data)
+        ? res.data.data
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res)
+        ? res
+        : [];
+      setAllFilteredVehicles(list);
     } catch (err) {
       console.warn("Failed to fetch all matching vehicles", err);
     }
@@ -229,9 +242,7 @@ export default function PromosSection() {
       }
       setActivePromoVehicles(activeVehiclesList);
 
-      // 3. Initial page load
-      await fetchModalVehiclesPage(1, "All", "All", "All", "");
-      await fetchAllMatchingVehicles("All", "All", "All", "");
+      // The initial page load is triggered reactively when isAssignModalOpen is set to true
     } catch (err) {
       toast.error("Failed to load fleet data.");
     } finally {
@@ -242,10 +253,10 @@ export default function PromosSection() {
   // Reactive effect to fetch page 1 whenever filters change inside the modal
   useEffect(() => {
     if (isAssignModalOpen) {
-      fetchModalVehiclesPage(1, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
-      fetchAllMatchingVehicles(modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+      fetchModalVehiclesPage(1, modalCountryFilter, modalBranchFilter, modalSupplierFilter, debouncedModalSearchQuery);
+      fetchAllMatchingVehicles(modalCountryFilter, modalBranchFilter, modalSupplierFilter, debouncedModalSearchQuery);
     }
-  }, [modalSearchQuery, modalSupplierFilter, modalCountryFilter, modalBranchFilter, isAssignModalOpen]);
+  }, [debouncedModalSearchQuery, modalSupplierFilter, modalCountryFilter, modalBranchFilter, isAssignModalOpen]);
 
   const handleSaveAssignments = async () => {
     if (!currentPromo) return;
@@ -880,7 +891,7 @@ export default function PromosSection() {
                               totalPages={modalTotalPages}
                               onPageChange={(page) => {
                                 setModalCurrentPage(page);
-                                fetchModalVehiclesPage(page, modalCountryFilter, modalBranchFilter, modalSupplierFilter, modalSearchQuery);
+                                fetchModalVehiclesPage(page, modalCountryFilter, modalBranchFilter, modalSupplierFilter, debouncedModalSearchQuery);
                               }}
                             />
                           </div>
