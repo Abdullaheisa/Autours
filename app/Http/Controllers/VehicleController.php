@@ -85,9 +85,6 @@ class VehicleController extends Controller
                 if ($diffInDays < 7) {
                     $excludedEmails[] = 'Jincy@drivus.ae';
                 }
-                if ($diffInDays < 14) {
-                    $excludedEmails[] = 'georgiaparkhurst@greenmotion.com';
-                }
                 if (!empty($excludedEmails)) {
                     $filteredVehicles->whereHas('supplierUser', function ($q) use ($excludedEmails) {
                         $q->whereNotIn('email', $excludedEmails);
