@@ -82,7 +82,7 @@ class VehicleController extends Controller
                 $startDate = \Carbon\Carbon::parse($dateFrom);
                 $diffInDays = \Carbon\Carbon::now()->startOfDay()->diffInDays($startDate->copy()->startOfDay(), false);
                 $excludedEmails = [];
-                if ($diffInDays < 7) {
+                if ($diffInDays < 14) {
                     $excludedEmails[] = 'Jincy@drivus.ae';
                 }
                 if (!empty($excludedEmails)) {

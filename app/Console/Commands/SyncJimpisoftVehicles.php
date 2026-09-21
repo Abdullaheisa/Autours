@@ -90,8 +90,7 @@ class SyncJimpisoftVehicles extends Command
 
         $this->info('Branches loaded: ' . $allBranches->count());
 
-        // Resolve dates
-        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addDay()->format('Y-m-d 10:00');
+        $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addDays(14)->format('Y-m-d 10:00');
         $dropoffDate1 = Carbon::parse($pickupDate)->addDay()->format('Y-m-d 10:00');
         $dropoffDate7 = Carbon::parse($pickupDate)->addDays(7)->format('Y-m-d 10:00');
         $dropoffDate30 = Carbon::parse($pickupDate)->addDays(30)->format('Y-m-d 10:00');
