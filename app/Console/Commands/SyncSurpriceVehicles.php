@@ -362,6 +362,24 @@ class SyncSurpriceVehicles extends Command
                             $inclusions[] = ucwords(strtolower($desc));
                         }
                     }
+
+                    // Add Taxes if VAT is > 0 or product cost is taxInclusive
+                    $vatPercentage = $priceData['totalCharge']['VATPercentage'] ?? 0;
+                    $vatAmount = $priceData['totalCharge']['VAT'] ?? 0;
+                    $isTaxInclusive = false;
+                    foreach ($priceData['vehicleCharges'] ?? [] as $charge) {
+                        if (($charge['purpose'] ?? 0) == 1 && !empty($charge['taxInclusive'])) {
+                            $isTaxInclusive = true;
+                            break;
+                        }
+                    }
+                    if ($vatPercentage > 0 || $vatAmount > 0 || $isTaxInclusive) {
+                        $inclusions[] = 'Taxes';
+                    }
+
+                    // Deduplicate inclusions
+                    $inclusions = array_unique($inclusions);
+
                     if ($pricesOnly && ! $existingVehicle) {
                         continue;
                     }
@@ -580,7 +598,7 @@ class SyncSurpriceVehicles extends Command
             $inc = Included::firstOrCreate(['what_is_included' => $incText]);
             $includedIds[] = $inc->id;
         }
-        $vehicle->included()->syncWithoutDetaching($includedIds);
+        $vehicle->included()->sync($includedIds);
     }
 
     /**
