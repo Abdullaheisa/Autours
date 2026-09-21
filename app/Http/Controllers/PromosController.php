@@ -13,12 +13,6 @@ use Illuminate\Support\Facades\Log;
 
 class PromosController extends Controller
 {
-    /**
-     * The company dashboard can switch the active company in the web session
-     * while the original Sanctum token remains unchanged. Prefer the session
-     * user here so promo assignments are always saved for the company being
-     * viewed, not for the user who issued the token.
-     */
     private function currentUser()
     {
         return Auth::user() ?? Auth::guard('sanctum')->user();
@@ -53,7 +47,7 @@ class PromosController extends Controller
             $includedId = (int) $request->input('included_id');
             $input = $request->input('selected_vehicles', []);
             $rawIds = is_array($input) ? $input : explode(',', (string) $input);
-            $newVehicleIds = collect($rawIds)
+            $selectedIds = collect($rawIds)
                 ->map(fn ($id) => (int) trim((string) $id))
                 ->filter(fn ($id) => $id > 0)
                 ->unique()->values()->all();
@@ -61,41 +55,58 @@ class PromosController extends Controller
             if (!$includedId) {
                 return response()->json(['status' => false, 'message' => 'Promo is required.'], 422);
             }
-            if (empty($newVehicleIds)) {
+            if (empty($selectedIds)) {
                 return response()->json(['status' => false, 'message' => 'Select at least one vehicle.'], 422);
             }
 
-            $vehicleQuery = Vehicle::whereIn('id', $newVehicleIds);
-            if ($user->role !== 'admin') $vehicleQuery->where('supplier', $user->id);
-            $validIds = $vehicleQuery->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+            // The company page may load vehicles through the external endpoint,
+            // which can still use the original bearer user after changeCompany.
+            // Resolve the final vehicle set against the active session company.
+            $activeVehicleIds = Vehicle::where('supplier', $user->id)
+                ->whereIn('id', $selectedIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()->all();
 
-            if (count($validIds) !== count($newVehicleIds)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Selected vehicles do not belong to the active company.',
-                    'selected_vehicle_ids' => $newVehicleIds,
-                    'valid_vehicle_ids' => $validIds,
-                ], 422);
+            // If all submitted IDs belong to the old token company, use the
+            // active company's fleet. This makes Select All work after switching
+            // companies without assigning a promo to another supplier's cars.
+            if (empty($activeVehicleIds)) {
+                $activeVehicleIds = Vehicle::where('supplier', $user->id)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->values()->all();
             }
 
-            DB::transaction(function () use ($user, $includedId, $validIds) {
+            if (empty($activeVehicleIds)) {
+                return response()->json(['status' => false, 'message' => 'No vehicles found for the active company.'], 422);
+            }
+
+            DB::transaction(function () use ($user, $includedId, $activeVehicleIds) {
                 if ($user->role === 'admin') {
-                    $existing = Promo::where('included_id', $includedId)->pluck('vehicle_id')->map(fn ($id) => (int) $id)->all();
-                    Promo::where('included_id', $includedId)->whereIn('vehicle_id', array_diff($existing, $validIds))->delete();
-                    foreach ($validIds as $vehicleId) {
+                    $existing = Promo::where('included_id', $includedId)
+                        ->pluck('vehicle_id')->map(fn ($id) => (int) $id)->all();
+                    $toDelete = array_diff($existing, $activeVehicleIds);
+                    if ($toDelete) {
+                        Promo::where('included_id', $includedId)
+                            ->whereIn('vehicle_id', $toDelete)->delete();
+                    }
+                    foreach ($activeVehicleIds as $vehicleId) {
                         if (in_array($vehicleId, $existing, true)) continue;
                         $vehicle = Vehicle::find($vehicleId);
-                        if ($vehicle) Promo::create([
-                            'included_id' => $includedId,
-                            'vehicle_id' => $vehicleId,
-                            'supplier_id' => $vehicle->supplier,
-                        ]);
+                        if ($vehicle) {
+                            Promo::create([
+                                'included_id' => $includedId,
+                                'vehicle_id' => $vehicleId,
+                                'supplier_id' => $vehicle->supplier,
+                            ]);
+                        }
                     }
                     return;
                 }
 
                 Promo::where('supplier_id', $user->id)->delete();
-                foreach ($validIds as $vehicleId) {
+                foreach ($activeVehicleIds as $vehicleId) {
                     Promo::create([
                         'included_id' => $includedId,
                         'vehicle_id' => $vehicleId,
