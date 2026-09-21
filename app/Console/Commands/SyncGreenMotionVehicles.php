@@ -25,8 +25,8 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
     use ResolvesLocalVehiclePhoto, NormalizesVehicleNames;
 
     protected $signature = 'greenmotion:sync-vehicles
-                            {--pickup-date= : Pickup date (yyyy-MM-dd HH:mm), defaults to tomorrow 10:00}
-                            {--dropoff-date= : Dropoff date (yyyy-MM-dd HH:mm), defaults to day-after-tomorrow 10:00}
+                            {--pickup-date= : Pickup date (yyyy-MM-dd HH:mm), defaults to 14 days from now 10:00}
+                            {--dropoff-date= : Dropoff date (yyyy-MM-dd HH:mm), defaults to 15 days from now 10:00}
                             {--pickup= : Pickup date DD.MM.YYYY}
                             {--dropoff= : Dropoff date DD.MM.YYYY}
                             {--dry-run : Only fetch from API and print what would be done}
@@ -497,15 +497,15 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
     protected function fetchVehiclesForDuration($service, Branch $branch, ?int $days, bool $hasCustomDates): array
     {
         if ($hasCustomDates) {
-            $pickupStr = $this->option('pickup-date') ?? Carbon::tomorrow()->format('Y-m-d 10:00');
-            $dropoffStr = $this->option('dropoff-date') ?? Carbon::tomorrow()->addDay()->format('Y-m-d 10:00');
+            $pickupStr = $this->option('pickup-date') ?? Carbon::tomorrow()->addDays(14)->format('Y-m-d 10:00');
+            $dropoffStr = $this->option('dropoff-date') ?? Carbon::tomorrow()->addDays(15)->format('Y-m-d 10:00');
             $pickup = Carbon::parse($pickupStr);
             $dropoff = Carbon::parse($dropoffStr);
         } else {
             $days = $days ?: 1;
-            $pickup = Carbon::tomorrow();
+            $pickup = Carbon::tomorrow()->addDays(14);
             $pickup->setTime(10, 0);
-            $dropoff = Carbon::tomorrow()->addDays($days);
+            $dropoff = (clone $pickup)->addDays($days);
             $dropoff->setTime(10, 0);
         }
 

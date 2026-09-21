@@ -81,9 +81,16 @@ class VehicleController extends Controller
             if ($dateFrom) {
                 $startDate = \Carbon\Carbon::parse($dateFrom);
                 $diffInDays = \Carbon\Carbon::now()->startOfDay()->diffInDays($startDate->copy()->startOfDay(), false);
+                $excludedEmails = [];
                 if ($diffInDays < 7) {
-                    $filteredVehicles->whereHas('supplierUser', function ($q) {
-                        $q->where('email', '!=', 'Jincy@drivus.ae');
+                    $excludedEmails[] = 'Jincy@drivus.ae';
+                }
+                if ($diffInDays < 14) {
+                    $excludedEmails[] = 'georgiaparkhurst@greenmotion.com';
+                }
+                if (!empty($excludedEmails)) {
+                    $filteredVehicles->whereHas('supplierUser', function ($q) use ($excludedEmails) {
+                        $q->whereNotIn('email', $excludedEmails);
                     });
                 }
             }
@@ -543,9 +550,17 @@ class VehicleController extends Controller
             
             // If pickup is less than 7 days away, hide Jimpisoft vehicles 
             // since Jimpisoft (Drivus) does not provide rates for close-in bookings.
+            $excludedEmails = [];
             if ($diffInDays < 7) {
-                $vehicles->whereHas('supplierUser', function ($q) {
-                    $q->where('email', '!=', 'Jincy@drivus.ae');
+                $excludedEmails[] = 'Jincy@drivus.ae';
+            }
+            if ($diffInDays < 14) {
+                $excludedEmails[] = 'georgiaparkhurst@greenmotion.com';
+            }
+            
+            if (!empty($excludedEmails)) {
+                $vehicles->whereHas('supplierUser', function ($q) use ($excludedEmails) {
+                    $q->whereNotIn('email', $excludedEmails);
                 });
             }
         }
