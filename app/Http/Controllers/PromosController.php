@@ -14,104 +14,78 @@ use Illuminate\Support\Facades\Log;
 class PromosController extends Controller
 {
     /**
-     * Get active promos for vehicles
+     * The company dashboard can switch the active company in the web session
+     * while the original Sanctum token remains unchanged. Prefer the session
+     * user here so promo assignments are always saved for the company being
+     * viewed, not for the user who issued the token.
      */
+    private function currentUser()
+    {
+        return Auth::user() ?? Auth::guard('sanctum')->user();
+    }
+
     public function index(Request $request)
     {
-        $user = Auth::guard('sanctum')->user() ?? Auth::user();
+        $user = $this->currentUser();
         if (!$user) return response()->json([]);
 
         if ($request->has('included_id')) {
-            $query = Promo::query()->where('included_id', (int) $request->query('included_id'));
-
+            $query = Promo::where('included_id', (int) $request->query('included_id'));
             if ($user->role !== 'admin') {
                 $query->where('supplier_id', $user->id);
             } elseif ($request->has('supplier_id')) {
                 $query->where('supplier_id', $request->query('supplier_id'));
             }
-
             return $query->pluck('vehicle_id')->map(fn ($id) => (int) $id)->values();
         }
 
         $query = Promo::query();
-        if ($user->role !== 'admin') {
-            $query->where('supplier_id', $user->id);
-        }
-        return $query->pluck('included_id')->unique()->values();
+        if ($user->role !== 'admin') $query->where('supplier_id', $user->id);
+        return $query->pluck('included_id')->map(fn ($id) => (int) $id)->unique()->values();
     }
 
-    /**
-     * Assign promo to vehicles
-     */
     public function store(Request $request)
     {
         try {
-            $user = Auth::guard('sanctum')->user() ?? Auth::user();
-            if (!$user) {
-                return response()->json(['error' => 'Unauthenticated'], StatusCodes::UNAUTHORIZED);
-            }
+            $user = $this->currentUser();
+            if (!$user) return response()->json(['error' => 'Unauthenticated'], StatusCodes::UNAUTHORIZED);
 
             $includedId = (int) $request->input('included_id');
-            $selectedVehicles = $request->input('selected_vehicles', '');
-            $rawIds = is_array($selectedVehicles) ? $selectedVehicles : explode(',', (string) $selectedVehicles);
-
+            $input = $request->input('selected_vehicles', []);
+            $rawIds = is_array($input) ? $input : explode(',', (string) $input);
             $newVehicleIds = collect($rawIds)
                 ->map(fn ($id) => (int) trim((string) $id))
                 ->filter(fn ($id) => $id > 0)
-                ->unique()
-                ->values()
-                ->all();
+                ->unique()->values()->all();
 
             if (!$includedId) {
                 return response()->json(['status' => false, 'message' => 'Promo is required.'], 422);
             }
-
-            $vehicleQuery = Vehicle::query()->whereIn('id', $newVehicleIds);
-            if ($user->role !== 'admin') {
-                $vehicleQuery->where('supplier', $user->id);
+            if (empty($newVehicleIds)) {
+                return response()->json(['status' => false, 'message' => 'Select at least one vehicle.'], 422);
             }
 
-            $validVehicleIds = $vehicleQuery
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->unique()
-                ->values()
-                ->all();
+            $vehicleQuery = Vehicle::whereIn('id', $newVehicleIds);
+            if ($user->role !== 'admin') $vehicleQuery->where('supplier', $user->id);
+            $validIds = $vehicleQuery->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
 
-            if (count($validVehicleIds) !== count($newVehicleIds)) {
+            if (count($validIds) !== count($newVehicleIds)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'One or more selected vehicles are invalid or do not belong to this supplier.',
+                    'message' => 'Selected vehicles do not belong to the active company.',
                     'selected_vehicle_ids' => $newVehicleIds,
-                    'valid_vehicle_ids' => $validVehicleIds,
+                    'valid_vehicle_ids' => $validIds,
                 ], 422);
             }
 
-            DB::transaction(function () use ($user, $includedId, $validVehicleIds) {
+            DB::transaction(function () use ($user, $includedId, $validIds) {
                 if ($user->role === 'admin') {
-                    $existingVehicleIds = Promo::where('included_id', $includedId)
-                        ->pluck('vehicle_id')
-                        ->map(fn ($id) => (int) $id)
-                        ->toArray();
-
-                    $toDelete = array_diff($existingVehicleIds, $validVehicleIds);
-                    if (!empty($toDelete)) {
-                        Promo::where('included_id', $includedId)
-                            ->whereIn('vehicle_id', $toDelete)
-                            ->delete();
-                    }
-
-                    foreach ($validVehicleIds as $vehicleId) {
-                        if (in_array($vehicleId, $existingVehicleIds, true)) {
-                            continue;
-                        }
-
+                    $existing = Promo::where('included_id', $includedId)->pluck('vehicle_id')->map(fn ($id) => (int) $id)->all();
+                    Promo::where('included_id', $includedId)->whereIn('vehicle_id', array_diff($existing, $validIds))->delete();
+                    foreach ($validIds as $vehicleId) {
+                        if (in_array($vehicleId, $existing, true)) continue;
                         $vehicle = Vehicle::find($vehicleId);
-                        if (!$vehicle) {
-                            continue;
-                        }
-
-                        Promo::create([
+                        if ($vehicle) Promo::create([
                             'included_id' => $includedId,
                             'vehicle_id' => $vehicleId,
                             'supplier_id' => $vehicle->supplier,
@@ -121,8 +95,7 @@ class PromosController extends Controller
                 }
 
                 Promo::where('supplier_id', $user->id)->delete();
-
-                foreach ($validVehicleIds as $vehicleId) {
+                foreach ($validIds as $vehicleId) {
                     Promo::create([
                         'included_id' => $includedId,
                         'vehicle_id' => $vehicleId,
@@ -133,58 +106,33 @@ class PromosController extends Controller
 
             return response()->json(['status' => true]);
         } catch (\Throwable $exception) {
-            Log::error('PromosController@store error', [
-                'message' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to update promo.'
-            ], StatusCodes::SERVER_ERROR);
+            Log::error('PromosController@store error', ['message' => $exception->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'Failed to update promo.'], StatusCodes::SERVER_ERROR);
         }
     }
 
-    /**
-     * Delete active promo assignments for a given included_id
-     */
     public function destroy($id)
     {
-        $user = Auth::guard('sanctum')->user() ?? Auth::user();
-        if (!$user) {
-            return response()->json(['error' => 'Unauthenticated'], StatusCodes::UNAUTHORIZED);
-        }
-
-        $query = Promo::query()->where('included_id', (int) $id);
-        if ($user->role !== 'admin') {
-            $query->where('supplier_id', $user->id);
-        }
-
+        $user = $this->currentUser();
+        if (!$user) return response()->json(['error' => 'Unauthenticated'], StatusCodes::UNAUTHORIZED);
+        $query = Promo::where('included_id', (int) $id);
+        if ($user->role !== 'admin') $query->where('supplier_id', $user->id);
         $query->delete();
         return response()->json(['status' => true]);
     }
 
-    // ==========================================
-    // Promo Definitions (included table where is_promo = 1)
-    // ==========================================
-
     public function getDefinitions(Request $request)
     {
-        $user = Auth::guard('sanctum')->user() ?? Auth::user();
+        $user = $this->currentUser();
         if (!$user) return response()->json([]);
-
-        if ($user->role === 'admin') {
-            return Included::where('is_promo', 1)->with('supplier')->get();
+        if ($user->role === 'admin') return Included::where('is_promo', 1)->with('supplier')->get();
+        if (in_array($user->role, ['supplier', 'active_supplier'], true)) {
+            return Included::where('is_promo', 1)->where(function ($q) use ($user) {
+                $q->where(function ($q2) {
+                    $q2->whereNull('supplier_id')->where('status', 'approved');
+                })->orWhere('supplier_id', $user->id);
+            })->get();
         }
-
-        if (in_array($user->role, ['supplier', 'active_supplier'])) {
-            return Included::where('is_promo', 1)
-                ->where(function ($query) use ($user) {
-                    $query->where(function ($q) {
-                        $q->whereNull('supplier_id')->where('status', 'approved');
-                    })->orWhere('supplier_id', $user->id);
-                })->get();
-        }
-
         return Included::where('is_promo', 1)->where('status', 'approved')->get();
     }
 }
