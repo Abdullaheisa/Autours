@@ -2177,6 +2177,43 @@ class VehicleController extends Controller
             }
 
             $service = new SurpriceApiService();
+            try {
+                $firstBranch = $branches->first();
+                $stationId = $firstBranch->station_id;
+                $country = ucwords(strtolower(\App\Services\CountryCurrencyResolver::normalizeCountryName($firstBranch->country)));
+                $details = $service->getLocationDetails($stationId);
+                $policies = $details['policies'] ?? [];
+                
+                if (!empty($policies)) {
+                    foreach ($policies as $policy) {
+                        $title = str_replace('_', ' ', ucwords(strtolower($policy['type'] ?? 'TERMS AND CONDITIONS')));
+                        $term = \App\Models\RentalTerms::updateOrCreate(
+                            [
+                                'created_by' => $supplierUser->id,
+                                'title' => $title,
+                                'country' => $country
+                            ],
+                            [
+                                'description' => $policy['text'] ?? '',
+                                'status' => 'approved',
+                                'branch_id' => null,
+                            ]
+                        );
+
+                        \App\Models\SupplierRentalTerm::updateOrCreate([
+                            'rental_term_id' => $term->id,
+                            'supplier_id' => $supplierUser->id,
+                            'country' => $country
+                        ], [
+                            'branch_id' => null,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Surprice API: Could not sync terms', ['error' => $e->getMessage()]);
+            }
+
+            $service = new SurpriceApiService();
             $pickupDateTime = $dateFrom . 'T10:00:00';
             $dropoffDateTime = $dateTo . 'T10:00:00';
 

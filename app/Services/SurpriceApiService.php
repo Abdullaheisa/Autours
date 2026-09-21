@@ -91,6 +91,34 @@ class SurpriceApiService
     }
 
     /**
+     * Fetch location details (including policies) from Surprice API.
+     *
+     * @param string $locationCode
+     * @return array<string, mixed>
+     */
+    public function getLocationDetails(string $locationCode): array
+    {
+        $response = Http::timeout($this->requestTimeout)
+            ->withHeaders($this->authHeaders())
+            ->withOptions(['verify' => false])
+            ->get(self::BASE_URL . '/v1/location/details', [
+                'locationCode' => $locationCode,
+                'extendedLocationCode' => $locationCode,
+            ]);
+
+        if (! $response->successful()) {
+            Log::error('Surprice API: Failed to fetch location details', [
+                'status' => $response->status(),
+                'location' => $locationCode,
+                'body' => $response->body(),
+            ]);
+            return [];
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /**
      * Check availability for a single location.
      *
      * @param string $locationCode   e.g. "ATH", "DXB"

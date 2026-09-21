@@ -67,11 +67,14 @@ class SyncSurpriceBranches extends Command
         $this->info('Locations fetched: ' . count($locations));
 
         // ------------------------------------------------------------------
+
+        // ------------------------------------------------------------------
         // 3. Create/update one branch per location
         // ------------------------------------------------------------------
         $created = 0;
         $updated = 0;
         $validStationIds = [];
+        $syncedCountries = [];
 
         foreach ($locations as $location) {
             $locationCode = (string) ($location['locationCode'] ?? '');
@@ -91,8 +94,47 @@ class SyncSurpriceBranches extends Command
             $lng = $address['coordinates']['lon'] ?? ($address['coordinates']['longitude'] ?? null);
 
             $currency = CountryCurrencyResolver::resolveCurrency($countryCode);
+            $resolvedCountry = ucwords(strtolower($countryName ?: CountryCurrencyResolver::resolveCountryName($countryCode)));
 
             $validStationIds[] = $locationCode;
+
+            // Fetch and sync terms per country
+            if (!isset($syncedCountries[$resolvedCountry])) {
+                try {
+                    $details = $service->getLocationDetails($locationCode);
+                    $policies = $details['policies'] ?? [];
+                    
+                    if (!empty($policies)) {
+                        $this->info("Syncing terms for country: {$resolvedCountry} using location: {$locationCode}...");
+                        foreach ($policies as $policy) {
+                            $title = str_replace('_', ' ', ucwords(strtolower($policy['type'] ?? 'TERMS AND CONDITIONS')));
+                            $term = \App\Models\RentalTerms::updateOrCreate(
+                                [
+                                    'created_by' => $supplierUser->id,
+                                    'title' => $title,
+                                    'country' => $resolvedCountry
+                                ],
+                                [
+                                    'description' => $policy['text'] ?? '',
+                                    'status' => 'approved',
+                                    'branch_id' => null,
+                                ]
+                            );
+
+                            \App\Models\SupplierRentalTerm::updateOrCreate([
+                                'rental_term_id' => $term->id,
+                                'supplier_id' => $supplierUser->id,
+                                'country' => $resolvedCountry
+                            ], [
+                                'branch_id' => null,
+                            ]);
+                        }
+                        $syncedCountries[$resolvedCountry] = true;
+                    }
+                } catch (\Exception $e) {
+                    $this->warn("Failed to sync terms for country: {$resolvedCountry} ({$e->getMessage()})");
+                }
+            }
 
             $branch = Branch::updateOrCreate(
                 [
@@ -104,7 +146,7 @@ class SyncSurpriceBranches extends Command
                     'location' => $city,
                     'adresse' => implode(', ', $address['addressLine'] ?? [$name]),
                     'city' => $city,
-                    'country' => $countryName ?: CountryCurrencyResolver::resolveCountryName($countryCode),
+                    'country' => $resolvedCountry,
                     'currency' => $currency,
                     'lat' => $lat,
                     'lng' => $lng,

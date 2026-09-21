@@ -332,15 +332,36 @@ class SyncSurpriceVehicles extends Command
                     $inclusions = [];
                     $insurance = $priceData['insurance'] ?? null;
                     if (!empty($insurance)) {
-                        $inclusions[] = $insurance['detailedDescription'] ?? $insurance['description'] ?? 'Insurance';
+                        $inclusions[] = ucwords(strtolower($insurance['detailedDescription'] ?? $insurance['description'] ?? 'Insurance'));
                     }
                     if (!empty($vehicleInfo['airConditionInd'])) {
                         $inclusions[] = 'Air Conditioning';
                     }
-                    if (!empty($vehicleInfo['unlimitedMileage'])) {
+                    $mileagePolicy = $priceData['mileagePolicy'] ?? [];
+                    if (!empty($vehicleInfo['unlimitedMileage']) || !empty($mileagePolicy['unlimited'])) {
                         $inclusions[] = 'Unlimited Mileage';
                     }
+                    
+                    // Parse vehicleCharges for included items
+                    foreach ($priceData['vehicleCharges'] ?? [] as $charge) {
+                        if (($charge['includedInRate'] ?? false) || ($charge['includedInEstTotalInd'] ?? false)) {
+                            // Skip purpose 1 (Product Cost / Base Rental)
+                            if (($charge['purpose'] ?? 0) != 1) {
+                                $desc = $charge['detailedDescription'] ?? $charge['description'] ?? '';
+                                if (!empty($desc)) {
+                                    $inclusions[] = ucwords(strtolower($desc));
+                                }
+                            }
+                        }
+                    }
 
+                    // Parse explicit included extras
+                    foreach ($priceData['includedExtras'] ?? [] as $extra) {
+                        $desc = $extra['detailedDescription'] ?? $extra['description'] ?? '';
+                        if (!empty($desc)) {
+                            $inclusions[] = ucwords(strtolower($desc));
+                        }
+                    }
                     if ($pricesOnly && ! $existingVehicle) {
                         continue;
                     }
@@ -364,8 +385,7 @@ class SyncSurpriceVehicles extends Command
                             }
                         }
                         $vehicle->update($updateData);
-
-
+                        $this->syncInclusions($vehicle, $inclusions);
 
                         $updated++;
                     } else {
