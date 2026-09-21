@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class SurpriceApiService
 {
-    private const BASE_URL = 'https://surpricecars-ota-service.uat.surpricemobility.com:3015';
+    private const BASE_URL = 'https://website-service.surpricemobility.com';
     private const BEARER_TOKEN = '69a638a6-9059-4039-ad36-196f9b1f9a7b';
 
     private int $requestTimeout = 30;

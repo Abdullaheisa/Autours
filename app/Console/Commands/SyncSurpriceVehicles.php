@@ -89,9 +89,10 @@ class SyncSurpriceVehicles extends Command
         $this->loadSpecificationDefinitions();
 
         // ------------------------------------------------------------------
-        // 3. Resolve all Surprice branches
+        // 3. Resolve all active Surprice branches
         // ------------------------------------------------------------------
         $allBranches = Branch::where('company_id', $supplierUser->id)
+            ->where('activation', true)
             ->whereNotNull('station_id')
             ->orderBy('city')
             ->orderBy('station_id')
@@ -437,6 +438,27 @@ class SyncSurpriceVehicles extends Command
         }
 
         // ------------------------------------------------------------------
+        // 9. Clean up vehicles belonging to inactive branches
+        // ------------------------------------------------------------------
+        $inactiveBranchIds = Branch::where('company_id', $supplierUser->id)
+            ->where(function ($q) {
+                $q->where('activation', false)->orWhereNull('activation');
+            })
+            ->pluck('id');
+
+        if ($inactiveBranchIds->isNotEmpty()) {
+            $inactiveVehicles = Vehicle::where('description', 'LIKE', '%[SURPRICE-GROUP-ID:%')
+                ->whereIn('pickup_loc', $inactiveBranchIds)
+                ->get();
+
+            foreach ($inactiveVehicles as $iv) {
+                $this->deleteVehicle($iv);
+                $deleted++;
+                $this->info("Deleted vehicle in inactive branch: {$iv->name}");
+            }
+        }
+
+        // ------------------------------------------------------------------
         // 10. Delete orphaned Surprice vehicles no longer in any group
         // ------------------------------------------------------------------
         if (! $pricesOnly && ! empty($syncedVehicleIds)) {
@@ -452,10 +474,11 @@ class SyncSurpriceVehicles extends Command
         }
 
         // ------------------------------------------------------------------
-        // 11. Delete empty branches
+        // 11. Delete empty active branches
         // ------------------------------------------------------------------
         $branchesDeleted = 0;
         $emptyBranches = Branch::where('company_id', $supplierUser->id)
+            ->where('activation', true)
             ->whereDoesntHave('vehicles', function ($q) {
                 $q->whereNull('deleted_at');
             })
@@ -546,6 +569,9 @@ class SyncSurpriceVehicles extends Command
     private function deleteVehicle(Vehicle $vehicle): void
     {
         VehicleSpecification::where('vehicle_id', $vehicle->id)->delete();
+        if (\Illuminate\Support\Facades\Schema::hasTable('vehicle_included')) {
+            \Illuminate\Support\Facades\DB::table('vehicle_included')->where('vehicle_id', $vehicle->id)->delete();
+        }
         $vehicle->delete();
     }
 

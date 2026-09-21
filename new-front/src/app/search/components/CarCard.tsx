@@ -350,6 +350,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             height={150}
             priority
             fetchPriority="high"
+            unoptimized={carData.image?.includes('http')}
             className="w-full max-w-[240px] md:max-w-[260px] h-auto max-h-[140px] md:max-h-[150px] object-contain"
             onError={() => setImgError(true)}
           />
@@ -422,8 +423,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     alt={`${carData.supplier.name} Logo`}
                     width={80}
                     height={40}
+                    unoptimized={carData.supplier.logo?.includes('http')}
                     className="w-full h-full object-contain"
-                    unoptimized
                   />
                 ) : (
                   <span className="text-[9px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
@@ -669,6 +670,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               height={200}
               priority
               fetchPriority="high"
+              unoptimized={carData.image?.includes('http')}
               className="w-full h-auto max-h-[200px] object-contain my-auto"
               onError={() => setImgError(true)}
             />
@@ -737,8 +739,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   alt={`${carData.supplier.name} Logo`}
                   width={65}
                   height={28}
+                  unoptimized={carData.supplier.logo?.includes('http')}
                   className="h-7 w-auto max-w-[65px] object-contain"
-                  unoptimized
                 />
               ) : (
                 <span className="text-[10px] font-bold text-gray-600">N/A</span>

@@ -2181,6 +2181,7 @@ class SupplierIntegrationService
             'vehicleGroupPrefAccriss'    => $groupId,
             'rateCode'                   => $rateCode,
             'vendorRateID'               => $vendorRateID,
+            'brokerOrderId'              => $rental->order_number ?? (string) $rental->id,
             'flightNo'                   => $rental->flight_number ?? '',
             'notes'                      => $rental->notes ?? '',
             'customerInfo'               => [
@@ -2417,6 +2418,7 @@ class SupplierIntegrationService
             'vehicleGroupPrefAccriss'    => $groupId,
             'rateCode'                   => $rateCode,
             'vendorRateID'               => $vendorRateID,
+            'brokerOrderId'              => $rental->order_number ?? (string) $rental->id,
             'flightNo'                   => $rental->flight_number ?? '',
             'notes'                      => $rental->notes ?? '',
             'customerInfo'               => [

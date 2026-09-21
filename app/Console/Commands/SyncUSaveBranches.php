@@ -31,7 +31,7 @@ class SyncUSaveBranches extends Command
         }
 
         $supplierUser = User::firstOrCreate(
-            ['email' => 'bookig@u-save-jo.com'],
+            ['email' => 'reservations@cs.usave.com'],
             [
                 'name' => 'U-Save',
                 'role' => 'active_supplier',
