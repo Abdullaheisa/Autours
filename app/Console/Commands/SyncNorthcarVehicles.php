@@ -413,16 +413,8 @@ class SyncNorthcarVehicles extends AbstractVehicleSyncCommand
 
         // 2. Mileage
         if (isset($rawData['FreeMiles']) && is_string($rawData['FreeMiles']) && $rawData['FreeMiles'] !== '' && strtolower((string)$rawData['FreeMiles']) !== 'unlimited') {
-            preg_match('/(\d+)/', (string)$rawData['FreeMiles'], $matches);
-            $numericLimit = $matches[1] ?? $rawData['FreeMiles'];
-            
-            if (is_numeric($numericLimit)) {
-                $unit = strtoupper($rawData['MileageUnit'] ?? 'KM');
-                if (str_starts_with($unit, 'MI')) {
-                    $numericLimit = (int) round((float)$numericLimit * 1.60934);
-                }
-            }
-            $mileageIncluded = \App\Models\Included::firstOrCreate(['what_is_included' => "Mileage Limit: {$numericLimit} km"]);
+            // Use canonical Limited Mileage (no km count in name)
+            $mileageIncluded = \App\Models\Included::firstOrCreate(['what_is_included' => 'Limited Mileage']);
         } else {
             $mileageIncluded = \App\Models\Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
         }

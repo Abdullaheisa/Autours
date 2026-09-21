@@ -371,33 +371,23 @@ class SyncUSaveVehicles extends AbstractVehicleSyncCommand
         $taxesIncluded = \App\Models\Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
         $includedIds[] = $taxesIncluded->id;
 
-        // Mileage
+        // Mileage — use canonical name only
         $mileageValue = $this->extractString($carData['mileage'] ?? null, '');
         if (!empty($mileageValue) && strtolower($mileageValue) !== 'unlimited') {
-            $limit = (int) filter_var($mileageValue, FILTER_SANITIZE_NUMBER_INT);
-            if ($limit > 0) {
-                $incText = "Mileage Limit: {$limit} km";
-                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
-                $includedIds[] = $inc->id;
-            } else {
-                $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
-                $includedIds[] = $inc->id;
-            }
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Limited Mileage']);
+            $includedIds[] = $inc->id;
         } else {
             $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
             $includedIds[] = $inc->id;
         }
 
-        // CDW and TP (often standard with an excess)
+        // CDW and TP — use canonical names (no excess amount embedded)
         $excessValue = (float) $this->extractString($carData['excess'] ?? null, '0');
         if ($excessValue > 0) {
-            $currency = $branch->currency ?? 'GBP';
-            $incText = "Collision Damage Waiver (Excess: {$excessValue} {$currency})";
-            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => 'Collision Damage Waiver (CDW)']);
             $includedIds[] = $inc->id;
 
-            $tpText = "Theft Protection (Excess: {$excessValue} {$currency})";
-            $incTp = \App\Models\Included::firstOrCreate(['what_is_included' => $tpText]);
+            $incTp = \App\Models\Included::firstOrCreate(['what_is_included' => 'Theft Protection (TP)']);
             $includedIds[] = $incTp->id;
         }
 

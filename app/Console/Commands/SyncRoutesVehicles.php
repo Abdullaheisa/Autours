@@ -223,24 +223,27 @@ class SyncRoutesVehicles extends Command
                     ->where('name', $normalizedModel)
                     ->first();
 
-                // Calculate per-vehicle inclusions
+                // Calculate per-vehicle inclusions — use canonical names only (no excess amounts)
                 $vehicleInclusions = [];
                 $taxesIncluded = Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
                 $vehicleInclusions[] = $taxesIncluded->id;
                 
                 if (!empty($model['Deposit'])) {
-                    $inc = Included::firstOrCreate(['what_is_included' => "Security Deposit: {$model['Deposit']}"]);
+                    // Use canonical Security Deposit (no amount embedded in the name)
+                    $inc = Included::firstOrCreate(['what_is_included' => 'Security Deposit']);
                     $vehicleInclusions[] = $inc->id;
                 }
                 
                 if ($isInclusive) {
                     if (!empty($model['CDW_Excess'])) {
-                        $inc = Included::firstOrCreate(['what_is_included' => "Collision Damage Waiver (Excess: {$model['CDW_Excess']})"]);
+                        // Canonical CDW — excess amount is informational, not stored in name
+                        $inc = Included::firstOrCreate(['what_is_included' => 'Collision Damage Waiver (CDW)']);
                         $vehicleInclusions[] = $inc->id;
                     }
                     
                     if (!empty($model['TP_Excess'])) {
-                        $inc = Included::firstOrCreate(['what_is_included' => "Theft Protection (Excess: {$model['TP_Excess']})"]);
+                        // Canonical Theft Protection
+                        $inc = Included::firstOrCreate(['what_is_included' => 'Theft Protection (TP)']);
                         $vehicleInclusions[] = $inc->id;
                     }
                 }
@@ -261,20 +264,10 @@ class SyncRoutesVehicles extends Command
                 }
                 
                 if (isset($model['FreeMiles']) && $model['FreeMiles'] !== '' && strtolower((string)$model['FreeMiles']) !== 'unlimited') {
-                    // Extract numeric part if it contains text
-                    preg_match('/(\d+)/', (string)$model['FreeMiles'], $matches);
-                    $numericLimit = $matches[1] ?? $model['FreeMiles'];
-                    
-                    if (is_numeric($numericLimit)) {
-                        $unit = strtoupper($model['MileageUnit'] ?? 'KM');
-                        if (str_starts_with($unit, 'MI')) {
-                            $numericLimit = (int) round((float)$numericLimit * 1.60934);
-                        }
-                    }
-
-                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => "Mileage Limit: {$numericLimit} km"]);
-                } else {
+                    // Limited mileage — use canonical name without embedding km count
                     $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Limited Mileage']);
+                } else {
+                    $mileageIncluded = Included::firstOrCreate(['what_is_included' => 'Unlimited Mileage']);
                 }
                 $vehicleInclusions[] = $mileageIncluded->id;
 
