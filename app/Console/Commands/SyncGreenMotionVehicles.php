@@ -97,7 +97,20 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
             $allVehiclesByTag = [];
 
             foreach ($durations as $days) {
-                $vehicles = $this->fetchVehiclesForDuration($service, $branch, $days, $hasCustomDates);
+                $fetchResult = $this->fetchVehiclesForDuration($service, $branch, $days, $hasCustomDates);
+                $vehicles = $fetchResult['vehicles'] ?? $fetchResult;
+                $apiCurrency = $fetchResult['currency'] ?? ($branch->currency ?? 'GBP');
+
+                $rateMultiplier = 1.0;
+                $branchCurrency = $branch->currency ?? 'GBP';
+                if ($apiCurrency !== $branchCurrency) {
+                    $rateObj = \App\Models\CurrencyRate::where('currency_from', $apiCurrency)
+                                ->where('currency_to', $branchCurrency)
+                                ->first();
+                    if ($rateObj) {
+                        $rateMultiplier = (float) $rateObj->rate;
+                    }
+                }
 
                 foreach ($vehicles as $carData) {
                     $vehicleId = $carData['@attributes']['id'] ?? null;
@@ -111,6 +124,8 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                     }
 
                     $dPrice = (float) (is_array($carData['total']) ? ($carData['total'][0] ?? 0) : $carData['total']);
+                    $dPrice = $dPrice * $rateMultiplier;
+
                     $daysKey = $hasCustomDates ? 1 : $days;
                     $allVehiclesByTag[$tag]['parsed_prices'][$daysKey] = $dPrice;
                 }
@@ -514,6 +529,8 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
         $pickupTimeArg = $pickup->format('H:i');
         $dropoffTimeArg = $dropoff->format('H:i');
 
+        $currency = $branch->currency ?? 'GBP';
+
         try {
             $result = $service->getVehicles(
                 (int)$branch->station_id,
@@ -522,11 +539,35 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 $dropoffDateArg,
                 $dropoffTimeArg,
                 30,
-                $branch->currency ?? 'GBP'
+                $currency
             );
 
-            return $result['vehicles'] ?? [];
+            return [
+                'vehicles' => $result['vehicles'] ?? [],
+                'currency' => $currency
+            ];
         } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'Invalid currency code') && $currency !== 'GBP') {
+                try {
+                    $result = $service->getVehicles(
+                        (int)$branch->station_id,
+                        $pickupDateArg,
+                        $pickupTimeArg,
+                        $dropoffDateArg,
+                        $dropoffTimeArg,
+                        30,
+                        'GBP'
+                    );
+                    return [
+                        'vehicles' => $result['vehicles'] ?? [],
+                        'currency' => 'GBP'
+                    ];
+                } catch (\Exception $e2) {
+                    Log::warning("Green Motion sync warning for branch {$branch->name} (ID: {$branch->station_id}): fallback to GBP failed " . $e2->getMessage());
+                    return [];
+                }
+            }
+
             Log::warning("Green Motion sync warning for branch {$branch->name} (ID: {$branch->station_id}): " . $e->getMessage());
             return [];
         }
