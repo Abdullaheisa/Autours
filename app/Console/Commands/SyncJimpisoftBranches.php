@@ -95,6 +95,12 @@ class SyncJimpisoftBranches extends Command
                 continue;
             }
 
+            // Only sync airport stations — skip Downtown/Hotel/Delivery locations
+            $locationType = $this->detectLocationType($stationName);
+            if ($locationType !== 'Airport') {
+                continue;
+            }
+
             $country = $this->detectCountry($stationName, $city);
 
             $branch = Branch::updateOrCreate(

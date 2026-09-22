@@ -76,19 +76,23 @@ class SyncJimpisoftVehicles extends Command
         $this->loadSpecificationDefinitions();
 
         // ------------------------------------------------------------------
-        // 3. Resolve all Jimpisoft branches
+        // 3. Ensure all airport branches exist, then load them
         // ------------------------------------------------------------------
+        $this->info('Ensuring all airport branches are synced from Jimpisoft API...');
+        $this->call('jimpisoft:sync-branches');
+
         $allBranches = Branch::where('company_id', $supplierUser->id)
+            ->where('location_type', 'Airport')
             ->orderBy('city')
             ->orderBy('station_id')
             ->get();
 
         if ($allBranches->isEmpty()) {
-            $this->warn('No Jimpisoft branches found. Run: php artisan jimpisoft:sync-branches');
+            $this->warn('No Jimpisoft airport branches found after sync-branches. Aborting.');
             return self::FAILURE;
         }
 
-        $this->info('Branches loaded: ' . $allBranches->count());
+        $this->info('Airport branches loaded: ' . $allBranches->count());
 
         $pickupDate = $this->option('pickup-date') ?: Carbon::now()->addDays(14)->format('Y-m-d 10:00');
         $dropoffDate1 = Carbon::parse($pickupDate)->addDay()->format('Y-m-d 10:00');
@@ -434,7 +438,7 @@ class SyncJimpisoftVehicles extends Command
         }
 
         // ------------------------------------------------------------------
-        // 9. Delete empty branches (no active vehicles left)
+        // 9. Log empty branches (do NOT delete — branch lifecycle is managed by sync-branches)
         // ------------------------------------------------------------------
         $branchesDeleted = 0;
         $emptyBranches = Branch::where('company_id', $supplierUser->id)
@@ -443,10 +447,11 @@ class SyncJimpisoftVehicles extends Command
             })
             ->get();
 
-        foreach ($emptyBranches as $emptyBranch) {
-            $emptyBranch->delete();
-            $branchesDeleted++;
-            $this->warn("Deleted empty branch: {$emptyBranch->name}");
+        if ($emptyBranches->isNotEmpty()) {
+            $this->warn("Branches with no active vehicles: {$emptyBranches->count()} (kept for next sync cycle)");
+            foreach ($emptyBranches as $emptyBranch) {
+                $this->line("  - {$emptyBranch->name} (station: {$emptyBranch->station_id})");
+            }
         }
 
         // ------------------------------------------------------------------
