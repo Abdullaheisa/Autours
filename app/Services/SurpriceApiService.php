@@ -249,7 +249,7 @@ class SurpriceApiService
      */
     public function createReservation(array $params): array
     {
-        $response = Http::timeout(60)
+        $response = Http::timeout(40)
             ->withHeaders($this->authHeaders())
             ->withOptions(['verify' => false])
             ->post(self::BASE_URL . '/v1/reservation', $params);
@@ -257,7 +257,12 @@ class SurpriceApiService
         if (! $response->successful()) {
             $status = $response->status();
             $body = $response->json();
-            $errorMsg = $body['message'] ?? $body['error']['message'] ?? (is_string($body['error'] ?? null) ? $body['error'] : "API Error ($status)");
+            
+            if ($status === 504 || $status === 502 || $status === 503) {
+                $errorMsg = "The supplier's booking system is currently unavailable ($status). Please try again later or select a different car.";
+            } else {
+                $errorMsg = $body['message'] ?? $body['error']['message'] ?? (is_string($body['error'] ?? null) ? $body['error'] : "API Error ($status)");
+            }
             
             Log::error('Surprice API: Failed to create reservation', [
                 'status' => $status,

@@ -2038,6 +2038,9 @@ class SupplierIntegrationService
         $issueDate = Carbon::now()->subYears(5)->format('Y-m-d');
         $expDate = Carbon::now()->addYears(5)->format('Y-m-d');
         
+        $countryCode = \App\Services\CountryCurrencyResolver::resolveCountryCode($customer->country ?? '');
+        $countryCode = $countryCode ?: 'GB';
+
         // Use default dates/codes if the customer is missing info, as per their schema docs
         $reservationData = [
             'pickUpDateTime' => Carbon::parse($pickupDateTime)->format('Y-m-d\TH:i:s'),
@@ -2054,11 +2057,11 @@ class SupplierIntegrationService
                     'phone' => $customer->phone_num ?? '+000000000000',
                     'addressLine' => $customer->address ?? 'Unknown Address',
                     'city' => $customer->city ?? 'Unknown',
-                    'country' => $customer->country ?? 'GB',
+                    'country' => $countryCode,
                     'postalCode' => $customer->zip_code ?? '00000',
                     'dateOfBirth' => $dob,
                     'driverLicenseNumber' => $customer->license_number ?? '123456',
-                    'driverLicenseCountryId' => $customer->country ?? 'GB',
+                    'driverLicenseCountryId' => $countryCode,
                     'driverLicenseIssueDate' => $issueDate,
                     'driverLicenseExpirationDate' => $expDate,
                 ]
