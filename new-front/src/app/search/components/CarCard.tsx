@@ -530,8 +530,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <div>
                     <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Address: {availableBranches.length} branches </span>
                     <span className="text-sm font-black text-gray-800">
-                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
-                        availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                        availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
                         carData.supplier.address}
                     </span>
                   </div>
@@ -847,8 +847,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Address: </span>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2">
-                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
-                      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
                       carData.supplier.address}
                     </span>
                   </div>
