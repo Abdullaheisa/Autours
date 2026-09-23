@@ -1,3 +1,3 @@
--export { supplierApi } from './index';
--export type { LoginRequest, ProfileResponse, VehicleListResponse, RentalListResponse } from './index';
+export { supplierApi } from './index';
+export type { LoginRequest, ProfileResponse, VehicleListResponse, RentalListResponse } from './index';
 
