@@ -228,6 +228,25 @@ trait NormalizesVehicleNames
                 continue;
             }
 
+            // Preserve words wrapped in parentheses e.g. (Inclusive), (Non-Inclusive)
+            if (str_starts_with($word, '(') && str_ends_with($word, ')')) {
+                $inner = substr($word, 1, -1);
+                if (str_contains($inner, '-')) {
+                    $innerFormatted = implode('-', array_map(fn ($part) =>
+                        isset($uppercaseLookup[strtoupper($part)])
+                            ? strtoupper($part)
+                            : ucfirst(strtolower($part)),
+                        explode('-', $inner)
+                    ));
+                } else {
+                    $innerFormatted = isset($uppercaseLookup[strtoupper($inner)])
+                        ? strtoupper($inner)
+                        : ucfirst(strtolower($inner));
+                }
+                $result[] = '(' . $innerFormatted . ')';
+                continue;
+            }
+
             // Preserve words that contain hyphens (e.g. "CR-V") – title-case each segment
             if (str_contains($word, '-')) {
                 $result[] = implode('-', array_map(fn ($part) =>

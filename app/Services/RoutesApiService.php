@@ -217,6 +217,11 @@ XML;
         $rates = [];
         if (isset($xml->Payload) && isset($xml->Payload->RateProduct)) {
             foreach ($xml->Payload->RateProduct as $rate) {
+                $totalPricing = $rate->TotalPricing ?? null;
+                $freeMilesRaw = !empty(trim((string)($rate->FreeMiles ?? '')))
+                    ? trim((string)$rate->FreeMiles)
+                    : (!empty(trim((string)($totalPricing->TotalFreeMiles ?? ''))) ? trim((string)$totalPricing->TotalFreeMiles) : null);
+
                 $rates[] = [
                     'ClassCode' => (string)$rate->ClassCode,
                     'ClassDesc' => (string)$rate->ClassDesc,
@@ -227,7 +232,7 @@ XML;
                     'RateAmount' => (string)$rate->RateAmount,
                     'CurrencyCode' => (string)$rate->CurrencyCode,
                     'TotalCharge' => isset($rate->TotalPricing->TotalCharges) ? (string)$rate->TotalPricing->TotalCharges : null,
-                    'FreeMiles' => isset($rate->FreeMiles) ? (string)$rate->FreeMiles : null,
+                    'FreeMiles' => $freeMilesRaw,
                     'MileageUnit' => isset($rate->MileageUnit) ? (string)$rate->MileageUnit : 'KM',
                     'Deposit' => isset($rate->Deposit) ? (string)$rate->Deposit : null,
                     'CDW_Excess' => isset($rate->CDW_Excess) ? (string)$rate->CDW_Excess : null,

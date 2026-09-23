@@ -88,7 +88,7 @@ class SyncRoutesVehicles extends Command
 
         // Resolve dates
         $pickupStr = $this->option('pickup-date');
-        $pickupDateCarbon = $pickupStr ? Carbon::parse($pickupStr) : Carbon::now()->addDays(2)->startOfDay()->addHours(10);
+        $pickupDateCarbon = $pickupStr ? Carbon::parse($pickupStr) : Carbon::now()->addDays(14)->startOfDay()->addHours(10);
 
         if ($pickupDateCarbon <= Carbon::today()) {
             $this->error('Pickup date must be in the future.');
@@ -213,7 +213,22 @@ class SyncRoutesVehicles extends Command
                 $classCode = $model['classCode'];
                 $isInclusive = strcasecmp(trim($rateCode), 'WebLink') === 0;
 
-                $normalizedModel = !empty($model['model']) ? trim((string)$model['model']) : trim((string)$model['classDesc']);
+                $rawModel = !empty($model['model']) ? trim((string)$model['model']) : trim((string)$model['classDesc']);
+                $cleanedModel = $this->cleanMultiVehicleName($rawModel);
+
+                // Add Transmission
+                $transmissionRaw = SippDecoder::getTransmissionAndDrive($classCode[2] ?? '');
+                $isAuto = str_contains(strtolower($transmissionRaw), 'automatic');
+                $isManual = str_contains(strtolower($transmissionRaw), 'manual');
+
+                if ($isAuto && !preg_match('/\b(Automatic|Auto|Aut)\b/i', $cleanedModel)) {
+                    $cleanedModel .= ' Automatic';
+                } elseif ($isManual && !preg_match('/\b(Manual|Man)\b/i', $cleanedModel)) {
+                    $cleanedModel .= ' Manual';
+                }
+
+                $packageTag = $isInclusive ? ' (Inclusive)' : ' (Non-Inclusive)';
+                $normalizedModel = $this->normalizeVehicleName($cleanedModel . $packageTag);
 
                 $categoryId = $this->resolveCategoryFromSipp($classCode);
 
@@ -235,17 +250,15 @@ class SyncRoutesVehicles extends Command
                 }
                 
                 if ($isInclusive) {
-                    if (!empty($model['CDW_Excess'])) {
-                        // Canonical CDW — excess amount is informational, not stored in name
-                        $inc = Included::firstOrCreate(['what_is_included' => 'Collision Damage Waiver (CDW)']);
-                        $vehicleInclusions[] = $inc->id;
-                    }
+                    // Canonical CDW, Theft Protection, and Third Party Liability for Inclusive product
+                    $cdw = Included::firstOrCreate(['what_is_included' => 'Collision Damage Waiver (CDW)']);
+                    $vehicleInclusions[] = $cdw->id;
                     
-                    if (!empty($model['TP_Excess'])) {
-                        // Canonical Theft Protection
-                        $inc = Included::firstOrCreate(['what_is_included' => 'Theft Protection (TP)']);
-                        $vehicleInclusions[] = $inc->id;
-                    }
+                    $tp = Included::firstOrCreate(['what_is_included' => 'Theft Protection (TP)']);
+                    $vehicleInclusions[] = $tp->id;
+
+                    $tpl = Included::firstOrCreate(['what_is_included' => 'Third party Liability (TPL)']);
+                    $vehicleInclusions[] = $tpl->id;
                 }
                 
                 if (!empty($model['TaxDesc'])) {
@@ -287,12 +300,12 @@ class SyncRoutesVehicles extends Command
 
                     $existingVehicle->update($updateData);
                     // Update Inclusions for existing vehicle
-                    $existingVehicle->included()->syncWithoutDetaching($vehicleInclusions);
+                    $existingVehicle->included()->sync($vehicleInclusions);
 
                     $syncedVehicleIds[] = $existingVehicle->id;
                     $updated++;
                 } elseif (!$pricesOnly) {
-                    $photoFilename = !empty($model['classImage']) ? $model['classImage'] : $this->resolveLocalPhoto($normalizedModel);
+                    $photoFilename = !empty($model['classImage']) ? $model['classImage'] : $this->resolveLocalPhoto($cleanedModel);
 
                     $vehicle = Vehicle::create([
                         'name'                 => $normalizedModel,
@@ -320,7 +333,7 @@ class SyncRoutesVehicles extends Command
                     $this->syncVehicleSpecifications($vehicle, $classCode, $model['seats']);
 
                     // Sync Inclusions
-                    $vehicle->included()->syncWithoutDetaching($vehicleInclusions);
+                    $vehicle->included()->sync($vehicleInclusions);
 
                     $syncedVehicleIds[] = $vehicle->id;
                     $created++;
