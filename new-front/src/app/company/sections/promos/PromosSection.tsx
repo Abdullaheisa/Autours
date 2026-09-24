@@ -225,18 +225,20 @@ export default function PromosSection() {
 
     // Parallel fetch for active promo details and ensure IDs are loaded
     try {
-      const [idsRes, activeRes] = await Promise.all([
+      const [idsRes, activeRes]: any[] = await Promise.all([
         allFleetIdsState.length === 0 ? supplierApi.getVehicleIds().catch(() => ({ data: [] })) : Promise.resolve({ data: allFleetIdsState }),
         promo.promoted ? supplierApi.getPromos(promo.id).catch(() => ({ data: [] })) : Promise.resolve([]),
       ]);
 
-      const fleetIds: number[] = (idsRes?.data && idsRes.data.length > 0) ? idsRes.data : allFleetIdsState;
+      const fleetData: any = idsRes;
+      const fleetIds: number[] = (fleetData?.data && Array.isArray(fleetData.data) && fleetData.data.length > 0) ? fleetData.data : allFleetIdsState;
       if (allFleetIdsState.length === 0 && fleetIds.length > 0) {
         setAllFleetIdsState(fleetIds);
         setTotalFleetCount(fleetIds.length);
       }
 
-      const activeVehicleIds: number[] = Array.isArray(activeRes) ? activeRes : (activeRes?.data || []);
+      const activeData: any = activeRes;
+      const activeVehicleIds: number[] = Array.isArray(activeData) ? activeData : (activeData?.data || []);
       const hasAllFleetMarker = activeVehicleIds.some((id: any) => Number(id) === 0);
 
       if (promo.promoted && !hasAllFleetMarker && activeVehicleIds.length > 0 && (fleetIds.length === 0 || activeVehicleIds.length < fleetIds.length)) {
