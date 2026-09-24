@@ -175,9 +175,15 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 $vehicleId = $carData['@attributes']['id'] ?? null;
                 $descriptionTag = "[{$tagPrefix}:{$vehicleId}]";
 
-                $vehicle = Vehicle::where('pickup_loc', $branch->id)
+                $vehicle = Vehicle::withTrashed()
+                    ->where('pickup_loc', $branch->id)
                     ->where('description', 'LIKE', "%{$descriptionTag}%")
                     ->first();
+
+                // Restore soft-deleted vehicle to preserve its ID (and any linked promos)
+                if ($vehicle && $vehicle->trashed()) {
+                    $vehicle->restore();
+                }
 
                 $image = $carData['@attributes']['image'] ?? '';
                 $localPhotoUrl = $this->resolveLocalPhoto($normalizedName) ?: $image;
