@@ -1132,45 +1132,103 @@ class VehicleController extends Controller
         }
 
         if ($request->filled('country')) {
-            $query->whereHas('branch', function ($q) use ($request) {
-                $q->where('country', $request->country);
+            $country = strtolower(trim($request->country));
+            $query->whereHas('branch', function ($q) use ($country) {
+                $q->whereRaw('LOWER(country) = ?', [$country]);
             });
         }
 
         if ($request->filled('address')) {
-            $query->whereHas('branch', function ($q) use ($request) {
-                $q->where('adresse', 'LIKE', '%' . $request->address . '%')
-                  ->orWhere('location', 'LIKE', '%' . $request->address . '%')
-                  ->orWhere('city', 'LIKE', '%' . $request->address . '%');
+            $searchTerm = '%' . strtolower(trim($request->address)) . '%';
+            $query->whereHas('branch', function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(adresse) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(location) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(city) LIKE ?', [$searchTerm]);
             });
         }
 
         if ($request->filled('search')) {
-            $query->where('name', 'LIKE', '%' . $request->search . '%');
+            $searchTerm = '%' . strtolower(trim($request->search)) . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+                  ->orWhereHas('branch', function ($bq) use ($searchTerm) {
+                      $bq->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+                        ->orWhereRaw('LOWER(city) LIKE ?', [$searchTerm])
+                        ->orWhereRaw('LOWER(country) LIKE ?', [$searchTerm]);
+                  });
+            });
         }
 
         $vehicles = $query->with(['category', 'branch', 'fuelPolicy', 'vehiclePhoto'])
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 15));
 
-        foreach ($vehicles->items() as $vehicle) {
-            $promos = DB::select(
-                'SELECT DISTINCT what_is_included as promotion 
-                 FROM promos 
-                 JOIN included ON included.id = promos.included_id  
-                 WHERE promos.vehicle_id = :vehicle_id 
-                    OR (promos.vehicle_id = 0 AND promos.supplier_id = :supplier_id)',
-                [
-                    'vehicle_id' => $vehicle->id,
-                    'supplier_id' => $supplier->id,
-                ]
-            );
-            $vehicle->setAttribute('promos', array_map(function($p) { return $p->promotion; }, $promos));
+        $vehicleIds = collect($vehicles->items())->pluck('id')->filter()->values()->toArray();
+        if (!empty($vehicleIds)) {
+            $supplierWidePromos = DB::table('promos')
+                ->join('included', 'included.id', '=', 'promos.included_id')
+                ->where('promos.vehicle_id', 0)
+                ->where('promos.supplier_id', $supplier->id)
+                ->pluck('included.what_is_included')
+                ->unique()
+                ->toArray();
+
+            $specificPromos = DB::table('promos')
+                ->join('included', 'included.id', '=', 'promos.included_id')
+                ->whereIn('promos.vehicle_id', $vehicleIds)
+                ->select('promos.vehicle_id', 'included.what_is_included as promotion')
+                ->get()
+                ->groupBy('vehicle_id');
+
+            foreach ($vehicles->items() as $vehicle) {
+                $itemSpecific = $specificPromos->get($vehicle->id, collect())->pluck('promotion')->toArray();
+                $allItemPromos = array_values(array_unique(array_merge($itemSpecific, $supplierWidePromos)));
+                $vehicle->setAttribute('promos', $allItemPromos);
+            }
         }
 
         return response()->json([
             'status' => true,
             'data' => $vehicles,
+        ]);
+    }
+
+    public function getVehicleIdsExternal(Request $request): JsonResponse
+    {
+        $supplier = $request->user();
+
+        $query = Vehicle::query()
+            ->where('supplier', $supplier->id);
+
+        if ($request->filled('branch_id')) {
+            $query->where('pickup_loc', $request->branch_id);
+        }
+
+        if ($request->filled('country')) {
+            $country = strtolower(trim($request->country));
+            $query->whereHas('branch', function ($q) use ($country) {
+                $q->whereRaw('LOWER(country) = ?', [$country]);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $searchTerm = '%' . strtolower(trim($request->search)) . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+                  ->orWhereHas('branch', function ($bq) use ($searchTerm) {
+                      $bq->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+                        ->orWhereRaw('LOWER(city) LIKE ?', [$searchTerm])
+                        ->orWhereRaw('LOWER(country) LIKE ?', [$searchTerm]);
+                  });
+            });
+        }
+
+        $ids = $query->pluck('id')->map(function ($id) { return (int) $id; })->values();
+
+        return response()->json([
+            'status' => true,
+            'data' => $ids,
+            'total' => count($ids),
         ]);
     }
 

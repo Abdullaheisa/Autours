@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check, AlertCircle } from "lucide-react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { 
+  Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check, 
+  AlertCircle, Building2, Globe, MapPin, CheckCheck, Square, RotateCcw
+} from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
 import Pagination from "@/components/ui/Pagination";
@@ -34,9 +37,23 @@ export default function PromosSection() {
   const [currentPromo, setCurrentPromo] = useState<any | null>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<number[]>([]);
+  const [allFleetIdsState, setAllFleetIdsState] = useState<number[]>([]);
+  const [totalFleetCount, setTotalFleetCount] = useState<number>(0);
   const [isAllSelected, setIsAllSelected] = useState(true);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+
+  // Modal Filters & Pagination
+  const [branches, setBranches] = useState<any[]>([]);
+  const [modalSearch, setModalSearch] = useState("");
+  const [debouncedModalSearch, setDebouncedModalSearch] = useState("");
+  const [modalCountry, setModalCountry] = useState("");
+  const [modalBranch, setModalBranch] = useState("");
+  const [modalPage, setModalPage] = useState(1);
+  const [modalTotalVehicles, setModalTotalVehicles] = useState(0);
+  const [modalTotalPages, setModalTotalPages] = useState(1);
+  const modalPerPage = 24;
 
   useEffect(() => {
     if (isSearchMount.current) {
@@ -45,6 +62,14 @@ export default function PromosSection() {
     }
     setCurrentPage(1);
   }, [localSearch, searchQuery, setCurrentPage]);
+
+  // Debounce search in modal
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedModalSearch(modalSearch);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [modalSearch]);
 
   const fetchPromosAndIncluded = async () => {
     setIsLoading(true);
@@ -82,6 +107,19 @@ export default function PromosSection() {
 
   useEffect(() => {
     fetchPromosAndIncluded();
+    // Preload branches and total fleet in background so modal opens instantly
+    supplierApi.getBranches().then((res: any) => {
+      const list = res?.data?.data || res?.data || res || [];
+      if (Array.isArray(list)) setBranches(list);
+    }).catch(() => {});
+
+    supplierApi.getVehicleIds().then((res: any) => {
+      const ids: number[] = res?.data || [];
+      if (ids.length > 0) {
+        setAllFleetIdsState(ids);
+        setTotalFleetCount(ids.length);
+      }
+    }).catch(() => {});
   }, []);
 
   const filteredPromos = useMemo(() => {
@@ -99,6 +137,74 @@ export default function PromosSection() {
     return filteredPromos.slice(start, start + itemsPerPage);
   }, [filteredPromos, currentPage]);
 
+  // Available countries derived from branches
+  const availableCountries = useMemo(() => {
+    const set = new Set<string>();
+    branches.forEach(b => {
+      if (b.country && typeof b.country === 'string' && b.country.trim()) {
+        set.add(b.country.trim());
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [branches]);
+
+  // Branches filtered by selected country
+  const availableBranches = useMemo(() => {
+    if (!modalCountry) return branches;
+    return branches.filter(b => (b.country || '').trim().toLowerCase() === modalCountry.trim().toLowerCase());
+  }, [branches, modalCountry]);
+
+  const loadModalVehicles = useCallback(async (page: number, search: string, country: string, branchId: string) => {
+    setIsLoadingVehicles(true);
+    try {
+      const res: any = await supplierApi.getVehicles(page, modalPerPage, {
+        search: search.trim() || undefined,
+        country: country.trim() || undefined,
+        branch_id: branchId.trim() || undefined,
+      });
+      const data = res?.data || res;
+      const list = data?.data || data?.vehicles || (Array.isArray(data) ? data : []);
+      setVehicles(list);
+      setModalTotalVehicles(data?.total ?? list.length);
+      setModalTotalPages(data?.last_page ?? Math.max(1, Math.ceil((data?.total ?? list.length) / modalPerPage)));
+    } catch (err) {
+      toast.error("Failed to load vehicles.");
+    } finally {
+      setIsLoadingVehicles(false);
+    }
+  }, [modalPerPage]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    loadModalVehicles(modalPage, debouncedModalSearch, modalCountry, modalBranch);
+  }, [isModalOpen, modalPage, debouncedModalSearch, modalCountry, modalBranch, loadModalVehicles]);
+
+  const handleSearchChange = (val: string) => {
+    setModalSearch(val);
+    setModalPage(1);
+  };
+
+  const handleCountryChange = (val: string) => {
+    setModalCountry(val);
+    setModalBranch("");
+    setModalPage(1);
+  };
+
+  const handleBranchChange = (val: string) => {
+    setModalBranch(val);
+    setModalPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setModalSearch("");
+    setDebouncedModalSearch("");
+    setModalCountry("");
+    setModalBranch("");
+    setModalPage(1);
+  };
+
+  const hasActiveFilters = Boolean(modalSearch || modalCountry || modalBranch);
+
   const handleOpenPromoModal = async (promo: any) => {
     if (promo.status === 'pending') {
       toast.error("This promo suggestion is still pending admin approval!");
@@ -111,34 +217,38 @@ export default function PromosSection() {
 
     setCurrentPromo(promo);
     setIsModalOpen(true);
-    setIsLoadingVehicles(true);
+    setModalSearch("");
+    setDebouncedModalSearch("");
+    setModalCountry("");
+    setModalBranch("");
+    setModalPage(1);
+
+    // Parallel fetch for active promo details and ensure IDs are loaded
     try {
-      // 1. Fetch fleet vehicles
-      const res: any = await supplierApi.getVehicles(1, 200);
-      const list = res?.data?.data || res?.data || res || [];
-      
-      // 2. Fetch active vehicle IDs for this promo
-      let activeVehicleIds: number[] = [];
-      if (promo.promoted) {
-        const activeRes: any = await supplierApi.getPromos(promo.id);
-        activeVehicleIds = Array.isArray(activeRes) ? activeRes : (activeRes?.data || []);
+      const [idsRes, activeRes] = await Promise.all([
+        allFleetIdsState.length === 0 ? supplierApi.getVehicleIds().catch(() => ({ data: [] })) : Promise.resolve({ data: allFleetIdsState }),
+        promo.promoted ? supplierApi.getPromos(promo.id).catch(() => ({ data: [] })) : Promise.resolve([]),
+      ]);
+
+      const fleetIds: number[] = (idsRes?.data && idsRes.data.length > 0) ? idsRes.data : allFleetIdsState;
+      if (allFleetIdsState.length === 0 && fleetIds.length > 0) {
+        setAllFleetIdsState(fleetIds);
+        setTotalFleetCount(fleetIds.length);
       }
 
-      if (Array.isArray(list)) {
-        setVehicles(list);
-        const hasAllFleetMarker = activeVehicleIds.some((id: any) => Number(id) === 0);
-        if (promo.promoted && !hasAllFleetMarker && activeVehicleIds.length > 0 && activeVehicleIds.length < list.length) {
-          setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)).filter(id => id > 0));
-          setIsAllSelected(false);
-        } else {
-          setSelectedVehicleIds(list.map((v: any) => v.id)); // Default select all
-          setIsAllSelected(true);
-        }
+      const activeVehicleIds: number[] = Array.isArray(activeRes) ? activeRes : (activeRes?.data || []);
+      const hasAllFleetMarker = activeVehicleIds.some((id: any) => Number(id) === 0);
+
+      if (promo.promoted && !hasAllFleetMarker && activeVehicleIds.length > 0 && (fleetIds.length === 0 || activeVehicleIds.length < fleetIds.length)) {
+        const cleaned = activeVehicleIds.map((id: any) => Number(id)).filter(id => id > 0);
+        setSelectedVehicleIds(cleaned);
+        setIsAllSelected(false);
+      } else {
+        setSelectedVehicleIds(fleetIds);
+        setIsAllSelected(true);
       }
     } catch (err) {
-      toast.error("Failed to load fleet vehicles.");
-    } finally {
-      setIsLoadingVehicles(false);
+      console.error("Failed to initialize promo fleet data", err);
     }
   };
 
@@ -146,12 +256,10 @@ export default function PromosSection() {
     if (!currentPromo) return;
     setIsSubmitting(true);
     try {
-      // If all fleet vehicles are selected, send select_all=true so the backend
-      // applies the promo to ALL supplier vehicles in the DB (not just the paginated subset in UI)
-      const applyToAll = isAllSelected || (vehicles.length > 0 && selectedVehicleIds.length === vehicles.length);
+      const applyToAll = isAllSelected || (totalFleetCount > 0 && selectedVehicleIds.length >= totalFleetCount);
       const res: any = await supplierApi.createPromo({
         included_id: currentPromo.id,
-        selected_vehicles: selectedVehicleIds.join(","),
+        selected_vehicles: applyToAll ? "" : selectedVehicleIds.join(","),
         select_all: applyToAll,
       });
       if (res?.status || res?.data) {
@@ -207,28 +315,104 @@ export default function PromosSection() {
   };
 
   const toggleVehicleSelection = (id: number) => {
-    setIsAllSelected(false);
-    setSelectedVehicleIds(prev => 
-      prev.includes(id) ? prev.filter(vId => vId !== id) : [...prev, id]
-    );
+    if (isAllSelected) {
+      setIsAllSelected(false);
+      setSelectedVehicleIds(allFleetIdsState.filter(vId => vId !== id));
+      return;
+    }
+
+    setSelectedVehicleIds(prev => {
+      const isSelected = prev.includes(id);
+      const next = isSelected ? prev.filter(vId => vId !== id) : [...prev, id];
+      if (allFleetIdsState.length > 0 && next.length >= allFleetIdsState.length) {
+        setIsAllSelected(true);
+      }
+      return next;
+    });
   };
 
-  const selectAllVehicles = () => {
-    if (isAllSelected || selectedVehicleIds.length === vehicles.length) {
+  const toggleSelectAllFleet = () => {
+    if (isAllSelected || (totalFleetCount > 0 && selectedVehicleIds.length >= totalFleetCount)) {
       setIsAllSelected(false);
       setSelectedVehicleIds([]);
     } else {
       setIsAllSelected(true);
-      setSelectedVehicleIds(vehicles.map(v => v.id));
+      setSelectedVehicleIds(allFleetIdsState);
+    }
+  };
+
+  const handleSelectFiltered = async () => {
+    setIsActionLoading(true);
+    try {
+      const res: any = await supplierApi.getVehicleIds({
+        search: debouncedModalSearch.trim() || undefined,
+        country: modalCountry.trim() || undefined,
+        branch_id: modalBranch.trim() || undefined,
+      });
+      const ids: number[] = res?.data || [];
+      if (ids.length === 0) {
+        toast.error("No vehicles found in this filter.");
+        return;
+      }
+      setSelectedVehicleIds(prev => {
+        const base = isAllSelected ? allFleetIdsState : prev;
+        const set = new Set([...base, ...ids]);
+        const next = Array.from(set);
+        if (allFleetIdsState.length > 0 && next.length >= allFleetIdsState.length) {
+          setIsAllSelected(true);
+        }
+        return next;
+      });
+      toast.success(`Selected ${ids.length} filtered vehicles.`);
+    } catch (e) {
+      toast.error("Failed to select filtered vehicles.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleDeselectFiltered = async () => {
+    setIsActionLoading(true);
+    try {
+      const res: any = await supplierApi.getVehicleIds({
+        search: debouncedModalSearch.trim() || undefined,
+        country: modalCountry.trim() || undefined,
+        branch_id: modalBranch.trim() || undefined,
+      });
+      const idsToRemove = new Set(res?.data || []);
+      if (idsToRemove.size === 0) return;
+
+      setIsAllSelected(false);
+      setSelectedVehicleIds(prev => {
+        const currentList = isAllSelected ? allFleetIdsState : prev;
+        return currentList.filter(id => !idsToRemove.has(id));
+      });
+      toast.success(`Deselected ${idsToRemove.size} vehicles.`);
+    } catch (e) {
+      toast.error("Failed to deselect filtered vehicles.");
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
   const resolveImageUrl = (v: any) => {
-    let img = v.image || v.photo || v.car_photo || v.cover_image;
+    let img = v.image || v.photo || v.car_photo || v.cover_image || v.vehiclePhoto?.photo || v.vehicle_photo?.photo;
     if (Array.isArray(img)) img = img[0];
     if (img && typeof img === 'object') img = img.photo || img.url || img.path || img.image || '';
     if (!img || typeof img !== 'string') return undefined;
     return getVehicleImageUrl(img);
+  };
+
+  const getBranchLabel = (v: any) => {
+    if (v.branch) {
+      const parts = [
+        v.branch.name || v.branch.location || '',
+        v.branch.city || '',
+        v.branch.country || ''
+      ].filter(Boolean);
+      return parts.join(' • ');
+    }
+    return v.pickup_loc_name || "General Fleet";
   };
 
   return (
@@ -460,102 +644,288 @@ export default function PromosSection() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden p-6 z-10 mx-2 max-h-[90vh] flex flex-col"
+              className="relative bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden p-5 sm:p-7 z-10 mx-2 max-h-[92vh] flex flex-col border border-gray-150"
             >
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-gray-150">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Promote: {currentPromo?.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Select which fleet vehicles should showcase this promotion</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shrink-0">
+                    <Zap size={22} className="fill-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-gray-900 leading-snug">
+                      Promote: {currentPromo?.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Select which fleet vehicles, branches, or countries should showcase this promotion
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors animate-all"
+                  className="p-2 hover:bg-gray-100 rounded-xl text-gray-400 hover:text-gray-700 transition-colors"
                   aria-label="Close modal"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar">
+              {/* Filters & Action Bar */}
+              <div className="py-4 space-y-3 border-b border-gray-150">
                 {otherActivePromo && (
-                  <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl flex items-start gap-3">
-                    <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                  <div className="bg-amber-50 border-l-4 border-amber-500 p-3.5 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={17} />
                     <div>
                       <p className="text-xs font-bold text-amber-800">
                         ملاحظة: تفعيل هذا البرومو سيؤدي تلقائياً إلى إلغاء برومو "{otherActivePromo.name}".
                       </p>
-                      <p className="text-[11px] text-amber-750 mt-1">
-                        Note: Promoting this feature will automatically deactivate "{otherActivePromo.name}". Only one promo can be active per company.
+                      <p className="text-[11px] text-amber-700 mt-0.5">
+                        Note: Activating this promo will replace "{otherActivePromo.name}". Only one promo can be active per company.
                       </p>
                     </div>
                   </div>
                 )}
+
+                {/* Filter Controls Row */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  {/* Search Input */}
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                    <input
+                      type="text"
+                      value={modalSearch}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="Search car name or branch..."
+                      className="w-full pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    />
+                    {modalSearch && (
+                      <button
+                        onClick={() => handleSearchChange("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Country Filter */}
+                  <div className="relative w-full sm:w-44">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <Globe size={15} />
+                    </div>
+                    <select
+                      value={modalCountry}
+                      onChange={(e) => handleCountryChange(e.target.value)}
+                      className="w-full pl-9 pr-7 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">All Countries</option>
+                      {availableCountries.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Branch Filter */}
+                  <div className="relative w-full sm:w-56">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <Building2 size={15} />
+                    </div>
+                    <select
+                      value={modalBranch}
+                      onChange={(e) => handleBranchChange(e.target.value)}
+                      className="w-full pl-9 pr-7 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer truncate"
+                    >
+                      <option value="">All Branches ({availableBranches.length})</option>
+                      {availableBranches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name || b.location || `Branch #${b.id}`} {b.city ? `(${b.city})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Clear Filters Button */}
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={handleClearFilters}
+                      className="px-3 py-2.5 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    >
+                      <RotateCcw size={13} />
+                      <span>Reset</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Selection Action Toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Master Select All Fleet */}
+                    <button
+                      type="button"
+                      onClick={toggleSelectAllFleet}
+                      className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+                        isAllSelected || (totalFleetCount > 0 && selectedVehicleIds.length >= totalFleetCount)
+                          ? "bg-primary text-black border-primary font-black"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-primary"
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                        isAllSelected || (totalFleetCount > 0 && selectedVehicleIds.length >= totalFleetCount)
+                          ? "bg-black border-black text-white"
+                          : "border-gray-300 bg-white"
+                      }`}>
+                        {(isAllSelected || (totalFleetCount > 0 && selectedVehicleIds.length >= totalFleetCount)) && (
+                          <Check size={11} strokeWidth={3} />
+                        )}
+                      </div>
+                      <span>SELECT ALL FLEET ({totalFleetCount.toLocaleString()})</span>
+                    </button>
+
+                    {/* Quick Filter Selection Helper */}
+                    {hasActiveFilters && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={isActionLoading || modalTotalVehicles === 0}
+                          onClick={handleSelectFiltered}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                        >
+                          {isActionLoading ? <Loader2 size={13} className="animate-spin" /> : <CheckCheck size={14} />}
+                          <span>Select Filtered ({modalTotalVehicles})</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isActionLoading || modalTotalVehicles === 0}
+                          onClick={handleDeselectFiltered}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                        >
+                          <Square size={13} className="text-gray-400" />
+                          <span>Deselect Filtered</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Selected Counter Pill */}
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-amber-50 text-amber-800 border border-amber-200 shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                      {isAllSelected || (totalFleetCount > 0 && selectedVehicleIds.length >= totalFleetCount)
+                        ? `All Fleet Selected (${totalFleetCount.toLocaleString()})`
+                        : `${selectedVehicleIds.length.toLocaleString()} Selected`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Body: Vehicles Grid */}
+              <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar">
                 {isLoadingVehicles ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-400">
-                    <Loader2 size={24} className="animate-spin text-primary" />
-                    <span className="text-xs font-semibold">Loading active fleet...</span>
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
+                    <Loader2 size={32} className="animate-spin text-primary" />
+                    <span className="text-sm font-semibold">Loading vehicles...</span>
                   </div>
                 ) : vehicles.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-sm text-gray-500">You don't have any vehicles to apply promotions to.</p>
-                  </div>
-                ) : (
-                  <div>
-                    {/* Toggle All Selection */}
-                    <div className="flex items-center justify-between bg-gray-50/50 border border-gray-200/60 rounded-xl p-3.5 mb-4">
-                      <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Select All Fleet Vehicles</span>
+                  <div className="text-center py-16 space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mx-auto">
+                      <Search size={24} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-800">No Vehicles Found</h4>
+                      <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1">
+                        No vehicles matched your current filters or search query.
+                      </p>
+                    </div>
+                    {hasActiveFilters && (
                       <button
                         type="button"
-                        onClick={selectAllVehicles}
-                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                          isAllSelected || (vehicles.length > 0 && selectedVehicleIds.length === vehicles.length)
-                            ? "bg-primary border-primary text-black"
-                            : "bg-white border-gray-300 hover:border-primary"
-                        }`}
+                        onClick={handleClearFilters}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-black font-bold text-xs rounded-xl shadow-sm hover:bg-primary/90 transition-all"
                       >
-                        {(isAllSelected || (vehicles.length > 0 && selectedVehicleIds.length === vehicles.length)) && <Check size={14} strokeWidth={3} />}
+                        <RotateCcw size={13} />
+                        Clear All Filters
                       </button>
-                    </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {vehicles.map((v) => {
+                      const isSelected = isAllSelected || selectedVehicleIds.includes(v.id);
+                      return (
+                        <div
+                          key={v.id}
+                          onClick={() => toggleVehicleSelection(v.id)}
+                          className={`group relative flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer select-none ${
+                            isSelected
+                              ? "bg-amber-50/50 border-primary shadow-sm"
+                              : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                          }`}
+                        >
+                          {/* Image */}
+                          <div className="w-14 h-11 rounded-xl overflow-hidden border border-gray-150 bg-gray-50 shrink-0 relative flex items-center justify-center">
+                            {resolveImageUrl(v) ? (
+                              <img
+                                src={resolveImageUrl(v)}
+                                alt={v.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-400 font-bold bg-gray-100">
+                                CAR
+                              </div>
+                            )}
+                          </div>
 
-                    {/* Vehicles Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {vehicles.map((v) => {
-                        const isSelected = selectedVehicleIds.includes(v.id);
-                        return (
-                          <div 
-                            key={v.id}
-                            onClick={() => toggleVehicleSelection(v.id)}
-                            className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all hover:bg-gray-50/50 ${
-                              isSelected ? "border-primary bg-primary/5/30" : "border-gray-200 bg-white"
-                            }`}
-                          >
-                            <div className="w-12 h-8 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
-                              {resolveImageUrl(v) ? (
-                                <img src={resolveImageUrl(v)} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-400 font-bold bg-gray-100">CAR</div>
-                              )}
+                          {/* Details */}
+                          <div className="flex-1 min-w-0 pr-1">
+                            <p className="text-xs font-bold text-gray-900 truncate leading-snug">
+                              {v.name}
+                            </p>
+                            <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-0.5 truncate">
+                              <MapPin size={11} className="text-gray-400 shrink-0" />
+                              <span className="truncate">{getBranchLabel(v)}</span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-gray-900 truncate leading-snug">{v.name}</p>
-                              <p className="text-[10px] text-gray-400 truncate mt-0.5">{v.pickup_loc?.name || "All Branches"}</p>
-                            </div>
-                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
-                              isSelected ? "bg-primary border-primary text-black" : "bg-white border-gray-200"
-                            }`}>
-                              {isSelected && <Check size={12} strokeWidth={3} />}
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                                {v.category?.name || "Standard"}
+                              </span>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          {/* Checkbox */}
+                          <div
+                            className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
+                              isSelected
+                                ? "bg-primary border-primary text-black"
+                                : "bg-white border-gray-300 group-hover:border-primary"
+                            }`}
+                          >
+                            {isSelected && <Check size={12} strokeWidth={3} />}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              {/* Footer */}
+              {/* Modal Pagination Footer */}
+              {modalTotalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-gray-100 bg-white">
+                  <span className="text-xs font-semibold text-gray-500">
+                    Showing {Math.min(modalTotalVehicles, (modalPage - 1) * modalPerPage + 1)} to{" "}
+                    {Math.min(modalTotalVehicles, modalPage * modalPerPage)} of {modalTotalVehicles.toLocaleString()} vehicles
+                  </span>
+                  <Pagination
+                    currentPage={modalPage}
+                    totalPages={modalTotalPages}
+                    onPageChange={setModalPage}
+                  />
+                </div>
+              )}
+
+              {/* Action Buttons Footer */}
               <div className="pt-4 border-t border-gray-150 flex gap-3">
                 <button
                   type="button"
@@ -567,7 +937,7 @@ export default function PromosSection() {
                 <button
                   type="button"
                   onClick={handleSavePromo}
-                  disabled={isSubmitting || selectedVehicleIds.length === 0}
+                  disabled={isSubmitting || (!isAllSelected && selectedVehicleIds.length === 0)}
                   className="flex-1 py-3 bg-primary hover:bg-primary/95 disabled:opacity-50 disabled:pointer-events-none text-black font-black rounded-xl text-sm transition-colors uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
                 >
                   {isSubmitting ? (
@@ -576,7 +946,9 @@ export default function PromosSection() {
                       <span>Promoting...</span>
                     </>
                   ) : (
-                    <span>Promote Active</span>
+                    <span>
+                      Promote Active {isAllSelected ? `(All ${totalFleetCount})` : `(${selectedVehicleIds.length})`}
+                    </span>
                   )}
                 </button>
               </div>

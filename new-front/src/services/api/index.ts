@@ -527,6 +527,17 @@ export const supplierApi = {
     return apiClient.get<VehicleListResponse>(url);
   },
 
+  getVehicleIds: (filters?: { branch_id?: string; country?: string; search?: string }) => {
+    let url = `/api/external/supplier/vehicle-ids`;
+    const params = new URLSearchParams();
+    if (filters?.branch_id) params.append('branch_id', filters.branch_id);
+    if (filters?.country)   params.append('country', filters.country);
+    if (filters?.search)    params.append('search', filters.search);
+    const queryString = params.toString();
+    if (queryString) url += `?${queryString}`;
+    return apiClient.get<{ status: boolean; data: number[]; total: number }>(url);
+  },
+
   createVehicle: (data: FormData | any) => {
     return apiClient.post('/api/external/supplier/vehicles', cleanPayload(data));
   },

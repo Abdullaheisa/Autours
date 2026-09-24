@@ -241,7 +241,10 @@ class ExternalAuthController extends Controller
      */
     public function getBranches(): JsonResponse
     {
-        $user = request()->user();
+        $user = request()->user() ?? \Illuminate\Support\Facades\Auth::guard('sanctum')->user();
+        if (!$user) {
+            return response()->json(['status' => false, 'data' => []], 401);
+        }
 
         $branches = \App\Models\Branch::query()
             ->where('company_id', $user->id)

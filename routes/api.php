@@ -95,6 +95,7 @@ Route::prefix('external/supplier')->group(function () {
 
         // Vehicle routes
         Route::get('/vehicles', [VehicleController::class, 'getVehiclesExternal'])->name('external.supplier.vehicles.index');
+        Route::get('/vehicle-ids', [VehicleController::class, 'getVehicleIdsExternal'])->name('external.supplier.vehicles.ids');
         Route::post('/vehicles', [VehicleController::class, 'createExternal'])->name('external.supplier.vehicles.store');
         Route::post('/vehicles/toggle-activation', [VehicleController::class, 'updateActivation'])->name('external.supplier.vehicles.toggle-activation');
         Route::put('/vehicles/{vehicleId}/price', [VehicleController::class, 'updatePriceExternal'])->name('external.supplier.vehicles.update-price');
