@@ -34,6 +34,7 @@ export default function PromosSection() {
   const [currentPromo, setCurrentPromo] = useState<any | null>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<number[]>([]);
+  const [isAllSelected, setIsAllSelected] = useState(true);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -125,10 +126,13 @@ export default function PromosSection() {
 
       if (Array.isArray(list)) {
         setVehicles(list);
-        if (promo.promoted && activeVehicleIds.length > 0) {
-          setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)));
+        const hasAllFleetMarker = activeVehicleIds.some((id: any) => Number(id) === 0);
+        if (promo.promoted && !hasAllFleetMarker && activeVehicleIds.length > 0 && activeVehicleIds.length < list.length) {
+          setSelectedVehicleIds(activeVehicleIds.map((id: any) => Number(id)).filter(id => id > 0));
+          setIsAllSelected(false);
         } else {
           setSelectedVehicleIds(list.map((v: any) => v.id)); // Default select all
+          setIsAllSelected(true);
         }
       }
     } catch (err) {
@@ -142,9 +146,13 @@ export default function PromosSection() {
     if (!currentPromo) return;
     setIsSubmitting(true);
     try {
+      // If all fleet vehicles are selected, send select_all=true so the backend
+      // applies the promo to ALL supplier vehicles in the DB (not just the paginated subset in UI)
+      const applyToAll = isAllSelected || (vehicles.length > 0 && selectedVehicleIds.length === vehicles.length);
       const res: any = await supplierApi.createPromo({
         included_id: currentPromo.id,
-        selected_vehicles: selectedVehicleIds.join(",")
+        selected_vehicles: selectedVehicleIds.join(","),
+        select_all: applyToAll,
       });
       if (res?.status || res?.data) {
         toast.success(`Successfully updated promotions for "${currentPromo.name}"!`);
@@ -199,15 +207,18 @@ export default function PromosSection() {
   };
 
   const toggleVehicleSelection = (id: number) => {
+    setIsAllSelected(false);
     setSelectedVehicleIds(prev => 
       prev.includes(id) ? prev.filter(vId => vId !== id) : [...prev, id]
     );
   };
 
   const selectAllVehicles = () => {
-    if (selectedVehicleIds.length === vehicles.length) {
+    if (isAllSelected || selectedVehicleIds.length === vehicles.length) {
+      setIsAllSelected(false);
       setSelectedVehicleIds([]);
     } else {
+      setIsAllSelected(true);
       setSelectedVehicleIds(vehicles.map(v => v.id));
     }
   };
@@ -499,12 +510,12 @@ export default function PromosSection() {
                         type="button"
                         onClick={selectAllVehicles}
                         className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                          selectedVehicleIds.length === vehicles.length
+                          isAllSelected || (vehicles.length > 0 && selectedVehicleIds.length === vehicles.length)
                             ? "bg-primary border-primary text-black"
                             : "bg-white border-gray-300 hover:border-primary"
                         }`}
                       >
-                        {selectedVehicleIds.length === vehicles.length && <Check size={14} strokeWidth={3} />}
+                        {(isAllSelected || (vehicles.length > 0 && selectedVehicleIds.length === vehicles.length)) && <Check size={14} strokeWidth={3} />}
                       </button>
                     </div>
 

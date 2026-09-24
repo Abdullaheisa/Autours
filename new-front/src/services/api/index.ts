@@ -560,7 +560,8 @@ export const supplierApi = {
     }
     return apiClient.get(url);
   },
-  createPromo: (data: { vehicle_id?: number, selected_vehicles?: string, included_id: number }) => apiClient.post('/api/supplier/promo', data),
+  createPromo: (data: { vehicle_id?: number, selected_vehicles?: string, included_id: number, select_all?: boolean }) => apiClient.post('/api/supplier/promo', data),
+
   deletePromo: (id: number) => apiClient.delete(`/api/supplier/promo/${id}`),
   requestMembership: () => apiClient.post('/post/request', {}),
   getRole: () => apiClient.get<string>('/get/user/role'),

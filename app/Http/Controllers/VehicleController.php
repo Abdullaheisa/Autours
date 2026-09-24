@@ -389,7 +389,25 @@ class VehicleController extends Controller
                 $vehicleId = $vehicleArr['id'];
                 $supplierId = is_array($vehicleArr['supplier']) ? $vehicleArr['supplier']['id'] : $vehicleArr['supplier'];
 
-                $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicleId]);
+                $allVehicleIds = [(int) $vehicleId];
+                if (!empty($vehicleArr['branch_vehicle_ids']) && is_array($vehicleArr['branch_vehicle_ids'])) {
+                    foreach ($vehicleArr['branch_vehicle_ids'] as $bVid) {
+                        if (is_numeric($bVid)) {
+                            $allVehicleIds[] = (int) $bVid;
+                        }
+                    }
+                }
+                $allVehicleIds = array_values(array_unique($allVehicleIds));
+
+                $placeholders = implode(',', array_fill(0, count($allVehicleIds), '?'));
+                $sql = "SELECT DISTINCT included.what_is_included AS promotion 
+                        FROM promos 
+                        JOIN included ON included.id = promos.included_id 
+                        WHERE promos.vehicle_id IN ($placeholders) 
+                           OR (promos.vehicle_id = 0 AND promos.supplier_id = ?)";
+
+                $bindings = array_merge($allVehicleIds, [(int) $supplierId]);
+                $promos = DB::select($sql, $bindings);
                 $vehicleArr['promos'] = array_map(function($p) { return $p->promotion; }, $promos);
 
                 // Map included relation to flat array for frontend
@@ -1136,7 +1154,17 @@ class VehicleController extends Controller
             ->paginate($request->get('per_page', 15));
 
         foreach ($vehicles->items() as $vehicle) {
-            $promos = DB::select('SELECT what_is_included as promotion FROM promos JOIN included ON included.id = promos.included_id  WHERE vehicle_id = :vehicle_id', ['vehicle_id' => $vehicle->id]);
+            $promos = DB::select(
+                'SELECT DISTINCT what_is_included as promotion 
+                 FROM promos 
+                 JOIN included ON included.id = promos.included_id  
+                 WHERE promos.vehicle_id = :vehicle_id 
+                    OR (promos.vehicle_id = 0 AND promos.supplier_id = :supplier_id)',
+                [
+                    'vehicle_id' => $vehicle->id,
+                    'supplier_id' => $supplier->id,
+                ]
+            );
             $vehicle->setAttribute('promos', array_map(function($p) { return $p->promotion; }, $promos));
         }
 

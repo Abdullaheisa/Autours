@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PromosController extends Controller
@@ -55,75 +56,135 @@ class PromosController extends Controller
                 return response()->json(['error' => 'Unauthenticated'], StatusCodes::UNAUTHORIZED);
             }
 
-            $includedId = $request->get('included_id');
-            
+            $includedId = (int) $request->get('included_id');
+            if (!$includedId) {
+                return response()->json(['error' => 'Invalid promo ID'], 422);
+            }
+
+            $selectAll = filter_var($request->get('select_all', false), FILTER_VALIDATE_BOOLEAN);
+
             // Parse selected vehicle IDs from request
             $newVehicleIds = array_filter(
                 array_map('trim', explode(',', (string) $request->selected_vehicles))
             );
-            $newVehicleIds = array_map('intval', $newVehicleIds);
+            $newVehicleIds = array_values(array_unique(array_map('intval', $newVehicleIds)));
 
             if ($user->role === 'admin') {
-                // Admin can assign promos to any vehicle.
-                // Fetch all existing vehicle relations for this promo
-                $existingVehicleIds = Promo::where('included_id', $includedId)
-                    ->pluck('vehicle_id')
-                    ->toArray();
+                // Admin can assign promos to any vehicle or supplier.
+                $targetSupplierId = $request->get('supplier_id');
 
-                // Delete any vehicles that are no longer selected
-                $toDelete = array_diff($existingVehicleIds, $newVehicleIds);
-                if (!empty($toDelete)) {
-                    Promo::where('included_id', $includedId)
-                        ->whereIn('vehicle_id', $toDelete)
-                        ->delete();
-                }
-
-                // Create new vehicle selections
-                foreach ($newVehicleIds as $vehicle_id) {
-                    if (!is_numeric($vehicle_id)) continue;
-                    if (in_array($vehicle_id, $existingVehicleIds)) continue;
-
-                    $vehicle = Vehicle::find($vehicle_id);
-                    if (!$vehicle) continue;
-
+                if ($selectAll && $targetSupplierId) {
+                    // Apply to ALL vehicles of this supplier
+                    Promo::where('supplier_id', $targetSupplierId)->delete();
+                    
                     Promo::create([
                         'included_id' => $includedId,
-                        'vehicle_id'  => $vehicle_id,
-                        'supplier_id' => $vehicle->supplier, // Store the vehicle's supplier ID
+                        'vehicle_id'  => 0,
+                        'supplier_id' => (int) $targetSupplierId,
                     ]);
+
+                    $allSupplierVehicles = Vehicle::where('supplier', $targetSupplierId)->pluck('id')->toArray();
+                    $records = [];
+                    $now = now();
+                    foreach ($allSupplierVehicles as $vId) {
+                        $records[] = [
+                            'included_id' => $includedId,
+                            'vehicle_id'  => (int) $vId,
+                            'supplier_id' => (int) $targetSupplierId,
+                            'created_at'  => $now,
+                            'updated_at'  => $now,
+                        ];
+                    }
+                    foreach (array_chunk($records, 1000) as $chunk) {
+                        DB::table('promos')->insert($chunk);
+                    }
+                } else {
+                    $existingVehicleIds = Promo::where('included_id', $includedId)
+                        ->where('vehicle_id', '>', 0)
+                        ->pluck('vehicle_id')
+                        ->toArray();
+
+                    $toDelete = array_diff($existingVehicleIds, $newVehicleIds);
+                    if (!empty($toDelete)) {
+                        Promo::where('included_id', $includedId)
+                            ->whereIn('vehicle_id', $toDelete)
+                            ->delete();
+                    }
+
+                    $toAdd = array_diff($newVehicleIds, $existingVehicleIds);
+                    if (!empty($toAdd)) {
+                        $vehiclesMap = Vehicle::whereIn('id', $toAdd)->pluck('supplier', 'id')->toArray();
+                        $records = [];
+                        $now = now();
+                        foreach ($toAdd as $vId) {
+                            $sId = $vehiclesMap[$vId] ?? null;
+                            if (!$sId) continue;
+                            $records[] = [
+                                'included_id' => $includedId,
+                                'vehicle_id'  => (int) $vId,
+                                'supplier_id' => (int) $sId,
+                                'created_at'  => $now,
+                                'updated_at'  => $now,
+                            ];
+                        }
+                        foreach (array_chunk($records, 1000) as $chunk) {
+                            DB::table('promos')->insert($chunk);
+                        }
+                    }
                 }
             } else {
-                // Suppliers can only assign promos to their OWN vehicles
+                // SUPPLIER MODE:
+                // Enforce single active promo rule: Delete any existing promos for this supplier
+                Promo::where('supplier_id', $user->id)->delete();
 
-                // Enforce single active promo rule: Delete any existing promos with a different included_id for this supplier
-                Promo::where('supplier_id', $user->id)
-                    ->where('included_id', '!=', $includedId)
-                    ->delete();
-
-                $existingVehicleIds = Promo::where('supplier_id', $user->id)
-                    ->where('included_id', $includedId)
-                    ->pluck('vehicle_id')
-                    ->toArray();
-
-                // Delete any vehicles that are no longer selected
-                $toDelete = array_diff($existingVehicleIds, $newVehicleIds);
-                if (!empty($toDelete)) {
-                    Promo::where('supplier_id', $user->id)
-                        ->where('included_id', $includedId)
-                        ->whereIn('vehicle_id', $toDelete)
-                        ->delete();
-                }
-
-                // Create new vehicle selections
-                foreach ($newVehicleIds as $vehicle_id) {
-                    if (!is_numeric($vehicle_id)) continue;
-                    if (in_array($vehicle_id, $existingVehicleIds)) continue;
-
+                if ($selectAll || empty($newVehicleIds)) {
+                    // 1. Insert master supplier promo (vehicle_id = 0)
                     Promo::create([
                         'included_id' => $includedId,
-                        'vehicle_id'  => $vehicle_id,
+                        'vehicle_id'  => 0,
                         'supplier_id' => $user->id,
                     ]);
+
+                    // 2. Bulk insert all supplier vehicles for compatibility
+                    $allVehicleIds = Vehicle::where('supplier', $user->id)
+                        ->pluck('id')
+                        ->toArray();
+
+                    $records = [];
+                    $now = now();
+                    foreach ($allVehicleIds as $vId) {
+                        $records[] = [
+                            'included_id' => $includedId,
+                            'vehicle_id'  => (int) $vId,
+                            'supplier_id' => $user->id,
+                            'created_at'  => $now,
+                            'updated_at'  => $now,
+                        ];
+                    }
+                    foreach (array_chunk($records, 1000) as $chunk) {
+                        DB::table('promos')->insert($chunk);
+                    }
+                } else {
+                    // Specific vehicles selected
+                    $validSupplierVehicles = Vehicle::where('supplier', $user->id)
+                        ->whereIn('id', $newVehicleIds)
+                        ->pluck('id')
+                        ->toArray();
+
+                    $records = [];
+                    $now = now();
+                    foreach ($validSupplierVehicles as $vId) {
+                        $records[] = [
+                            'included_id' => $includedId,
+                            'vehicle_id'  => (int) $vId,
+                            'supplier_id' => $user->id,
+                            'created_at'  => $now,
+                            'updated_at'  => $now,
+                        ];
+                    }
+                    foreach (array_chunk($records, 1000) as $chunk) {
+                        DB::table('promos')->insert($chunk);
+                    }
                 }
             }
 
@@ -134,6 +195,7 @@ class PromosController extends Controller
             return response()->json(['error' => $exception->getMessage(), 'message' => $exception->getMessage()], StatusCodes::SERVER_ERROR);
         }
     }
+
 
     /**
      * Delete active promo assignments for a given included_id
