@@ -308,9 +308,9 @@ export const promoApi = {
   delete: (id: number) => apiClient.delete(`/api/supplier/promo/${id}`),
   // Clean Promo Definitions (is_promo = 1)
   getDefinitions: () => apiClient.get("/api/get/promos/definitions"),
-  suggest: (data: { included: string; description?: string }) => apiClient.post("/api/post/promos/definitions", data),
+  suggest: (data: { included: string; description?: string; is_special_offer?: boolean }) => apiClient.post("/api/post/promos/definitions", data),
   updateStatus: (data: { id: number; status: string }) => apiClient.post("/api/admin/post/promos/definitions/status", data),
-  update: (data: { id: number; included: string; description?: string }) => apiClient.post("/api/admin/post/promos/definitions/update", data),
+  update: (data: { id: number; included: string; description?: string; is_special_offer?: boolean }) => apiClient.post("/api/admin/post/promos/definitions/update", data),
   deleteDefinition: (id: number) => apiClient.post("/api/admin/delete/promos/definitions", { id }),
 };
 
@@ -559,6 +559,17 @@ export const supplierApi = {
 
   updateVehiclePrice: (vehicleId: number, data: { price?: number; week_price?: number; month_price?: number }) =>
     apiClient.put(`/api/external/supplier/vehicles/${vehicleId}/price`, cleanPayload(data)),
+
+  bulkUpdateDeposit: (data: {
+    scope: 'all' | 'branch' | 'country' | 'selected';
+    deposit_amount: number;
+    deposit_terms?: string;
+    branch_id?: number | string;
+    country?: string;
+    vehicle_ids?: number[];
+  }) => {
+    return apiClient.post('/api/external/supplier/vehicles/bulk-deposit', data);
+  },
 
   getRentals: (page: number = 1, perPage: number = 15, hasReview?: boolean) => {
     let url = `/api/external/supplier/rentals?page=${page}&per_page=${perPage}`;

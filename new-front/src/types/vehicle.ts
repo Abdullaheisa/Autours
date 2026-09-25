@@ -54,6 +54,8 @@ export interface Vehicle {
   instant_confirmation?: boolean | number;
   discount_percent?: number;
   original_price?: number;
+  deposit_amount?: number;
+  deposit_terms?: string;
 }
 
 export interface Car {

@@ -110,6 +110,10 @@ export const vehicleMapper = {
       promos_details: raw.promos_details || [],
       discount_percent: Number(raw.discount_percent) || 0,
       original_price: Number(raw.original_price) || 0,
+      deposit_amount: raw.deposit_amount !== undefined && raw.deposit_amount !== null
+        ? Number(raw.deposit_amount)
+        : (raw.deposit !== undefined && raw.deposit !== null ? Number(raw.deposit) : undefined),
+      deposit_terms: raw.deposit_terms || raw.depositTerms || undefined,
       available_branches: raw.available_branches || [],
       branch_vehicle_ids: raw.branch_vehicle_ids || {},
       branch: branch,

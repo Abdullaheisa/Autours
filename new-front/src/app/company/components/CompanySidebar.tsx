@@ -9,7 +9,8 @@ import { normalizeAuthRole } from "@/utils/auth";
 import {
   LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
   Tag, Crown, CalendarCheck, FileText, Star, Ticket,
-  CreditCard, LogOut, ChevronLeft, ChevronRight, Calendar, ChevronDown
+  CreditCard, LogOut, ChevronLeft, ChevronRight, Calendar, ChevronDown,
+  ShieldCheck
 } from "lucide-react";
 
 import Image from "next/image";
@@ -18,7 +19,7 @@ import { getUserImageUrl } from "@/utils/getImageUrl";
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, UserCircle, Building2, Car, PlusCircle,
   Tag, Crown, CalendarCheck, FileText, Star, Ticket,
-  CreditCard, LogOut, Calendar
+  CreditCard, LogOut, Calendar, ShieldCheck
 };
 
 type SidebarItem =
@@ -50,6 +51,7 @@ const companySidebarNav: SidebarItem[] = [
     children: [
       { id: "vehicles", label: "My Vehicles", icon: "Car" },
       { id: "create-vehicle", label: "Create Vehicle", icon: "PlusCircle" },
+      { id: "deposit", label: "Security Deposit", icon: "ShieldCheck" },
       { id: "bulk-upload", label: "Bulk Upload", icon: "FileText" },
       { id: "price-list", label: "Price List", icon: "Tag" },
     ]

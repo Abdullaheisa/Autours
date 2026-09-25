@@ -19,6 +19,11 @@ export const filterOptions = {
     { label: 'Pay in Full', value: 'Pay in Full' },
     { label: 'Deposit Required', value: 'Deposit Required' }
   ],
+  deposit: [
+    { label: 'Low Deposit (< 300€)', value: 'low' },
+    { label: 'Average Deposit (300€ - 800€)', value: 'average' },
+    { label: 'High Deposit (> 800€)', value: 'high' }
+  ],
   seats: [
     { label: '2 Seats', value: '2' },
     { label: '4 Seats', value: '4' },

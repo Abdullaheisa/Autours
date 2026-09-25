@@ -35,6 +35,8 @@ class CreateEditVehicle extends FormRequest
             'pricing_mode' => 'nullable|string|in:standard,granular,dynamic',
             'granular_prices' => 'nullable',
             'custom_price_tiers' => 'nullable',
+            'deposit_amount' => 'nullable|numeric|min:0',
+            'deposit_terms' => 'nullable|string',
         ];
     }
 }

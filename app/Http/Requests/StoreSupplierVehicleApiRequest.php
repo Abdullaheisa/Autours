@@ -32,6 +32,8 @@ class StoreSupplierVehicleApiRequest extends FormRequest
             // Included can be IDs (integers) or names (strings)
             'included' => 'nullable|array',
             'included.*' => 'required|string',
+            'deposit_amount' => 'nullable|numeric|min:0',
+            'deposit_terms' => 'nullable|string',
             'specifications' => 'nullable|array',
             'specifications.*.name' => 'required_with:specifications|string|max:255',
             'specifications.*.value' => 'required_with:specifications|string|max:255',

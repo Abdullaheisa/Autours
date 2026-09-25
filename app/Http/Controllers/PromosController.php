@@ -74,8 +74,8 @@ class PromosController extends Controller
                 $targetSupplierId = $request->get('supplier_id');
 
                 if ($selectAll && $targetSupplierId) {
-                    // Apply to ALL vehicles of this supplier
-                    Promo::where('supplier_id', $targetSupplierId)->delete();
+                    // Apply to ALL vehicles of this supplier for this specific promo
+                    Promo::where('supplier_id', $targetSupplierId)->where('included_id', $includedId)->delete();
                     
                     Promo::create([
                         'included_id' => $includedId,
@@ -134,8 +134,8 @@ class PromosController extends Controller
                 }
             } else {
                 // SUPPLIER MODE:
-                // Enforce single active promo rule: Delete any existing promos for this supplier
-                Promo::where('supplier_id', $user->id)->delete();
+                // Delete previous mapping ONLY for this specific promo
+                Promo::where('supplier_id', $user->id)->where('included_id', $includedId)->delete();
 
                 if ($selectAll || empty($newVehicleIds)) {
                     // 1. Insert master supplier promo (vehicle_id = 0)
@@ -253,6 +253,7 @@ class PromosController extends Controller
         $included = new Included();
         $included->what_is_included = $request->included;
         $included->is_promo = 1;
+        $included->is_special_offer = filter_var($request->get('is_special_offer', false), FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         
         if ($request->has('description')) {
             $included->description = $request->description;
@@ -330,6 +331,9 @@ class PromosController extends Controller
         $included->what_is_included = $request->included;
         if ($request->has('description')) {
             $included->description = $request->description;
+        }
+        if ($request->has('is_special_offer')) {
+            $included->is_special_offer = filter_var($request->get('is_special_offer'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         }
         $status = $included->save();
 

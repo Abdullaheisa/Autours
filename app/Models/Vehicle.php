@@ -67,13 +67,16 @@ class Vehicle extends Model
         'instant_confirmation',
         'pricing_mode',
         'granular_prices',
-        'custom_price_tiers'
+        'custom_price_tiers',
+        'deposit_amount',
+        'deposit_terms',
     ];
 
     protected $casts = [
         'specifications' => 'array',
         'granular_prices' => 'array',
-        'custom_price_tiers' => 'array'
+        'custom_price_tiers' => 'array',
+        'deposit_amount' => 'float',
     ];
 
     protected $appends = [

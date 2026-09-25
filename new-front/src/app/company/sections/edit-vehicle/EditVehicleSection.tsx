@@ -252,6 +252,8 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
     price12: "",
     price37: "",
     price830: "",
+    depositAmount: "",
+    depositTerms: "",
     includedFeatures: [] as number[],
     showIncludedDropdown: false,
     showVehicleDropdown: false,
@@ -341,6 +343,8 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
             price12: String(vehicleData.price || ""),
             price37: String(vehicleData.week_price || ""),
             price830: String(vehicleData.month_price || ""),
+            depositAmount: String(vehicleData.deposit_amount || ""),
+            depositTerms: String(vehicleData.deposit_terms || ""),
             includedFeatures: includedFeatures,
             showIncludedDropdown: false,
             showVehicleDropdown: false,
@@ -448,6 +452,8 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
       form.append("price", formData.price12);
       form.append("week_price", formData.price37);
       form.append("month_price", formData.price830);
+      form.append("deposit_amount", formData.depositAmount || "0");
+      form.append("deposit_terms", formData.depositTerms || "");
       
       form.append("pickupLoc", formData.pickupLocationId);
       
@@ -746,10 +752,59 @@ export default function EditVehicleSection({ vehicleId, onBack }: { vehicleId: n
 
         {/* ── Prices ── */}
         <SectionCard icon={Tag} title="Prices Section">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <PriceField label="Price 1-2 days"  value={formData.price12}  onChange={(v) => setFormData(p => ({ ...p, price12: v }))} />
-            <PriceField label="3 - 7 Days Price" value={formData.price37}  onChange={(v) => setFormData(p => ({ ...p, price37: v }))} />
-            <PriceField label="8-30 Days Price"  value={formData.price830} onChange={(v) => setFormData(p => ({ ...p, price830: v }))} />
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <PriceField label="Price 1-2 days"  value={formData.price12}  onChange={(v) => setFormData(p => ({ ...p, price12: v }))} />
+              <PriceField label="3 - 7 Days Price" value={formData.price37}  onChange={(v) => setFormData(p => ({ ...p, price37: v }))} />
+              <PriceField label="8-30 Days Price"  value={formData.price830} onChange={(v) => setFormData(p => ({ ...p, price830: v }))} />
+            </div>
+
+            {/* Security Deposit Settings */}
+            <div className="pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                  Security Deposit (Refundable)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1.5">
+                    Deposit Amount
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="0 (or leave empty for zero deposit)"
+                      value={formData.depositAmount || ""}
+                      onChange={(e) => setFormData(p => ({ ...p, depositAmount: e.target.value }))}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1 block">
+                    Enter 0 or leave blank if no security deposit is required.
+                  </span>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1.5">
+                    Deposit Terms &amp; Conditions
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Refundable security deposit held via credit card on pickup and returned within 14 days"
+                    value={formData.depositTerms || ""}
+                    onChange={(e) => setFormData(p => ({ ...p, depositTerms: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                  />
+                  <span className="text-[10px] text-gray-400 mt-1 block">
+                    Explain when and how the deposit is held and refunded to the customer.
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </SectionCard>
 

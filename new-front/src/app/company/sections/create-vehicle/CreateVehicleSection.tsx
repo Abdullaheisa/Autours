@@ -41,6 +41,9 @@ export default function CreateVehicleSection({ onBack }: { onBack?: () => void }
     price1530: "",
     customPriceTiers: [],
 
+    depositAmount: "",
+    depositTerms: "",
+
     includedFeatures: [],
     showIncludedDropdown: false,
     showVehicleDropdown: false,
@@ -233,6 +236,8 @@ export default function CreateVehicleSection({ onBack }: { onBack?: () => void }
         location_types:      formData.locationTypeId ? [Number(formData.locationTypeId)] : [],
         fuel_policy_id:      formData.fuelPolicyId ? Number(formData.fuelPolicyId) : undefined,
         included:            selectedFeatures.map((item) => item.what_is_included || item.name || String(item.id)),
+        deposit_amount:      formData.depositAmount ? parseFloat(formData.depositAmount) : 0,
+        deposit_terms:       formData.depositTerms || null,
         
         // Multi-model pricing payload extension
         pricing_mode:        formData.pricingMode,

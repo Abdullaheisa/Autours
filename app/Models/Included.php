@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Included extends Model
 {
     protected $table = 'included';
-    public $timestamps = true;
-    protected $fillable = ['id','what_is_included','description','discount_percent','supplier_id','status','is_promo'];
+    protected $fillable = ['id','what_is_included','description','discount_percent','supplier_id','status','is_promo','is_special_offer'];
+    protected $casts = [
+        'is_promo' => 'boolean',
+        'is_special_offer' => 'boolean',
+    ];
     use HasFactory;
 
     public function supplier()

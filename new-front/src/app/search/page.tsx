@@ -16,13 +16,14 @@ import CarCardSkeleton from './components/CarCardSkeleton';
 import CategoryFilterBar from './components/CategoryFilterBar';
 import { RootState, AppDispatch } from '@/store';
 import { setSearchParams, setFilterParams, fetchVehicles, setPage, resetFilters } from '@/store/slices/searchSlice';
-import type { FilterPayload } from '@/types';
+import type { FilterPayload, Currency } from '@/types';
 import { FILTER_SPEC_NAMES } from '@/constants/filterSpecNames';
+import { getVehicleDepositPrice } from '@/utils/vehiclePrice';
 
 function SearchPageContent() {
   const dispatch = useDispatch<AppDispatch>();
   const urlParams = useSearchParams();
-  const currencyCode = useSelector((state: RootState) => state.currency.code);
+  const { code: currencyCode, allRates } = useSelector((state: RootState) => state.currency);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
 
   // 🔒 قفل الـ scroll لما الـ drawer يفتح
@@ -235,8 +236,35 @@ function SearchPageContent() {
   }, []);
 
   const displayedVehicles = useMemo(() => {
-    return vehicles;
-  }, [vehicles]);
+    if (!filterParams.deposit || filterParams.deposit.length === 0) {
+      return vehicles;
+    }
+
+    // Get converted deposits for vehicles with deposit > 0
+    const deposits = vehicles
+      .map(v => getVehicleDepositPrice(v, currencyCode as Currency, allRates))
+      .filter(d => d > 0)
+      .sort((a, b) => a - b);
+
+    if (deposits.length === 0) return [];
+
+    const min = deposits[0];
+    const max = deposits[deposits.length - 1];
+    const tier1 = min === max ? min : min + (max - min) / 3;
+    const tier2 = min === max ? max : min + 2 * (max - min) / 3;
+
+    return vehicles.filter(v => {
+      const deposit = getVehicleDepositPrice(v, currencyCode as Currency, allRates);
+      if (deposit <= 0) return false;
+
+      return filterParams.deposit.some((range: string) => {
+        if (range === 'low') return deposit <= tier1;
+        if (range === 'average') return deposit > tier1 && deposit <= tier2;
+        if (range === 'high') return deposit > tier2;
+        return true;
+      });
+    });
+  }, [vehicles, filterParams.deposit, currencyCode, allRates]);
 
 
 

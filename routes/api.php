@@ -99,6 +99,7 @@ Route::prefix('external/supplier')->group(function () {
         Route::post('/vehicles', [VehicleController::class, 'createExternal'])->name('external.supplier.vehicles.store');
         Route::post('/vehicles/toggle-activation', [VehicleController::class, 'updateActivation'])->name('external.supplier.vehicles.toggle-activation');
         Route::put('/vehicles/{vehicleId}/price', [VehicleController::class, 'updatePriceExternal'])->name('external.supplier.vehicles.update-price');
+        Route::post('/vehicles/bulk-deposit', [VehicleController::class, 'bulkUpdateDeposit'])->name('external.supplier.vehicles.bulk-deposit');
         Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy'])->name('external.supplier.vehicles.destroy');
         // Rental routes
         Route::get('/rentals', [ExternalAuthController::class, 'getRentals'])->name('external.supplier.rentals');

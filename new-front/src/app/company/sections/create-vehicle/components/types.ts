@@ -31,6 +31,10 @@ export interface VehicleFormData {
   // Custom dynamic pricing tiers
   customPriceTiers: CustomPriceTier[];
 
+  // Security Deposit
+  depositAmount: string;
+  depositTerms: string;
+
   includedFeatures: number[];
   showIncludedDropdown: boolean;
   showVehicleDropdown: boolean;

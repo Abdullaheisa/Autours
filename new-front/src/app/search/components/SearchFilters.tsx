@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ChevronDown, Check, SlidersHorizontal, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,6 +12,9 @@ import {
 } from '@/store/slices/searchSlice';
 import { filterOptions } from '@/data/filterOptions';
 import { formatPrice } from '@/utils/currency';
+import { getLogoUrl } from '@/utils/getImageUrl';
+import { getVehicleDepositPrice } from '@/utils/vehiclePrice';
+import type { Currency } from '@/types';
 
 interface SearchFiltersProps {
   onFilterChange?: () => void;
@@ -160,6 +163,37 @@ function FiltersContent({
 }: any) {
   const dispatch = useDispatch<AppDispatch>();
 
+  const { vehicles } = useSelector((state: RootState) => state.search);
+  const { allRates } = useSelector((state: RootState) => state.currency);
+
+  const depositCounts = useMemo(() => {
+    const deposits = (vehicles || [])
+      .map(v => getVehicleDepositPrice(v, currencyCode as Currency, allRates))
+      .filter(d => d > 0)
+      .sort((a, b) => a - b);
+
+    if (deposits.length === 0) {
+      return { low: 0, average: 0, high: 0, totalWithDeposit: 0 };
+    }
+
+    const min = deposits[0];
+    const max = deposits[deposits.length - 1];
+    const tier1 = min === max ? min : min + (max - min) / 3;
+    const tier2 = min === max ? max : min + 2 * (max - min) / 3;
+
+    let low = 0;
+    let average = 0;
+    let high = 0;
+
+    deposits.forEach(d => {
+      if (d <= tier1) low++;
+      else if (d <= tier2) average++;
+      else high++;
+    });
+
+    return { low, average, high, totalWithDeposit: deposits.length };
+  }, [vehicles, currencyCode, allRates]);
+
   const isChecked = (key: string, value: string) => {
     const current = (filterParams as any)[key];
     return Array.isArray(current) ? current.includes(value) : current === value;
@@ -233,7 +267,9 @@ function FiltersContent({
             filteredSuppliers.map((sup: any) => (
               <FilterOption
                 key={sup.id}
-                label={`${sup.name} (${sup.vehicle_count})`}
+                label={sup.name || sup.company || 'Supplier'}
+                count={sup.vehicle_count}
+                logoUrl={getLogoUrl(sup.logo || sup.company_logo)}
                 checked={isChecked('supplier', String(sup.id))}
                 onToggle={() => handleToggle('supplier', String(sup.id))}
               />
@@ -241,6 +277,23 @@ function FiltersContent({
           ) : (
             <p className="text-xs text-gray-400 px-4 py-2">No suppliers available</p>
           )}
+        </FilterSection>
+
+        {/* 4. Deposit Filter */}
+        <FilterSection title="Deposit" expanded>
+          {[
+            { value: 'low', label: 'Low Deposit', count: depositCounts.low },
+            { value: 'average', label: 'Average Deposit', count: depositCounts.average },
+            { value: 'high', label: 'High Deposit', count: depositCounts.high },
+          ].map(opt => (
+            <FilterOption
+              key={opt.value}
+              label={opt.label}
+              count={opt.count}
+              checked={isChecked('deposit', opt.value)}
+              onToggle={() => handleToggle('deposit', opt.value)}
+            />
+          ))}
         </FilterSection>
 
         {/* 4. Transmission Filter */}
@@ -484,19 +537,45 @@ function FilterSection({ title, children, badge, expanded = false, isLast = fals
 }
 
 // Fast, responsive Checkbox Option without Framer Motion overhead
-function FilterOption({ label, checked, onToggle }: { label: string; checked: boolean; onToggle: () => void }) {
+function FilterOption({
+  label,
+  checked,
+  onToggle,
+  logoUrl,
+  count,
+}: {
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+  logoUrl?: string;
+  count?: number;
+}) {
   return (
     <div
       role="checkbox"
       aria-checked={checked}
-      className="flex items-center justify-between group cursor-pointer py-1.5 px-1.5 rounded-lg select-none hover:bg-yellow-50/60 transition-colors"
+      className="flex items-center justify-between group cursor-pointer py-2 px-2 rounded-xl select-none hover:bg-yellow-50/70 transition-colors"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onToggle();
       }}
     >
-      <span className="text-[13px] font-medium text-gray-700 group-hover:text-gray-900 transition-colors">{label}</span>
+      <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+        {logoUrl !== undefined && (
+          <div className="relative w-16 h-8.5 rounded-lg overflow-hidden bg-white border border-gray-200/90 shadow-2xs shrink-0 flex items-center justify-center px-1.5 py-0.5">
+            {logoUrl ? (
+              <img src={logoUrl} alt={label} className="w-full h-full object-contain max-h-full max-w-full" />
+            ) : (
+              <span className="text-xs font-black text-gray-500">{label.charAt(0)}</span>
+            )}
+          </div>
+        )}
+        <span className="text-[13px] font-semibold text-gray-800 group-hover:text-gray-950 transition-colors truncate">
+          {label}
+          {count !== undefined && <span className="text-gray-400 font-normal ml-1.5 text-xs">({count})</span>}
+        </span>
+      </div>
       <div className="relative w-5 h-5 shrink-0">
         <div
           className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${

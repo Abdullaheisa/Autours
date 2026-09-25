@@ -42,6 +42,9 @@ export default function EditVehicleSection({
     price1530: "",
     customPriceTiers: [],
 
+    depositAmount: "",
+    depositTerms: "",
+
     includedFeatures: [],
     showIncludedDropdown: false,
     showVehicleDropdown: false,
@@ -140,6 +143,9 @@ export default function EditVehicleSection({
             price814: String(granular.price_8_14 || ""),
             price1530: String(granular.price_15_30 || ""),
             customPriceTiers: customTiers,
+
+            depositAmount: String(vehicleData.deposit_amount ?? ""),
+            depositTerms: vehicleData.deposit_terms || "",
 
             includedFeatures: includedFeatures,
             showIncludedDropdown: false,

@@ -19,6 +19,7 @@ import CompanyRentalTermsSection from "./sections/rental-terms/CompanyRentalTerm
 import PromosSection from "./sections/promos/PromosSection";
 import CompanyRentalReviewsSection from "./sections/rental-reviews/CompanyRentalReviewsSection";
 import CompanyBulkUploadSection from "./sections/bulk-upload/CompanyBulkUploadSection";
+import CompanyDepositSection from "./sections/deposit/CompanyDepositSection";
 import EditVehicleSection from "./sections/create-vehicle/EditVehicleSection";
 import NotificationsSection from "@/app/admin/sections/notifications/NotificationsSection";
 
@@ -29,6 +30,7 @@ const pageTitles: Record<string, string> = {
   branches: "Branches",
   "payment-methods": "Payment Methods",
   "create-vehicle": "Create Vehicle",
+  deposit: "Security Deposit",
   "price-list": "Price List",
   vehicles: "My Vehicles",
   membership: "Membership",
@@ -123,6 +125,7 @@ export default function CompanyDashboard() {
       case "promos":          return <PromosSection />;
       case "rental-reviews":  return <CompanyRentalReviewsSection />;
       case "bulk-upload":     return <CompanyBulkUploadSection />;
+      case "deposit":         return <CompanyDepositSection />;
       case "notifications":   return <NotificationsSection />;
       case "dashboard":
       default:                return <CompanyDashboardOverview />;

@@ -302,6 +302,10 @@ class VehicleController extends Controller
                         $vehicle->final_price = round($vehicle->final_price, 2);
                         $vehicle->original_price *= $rate->rate;
                         $vehicle->original_price = round($vehicle->original_price, 2);
+                        if (!empty($vehicle->deposit_amount) && $vehicle->deposit_amount > 0) {
+                            $vehicle->deposit_amount *= $rate->rate;
+                            $vehicle->deposit_amount = round($vehicle->deposit_amount, 2);
+                        }
                     }
                 }
 
@@ -419,7 +423,8 @@ class VehicleController extends Controller
                 $sql = "SELECT DISTINCT 
                             included.id,
                             included.what_is_included AS promotion,
-                            included.description
+                            included.description,
+                            included.is_special_offer
                         FROM promos 
                         JOIN included ON included.id = promos.included_id 
                         WHERE promos.vehicle_id IN ($placeholders) 
@@ -433,6 +438,7 @@ class VehicleController extends Controller
                         'id' => (int) $p->id,
                         'name' => $p->promotion,
                         'description' => $p->description ?: '',
+                        'is_special_offer' => (bool) ($p->is_special_offer ?? false),
                     ];
                 }, $promos);
 
@@ -444,6 +450,10 @@ class VehicleController extends Controller
                     $vehicleArr['original_price'] = $vehicleArr['final_price'];
                 }
 
+
+                // Deposit information
+                $vehicleArr['deposit_amount'] = floatval($vehicleArr['deposit_amount'] ?? 0);
+                $vehicleArr['deposit_terms'] = !empty($vehicleArr['deposit_terms']) ? $vehicleArr['deposit_terms'] : null;
 
                 // Map included relation to flat array for frontend
                 $vehicleArr['what_is_included'] = array_map(function($inc) {
@@ -729,6 +739,12 @@ class VehicleController extends Controller
                     : $request->custom_price_tiers;
             }
 
+            if ($request->has('deposit_amount')) {
+                $existingVehicle->deposit_amount = $request->deposit_amount;
+            }
+            if ($request->has('deposit_terms')) {
+                $existingVehicle->deposit_terms = $request->deposit_terms;
+            }
 
             if ($request->has('pickupLoc')) {
                 if (is_numeric($request->pickupLoc)) {
@@ -853,6 +869,12 @@ class VehicleController extends Controller
                     : $request->custom_price_tiers;
             }
 
+            if ($request->has('deposit_amount')) {
+                $item->deposit_amount = $request->deposit_amount;
+            }
+            if ($request->has('deposit_terms')) {
+                $item->deposit_terms = $request->deposit_terms;
+            }
 
             $item->save();
             if ($request->has('location_types')) {
@@ -961,6 +983,8 @@ class VehicleController extends Controller
             $vehicle->fuel_policy_id = $request->fuel_policy_id;
             $vehicle->instant_confirmation = $request->boolean('instant_confirmation');
             $vehicle->activation = $request->has('activation') ? $request->boolean('activation') : true;
+            $vehicle->deposit_amount = $request->deposit_amount ?? 0;
+            $vehicle->deposit_terms = $request->deposit_terms;
             $vehicle->save();
 
             if ($request->filled('location_types')) {
@@ -1146,6 +1170,64 @@ class VehicleController extends Controller
                 'message' => 'Failed to update vehicle price.',
                 'error' => $e->getMessage(),
             ], StatusCodes::SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Bulk update deposit amount and terms for supplier vehicles.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function bulkUpdateDeposit(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
+            }
+
+            $scope = $request->input('scope', 'all');
+            $depositAmount = $request->has('deposit_amount') ? floatval($request->input('deposit_amount')) : 0;
+            $depositTerms = $request->input('deposit_terms', null);
+
+            $query = Vehicle::query()->where('supplier', $user->id);
+
+            if ($scope === 'branch' && $request->filled('branch_id') && $request->input('branch_id') !== 'all') {
+                $branchId = (int) $request->input('branch_id');
+                $query->where(function ($q) use ($branchId) {
+                    $q->where('pickup_loc', $branchId)
+                      ->orWhereHas('branches', fn ($b) => $b->where('branches.id', $branchId));
+                });
+            } elseif ($scope === 'country' && $request->filled('country') && $request->input('country') !== 'all') {
+                $country = $request->input('country');
+                $query->whereHas('branch', function ($b) use ($country) {
+                    $b->where('country', 'ILIKE', $country);
+                });
+            } elseif ($scope === 'selected' && $request->filled('vehicle_ids')) {
+                $ids = is_array($request->vehicle_ids) ? $request->vehicle_ids : explode(',', $request->vehicle_ids);
+                $ids = array_filter(array_map('intval', $ids));
+                if (!empty($ids)) {
+                    $query->whereIn('id', $ids);
+                }
+            }
+
+            $affected = $query->update([
+                'deposit_amount' => $depositAmount,
+                'deposit_terms' => $depositTerms,
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => "Successfully updated security deposit for {$affected} vehicle(s).",
+                'affected_count' => $affected,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to bulk update deposit: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

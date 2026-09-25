@@ -31,6 +31,7 @@ export interface FilterParams {
   airConditioning: string | null;
   suitcases: string[];
   paymentType: string[];
+  deposit: string[];
   rating: number | null;
   sortBy: 'price_low' | 'price_high' | 'rating' | 'popular';
 }
@@ -83,6 +84,7 @@ const initialState: SearchState = {
     airConditioning: null,
     suitcases: [],
     paymentType: [],
+    deposit: [],
     rating: null,
     sortBy: 'price_low',
   },
@@ -166,6 +168,7 @@ const searchSlice = createSlice({
         airConditioning: null,
         suitcases: [],
         paymentType: [],
+        deposit: [],
         rating: null,
         sortBy: 'price_low',
       };
@@ -237,6 +240,7 @@ const searchSlice = createSlice({
           state.filterParams.supplier.length > 0 ||
           state.filterParams.locationType.length > 0 ||
           state.filterParams.paymentType.length > 0 ||
+          state.filterParams.deposit.length > 0 ||
           state.filterParams.priceRange !== null ||
           state.filterParams.seats.length > 0 ||
           state.filterParams.doors.length > 0 ||

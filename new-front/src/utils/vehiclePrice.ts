@@ -38,6 +38,31 @@ export function getVehicleDisplayPrice(
   return Math.round(Number(v.price) || 0);
 }
 
+/**
+ * Converts a vehicle's raw deposit amount from its base currency to the target currency.
+ */
+export function getVehicleDepositPrice(
+  vehicle: Vehicle | null | undefined,
+  currencyCode: Currency,
+  allRates: Record<string, number> = {},
+  fetchedCurrency?: string
+): number {
+  if (!vehicle) return 0;
+  const rawDeposit = Number(vehicle.deposit_amount ?? (vehicle as any)?.deposit ?? 0);
+  if (rawDeposit <= 0) return 0;
+
+  const priceCurrency = (fetchedCurrency || vehicle.baseCurrency || 'AED').toUpperCase();
+  const targetCurr = (currencyCode || 'AED').toUpperCase();
+
+  if (priceCurrency === targetCurr) {
+    return Math.round(rawDeposit);
+  }
+
+  const rateToBase = allRates[priceCurrency] || fallbackRates[priceCurrency] || 1;
+  const usdValue = rawDeposit / rateToBase;
+  return Math.round(convertFromUsd(usdValue, targetCurr, allRates));
+}
+
 /** @deprecated Use getVehicleDisplayPrice */
 export function getVehicleTotalPrice(vehicle: Vehicle | null | undefined): number {
   return getVehicleDisplayPrice(vehicle, 'USD', { USD: 1 }, 1);

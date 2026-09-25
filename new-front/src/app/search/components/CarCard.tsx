@@ -14,7 +14,7 @@ import { Vehicle } from '@/types';
 import { getVehicleImageUrl, getLogoUrl } from '@/utils/getImageUrl';
 import { assets } from '@/config/assets';
 import { formatPrice, formatPriceParts } from '@/utils/currency';
-import { getVehicleDisplayPrice } from '@/utils/vehiclePrice';
+import { getVehicleDisplayPrice, getVehicleDepositPrice } from '@/utils/vehiclePrice';
 import type { Currency } from '@/types';
 import RentalTermsModal from './RentalTermsModal';
 
@@ -408,6 +408,14 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       'meet_and_greet'
     );
 
+    const depositAmount = getVehicleDepositPrice(
+      vehicle,
+      currencyCode as Currency,
+      allRates,
+      fetchedCurrency
+    );
+    const depositTerms = vehicle.deposit_terms || (vehicle as any)?.depositTerms || null;
+
     const inclusions = (vehicle.included || [])
       .map((i: any) => {
         if (!i) return '';
@@ -422,6 +430,24 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       })
       .filter(Boolean);
 
+    // Filter out any stale generic deposit strings from inclusions
+    const filteredInclusions = inclusions.filter(inc => {
+      const lower = inc.toLowerCase().trim();
+      return !(
+        lower === 'deposit' ||
+        lower === 'zero deposit' ||
+        lower === 'low deposit' ||
+        lower === 'average deposit' ||
+        lower === 'high deposit' ||
+        lower.startsWith('deposit:')
+      );
+    });
+
+    // Only add Deposit to inclusions if there is an actual deposit (> 0)
+    if (depositAmount > 0) {
+      filteredInclusions.unshift(`Deposit: ${formatPrice(depositAmount, currencyCode as Currency)}`);
+    }
+
     const totalPrice = getVehicleDisplayPrice(
       vehicle,
       currencyCode as Currency,
@@ -435,6 +461,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     return {
       name: trimmedName,
       type: getSpec('type') !== 'N/A' ? getSpec('type') : (vehicle.category || 'Economy'),
+      depositAmount,
+      depositTerms,
       image: getVehicleImageUrl(imgSource),
       transmission: getSpec('transmission'),
       fuelType: getSpec('fuel'),
@@ -476,10 +504,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         currency: currencyCode,
         totalDays: daysNumber || 1,
       },
-      inclusions,
+      inclusions: filteredInclusions,
       fuelPolicy: typeof vehicle.fuelPolicy === 'string' ? vehicle.fuelPolicy : (vehicle.fuel_policy?.name || (vehicle as any).fuelPolicy?.name || 'Full to Full'),
       pickupType: pickupType,
-      freeCancellation: inclusions.some(i => i.toLowerCase().includes('cancel')),
+      freeCancellation: filteredInclusions.some(i => i.toLowerCase().includes('cancel')),
       freeCancellationHours: 24,
       promos: vehicle.promos || (vehicle.promo ? [vehicle.promo] : []),
       promosDetails: (vehicle as any).promos_details || [],
@@ -525,6 +553,23 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       return name === mainHighlight?.toLowerCase().trim();
     }) || null;
   }, [mainHighlight, carData.promosDetails]);
+
+  // Extract special offers (e.g. Online Check-in, Free Additional Driver, Free Child Seat)
+  const specialOfferDetails = useMemo(() => {
+    const details = carData.promosDetails || [];
+    return details.filter((pd: any) => {
+      if (pd.is_special_offer) return true;
+      const name = (pd.name || pd.what_is_included || '').toLowerCase().trim();
+      return (
+        name.includes('online check') ||
+        name.includes('check-in') ||
+        name.includes('check in') ||
+        name.includes('additional driver') ||
+        name.includes('child seat') ||
+        name.includes('baby seat')
+      );
+    });
+  }, [carData.promosDetails]);
 
   const mainHighlightDesc = mainHighlightDetail?.description || (
     mainHighlight?.toLowerCase().includes('cancel') || mainHighlight?.includes('مجاني')
@@ -672,18 +717,37 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
 
-            {/* Row 2: Instant confirmation */}
-            {carData.supplier.instantConfirmation && (
-              <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-200">
-                <img src={assets.icons.instant} alt="" className="w-4 h-4 object-contain shrink-0" aria-hidden="true" />
-                <span className="text-[11px] font-black text-gray-700">Instant confirmation</span>
-                <ChicTooltip
-                  text="Receive instant booking confirmation right after completing your reservation!"
-                  title="Instant Confirmation"
-                  variant="gold"
-                  align="left"
-                  position="top"
-                />
+            {/* Row 2: Instant confirmation & Special Offers */}
+            {(carData.supplier.instantConfirmation || specialOfferDetails.length > 0) && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1.5 border-t border-gray-200">
+                {carData.supplier.instantConfirmation && (
+                  <div className="flex items-center gap-1.5">
+                    <img src={assets.icons.instant} alt="" className="w-4 h-4 object-contain shrink-0" aria-hidden="true" />
+                    <span className="text-[11px] font-black text-gray-700">Instant confirmation</span>
+                    <ChicTooltip
+                      text="Receive instant booking confirmation right after completing your reservation!"
+                      title="Instant Confirmation"
+                      variant="gold"
+                      align="left"
+                      position="top"
+                    />
+                  </div>
+                )}
+                {specialOfferDetails.map((so: any) => (
+                  <div key={so.id || so.name} className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Check size={10} className="stroke-[3]" />
+                    </span>
+                    <span className="text-[11px] font-black text-gray-800">{so.name}</span>
+                    <ChicTooltip
+                      text={so.description || "Special offer included with this vehicle."}
+                      title={so.name}
+                      variant="emerald"
+                      align="left"
+                      position="top"
+                    />
+                  </div>
+                ))}
               </div>
             )}
 
@@ -713,12 +777,26 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <h4 className="text-sm font-black text-green-700 mb-2">What is Included</h4>
                   <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3">
-                    {displayedInclusions.map((inc, i) => (
-                      <div key={i} className="flex items-start gap-1.5">
-                        <Check size={14} className="text-green-600 shrink-0 mt-0.5" />
-                        <span className="text-xs font-bold text-gray-700 break-words">{inc}</span>
-                      </div>
-                    ))}
+                    {displayedInclusions.map((inc, i) => {
+                      const isDeposit = inc.toLowerCase().includes('deposit');
+                      const depositDesc = isDeposit 
+                        ? (carData.depositTerms || (inc.toLowerCase().includes('zero') ? "No security deposit is required for this vehicle." : "Refundable security deposit collected at counter upon vehicle pickup and released upon return."))
+                        : null;
+                      return (
+                        <div key={i} className="flex items-start gap-1.5">
+                          <Check size={14} className="text-green-600 shrink-0 mt-0.5" />
+                          <span className="text-xs font-bold text-gray-700 break-words">{inc}</span>
+                          {depositDesc && (
+                            <ChicTooltip
+                              text={depositDesc}
+                              title="Security Deposit"
+                              variant="gold"
+                              position="top"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                   {carData.inclusions.length > 6 && (
                     <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="text-xs text-end w-full py-3 pr-5 font-black text-gray-700 underline hover:text-gray-900">
@@ -975,17 +1053,37 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
 
-            {carData.supplier.instantConfirmation && (
-              <div className="flex items-center gap-1.5 shrink-0">
-                <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
-                <ChicTooltip
-                  text="Receive instant booking confirmation right after completing your reservation!"
-                  title="Instant Confirmation"
-                  variant="gold"
-                  align="left"
-                  position="top"
-                />
+            {/* Instant Confirmation & Special Offers */}
+            {(carData.supplier.instantConfirmation || specialOfferDetails.length > 0) && (
+              <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 shrink-0">
+                {carData.supplier.instantConfirmation && (
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
+                    <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
+                    <ChicTooltip
+                      text="Receive instant booking confirmation right after completing your reservation!"
+                      title="Instant Confirmation"
+                      variant="gold"
+                      align="left"
+                      position="top"
+                    />
+                  </div>
+                )}
+                {specialOfferDetails.map((so: any) => (
+                  <div key={so.id || so.name} className="flex items-center gap-1.5 shrink-0">
+                    <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Check size={11} className="stroke-[3]" />
+                    </span>
+                    <span className="text-xs font-black text-gray-800 whitespace-nowrap">{so.name}</span>
+                    <ChicTooltip
+                      text={so.description || "Special offer included with this vehicle."}
+                      title={so.name}
+                      variant="emerald"
+                      align="left"
+                      position="top"
+                    />
+                  </div>
+                ))}
               </div>
             )}
 
@@ -1036,12 +1134,26 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
               </div>
               <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
-                {displayedInclusions.map((inc, i) => (
-                  <div key={i} className="flex items-start gap-1.5 min-w-0">
-                    <Check size={13} className="text-green-600 shrink-0 mt-0.5 md:mt-1" />
-                    <span className="text-xs md:text-sm font-bold text-gray-700 break-words" title={inc}>{inc}</span>
-                  </div>
-                ))}
+                {displayedInclusions.map((inc, i) => {
+                  const isDeposit = inc.toLowerCase().includes('deposit');
+                  const depositDesc = isDeposit 
+                    ? (carData.depositTerms || (inc.toLowerCase().includes('zero') ? "No security deposit is required for this vehicle." : "Refundable security deposit collected at counter upon vehicle pickup and released upon return."))
+                    : null;
+                  return (
+                    <div key={i} className="flex items-start gap-1.5 min-w-0">
+                      <Check size={13} className="text-green-600 shrink-0 mt-0.5 md:mt-1" />
+                      <span className="text-xs md:text-sm font-bold text-gray-700 break-words" title={inc}>{inc}</span>
+                      {depositDesc && (
+                        <ChicTooltip
+                          text={depositDesc}
+                          title="Security Deposit"
+                          variant="gold"
+                          position="top"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               {carData.inclusions.length > 6 && (
                 <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-xs font-black text-gray-800 underline hover:text-gray-600">
