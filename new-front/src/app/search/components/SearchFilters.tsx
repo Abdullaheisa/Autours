@@ -282,14 +282,15 @@ function FiltersContent({
         {/* 4. Deposit Filter */}
         <FilterSection title="Deposit" expanded>
           {[
-            { value: 'low', label: 'Low Deposit', count: depositCounts.low },
-            { value: 'average', label: 'Average Deposit', count: depositCounts.average },
-            { value: 'high', label: 'High Deposit', count: depositCounts.high },
+            { value: 'low', label: 'Low Deposit', count: depositCounts.low, tier: 'low' as const },
+            { value: 'average', label: 'Average Deposit', count: depositCounts.average, tier: 'average' as const },
+            { value: 'high', label: 'High Deposit', count: depositCounts.high, tier: 'high' as const },
           ].map(opt => (
             <FilterOption
               key={opt.value}
               label={opt.label}
               count={opt.count}
+              customIcon={<DepositTierIcon level={opt.tier} />}
               checked={isChecked('deposit', opt.value)}
               onToggle={() => handleToggle('deposit', opt.value)}
             />
@@ -502,16 +503,54 @@ function SimplePriceRange({
   );
 }
 
-// Accordion Component with Smooth Animation
+// ═══════════════════════════════════════════════════════════════
+// DEPOSIT TIER ICON (Matching user design: dark card + yellow strip + bar chart badge)
+// ═══════════════════════════════════════════════════════════════
+function DepositTierIcon({ level }: { level: 'low' | 'average' | 'high' }) {
+  const isAvg = level === 'average';
+  const isHigh = level === 'high';
+
+  return (
+    <svg viewBox="0 0 64 42" className="w-10 h-7 shrink-0 drop-shadow-2xs select-none" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Back Card */}
+      <g transform="rotate(-6 24 16)">
+        <rect x="6" y="5" width="38" height="23" rx="3.5" fill="#1e293b" />
+        <rect x="6" y="8" width="38" height="3" fill="#f59e0b" />
+      </g>
+      {/* Front Card */}
+      <rect x="4" y="9" width="42" height="26" rx="4" fill="#0f172a" stroke="#334155" strokeWidth="0.8" />
+      {/* Yellow top stripe */}
+      <path d="M4 14.5H46" stroke="#f59e0b" strokeWidth="2.5" />
+      {/* Chip */}
+      <rect x="8" y="19" width="7" height="5" rx="1" fill="#f59e0b" />
+      <rect x="9.5" y="20.5" width="4" height="2" rx="0.5" fill="#d97706" />
+
+      {/* Circle Badge */}
+      <circle cx="45" cy="27" r="12" fill="#ffffff" stroke="#f59e0b" strokeWidth="2" />
+
+      {/* Bar 1 (Low) */}
+      <rect x="38" y="28" width="3" height="5" rx="1.2" fill="#f59e0b" />
+
+      {/* Bar 2 (Average) */}
+      <rect x="43.5" y="24" width="3" height="9" rx="1.2" fill={isAvg || isHigh ? '#f59e0b' : '#cbd5e1'} />
+
+      {/* Bar 3 (High) */}
+      <rect x="49" y="20" width="3" height="13" rx="1.2" fill={isHigh ? '#f59e0b' : '#cbd5e1'} />
+    </svg>
+  );
+}
+
+// Accordion Component with Distinct Heading Styling
 function FilterSection({ title, children, badge, expanded = false, isLast = false }: any) {
   const [isOpen, setIsOpen] = useState(expanded);
   return (
-    // 💡 تم تقليص البادينج السفلي إلى pb-0 ونقل الخط border-b-2 ليكون في أسفل الحاوية تماماً ليرتفع الخط للأعلى بشكل مثالي ونظيف
-    <div className={`px-4 pt-3.5 pb-0 transition-colors ${!isLast ? 'border-b-2 border-gray-200' : ''}`}>
+    <div className={`px-4 pt-3.5 pb-0 transition-colors ${!isLast ? 'border-b-2 border-gray-150' : ''}`}>
       <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between group pb-3.5">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-gray-800 transition-colors">{title}</span>
-          {badge && <span className="bg-primary/10 text-primary-700 text-[9px] font-bold px-2 py-0.5 rounded-full">{badge}</span>}
+          <span className="text-[13.5px] font-black text-gray-900 tracking-tight uppercase group-hover:text-amber-600 transition-colors">
+            {title}
+          </span>
+          {badge && <span className="bg-primary/10 text-primary-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">{badge}</span>}
         </div>
         <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown size={16} className={`text-gray-400 ${isOpen ? 'text-yellow-500' : ''}`} />
@@ -527,7 +566,6 @@ function FilterSection({ title, children, badge, expanded = false, isLast = fals
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            {/* تم ضبط البادينج الداخلي هنا pb-4 ليحافظ على المسافات متناسقة مع ارتفاع الخط */}
             <div className="pt-1 pb-4 space-y-1.5">{children}</div>
           </motion.div>
         )}
@@ -542,12 +580,14 @@ function FilterOption({
   checked,
   onToggle,
   logoUrl,
+  customIcon,
   count,
 }: {
   label: string;
   checked: boolean;
   onToggle: () => void;
   logoUrl?: string;
+  customIcon?: React.ReactNode;
   count?: number;
 }) {
   return (
@@ -562,7 +602,11 @@ function FilterOption({
       }}
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
-        {logoUrl !== undefined && (
+        {customIcon ? (
+          <div className="shrink-0 flex items-center justify-center">
+            {customIcon}
+          </div>
+        ) : logoUrl !== undefined ? (
           <div className="relative w-16 h-8.5 rounded-lg overflow-hidden bg-white border border-gray-200/90 shadow-2xs shrink-0 flex items-center justify-center px-1.5 py-0.5">
             {logoUrl ? (
               <img src={logoUrl} alt={label} className="w-full h-full object-contain max-h-full max-w-full" />
@@ -570,7 +614,7 @@ function FilterOption({
               <span className="text-xs font-black text-gray-500">{label.charAt(0)}</span>
             )}
           </div>
-        )}
+        ) : null}
         <span className="text-[13px] font-semibold text-gray-800 group-hover:text-gray-950 transition-colors truncate">
           {label}
           {count !== undefined && <span className="text-gray-400 font-normal ml-1.5 text-xs">({count})</span>}

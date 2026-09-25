@@ -14,6 +14,7 @@ import SearchFilters from './components/SearchFilters';
 import CarCard from './components/CarCard';
 import CarCardSkeleton from './components/CarCardSkeleton';
 import CategoryFilterBar from './components/CategoryFilterBar';
+import Loader from '@/components/ui/Loader';
 import { RootState, AppDispatch } from '@/store';
 import { setSearchParams, setFilterParams, fetchVehicles, setPage, resetFilters } from '@/store/slices/searchSlice';
 import type { FilterPayload, Currency } from '@/types';
@@ -327,8 +328,8 @@ function SearchPageContent() {
               </div>
 
               {isFiltering && displayedVehicles.length === 0 && (
-                <div className="space-y-4">
-                  {Array.from({ length: 4 }).map((_, i) => <CarCardSkeleton key={i} />)}
+                <div className="w-full py-4">
+                  <Loader fullScreen={false} />
                 </div>
               )}
 

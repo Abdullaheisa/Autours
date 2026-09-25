@@ -297,6 +297,36 @@ export const countryIsoMap: Record<string, string> = {
   "Michigan": "us",
   "New Jersey": "us",
   "North Carolina": "us",
+  "Andorra": "ad",
+  "AD": "ae", // In car rental search context, AD usually represents Abu Dhabi
+  "AUH": "ae",
+  "DXB": "ae",
+  "DWC": "ae",
+  "SHJ": "ae",
+  "Dubai": "ae",
+  "Abu Dhabi": "ae",
+  "Doha": "qa",
+  "DOH": "qa",
+  "Riyadh": "sa",
+  "Jeddah": "sa",
+  "RUH": "sa",
+  "JED": "sa",
+  "Cairo": "eg",
+  "CAI": "eg",
+  "Amman": "jo",
+  "AMM": "jo",
+  "Istanbul": "tr",
+  "IST": "tr",
+  "SAW": "tr",
+  "Casablanca": "ma",
+  "CMN": "ma",
+  "Muscat": "om",
+  "MCT": "om",
+  "KWI": "kw",
+  "Manama": "bh",
+  "BAH": "bh",
+  "Tbilisi": "ge",
+  "TBS": "ge",
   "Ohio": "us",
   "Pennsylvania": "us",
   "Tennessee": "us",
@@ -366,3 +396,358 @@ export function getCountryIso(countryName?: string): string | null {
 
   return null;
 }
+
+/**
+ * Accurately resolves the destination country based on location name,
+ * airport code, arabic keywords, or fallback search parameters.
+ */
+export function resolveDestinationCountry(searchLocation?: string | null, fallbackCountry?: string | null): string {
+  const loc = (searchLocation || '').trim();
+  if (loc) {
+    const lower = loc.toLowerCase();
+
+    // 1. UAE / Dubai / Abu Dhabi
+    if (
+      lower.includes('dubai') ||
+      lower.includes('abu dhabi') ||
+      lower.includes('abudhabi') ||
+      lower.includes('sharjah') ||
+      lower.includes('ajman') ||
+      lower.includes('ras al khaimah') ||
+      lower.includes('fujairah') ||
+      lower.includes('al ain') ||
+      lower.includes('emirates') ||
+      lower.includes('uae') ||
+      lower.includes('dxb') ||
+      lower.includes('dwc') ||
+      lower.includes('auh') ||
+      lower.includes('shj') ||
+      lower.includes('rkt') ||
+      lower.includes('fjr') ||
+      lower.includes('aan') ||
+      loc.includes('دبي') ||
+      loc.includes('دبى') ||
+      loc.includes('أبوظبي') ||
+      loc.includes('ابوظبي') ||
+      loc.includes('الشارقة') ||
+      loc.includes('عجمان') ||
+      loc.includes('الامارات') ||
+      loc.includes('الإمارات')
+    ) {
+      return 'United Arab Emirates';
+    }
+
+    // 2. Qatar / Doha
+    if (
+      lower.includes('doha') ||
+      lower.includes('qatar') ||
+      lower.includes('doh') ||
+      lower.includes('hamad') ||
+      loc.includes('قطر') ||
+      loc.includes('الدوحة')
+    ) {
+      return 'Qatar';
+    }
+
+    // 3. Saudi Arabia / Riyadh / Jeddah / Dammam / Medina / Mecca
+    if (
+      lower.includes('riyadh') ||
+      lower.includes('jeddah') ||
+      lower.includes('dammam') ||
+      lower.includes('medina') ||
+      lower.includes('madinah') ||
+      lower.includes('mecca') ||
+      lower.includes('makkah') ||
+      lower.includes('saudi') ||
+      lower.includes('ksa') ||
+      lower.includes('ruh') ||
+      lower.includes('jed') ||
+      lower.includes('dmm') ||
+      lower.includes('med') ||
+      lower.includes('ahb') ||
+      lower.includes('tif') ||
+      lower.includes('tab') ||
+      lower.includes('giz') ||
+      lower.includes('elq') ||
+      lower.includes('ulh') ||
+      lower.includes('ynb') ||
+      loc.includes('السعودية') ||
+      loc.includes('الرياض') ||
+      loc.includes('جدة') ||
+      loc.includes('الدمام') ||
+      loc.includes('المدينة') ||
+      loc.includes('مكة')
+    ) {
+      return 'Saudi Arabia';
+    }
+
+    // 4. Egypt / Cairo / Alexandria / Hurghada / Sharm
+    if (
+      lower.includes('cairo') ||
+      lower.includes('alexandria') ||
+      lower.includes('hurghada') ||
+      lower.includes('sharm') ||
+      lower.includes('luxor') ||
+      lower.includes('aswan') ||
+      lower.includes('egypt') ||
+      lower.includes('cai') ||
+      lower.includes('spx') ||
+      lower.includes('hrg') ||
+      lower.includes('ssh') ||
+      lower.includes('hbe') ||
+      lower.includes('lxr') ||
+      lower.includes('asw') ||
+      lower.includes('rmf') ||
+      loc.includes('مصر') ||
+      loc.includes('القاهرة') ||
+      loc.includes('الاسكندرية') ||
+      loc.includes('شرم') ||
+      loc.includes('الغردقة')
+    ) {
+      return 'Egypt';
+    }
+
+    // 5. Jordan / Amman / Aqaba
+    if (
+      lower.includes('amman') ||
+      lower.includes('aqaba') ||
+      lower.includes('jordan') ||
+      lower.includes('amm') ||
+      lower.includes('aqj') ||
+      loc.includes('الاردن') ||
+      loc.includes('الأردن') ||
+      loc.includes('عمان') ||
+      loc.includes('العقبة')
+    ) {
+      return 'Jordan';
+    }
+
+    // 6. Turkey / Istanbul / Antalya / Ankara / Trabzon / Bodrum / Izmir
+    if (
+      lower.includes('istanbul') ||
+      lower.includes('antalya') ||
+      lower.includes('ankara') ||
+      lower.includes('izmir') ||
+      lower.includes('trabzon') ||
+      lower.includes('bodrum') ||
+      lower.includes('dalaman') ||
+      lower.includes('turkey') ||
+      lower.includes('türkiye') ||
+      lower.includes('turkiye') ||
+      lower.includes('ist') ||
+      lower.includes('saw') ||
+      lower.includes('ayt') ||
+      lower.includes('adb') ||
+      lower.includes('esb') ||
+      lower.includes('tzx') ||
+      lower.includes('dlm') ||
+      lower.includes('bjv') ||
+      loc.includes('تركيا') ||
+      loc.includes('اسطنبول') ||
+      loc.includes('إسطنبول') ||
+      loc.includes('انطاليا') ||
+      loc.includes('أنطاليا') ||
+      loc.includes('طرابزون')
+    ) {
+      return 'Turkey';
+    }
+
+    // 7. Morocco / Casablanca / Marrakech / Agadir / Tangier / Fes / Rabat
+    if (
+      lower.includes('casablanca') ||
+      lower.includes('marrakech') ||
+      lower.includes('marrakesh') ||
+      lower.includes('agadir') ||
+      lower.includes('tangier') ||
+      lower.includes('fes') ||
+      lower.includes('fez') ||
+      lower.includes('rabat') ||
+      lower.includes('morocco') ||
+      lower.includes('cmn') ||
+      lower.includes('rak') ||
+      lower.includes('aga') ||
+      lower.includes('tng') ||
+      lower.includes('rba') ||
+      loc.includes('المغرب') ||
+      loc.includes('كازابلانكا') ||
+      loc.includes('مراكش') ||
+      loc.includes('طنجة') ||
+      loc.includes('الرباط') ||
+      loc.includes('أكادير')
+    ) {
+      return 'Morocco';
+    }
+
+    // 8. Oman / Muscat / Salalah
+    if (
+      lower.includes('muscat') ||
+      lower.includes('salalah') ||
+      lower.includes('oman') ||
+      lower.includes('mct') ||
+      lower.includes('sll') ||
+      loc.includes('مسقط') ||
+      loc.includes('صلالة') ||
+      loc.includes('سلطنة عمان')
+    ) {
+      return 'Oman';
+    }
+
+    // 9. Kuwait
+    if (
+      lower.includes('kuwait') ||
+      lower.includes('kwi') ||
+      loc.includes('الكويت')
+    ) {
+      return 'Kuwait';
+    }
+
+    // 10. Bahrain
+    if (
+      lower.includes('bahrain') ||
+      lower.includes('manama') ||
+      lower.includes('bah') ||
+      loc.includes('البحرين') ||
+      loc.includes('المنامة')
+    ) {
+      return 'Bahrain';
+    }
+
+    // 11. Georgia / Tbilisi / Batumi / Kutaisi
+    if (
+      lower.includes('tbilisi') ||
+      lower.includes('batumi') ||
+      lower.includes('kutaisi') ||
+      lower.includes('georgia') ||
+      lower.includes('tbs') ||
+      lower.includes('bus') ||
+      lower.includes('kut') ||
+      loc.includes('جورجيا') ||
+      loc.includes('تبليسي') ||
+      loc.includes('باتومي')
+    ) {
+      return 'Georgia';
+    }
+
+    // 12. Cyprus / Northern Cyprus / Larnaca / Paphos / Ercan
+    if (
+      lower.includes('cyprus') ||
+      lower.includes('larnaca') ||
+      lower.includes('paphos') ||
+      lower.includes('ercan') ||
+      lower.includes('lca') ||
+      lower.includes('pfo') ||
+      lower.includes('ecn') ||
+      loc.includes('قبرص') ||
+      loc.includes('لارنكا')
+    ) {
+      return lower.includes('north') ? 'Northern Cyprus' : 'Cyprus';
+    }
+
+    // 13. Spain / Madrid / Barcelona / Malaga
+    if (
+      lower.includes('spain') ||
+      lower.includes('madrid') ||
+      lower.includes('barcelona') ||
+      lower.includes('malaga') ||
+      lower.includes('mad') ||
+      lower.includes('bcn') ||
+      loc.includes('اسبانيا') ||
+      loc.includes('أسبانيا') ||
+      loc.includes('مدريد') ||
+      loc.includes('برشلونة')
+    ) {
+      return 'Spain';
+    }
+
+    // 14. Italy / Rome / Milan
+    if (
+      lower.includes('italy') ||
+      lower.includes('rome') ||
+      lower.includes('milan') ||
+      lower.includes('fco') ||
+      lower.includes('mxp') ||
+      loc.includes('ايطاليا') ||
+      loc.includes('إيطاليا') ||
+      loc.includes('روما') ||
+      loc.includes('ميلان')
+    ) {
+      return 'Italy';
+    }
+
+    // 15. Germany / Berlin / Munich / Frankfurt
+    if (
+      lower.includes('germany') ||
+      lower.includes('berlin') ||
+      lower.includes('munich') ||
+      lower.includes('frankfurt') ||
+      lower.includes('fra') ||
+      lower.includes('ber') ||
+      lower.includes('muc') ||
+      loc.includes('المانيا') ||
+      loc.includes('ألمانيا')
+    ) {
+      return 'Germany';
+    }
+
+    // 16. France / Paris / Nice
+    if (
+      lower.includes('france') ||
+      lower.includes('paris') ||
+      lower.includes('nice') ||
+      lower.includes('cdg') ||
+      lower.includes('ory') ||
+      loc.includes('فرنسا') ||
+      loc.includes('باريس')
+    ) {
+      return 'France';
+    }
+
+    // 17. UK / London
+    if (
+      lower.includes('united kingdom') ||
+      lower.includes('london') ||
+      lower.includes('manchester') ||
+      lower.includes('lhr') ||
+      lower.includes('lgw') ||
+      loc.includes('بريطانيا') ||
+      loc.includes('لندن') ||
+      loc.includes('انجلترا')
+    ) {
+      return 'United Kingdom';
+    }
+
+    // 18. USA / United States
+    if (
+      lower.includes('united states') ||
+      lower.includes('usa') ||
+      lower.includes('new york') ||
+      lower.includes('miami') ||
+      lower.includes('orlando') ||
+      lower.includes('jfk') ||
+      lower.includes('lax') ||
+      lower.includes('mco') ||
+      lower.includes('mia') ||
+      loc.includes('امريكا') ||
+      loc.includes('أمريكا')
+    ) {
+      return 'United States';
+    }
+
+    // Generic match against countryNamesMap
+    const matched = getCountryFullName(loc);
+    if (matched && matched !== loc && matched !== 'Global') {
+      return matched;
+    }
+  }
+
+  // Fallback to fallbackCountry if provided
+  if (fallbackCountry && fallbackCountry.trim()) {
+    const fromParam = getCountryFullName(fallbackCountry.trim());
+    if (fromParam && fromParam !== 'Global' && fromParam !== 'Andorra') {
+      return fromParam;
+    }
+  }
+
+  return 'United Arab Emirates';
+}
+

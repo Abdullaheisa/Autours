@@ -312,6 +312,13 @@ class UserController extends Controller
             $supplierIds = Branch::where('country', $request->country)->pluck('company_id');
             $query->whereIn('id', $supplierIds);
         }
+
+        $query->withCount('vehicles');
+
+        if ($request->boolean('with_vehicles') || $request->get('has_vehicles') === 'true') {
+            $query->has('vehicles');
+        }
+
         return $query->get();
     }
 

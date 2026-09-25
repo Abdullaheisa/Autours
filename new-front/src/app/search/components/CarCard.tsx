@@ -881,7 +881,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <div className="text-left">
               {originalPriceParts && discountPercent > 0 && (
                 <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-xs md:text-sm font-bold text-gray-400 line-through tracking-tight">
+                  <span className="text-xs md:text-sm font-bold text-red-500 line-through decoration-red-500 tracking-tight">
                     {originalPriceParts.currency} {originalPriceParts.amount}
                   </span>
                 </div>
@@ -1230,7 +1230,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex flex-col lg:items-start items-start text-left">
                 {originalPriceParts && discountPercent > 0 && (
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-sm lg:text-base font-bold text-gray-400 line-through tracking-tight">
+                    <span className="text-sm lg:text-base font-bold text-red-500 line-through decoration-red-500 tracking-tight">
                       {originalPriceParts.currency} {originalPriceParts.amount}
                     </span>
                   </div>
