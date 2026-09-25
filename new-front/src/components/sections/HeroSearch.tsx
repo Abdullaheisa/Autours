@@ -702,14 +702,14 @@ export default function HeroSearch({
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 5, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 w-64 max-w-[calc(100vw-32px)] p-3 rounded-xl bg-gray-950/95 backdrop-blur-md text-white shadow-2xl border border-white/10 z-[100] text-left pointer-events-none"
+                          className="absolute bottom-full mb-2.5 right-0 translate-x-2 sm:translate-x-0 w-64 sm:w-72 max-w-[calc(100vw-36px)] p-3 rounded-2xl bg-gray-950/95 backdrop-blur-md text-white shadow-2xl border border-white/15 z-[100] text-left pointer-events-none"
                         >
-                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 sm:left-4 sm:translate-x-0 w-2 h-2 bg-gray-950 rotate-45 border-b border-r border-white/10" />
+                          <div className="absolute -bottom-1.5 right-3.5 w-3 h-3 bg-gray-950 rotate-45 border-b border-r border-white/15" />
                           <div className="font-black text-[#f9d602] text-xs mb-1">
-                            Drivers Between 30-65
+                            Drivers Between 30 - 65
                           </div>
                           <p className="text-gray-200 text-xs leading-relaxed font-medium">
-                            Supplier may charge additional fees if the main drivers is under 25 Years.
+                            Suppliers may charge additional fees or apply young/senior driver requirements if the driver is outside this age range.
                           </p>
                         </motion.div>
                       )}

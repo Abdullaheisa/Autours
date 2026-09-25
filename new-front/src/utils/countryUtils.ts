@@ -3,6 +3,14 @@ export const countryNamesMap: Record<string, string> = {
   "UAE": "United Arab Emirates",
   "United Arab Emirates22": "United Arab Emirates",
   "AE": "United Arab Emirates",
+  "AD": "United Arab Emirates",
+  "AUH": "United Arab Emirates",
+  "DXB": "United Arab Emirates",
+  "DWC": "United Arab Emirates",
+  "SHJ": "United Arab Emirates",
+  "Dubai": "United Arab Emirates",
+  "Abu Dhabi": "United Arab Emirates",
+  "Sharjah": "United Arab Emirates",
   "TR": "Turkey",
   "TURKEY": "Turkey",
   "CY": "Cyprus",
@@ -35,8 +43,21 @@ export const countryNamesMap: Record<string, string> = {
   "OMAN": "Oman",
   "QA": "Qatar",
   "QATAR": "Qatar",
+  "DOH": "Qatar",
+  "Doha": "Qatar",
   "SA": "Saudi Arabia",
   "SAUDI ARABIA": "Saudi Arabia",
+  "KSA": "Saudi Arabia",
+  "RUH": "Saudi Arabia",
+  "JED": "Saudi Arabia",
+  "Riyadh": "Saudi Arabia",
+  "Jeddah": "Saudi Arabia",
+  "Cairo": "Egypt",
+  "CAI": "Egypt",
+  "Amman": "Jordan",
+  "AMM": "Jordan",
+  "Istanbul": "Turkey",
+  "IST": "Turkey",
   "AZ": "Azerbaijan",
   "AZERBAIJAN": "Azerbaijan",
   "AL": "Albania",
@@ -406,8 +427,19 @@ export function resolveDestinationCountry(searchLocation?: string | null, fallba
   if (loc) {
     const lower = loc.toLowerCase();
 
-    // 1. UAE / Dubai / Abu Dhabi
+    // 1. UAE / Dubai / Abu Dhabi / AD / AUH / DXB
     if (
+      lower === 'ad' ||
+      lower === 'ae' ||
+      lower === 'uae' ||
+      lower === 'auh' ||
+      lower === 'dxb' ||
+      lower === 'dwc' ||
+      lower === 'shj' ||
+      lower === 'rkt' ||
+      lower === 'fjr' ||
+      lower.startsWith('ad ') ||
+      lower.endsWith(' ad') ||
       lower.includes('dubai') ||
       lower.includes('abu dhabi') ||
       lower.includes('abudhabi') ||

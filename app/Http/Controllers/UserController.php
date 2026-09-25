@@ -309,8 +309,69 @@ class UserController extends Controller
         }
 
         if ($request->filled('country') && $request->country !== 'All') {
-            $supplierIds = Branch::where('country', $request->country)->pluck('company_id');
-            $query->whereIn('id', $supplierIds);
+            $inputCountry = trim($request->country);
+            $normalizedCountry = $inputCountry;
+
+            $countryMap = [
+                'AD' => 'United Arab Emirates',
+                'AE' => 'United Arab Emirates',
+                'UAE' => 'United Arab Emirates',
+                'DUBAI' => 'United Arab Emirates',
+                'ABU DHABI' => 'United Arab Emirates',
+                'UNITED ARAB EMIRATES' => 'United Arab Emirates',
+                'QA' => 'Qatar',
+                'QATAR' => 'Qatar',
+                'DOHA' => 'Qatar',
+                'SA' => 'Saudi Arabia',
+                'KSA' => 'Saudi Arabia',
+                'SAUDI ARABIA' => 'Saudi Arabia',
+                'RIYADH' => 'Saudi Arabia',
+                'JEDDAH' => 'Saudi Arabia',
+                'EG' => 'Egypt',
+                'EGYPT' => 'Egypt',
+                'CAIRO' => 'Egypt',
+                'JO' => 'Jordan',
+                'JORDAN' => 'Jordan',
+                'AMMAN' => 'Jordan',
+                'TR' => 'Turkey',
+                'TURKEY' => 'Turkey',
+                'TÜRKIYE' => 'Turkey',
+                'TURKIYE' => 'Turkey',
+                'ISTANBUL' => 'Turkey',
+                'MA' => 'Morocco',
+                'MOROCCO' => 'Morocco',
+                'CASABLANCA' => 'Morocco',
+                'KW' => 'Kuwait',
+                'KUWAIT' => 'Kuwait',
+                'OM' => 'Oman',
+                'OMAN' => 'Oman',
+                'MUSCAT' => 'Oman',
+                'BH' => 'Bahrain',
+                'BAHRAIN' => 'Bahrain',
+                'GE' => 'Georgia',
+                'GEORGIA' => 'Georgia',
+                'TBILISI' => 'Georgia',
+                'CY' => 'Cyprus',
+                'CYPRUS' => 'Cyprus',
+            ];
+
+            $upper = strtoupper($inputCountry);
+            if (isset($countryMap[$upper])) {
+                $normalizedCountry = $countryMap[$upper];
+            }
+
+            // Find suppliers with branches in this country or whose user country matches
+            $supplierIds = Branch::where(function($q) use ($inputCountry, $normalizedCountry) {
+                $q->whereRaw('LOWER(country) = ?', [strtolower($inputCountry)])
+                  ->orWhereRaw('LOWER(country) = ?', [strtolower($normalizedCountry)])
+                  ->orWhereRaw('LOWER(city) = ?', [strtolower($inputCountry)]);
+            })->pluck('company_id');
+
+            $query->where(function($q) use ($supplierIds, $inputCountry, $normalizedCountry) {
+                $q->whereIn('id', $supplierIds)
+                  ->orWhereRaw('LOWER(country) = ?', [strtolower($inputCountry)])
+                  ->orWhereRaw('LOWER(country) = ?', [strtolower($normalizedCountry)]);
+            });
         }
 
         $query->withCount('vehicles');
