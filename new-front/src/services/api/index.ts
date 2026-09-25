@@ -8,10 +8,16 @@ import {
   LocationBranch 
 } from '@/types';
 
-// In-memory location cache (cleared on page navigation/refresh)
-// No sessionStorage: ensures deactivated branches disappear immediately after refresh
+// In-memory location cache
 let memoryLocationsCache: LocationBranch[] | null = null;
 const memoryCountryLocationsCache: Record<string, LocationBranch[]> = {};
+
+export const clearLocationCache = () => {
+  memoryLocationsCache = null;
+  Object.keys(memoryCountryLocationsCache).forEach((k) => {
+    delete memoryCountryLocationsCache[k];
+  });
+};
 
 // Blog API - uses /api/blogs endpoints
 export const blogApi = {
@@ -247,22 +253,45 @@ export const authApi = {
 // Branches API
 export const branchApi = {
   getAll: () => apiClient.get("/api/supplier/get/branches"),
-  create: (data: unknown) => apiClient.post("/api/supplier/upload/branch", data),
+  create: (data: unknown) => {
+    clearLocationCache();
+    return apiClient.post("/api/supplier/upload/branch", data);
+  },
   getById: (id: number) => apiClient.get(`/api/supplier/branches/edit/${id}`),
-  update: (data: unknown) => apiClient.post("/api/supplier/branches/update", data),
-  delete: (data: unknown) => apiClient.post("/api/supplier/delete/branches", data),
-  toggleActivation: (id: number, activation: boolean) =>
-    apiClient.post("/api/supplier/branches/update", { id, activation }),
+  update: (data: unknown) => {
+    clearLocationCache();
+    return apiClient.post("/api/supplier/branches/update", data);
+  },
+  delete: (data: unknown) => {
+    clearLocationCache();
+    return apiClient.post("/api/supplier/delete/branches", data);
+  },
+  toggleActivation: (id: number, activation: boolean) => {
+    clearLocationCache();
+    return apiClient.post("/api/supplier/branches/update", { id, activation });
+  },
 };
 
 // Vehicle Management API (Supplier)
 export const vehicleManagementApi = {
-  create: (data: unknown) => apiClient.post("/post/vehicles", data),
+  create: (data: unknown) => {
+    clearLocationCache();
+    return apiClient.post("/post/vehicles", data);
+  },
   getForEdit: (id: number) => apiClient.get(`/api/supplier/edit/vehicles/${id}`),
   updatePrice: (data: unknown) => apiClient.post("/edit-vehicle-price", data),
-  toggleActivation: (data: unknown) => apiClient.post("/update/vehicles/activation", data),
-  delete: (id: number) => apiClient.post(`/delete/vehicles/${id}`, {}),
-  bulkUpload: (data: unknown) => apiClient.post("/vehicles/bulk-upload", data),
+  toggleActivation: (data: unknown) => {
+    clearLocationCache();
+    return apiClient.post("/update/vehicles/activation", data);
+  },
+  delete: (id: number) => {
+    clearLocationCache();
+    return apiClient.post(`/delete/vehicles/${id}`, {});
+  },
+  bulkUpload: (data: unknown) => {
+    clearLocationCache();
+    return apiClient.post("/vehicles/bulk-upload", data);
+  },
   getList: () => apiClient.get("/get/vehicles"),
 };
 

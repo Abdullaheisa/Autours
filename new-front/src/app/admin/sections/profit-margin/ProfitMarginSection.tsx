@@ -290,28 +290,32 @@ export default function ProfitMarginsPage() {
   };
 
   const handleApplyProfit = async (margins: ProfitMarginsData) => {
-    if (vehicles.length === 0) return;
-
     const payload: any = {};
     if (margins.days1_2) payload.priceTax = parseFloat(margins.days1_2);
     if (margins.days3_7) payload.weekPriceTax = parseFloat(margins.days3_7);
     if (margins.days8_30) payload.monthPriceTax = parseFloat(margins.days8_30);
     if (margins.weekend) payload.weekendPriceTax = parseFloat(margins.weekend);
 
+    if (Object.keys(payload).length === 0) {
+      toast.error("Please enter at least one profit margin percentage.");
+      return;
+    }
+
     if (selectedCountry) payload.country = selectedCountry;
     if (selectedSupplier) payload.supplier = selectedSupplier;
     if (selectedBranch) payload.branch = selectedBranch;
     if (selectedCategory) payload.category = selectedCategory;
     if (supplierStatus) payload.supplier_status = supplierStatus;
-
-    const idsToUpdate = new Set(vehicles.map((v) => v.id));
-    if (!selectedCountry && !selectedSupplier && !selectedBranch && !selectedCategory) {
-      payload.selectedVehicles = [...idsToUpdate].join(",");
-    }
+    if (searchQuery.trim()) payload.search = searchQuery.trim();
 
     try {
-      await profitApi.upload(payload);
-      toast.success("Profit margins applied successfully!");
+      const res: any = await profitApi.upload(payload);
+      const count = res?.count || res?.data?.count;
+      toast.success(
+        count !== undefined
+          ? `Profit margins applied to ${count} vehicle(s) successfully!`
+          : "Profit margins applied to all matching vehicles successfully!"
+      );
       fetchData(currentPage);
     } catch (e: any) {
       console.warn("Failed to upload global profit:", e.message);
@@ -320,7 +324,6 @@ export default function ProfitMarginsPage() {
   };
 
   const handleApplyDiscount = async (discount: string) => {
-    if (vehicles.length === 0) return;
     if (discount === "" || isNaN(Number(discount))) {
       toast.error("Please enter a valid discount percentage");
       return;
@@ -335,15 +338,16 @@ export default function ProfitMarginsPage() {
     if (selectedBranch) payload.branch = selectedBranch;
     if (selectedCategory) payload.category = selectedCategory;
     if (supplierStatus) payload.supplier_status = supplierStatus;
-
-    const idsToUpdate = new Set(vehicles.map((v) => v.id));
-    if (!selectedCountry && !selectedSupplier && !selectedBranch && !selectedCategory) {
-      payload.selectedVehicles = [...idsToUpdate].join(",");
-    }
+    if (searchQuery.trim()) payload.search = searchQuery.trim();
 
     try {
-      await profitApi.upload(payload);
-      toast.success(`Discount of ${discount}% applied successfully!`);
+      const res: any = await profitApi.upload(payload);
+      const count = res?.count || res?.data?.count;
+      toast.success(
+        count !== undefined
+          ? `Discount of ${discount}% applied to ${count} vehicle(s) successfully!`
+          : `Discount of ${discount}% applied successfully!`
+      );
       fetchData(currentPage);
     } catch (e: any) {
       console.warn("Failed to upload discount:", e.message);

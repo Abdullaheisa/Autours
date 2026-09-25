@@ -18,7 +18,7 @@ class isSupplier
     public function handle(Request $request, Closure $next)
     {
         $user = Auth::guard('sanctum')->user() ?? Auth::user();
-        if ($user && $user->role == 'supplier') {
+        if ($user && ($user->role == 'supplier' || $user->role == 'active_supplier' || $user->role == 'admin')) {
             if (Auth::guard('sanctum')->check()) {
                 Auth::shouldUse('sanctum');
             } else {

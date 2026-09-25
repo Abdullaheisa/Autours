@@ -1316,7 +1316,9 @@ class VehicleController extends Controller
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
         $locations = Branch::query()
             ->with(['airport', 'company:id,name,logo,company'])
-            ->where('activation', 1)
+            ->where(function ($q) {
+                $q->where('activation', true)->orWhere('activation', 1);
+            })
             ->whereHas('company', function ($query) use ($user) {
                 $query->where('role', 'active_supplier');
                 if (!$user || $user->role !== 'admin') {
@@ -1325,7 +1327,13 @@ class VehicleController extends Controller
                     });
                 }
             })
-            ->has('vehicles')
+            ->where(function ($q) {
+                $q->whereHas('vehicles', function ($vq) {
+                    $vq->where('activation', true)->orWhere('activation', 1);
+                })->orWhereHas('pivotVehicles', function ($vq) {
+                    $vq->where('activation', true)->orWhere('activation', 1);
+                });
+            })
             ->orderBy('name')
             ->get()
             ->map(function ($branch) {

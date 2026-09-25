@@ -17,21 +17,64 @@ class ProfitsController extends Controller
             $query = Vehicle::query();
 
             if ($request->filled('country') && $request->country !== 'All') {
-                $branchIds = Branch::query()->select(['id'])->where('country', $request->country)->get()->pluck('id')->toArray();
+                $country = trim($request->country);
+                $branchIds = Branch::query()
+                    ->select(['id'])
+                    ->where(function ($q) use ($country) {
+                        $q->where('country', $country)
+                          ->orWhere('country', 'ILIKE', $country);
+                    })
+                    ->pluck('id')
+                    ->toArray();
                 $query->whereIn('pickup_loc', $branchIds);
             }
+
             if ($request->filled('supplier') && $request->supplier !== 'All') {
                 $query->where('supplier', $request->supplier);
+            } else if ($request->filled('supplier_status') && $request->supplier_status !== 'all') {
+                $status = $request->supplier_status;
+                $query->whereHas('supplierUser', function ($q) use ($status) {
+                    if ($status === 'active') {
+                        $q->where('role', 'active_supplier')
+                          ->where(function ($sq) {
+                              $sq->whereNull('vehicles_hidden')->orWhere('vehicles_hidden', false);
+                          });
+                    } else if ($status === 'inactive') {
+                        $q->where('role', '!=', 'active_supplier')
+                          ->orWhere('vehicles_hidden', true);
+                    }
+                });
             }
+
             if ($request->filled('branch') && $request->branch !== 'All') {
                 $query->where('pickup_loc', $request->branch);
             }
+
             if ($request->filled('category') && $request->category !== 'All') {
                 $query->where('category', $request->category);
             }
+
+            if ($request->filled('search')) {
+                $search = trim($request->search);
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'ILIKE', "%{$search}%")
+                      ->orWhereHas('branch', function ($bq) use ($search) {
+                          $bq->where('name', 'ILIKE', "%{$search}%")
+                             ->orWhere('country', 'ILIKE', "%{$search}%");
+                      })
+                      ->orWhereHas('supplierUser', function ($sq) use ($search) {
+                          $sq->where('name', 'ILIKE', "%{$search}%")
+                             ->orWhere('company', 'ILIKE', "%{$search}%");
+                      });
+                });
+            }
+
             if ($request->filled('selectedVehicles')) {
                 $ids = is_array($request->selectedVehicles) ? $request->selectedVehicles : explode(',', $request->selectedVehicles);
-                $query->whereIn('id', array_filter($ids));
+                $cleanIds = array_filter($ids);
+                if (!empty($cleanIds)) {
+                    $query->whereIn('id', $cleanIds);
+                }
             }
 
             $updateData = [];
@@ -56,7 +99,8 @@ class ProfitsController extends Controller
             if (empty($updateData)) {
                 return response()->json([
                     'data' => [],
-                    'message' => 'No values to update'
+                    'message' => 'No values to update',
+                    'count' => 0
                 ], 200);
             }
 
@@ -64,7 +108,8 @@ class ProfitsController extends Controller
             if ($vehicles->isEmpty()) {
                 return response()->json([
                     'data' => [],
-                    'message' => 'No vehicles found to update'
+                    'message' => 'No vehicles found to update',
+                    'count' => 0
                 ], 200);
             }
 
@@ -72,12 +117,19 @@ class ProfitsController extends Controller
             $now = now();
             $updateDataWithTimestamp = array_merge($updateData, ['updated_at' => $now]);
 
-            // Bulk update existing profits
-            Profit::whereIn('vehicle_id', $vehicleIds)->update($updateDataWithTimestamp);
+            // Bulk update existing profits in chunks
+            foreach (array_chunk($vehicleIds, 1000) as $chunkIds) {
+                Profit::whereIn('vehicle_id', $chunkIds)->update($updateDataWithTimestamp);
+            }
 
-            // Insert profit rows for vehicles that don't have one yet
-            $existingVehicleIds = Profit::whereIn('vehicle_id', $vehicleIds)->pluck('vehicle_id')->toArray();
-            $missingVehicles = $vehicles->whereNotIn('id', $existingVehicleIds);
+            // Find missing vehicles that don't have profit rows
+            $existingVehicleIds = [];
+            foreach (array_chunk($vehicleIds, 1000) as $chunkIds) {
+                $existingChunk = Profit::whereIn('vehicle_id', $chunkIds)->pluck('vehicle_id')->toArray();
+                $existingVehicleIds = array_merge($existingVehicleIds, $existingChunk);
+            }
+            $existingMap = array_flip($existingVehicleIds);
+            $missingVehicles = $vehicles->filter(fn($v) => !isset($existingMap[$v->id]));
 
             if ($missingVehicles->isNotEmpty()) {
                 $rowsToInsert = [];
@@ -102,7 +154,8 @@ class ProfitsController extends Controller
 
             return response()->json([
                 'data' => [],
-                'message' => 'profit updated'
+                'message' => 'Profit updated successfully',
+                'count' => count($vehicleIds)
             ], 200);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("ProfitsController upload error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
