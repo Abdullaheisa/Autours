@@ -8,23 +8,11 @@ import {
   LocationBranch 
 } from '@/types';
 
-// Cache structures to prevent HTTP 429 Rate Limiting (Too Many Requests)
-// Cache key includes today's date so stale data (e.g. inactive branches) is invalidated daily
-const _today = new Date().toISOString().slice(0, 10); // e.g. "2026-09-25"
-const LOCATIONS_CACHE_KEY = `autours_locations_${_today}`;
-const COUNTRY_LOCATIONS_CACHE_PREFIX = `autours_loc_country_${_today}_`;
+// In-memory location cache (cleared on page navigation/refresh)
+// No sessionStorage: ensures deactivated branches disappear immediately after refresh
 let memoryLocationsCache: LocationBranch[] | null = null;
 const memoryCountryLocationsCache: Record<string, LocationBranch[]> = {};
 
-// Purge location cache entries from previous days
-if (typeof window !== 'undefined') {
-  for (let i = sessionStorage.length - 1; i >= 0; i--) {
-    const k = sessionStorage.key(i);
-    if (k && (k.startsWith('autours_locations') || k.startsWith('autours_loc_country_')) && k !== LOCATIONS_CACHE_KEY && !k.startsWith(COUNTRY_LOCATIONS_CACHE_PREFIX)) {
-      sessionStorage.removeItem(k);
-    }
-  }
-}
 // Blog API - uses /api/blogs endpoints
 export const blogApi = {
   getAll: () => apiClient.get("/api/blogs?per_page=1000"),
@@ -368,13 +356,6 @@ export const vehicleApi = {
       if (memoryLocationsCache) {
         return memoryLocationsCache;
       }
-      if (typeof window !== 'undefined') {
-        const cached = sessionStorage.getItem(LOCATIONS_CACHE_KEY);
-        if (cached) {
-          memoryLocationsCache = JSON.parse(cached);
-          return memoryLocationsCache!;
-        }
-      }
 
       const data = await apiClient.get<any[]>('/get/locations');
       const mapped = (data || []).map((loc: any) => ({
@@ -393,9 +374,6 @@ export const vehicleApi = {
       }));
 
       memoryLocationsCache = mapped;
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(LOCATIONS_CACHE_KEY, JSON.stringify(mapped));
-      }
       return mapped;
     } catch (err) {
       console.error('[LOCATIONS ERROR]', err);
@@ -408,13 +386,6 @@ export const vehicleApi = {
       const countryKey = country.toLowerCase().trim();
       if (memoryCountryLocationsCache[countryKey]) {
         return memoryCountryLocationsCache[countryKey];
-      }
-      if (typeof window !== 'undefined') {
-        const cached = sessionStorage.getItem(`${COUNTRY_LOCATIONS_CACHE_PREFIX}${countryKey}`);
-        if (cached) {
-          memoryCountryLocationsCache[countryKey] = JSON.parse(cached);
-          return memoryCountryLocationsCache[countryKey];
-        }
       }
 
       const data = await apiClient.get<any[]>(`/get/locations/country/${country}`);
@@ -434,9 +405,6 @@ export const vehicleApi = {
       }));
 
       memoryCountryLocationsCache[countryKey] = mapped;
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(`${COUNTRY_LOCATIONS_CACHE_PREFIX}${countryKey}`, JSON.stringify(mapped));
-      }
       return mapped;
     } catch (err) {
       console.error('[LOCATIONS BY COUNTRY ERROR]', err);

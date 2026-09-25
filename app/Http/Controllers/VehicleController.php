@@ -94,6 +94,8 @@ class VehicleController extends Controller
 
             if ($location) {
                 $filteredVehicles->whereHas('branch', function ($q) use ($location) {
+                    // Only look in ACTIVE branches
+                    $q->where('branches.activation', 1);
                     if (is_numeric($location)) {
                         // Direct branch ID lookup
                         $branch = Branch::find($location);
