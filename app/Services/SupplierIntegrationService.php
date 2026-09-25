@@ -2021,10 +2021,18 @@ class SupplierIntegrationService
         $offerings = $branchAvailability['productOfferings'] ?? [];
 
         $vendorRateID = null;
+        $currencyCode = 'EUR';
         foreach ($offerings as $offering) {
             $offeringGroupId = (string) ($offering['vehicle']['code'] ?? '');
             if ($offeringGroupId === $groupId) {
                 $vendorRateID = $offering['rentalDetails'][0]['rentalRate']['rateQualifier']['vendorRateID'] ?? null;
+                $charges = $offering['rentalDetails'][0]['rentalRate']['vehicleCharges'] ?? [];
+                foreach ($charges as $charge) {
+                    if (($charge['purpose'] ?? null) === 1 && !empty($charge['currencyCode'])) {
+                        $currencyCode = $charge['currencyCode'];
+                        break;
+                    }
+                }
                 break;
             }
         }
@@ -2050,6 +2058,7 @@ class SupplierIntegrationService
             'vehicleGroupPrefAccriss' => $groupId,
             'rateCode' => $rateCode,
             'vendorRateID' => $vendorRateID,
+            'currencyCode' => $currencyCode,
             'customerInfo' => [
                 'customer' => [
                     'name' => $customer->name ?? 'Customer',
