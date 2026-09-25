@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
@@ -83,65 +83,121 @@ function ChicTooltip({
   position?: 'top' | 'bottom';
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tooltipPos, setTooltipPos] = useState<{
+    top: number;
+    left: number;
+    arrowLeft: number;
+    width: number;
+    placement: 'top' | 'bottom';
+  } | null>(null);
+
+  const calculatePosition = () => {
+    if (!containerRef.current || typeof window === 'undefined') return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const tooltipWidth = Math.min(270, window.innerWidth - 32);
+    const iconCenterX = rect.left + rect.width / 2;
+
+    // Center the tooltip relative to the icon, clamped within screen margins
+    let left = iconCenterX - tooltipWidth / 2;
+    const minLeft = 16;
+    const maxLeft = window.innerWidth - tooltipWidth - 16;
+    left = Math.max(minLeft, Math.min(maxLeft, left));
+
+    // Arrow pointer relative to tooltip box (clamped inside box padding)
+    const arrowLeft = Math.max(12, Math.min(tooltipWidth - 12, iconCenterX - left));
+
+    // Check vertical clearance
+    let placement = position;
+    let top = 0;
+    if (position === 'top') {
+      if (rect.top < 150) {
+        placement = 'bottom';
+        top = rect.bottom + 8;
+      } else {
+        placement = 'top';
+        top = rect.top - 8;
+      }
+    } else {
+      if (window.innerHeight - rect.bottom < 150 && rect.top > 150) {
+        placement = 'top';
+        top = rect.top - 8;
+      } else {
+        placement = 'bottom';
+        top = rect.bottom + 8;
+      }
+    }
+
+    setTooltipPos({
+      top,
+      left,
+      arrowLeft,
+      width: tooltipWidth,
+      placement,
+    });
+  };
+
+  const handleOpen = () => {
+    calculatePosition();
+    setIsOpen(true);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    calculatePosition();
+
+    const handleScrollOrResize = () => {
+      setIsOpen(false);
+    };
+
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+    window.addEventListener('resize', handleScrollOrResize);
+    document.addEventListener('click', handleDocumentClick);
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [isOpen]);
 
   if (!text) return null;
 
   const variantStyles = {
     gold: {
-      btn: 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 hover:text-amber-800 border-amber-400/40',
+      btn: 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 hover:text-amber-900 border-amber-400/50',
       badge: 'text-amber-400',
     },
     emerald: {
-      btn: 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 hover:text-emerald-800 border-emerald-400/40',
+      btn: 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 hover:text-emerald-900 border-emerald-400/50',
       badge: 'text-emerald-400',
     },
     blue: {
-      btn: 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 hover:text-blue-800 border-blue-400/40',
+      btn: 'bg-blue-500/15 hover:bg-blue-500/25 text-blue-800 hover:text-blue-900 border-blue-400/50',
       badge: 'text-blue-400',
     },
   }[variant];
 
-  const posStyles = position === 'top'
-    ? 'bottom-full mb-2'
-    : 'top-full mt-2';
-
-  const arrowVertStyles = position === 'top'
-    ? '-bottom-1 border-r border-b'
-    : '-top-1 border-l border-t';
-
-  // Exact coordinates matching the 16px icon button perfectly
-  const getPositionStyles = () => {
-    if (align === 'right') {
-      return {
-        boxStyle: { right: '-10px' },
-        arrowStyle: { right: '14px' },
-        animX: 0,
-      };
-    }
-    if (align === 'left') {
-      return {
-        boxStyle: { left: '-10px' },
-        arrowStyle: { left: '14px' },
-        animX: 0,
-      };
-    }
-    return {
-      boxStyle: { left: '50%' },
-      arrowStyle: { left: '50%', transform: 'translateX(-50%) rotate(45deg)' },
-      animX: '-50%',
-    };
-  };
-
-  const { boxStyle, arrowStyle, animX } = getPositionStyles();
-
   return (
     <div
+      ref={containerRef}
       className="relative inline-flex items-center justify-center shrink-0 grow-0 w-4 h-4 group cursor-pointer"
-      onMouseEnter={() => setIsOpen(true)}
+      onMouseEnter={handleOpen}
       onMouseLeave={() => setIsOpen(false)}
       onClick={(e) => {
         e.stopPropagation();
-        setIsOpen((prev) => !prev);
+        if (isOpen) {
+          setIsOpen(false);
+        } else {
+          handleOpen();
+        }
       }}
     >
       <button
@@ -149,25 +205,36 @@ function ChicTooltip({
         aria-label="More information"
         className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200 border shadow-xs focus:outline-none shrink-0 ${variantStyles.btn}`}
       >
-        <Info size={11} className="stroke-[2.5]" />
+        <Info size={10} className="stroke-[2.5]" />
       </button>
 
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && tooltipPos && (
           <motion.div
-            initial={{ opacity: 0, y: position === 'top' ? 4 : -4, x: animX, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, x: animX, scale: 1 }}
-            exit={{ opacity: 0, y: position === 'top' ? 2 : -2, x: animX, scale: 0.96 }}
+            initial={{ opacity: 0, y: tooltipPos.placement === 'top' ? 6 : -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: tooltipPos.placement === 'top' ? 4 : -4, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            style={boxStyle}
-            className={`absolute ${posStyles} w-64 max-w-[calc(100vw-32px)] p-3.5 rounded-xl bg-slate-950/95 backdrop-blur-md text-white text-xs shadow-2xl z-[100] border border-white/10 pointer-events-none text-left`}
+            style={{
+              position: 'fixed',
+              top: tooltipPos.placement === 'top' ? undefined : `${tooltipPos.top}px`,
+              bottom: tooltipPos.placement === 'top' ? `${typeof window !== 'undefined' ? window.innerHeight - tooltipPos.top : 0}px` : undefined,
+              left: `${tooltipPos.left}px`,
+              width: `${tooltipPos.width}px`,
+              zIndex: 9999,
+            }}
+            className="p-3.5 rounded-xl bg-slate-950/95 backdrop-blur-md text-white text-xs shadow-2xl border border-white/10 text-left pointer-events-none"
           >
             <div
-              style={arrowStyle}
-              className={`absolute w-2 h-2 bg-slate-950 rotate-45 border-white/10 ${arrowVertStyles}`}
+              style={{ left: `${tooltipPos.arrowLeft}px` }}
+              className={`absolute w-2.5 h-2.5 bg-slate-950 -translate-x-1/2 rotate-45 border-white/10 ${
+                tooltipPos.placement === 'top'
+                  ? '-bottom-1 border-r border-b'
+                  : '-top-1 border-l border-t'
+              }`}
             />
             {title && (
-              <div className={`font-black tracking-wider uppercase text-[10px] mb-1 ${variantStyles.badge}`}>
+              <div className={`font-black tracking-wider uppercase text-[10px] mb-1.5 ${variantStyles.badge}`}>
                 {title}
               </div>
             )}
@@ -185,8 +252,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   const [showTerms, setShowTerms] = useState(false);
   const [showAllInclusions, setShowAllInclusions] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
-  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
-  const [showInstantTooltip, setShowInstantTooltip] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   const availableBranches = (vehicle as any).available_branches || [];
@@ -537,30 +602,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               {carData.name}
             </h3>
             <span className="text-xs md:text-sm font-medium text-gray-600">or Similar</span>
-            <div
-              className="relative"
-              onMouseEnter={() => setShowInfoTooltip(true)}
-              onMouseLeave={() => setShowInfoTooltip(false)}
-            >
-              <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 shadow-sm"
-                style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
-              >
-                <Info size={9} className="text-gray-900" strokeWidth={3} />
-              </div>
-              <AnimatePresence>
-                {showInfoTooltip && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 5, x: "-50%" }}
-                    animate={{ opacity: 1, y: 0, x: "-50%" }}
-                    exit={{ opacity: 0, y: 5, x: "-50%" }}
-                    className="absolute top-full right-[-120px] mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
-                  >
-                    <div className="absolute -top-1 left-[93%] translate-x-[-50%] w-2 h-2 bg-gray-900 rotate-45" />
-                    The supplier will provide a car with same class and specifications, though the make may vary.
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <ChicTooltip
+              text="The supplier will provide a car with same class and specifications, though the make may vary."
+              title="Vehicle Category"
+              variant="gold"
+              align="center"
+              position="bottom"
+            />
           </div>
           <p className="text-xs md:text-sm font-black text-gray-600 mt-0.5 md:mt-1">{carData.type}</p>
         </div>
@@ -629,30 +677,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-200">
                 <img src={assets.icons.instant} alt="" className="w-4 h-4 object-contain shrink-0" aria-hidden="true" />
                 <span className="text-[11px] font-black text-gray-700">Instant confirmation</span>
-                <div
-                  className="relative"
-                  onMouseEnter={() => setShowInstantTooltip(true)}
-                  onMouseLeave={() => setShowInstantTooltip(false)}
-                >
-                  <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
-                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
-                  >
-                    <Info size={10} className="text-gray-900" strokeWidth={3} />
-                  </div>
-                  <AnimatePresence>
-                    {showInstantTooltip && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full right-[-30px] mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
-                      >
-                        <div className="absolute -top-1 right-[33px] w-2 h-2 bg-gray-900 rotate-45" />
-                        Receive instant booking confirmation!
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <ChicTooltip
+                  text="Receive instant booking confirmation right after completing your reservation!"
+                  title="Instant Confirmation"
+                  variant="gold"
+                  align="left"
+                  position="top"
+                />
               </div>
             )}
 
@@ -716,7 +747,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Fuel Policy: </span>
                     <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
-                    <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="right" position="top" />
+                    <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="left" position="top" />
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
@@ -737,7 +768,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="inline-flex items-center gap-1.5 text-green-700">
                 {renderHighlightWithLine(mainHighlight, "text-xs md:text-sm", <Check size={14} className="stroke-[3] shrink-0" />)}
                 {mainHighlightDesc && (
-                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="left" position="bottom" />
+                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="left" position="top" />
                 )}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm shrink-0">
@@ -882,30 +913,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-lg font-bold text-gray-900">{carData.name}</h3>
                 <span className="text-xs font-medium text-gray-600">or Similar</span>
-                <div
-                  className="relative"
-                  onMouseEnter={() => setShowInfoTooltip(true)}
-                  onMouseLeave={() => setShowInfoTooltip(false)}
-                >
-                  <div className="relative w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 shadow-sm"
-                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
-                  >
-                    <Info size={11} className="text-gray-900" strokeWidth={3} />
-                  </div>
-                  <AnimatePresence>
-                    {showInfoTooltip && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
-                      >
-                        <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-900 rotate-45" />
-                        The supplier will provide a car with same class and specifications, though the make may vary.
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <ChicTooltip
+                  text="The supplier will provide a car with same class and specifications, though the make may vary."
+                  title="Vehicle Category"
+                  variant="gold"
+                  align="left"
+                  position="bottom"
+                />
               </div>
               <p className="text-xs font-black text-gray-600 mb-4">{carData.type}</p>
 
@@ -965,30 +979,13 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1.5 shrink-0">
                 <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
                 <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
-                <div
-                  className="relative"
-                  onMouseEnter={() => setShowInstantTooltip(true)}
-                  onMouseLeave={() => setShowInstantTooltip(false)}
-                >
-                  <div className="w-4 h-4 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
-                    style={{ background: 'linear-gradient(135deg, #f4d849 0%, #e5c73a 100%)' }}
-                  >
-                    <Info size={10} className="text-gray-900" strokeWidth={3} />
-                  </div>
-                  <AnimatePresence>
-                    {showInstantTooltip && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50"
-                      >
-                        <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-900 rotate-45" />
-                        Receive instant booking confirmation!
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <ChicTooltip
+                  text="Receive instant booking confirmation right after completing your reservation!"
+                  title="Instant Confirmation"
+                  variant="gold"
+                  align="left"
+                  position="top"
+                />
               </div>
             )}
 
