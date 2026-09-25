@@ -8,9 +8,23 @@ import {
   LocationBranch 
 } from '@/types';
 
-// Cache structures to prevent HTTP 429 Rate Limiting (Too Many Attempts)
+// Cache structures to prevent HTTP 429 Rate Limiting (Too Many Requests)
+// Cache key includes today's date so stale data (e.g. inactive branches) is invalidated daily
+const _today = new Date().toISOString().slice(0, 10); // e.g. "2026-09-25"
+const LOCATIONS_CACHE_KEY = `autours_locations_${_today}`;
+const COUNTRY_LOCATIONS_CACHE_PREFIX = `autours_loc_country_${_today}_`;
 let memoryLocationsCache: LocationBranch[] | null = null;
 const memoryCountryLocationsCache: Record<string, LocationBranch[]> = {};
+
+// Purge location cache entries from previous days
+if (typeof window !== 'undefined') {
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const k = sessionStorage.key(i);
+    if (k && (k.startsWith('autours_locations') || k.startsWith('autours_loc_country_')) && k !== LOCATIONS_CACHE_KEY && !k.startsWith(COUNTRY_LOCATIONS_CACHE_PREFIX)) {
+      sessionStorage.removeItem(k);
+    }
+  }
+}
 // Blog API - uses /api/blogs endpoints
 export const blogApi = {
   getAll: () => apiClient.get("/api/blogs?per_page=1000"),
@@ -190,7 +204,7 @@ export const profitApi = {
   getAll: (params?: any) => apiClient.get("/get/profit", { params }),
   upload: (data: unknown) => apiClient.post("/api/admin/profit/upload", data),
   getCountries: () => apiClient.get("/get/countries"),
-  getSuppliers: (country?: string) => apiClient.get("/get/suppliers", { params: { country } }),
+  getSuppliers: (country?: string, status?: string) => apiClient.get("/get/suppliers", { params: { country, status } }),
   getBranches: (company_id?: string, country?: string) => apiClient.get("/get/branches", { params: { company_id, country } }),
   getVehicles: (supplier?: string, branch_id?: string) => apiClient.get("/get/vehicles", { params: { supplier, branch_id } }),
   getCategories: () => apiClient.get("/get/categories"),
@@ -355,7 +369,7 @@ export const vehicleApi = {
         return memoryLocationsCache;
       }
       if (typeof window !== 'undefined') {
-        const cached = sessionStorage.getItem('autours_locations');
+        const cached = sessionStorage.getItem(LOCATIONS_CACHE_KEY);
         if (cached) {
           memoryLocationsCache = JSON.parse(cached);
           return memoryLocationsCache!;
@@ -380,7 +394,7 @@ export const vehicleApi = {
 
       memoryLocationsCache = mapped;
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('autours_locations', JSON.stringify(mapped));
+        sessionStorage.setItem(LOCATIONS_CACHE_KEY, JSON.stringify(mapped));
       }
       return mapped;
     } catch (err) {
@@ -396,7 +410,7 @@ export const vehicleApi = {
         return memoryCountryLocationsCache[countryKey];
       }
       if (typeof window !== 'undefined') {
-        const cached = sessionStorage.getItem(`autours_locations_${countryKey}`);
+        const cached = sessionStorage.getItem(`${COUNTRY_LOCATIONS_CACHE_PREFIX}${countryKey}`);
         if (cached) {
           memoryCountryLocationsCache[countryKey] = JSON.parse(cached);
           return memoryCountryLocationsCache[countryKey];
@@ -421,7 +435,7 @@ export const vehicleApi = {
 
       memoryCountryLocationsCache[countryKey] = mapped;
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem(`autours_locations_${countryKey}`, JSON.stringify(mapped));
+        sessionStorage.setItem(`${COUNTRY_LOCATIONS_CACHE_PREFIX}${countryKey}`, JSON.stringify(mapped));
       }
       return mapped;
     } catch (err) {

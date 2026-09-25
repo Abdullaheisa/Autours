@@ -48,6 +48,139 @@ function PickupLabel({ pickupType }: { pickupType: string }) {
   return pickupType.charAt(0).toUpperCase() + pickupType.slice(1);
 }
 
+const FUEL_POLICY_DESCRIPTIONS: Record<string, string> = {
+  'full to full': 'The vehicle is provided with a full tank of fuel and must be returned with a full tank. If the vehicle is returned with less fuel, the rental company may charge for the missing fuel and applicable service fees.',
+  'same to same': 'The vehicle should be returned with approximately the same fuel level as when it was collected.',
+  'pay to full': "Fuel may be purchased in advance from the rental company. Any unused fuel may be subject to the supplier's specific terms.",
+};
+
+function getFuelPolicyDescription(policy: string): string {
+  if (!policy) return FUEL_POLICY_DESCRIPTIONS['full to full'];
+  const normalized = policy.toLowerCase().replace(/[-_]/g, ' ').trim();
+  if (normalized.includes('full to full') || normalized.includes('full/full')) {
+    return FUEL_POLICY_DESCRIPTIONS['full to full'];
+  }
+  if (normalized.includes('same')) {
+    return FUEL_POLICY_DESCRIPTIONS['same to same'];
+  }
+  if (normalized.includes('pay') || normalized.includes('purchase') || normalized.includes('empty')) {
+    return FUEL_POLICY_DESCRIPTIONS['pay to full'];
+  }
+  return FUEL_POLICY_DESCRIPTIONS['full to full'];
+}
+
+function ChicTooltip({
+  text,
+  title,
+  variant = 'gold',
+  align = 'center',
+  position = 'top',
+}: {
+  text: string;
+  title?: string;
+  variant?: 'gold' | 'emerald' | 'blue';
+  align?: 'center' | 'left' | 'right';
+  position?: 'top' | 'bottom';
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!text) return null;
+
+  const variantStyles = {
+    gold: {
+      btn: 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 hover:text-amber-800 border-amber-400/40',
+      badge: 'text-amber-400',
+    },
+    emerald: {
+      btn: 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 hover:text-emerald-800 border-emerald-400/40',
+      badge: 'text-emerald-400',
+    },
+    blue: {
+      btn: 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 hover:text-blue-800 border-blue-400/40',
+      badge: 'text-blue-400',
+    },
+  }[variant];
+
+  const posStyles = position === 'top'
+    ? 'bottom-full mb-2'
+    : 'top-full mt-2';
+
+  const arrowVertStyles = position === 'top'
+    ? '-bottom-1 border-r border-b'
+    : '-top-1 border-l border-t';
+
+  // Exact coordinates matching the 16px icon button perfectly
+  const getPositionStyles = () => {
+    if (align === 'right') {
+      return {
+        boxStyle: { right: '-10px' },
+        arrowStyle: { right: '14px' },
+        animX: 0,
+      };
+    }
+    if (align === 'left') {
+      return {
+        boxStyle: { left: '-10px' },
+        arrowStyle: { left: '14px' },
+        animX: 0,
+      };
+    }
+    return {
+      boxStyle: { left: '50%' },
+      arrowStyle: { left: '50%', transform: 'translateX(-50%) rotate(45deg)' },
+      animX: '-50%',
+    };
+  };
+
+  const { boxStyle, arrowStyle, animX } = getPositionStyles();
+
+  return (
+    <div
+      className="relative inline-flex items-center justify-center shrink-0 grow-0 w-4 h-4 group cursor-pointer"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsOpen((prev) => !prev);
+      }}
+    >
+      <button
+        type="button"
+        aria-label="More information"
+        className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200 border shadow-xs focus:outline-none shrink-0 ${variantStyles.btn}`}
+      >
+        <Info size={11} className="stroke-[2.5]" />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: position === 'top' ? 4 : -4, x: animX, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, x: animX, scale: 1 }}
+            exit={{ opacity: 0, y: position === 'top' ? 2 : -2, x: animX, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            style={boxStyle}
+            className={`absolute ${posStyles} w-64 max-w-[calc(100vw-32px)] p-3.5 rounded-xl bg-slate-950/95 backdrop-blur-md text-white text-xs shadow-2xl z-[100] border border-white/10 pointer-events-none text-left`}
+          >
+            <div
+              style={arrowStyle}
+              className={`absolute w-2 h-2 bg-slate-950 rotate-45 border-white/10 ${arrowVertStyles}`}
+            />
+            {title && (
+              <div className={`font-black tracking-wider uppercase text-[10px] mb-1 ${variantStyles.badge}`}>
+                {title}
+              </div>
+            )}
+            <div className="text-slate-100 leading-relaxed font-normal text-[11px] break-words">
+              {text}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function CarCard({ vehicle, daysNumber, hideBookingControls = false, preselectedBookId = null }: CarCardProps) {
   const [showTerms, setShowTerms] = useState(false);
   const [showAllInclusions, setShowAllInclusions] = useState(false);
@@ -284,6 +417,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       freeCancellation: inclusions.some(i => i.toLowerCase().includes('cancel')),
       freeCancellationHours: 24,
       promos: vehicle.promos || (vehicle.promo ? [vehicle.promo] : []),
+      promosDetails: (vehicle as any).promos_details || [],
     };
   }, [vehicle, daysNumber, currencyCode, allRates, filteredSuppliers, fetchedCurrency]);
 
@@ -316,6 +450,47 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   }
 
   hiddenPromos = Array.from(new Set(hiddenPromos));
+
+  // Find promo details / description for mainHighlight
+  const mainHighlightDetail = useMemo(() => {
+    if (!mainHighlight) return null;
+    const details = carData.promosDetails || [];
+    return details.find((pd: any) => {
+      const name = (pd.name || pd.what_is_included || '').toLowerCase().trim();
+      return name === mainHighlight?.toLowerCase().trim();
+    }) || null;
+  }, [mainHighlight, carData.promosDetails]);
+
+  const mainHighlightDesc = mainHighlightDetail?.description || (
+    mainHighlight?.toLowerCase().includes('cancel') || mainHighlight?.includes('مجاني')
+      ? 'Free cancellation up to 48 hours before pickup. If your plans change, cancel without penalty according to supplier terms.'
+      : ''
+  );
+
+  // Calculate discount percentage strictly from vehicle profit discount
+  const discountPercent = useMemo(() => {
+    const directDiscount = Number((vehicle as any).discount_percent);
+    if (!isNaN(directDiscount) && directDiscount > 0) {
+      return directDiscount;
+    }
+    return 0;
+  }, [vehicle]);
+
+  const originalPriceParts = useMemo(() => {
+    // Only display strikethrough original price if there is an active discount > 0
+    if (discountPercent > 0 && discountPercent < 100 && carData.price.amount > 0) {
+      const originalAmount = carData.price.amount / (1 - (discountPercent / 100));
+      const origFormatted = formatPriceParts(originalAmount, carData.price.currency as Currency);
+      const currFormatted = formatPriceParts(carData.price.amount, carData.price.currency as Currency);
+
+      const numOrig = parseFloat(origFormatted.amount.replace(/,/g, ''));
+      const numCurr = parseFloat(currFormatted.amount.replace(/,/g, ''));
+      if (numOrig > numCurr) {
+        return origFormatted;
+      }
+    }
+    return null;
+  }, [discountPercent, carData.price.amount, carData.price.currency]);
 
   const renderHighlightWithLine = (highlightText: string, sizeClass: string, checkIcon: React.ReactNode) => {
     const firstSpaceIdx = highlightText.indexOf(' ');
@@ -541,6 +716,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Fuel Policy: </span>
                     <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
+                    <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="right" position="top" />
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
@@ -560,18 +736,30 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             <div className="flex justify-start mb-8">
               <div className="inline-flex items-center gap-1.5 text-green-700">
                 {renderHighlightWithLine(mainHighlight, "text-xs md:text-sm", <Check size={14} className="stroke-[3] shrink-0" />)}
+                {mainHighlightDesc && (
+                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="left" position="bottom" />
+                )}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm shrink-0">
                     <span className="text-[10px] font-black">+{hiddenPromos.length}</span>
-                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
+                    <div className="absolute bottom-full left-0 mb-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
                       <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45" />
                       <div className="flex flex-col gap-1.5">
-                        {hiddenPromos.map((p: string, idx: number) => (
-                          <div key={idx} className="flex items-start gap-1.5">
-                            <span className="text-green-100 mt-0.5 shrink-0"><Check size={10} className="stroke-[3]" /></span>
-                            <span className="leading-snug">{p}</span>
-                          </div>
-                        ))}
+                        {hiddenPromos.map((p: string, idx: number) => {
+                          const pDetail = (carData.promosDetails || []).find((pd: any) =>
+                            (pd.name || pd.what_is_included || '').toLowerCase().trim() === p.toLowerCase().trim()
+                          );
+                          const pDesc = pDetail?.description;
+                          return (
+                            <div key={idx} className="flex items-start gap-1.5">
+                              <span className="text-green-100 mt-0.5 shrink-0"><Check size={10} className="stroke-[3]" /></span>
+                              <div className="flex flex-col min-w-0">
+                                <span className="leading-snug font-bold">{p}</span>
+                                {pDesc && <span className="text-[10px] text-gray-300 leading-snug mt-0.5">{pDesc}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -582,12 +770,25 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           <div className="flex items-end justify-between gap-3 md:gap-4">
             <div className="text-left">
+              {originalPriceParts && discountPercent > 0 && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-xs md:text-sm font-bold text-gray-400 line-through tracking-tight">
+                    {originalPriceParts.currency} {originalPriceParts.amount}
+                  </span>
+                  <span className="bg-red-50 text-red-600 border border-red-200/80 px-1.5 py-0.5 rounded-md text-[10px] md:text-xs font-bold tracking-tight">
+                    {discountPercent}% OFF
+                  </span>
+                </div>
+              )}
               <div className="text-xl md:text-2xl font-bold text-gray-950 tracking-tight leading-none">
                 {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
                 {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
               </div>
               <span className="text-sm text-gray-600 font-normal block mt-1.5">
                 Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+              </span>
+              <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
+                Included taxes &amp; fees
               </span>
             </div>
 
@@ -797,18 +998,30 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             {mainHighlight && (
               <div className="inline-flex items-center gap-1.5 text-green-700">
                 {renderHighlightWithLine(mainHighlight, "text-sm lg:text-base", <Check size={16} className="stroke-[3] shrink-0" />)}
+                {mainHighlightDesc && (
+                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="right" position="bottom" />
+                )}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
                     <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
                     <div className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2.5 rounded-xl shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto text-left">
                       <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 rotate-45" />
                       <div className="flex flex-col gap-2">
-                        {hiddenPromos.map((p: string, idx: number) => (
-                          <div key={idx} className="flex items-start gap-1.5">
-                            <span className="text-green-100 mt-0.5 shrink-0"><Check size={12} className="stroke-[3]" /></span>
-                            <span className="leading-snug">{p}</span>
-                          </div>
-                        ))}
+                        {hiddenPromos.map((p: string, idx: number) => {
+                          const pDetail = (carData.promosDetails || []).find((pd: any) =>
+                            (pd.name || pd.what_is_included || '').toLowerCase().trim() === p.toLowerCase().trim()
+                          );
+                          const pDesc = pDetail?.description;
+                          return (
+                            <div key={idx} className="flex items-start gap-1.5">
+                              <span className="text-green-100 mt-0.5 shrink-0"><Check size={12} className="stroke-[3]" /></span>
+                              <div className="flex flex-col min-w-0">
+                                <span className="leading-snug font-bold">{p}</span>
+                                {pDesc && <span className="text-[10px] text-gray-300 leading-snug mt-0.5">{pDesc}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -856,9 +1069,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
               <div className="flex items-center gap-1.5 min-w-0">
                 <Fuel size={17} className="text-blue-600 shrink-0" />
-                <div className="flex items-center gap-1 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
                   <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Fuel Policy: </span>
                   <span className="text-xs md:text-sm font-black text-gray-800 truncate">{carData.fuelPolicy}</span>
+                  <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="right" position="top" />
                 </div>
               </div>
               <div className="flex items-start gap-1.5 min-w-0">
@@ -875,18 +1089,30 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             {mainHighlight && (
               <div className="inline-flex lg:hidden items-center gap-1.5 text-green-700">
                 {renderHighlightWithLine(mainHighlight, "text-sm lg:text-base", <Check size={16} className="stroke-[3] shrink-0" />)}
+                {mainHighlightDesc && (
+                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="right" position="bottom" />
+                )}
                 {hiddenPromos.length > 0 && (
                   <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
                     <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
                     <div className="absolute bottom-full right-0 mb-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2.5 rounded-xl shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto text-left">
                       <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 rotate-45" />
                       <div className="flex flex-col gap-2">
-                        {hiddenPromos.map((p: string, idx: number) => (
-                          <div key={idx} className="flex items-start gap-1.5">
-                            <span className="text-green-100 mt-0.5 shrink-0"><Check size={12} className="stroke-[3]" /></span>
-                            <span className="leading-snug">{p}</span>
-                          </div>
-                        ))}
+                        {hiddenPromos.map((p: string, idx: number) => {
+                          const pDetail = (carData.promosDetails || []).find((pd: any) =>
+                            (pd.name || pd.what_is_included || '').toLowerCase().trim() === p.toLowerCase().trim()
+                          );
+                          const pDesc = pDetail?.description;
+                          return (
+                            <div key={idx} className="flex items-start gap-1.5">
+                              <span className="text-green-100 mt-0.5 shrink-0"><Check size={12} className="stroke-[3]" /></span>
+                              <div className="flex flex-col min-w-0">
+                                <span className="leading-snug font-bold">{p}</span>
+                                {pDesc && <span className="text-[10px] text-gray-300 leading-snug mt-0.5">{pDesc}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -896,12 +1122,25 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
             <div className="flex flex-row lg:flex-col items-end lg:items-start justify-between w-full lg:gap-3 mt-auto gap-3">
               <div className="flex flex-col lg:items-start items-start text-left">
+                {originalPriceParts && discountPercent > 0 && (
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-sm lg:text-base font-bold text-gray-400 line-through tracking-tight">
+                      {originalPriceParts.currency} {originalPriceParts.amount}
+                    </span>
+                    <span className="bg-red-50 text-red-600 border border-red-200/80 px-1.5 py-0.5 rounded-md text-[11px] font-bold tracking-tight">
+                      {discountPercent}% OFF
+                    </span>
+                  </div>
+                )}
                 <div className="text-2xl lg:text-[26px] font-bold text-gray-950 tracking-tight leading-none">
                   {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
                   {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
                 </div>
                 <span className="text-sm lg:text-[15px] text-gray-600 font-normal block mt-1.5">
                   Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+                </span>
+                <span className="text-xs text-gray-500 font-medium block mt-0.5">
+                  Included taxes &amp; fees
                 </span>
               </div>
 

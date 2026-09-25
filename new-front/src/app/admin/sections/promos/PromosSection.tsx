@@ -59,7 +59,6 @@ export default function PromosSection() {
   const [modalBranches, setModalBranches] = useState<any[]>([]);
   const [modalSuppliers, setModalSuppliers] = useState<any[]>([]);
 
-  // Form State
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -301,6 +300,7 @@ export default function PromosSection() {
       toast.error("Promo name is required.");
       return;
     }
+
     setIsSubmitting(true);
     try {
       if (isEditing && currentPromo) {
@@ -540,6 +540,7 @@ export default function PromosSection() {
                     <td className="px-6 py-4">
                       <span className="text-xs text-gray-500 leading-relaxed block max-w-md">{promo.description || "No description provided."}</span>
                     </td>
+
                     <td className="px-6 py-4 text-center">
                       {isSuggested ? (
                         <div className="inline-flex flex-col text-center">
@@ -983,6 +984,7 @@ export default function PromosSection() {
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-250 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none resize-none"
                   />
                 </div>
+
               </div>
 
               {/* Footer */}

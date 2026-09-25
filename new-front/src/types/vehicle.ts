@@ -51,7 +51,9 @@ export interface Vehicle {
   locationType?: string;
   freeCancellation?: boolean;
   rental_terms?: any[];
-  instant_confirmation?: boolean | number; // تم إضافتها لحل الإيرور في الكومبوننت
+  instant_confirmation?: boolean | number;
+  discount_percent?: number;
+  original_price?: number;
 }
 
 export interface Car {

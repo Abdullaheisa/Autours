@@ -9,7 +9,7 @@ class Included extends Model
 {
     protected $table = 'included';
     public $timestamps = true;
-    protected $fillable = ['id','what_is_included','description','supplier_id','status'];
+    protected $fillable = ['id','what_is_included','description','discount_percent','supplier_id','status','is_promo'];
     use HasFactory;
 
     public function supplier()

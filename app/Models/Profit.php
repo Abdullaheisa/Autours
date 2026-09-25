@@ -17,7 +17,8 @@ class Profit extends Model
         'per_month_profit',
         'vehicle_id',
         'branch_id',
-        'weekend_profit'
+        'weekend_profit',
+        'discount_percent'
     ];
 
     public $timestamps = true;

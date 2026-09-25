@@ -7,7 +7,7 @@ import Image from 'next/image';
 import {
   Search, MapPin, Calendar, Clock,
   Plane, Building, AlertCircle, Check, X, ChevronDown,
-  Minus, Plus, Globe
+  Minus, Plus, Globe, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInDays } from 'date-fns';
@@ -100,6 +100,18 @@ export default function HeroSearch({
 
   const [errors, setErrors] = useState<{ location?: string; dates?: string }>({});
   const [heroBg, setHeroBg] = useState<string>(assets.hero.background);
+  const [showAgeInfo, setShowAgeInfo] = useState(false);
+  const ageInfoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ageInfoRef.current && !ageInfoRef.current.contains(e.target as Node)) {
+        setShowAgeInfo(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     referenceApi.getBackgrounds()
@@ -643,24 +655,67 @@ export default function HeroSearch({
 
               {/* Driver's age Checkbox & Age Stepper */}
               <div className="flex items-center justify-between sm:justify-start gap-2.5 sm:gap-3 flex-wrap">
-                <label className="flex items-center gap-2 cursor-pointer select-none group shrink-0">
-                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0 ${
-                    driverAge25to70 
-                      ? 'bg-[#f9d602] border-[#f9d602] text-gray-950 shadow-md shadow-yellow-500/20' 
-                      : 'bg-white/10 border-white/80 group-hover:border-[#f9d602] group-hover:bg-white/20'
-                  }`}>
-                    {driverAge25to70 && <Check size={13} strokeWidth={3.5} />}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <label className="flex items-center gap-2 cursor-pointer select-none group shrink-0">
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0 ${
+                      driverAge25to70 
+                        ? 'bg-[#f9d602] border-[#f9d602] text-gray-950 shadow-md shadow-yellow-500/20' 
+                        : 'bg-white/10 border-white/80 group-hover:border-[#f9d602] group-hover:bg-white/20'
+                    }`}>
+                      {driverAge25to70 && <Check size={13} strokeWidth={3.5} />}
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={driverAge25to70}
+                      onChange={(e) => setDriverAge25to70(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <span className="text-xs sm:text-sm font-extrabold text-white drop-shadow-sm group-hover:text-[#f9d602] transition-colors whitespace-nowrap">
+                      Driver's age between 30-65?
+                    </span>
+                  </label>
+
+                  {/* Driver Age Info Tooltip */}
+                  <div
+                    ref={ageInfoRef}
+                    className="relative inline-flex items-center"
+                    onMouseEnter={() => setShowAgeInfo(true)}
+                    onMouseLeave={() => setShowAgeInfo(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowAgeInfo((prev) => !prev);
+                      }}
+                      aria-label="Driver age info"
+                      className="w-4 h-4 rounded-full bg-white/20 hover:bg-[#f9d602] hover:text-gray-950 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
+                    >
+                      <Info size={10} strokeWidth={3} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showAgeInfo && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 w-64 max-w-[calc(100vw-32px)] p-3 rounded-xl bg-gray-950/95 backdrop-blur-md text-white shadow-2xl border border-white/10 z-[100] text-left pointer-events-none"
+                        >
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 sm:left-4 sm:translate-x-0 w-2 h-2 bg-gray-950 rotate-45 border-b border-r border-white/10" />
+                          <div className="font-black text-[#f9d602] text-xs mb-1">
+                            Drivers Between 30-65
+                          </div>
+                          <p className="text-gray-200 text-xs leading-relaxed font-medium">
+                            Supplier may charge additional fees if the main drivers is under 25 Years.
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={driverAge25to70}
-                    onChange={(e) => setDriverAge25to70(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <span className="text-xs sm:text-sm font-extrabold text-white drop-shadow-sm group-hover:text-[#f9d602] transition-colors whitespace-nowrap">
-                    Driver's age between 30-65?
-                  </span>
-                </label>
+                </div>
 
                 {/* Custom Age Stepper when unchecked */}
                 {!driverAge25to70 && (

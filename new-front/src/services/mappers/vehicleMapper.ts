@@ -107,6 +107,9 @@ export const vehicleMapper = {
           ? !!supplierRaw.instant_confirmation
           : true),
       promos: raw.promos || [],
+      promos_details: raw.promos_details || [],
+      discount_percent: Number(raw.discount_percent) || 0,
+      original_price: Number(raw.original_price) || 0,
       available_branches: raw.available_branches || [],
       branch_vehicle_ids: raw.branch_vehicle_ids || {},
       branch: branch,

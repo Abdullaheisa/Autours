@@ -258,6 +258,7 @@ class PromosController extends Controller
             $included->description = $request->description;
         }
 
+
         if ($user->role === 'admin') {
             $included->supplier_id = null;
             $included->status = 'approved';

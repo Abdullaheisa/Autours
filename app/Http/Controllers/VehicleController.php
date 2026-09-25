@@ -263,29 +263,43 @@ class VehicleController extends Controller
 
             foreach ($vehicles as $vehicle) {
                 // Use profit margins if available, default to 0% markup
-                $perDayProfit   = $vehicle->profit->per_day_profit   ?? 0;
-                $perWeekProfit  = $vehicle->profit->per_week_profit  ?? 0;
-                $perMonthProfit = $vehicle->profit->per_month_profit ?? 0;
+                $perDayProfit   = floatval($vehicle->profit->per_day_profit   ?? 0);
+                $perWeekProfit  = floatval($vehicle->profit->per_week_profit  ?? 0);
+                $perMonthProfit = floatval($vehicle->profit->per_month_profit ?? 0);
+                $discountPercent = floatval($vehicle->profit->discount_percent ?? 0);
 
                 if ($diffInDays >= '1' && $diffInDays < '3') {
-                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * $diffInDays;
+                    $priceWithProfit = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * $diffInDays;
                     $priceTax = $perDayProfit;
                 } else if ($diffInDays >= '3' && $diffInDays <= '7') {
-                    $vehicle->final_price = ($vehicle->week_price + (($vehicle->week_price * $perWeekProfit) / 100)) * $diffInDays;
+                    $priceWithProfit = ($vehicle->week_price + (($vehicle->week_price * $perWeekProfit) / 100)) * $diffInDays;
                     $priceTax = $perWeekProfit;
                 } else if ($diffInDays >= 8) {
-                    $vehicle->final_price = ($vehicle->month_price + (($vehicle->month_price * $perMonthProfit) / 100)) * $diffInDays;
+                    $priceWithProfit = ($vehicle->month_price + (($vehicle->month_price * $perMonthProfit) / 100)) * $diffInDays;
                     $priceTax = $perMonthProfit;
                 } else {
                     // fallback: use daily price
-                    $vehicle->final_price = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * max($diffInDays, 1);
+                    $priceWithProfit = ($vehicle->price + (($vehicle->price * $perDayProfit) / 100)) * max($diffInDays, 1);
                 }
-                $vehicle->final_price = round($vehicle->final_price, 2);
+
+                // Apply discount after profit:
+                if ($discountPercent > 0 && $discountPercent < 100) {
+                    $finalPrice = $priceWithProfit * (1 - ($discountPercent / 100));
+                } else {
+                    $finalPrice = $priceWithProfit;
+                }
+
+                $vehicle->final_price = round($finalPrice, 2);
+                $vehicle->original_price = round($priceWithProfit, 2);
+                $vehicle->discount_percent = $discountPercent;
+
                 if ($vehicle->branch && $currency != $vehicle->branch->currency) {
                     $rate = CurrencyRate::query()->where('currency_from', $vehicle->branch->currency)->where('currency_to', $currency)->first();
                     if ($rate != null) {
                         $vehicle->final_price *= $rate->rate;
                         $vehicle->final_price = round($vehicle->final_price, 2);
+                        $vehicle->original_price *= $rate->rate;
+                        $vehicle->original_price = round($vehicle->original_price, 2);
                     }
                 }
 
@@ -400,7 +414,10 @@ class VehicleController extends Controller
                 $allVehicleIds = array_values(array_unique($allVehicleIds));
 
                 $placeholders = implode(',', array_fill(0, count($allVehicleIds), '?'));
-                $sql = "SELECT DISTINCT included.what_is_included AS promotion 
+                $sql = "SELECT DISTINCT 
+                            included.id,
+                            included.what_is_included AS promotion,
+                            included.description
                         FROM promos 
                         JOIN included ON included.id = promos.included_id 
                         WHERE promos.vehicle_id IN ($placeholders) 
@@ -408,7 +425,19 @@ class VehicleController extends Controller
 
                 $bindings = array_merge($allVehicleIds, [(int) $supplierId]);
                 $promos = DB::select($sql, $bindings);
-                $vehicleArr['promos'] = array_map(function($p) { return $p->promotion; }, $promos);
+                $vehicleArr['promos'] = array_values(array_unique(array_map(function($p) { return $p->promotion; }, $promos)));
+                $vehicleArr['promos_details'] = array_map(function($p) {
+                    return [
+                        'id' => (int) $p->id,
+                        'name' => $p->promotion,
+                        'description' => $p->description ?: '',
+                    ];
+                }, $promos);
+
+                $vehicleArr['discount_percent'] = floatval($vehicleArr['discount_percent'] ?? 0);
+                if (!isset($vehicleArr['original_price']) || empty($vehicleArr['original_price'])) {
+                    $vehicleArr['original_price'] = $vehicleArr['final_price'];
+                }
 
                 // Map included relation to flat array for frontend
                 $vehicleArr['what_is_included'] = array_map(function($inc) {
@@ -1281,6 +1310,7 @@ class VehicleController extends Controller
         $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user() ?? auth()->user();
         $locations = Branch::query()
             ->with(['airport', 'company:id,name,logo,company'])
+            ->where('activation', 1)
             ->whereHas('company', function ($query) use ($user) {
                 $query->where('role', 'active_supplier');
                 if (!$user || $user->role !== 'admin') {
@@ -1588,14 +1618,21 @@ class VehicleController extends Controller
             } else if ($diffInDays >= '8' && $diffInDays < '30') {
                 $selectedVehicle->final_price = ($selectedVehicle->month_price + (($selectedVehicle->month_price * $selectedVehicle->profit->per_month_profit) / 100)) * $diffInDays;
                 $selectedVehicle->profit_price =  (($selectedVehicle->month_price * $selectedVehicle->profit->per_month_profit) / 100) * $diffInDays;
-
             }
 
+            $discountPercent = floatval($selectedVehicle->profit->discount_percent ?? 0);
+            $selectedVehicle->original_price = $selectedVehicle->final_price;
+            if ($discountPercent > 0 && $discountPercent < 100) {
+                $selectedVehicle->final_price = round($selectedVehicle->final_price * (1 - ($discountPercent / 100)), 2);
+            }
+            $selectedVehicle->discount_percent = $discountPercent;
 
             if ($currency != $selectedVehicle->branch->currency) {
                 $rate = CurrencyRate::query()->where('currency_from', $selectedVehicle->branch->currency)->where('currency_to', $currency)->first();
                 if ($rate != null) {
                     $selectedVehicle->final_price *= $rate->rate;
+                    $selectedVehicle->original_price *= $rate->rate;
+                    $selectedVehicle->original_price = round($selectedVehicle->original_price, 2);
                 }
             }
             $selectedVehicle->final_price = round($selectedVehicle->final_price, 2);

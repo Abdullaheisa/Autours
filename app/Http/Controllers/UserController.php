@@ -297,8 +297,18 @@ class UserController extends Controller
 
     public function suppliers(Request $request)
     {
-        $query = User::query()->where('role', 'active_supplier');
-        if ($request->has('country')) {
+        $status = $request->get('status', $request->get('supplier_status', 'active'));
+        $query = User::query();
+
+        if ($status === 'active') {
+            $query->where('role', 'active_supplier');
+        } else if ($status === 'inactive') {
+            $query->where('role', '!=', 'active_supplier');
+        } else {
+            $query->whereIn('role', ['supplier', 'active_supplier', 'under_review']);
+        }
+
+        if ($request->filled('country') && $request->country !== 'All') {
             $supplierIds = Branch::where('country', $request->country)->pluck('company_id');
             $query->whereIn('id', $supplierIds);
         }
@@ -376,12 +386,12 @@ class UserController extends Controller
 
 
         $branches = Branch::query();
-        if ($request->has('company_id')) {
+        if ($request->filled('company_id') && $request->company_id !== 'All') {
             $branches->where('company_id', $request->company_id);
         } else if ($companyId && $user && $user->role === 'active_supplier') {
             $branches->where('company_id', $companyId);
         }
-        if ($request->has('country')) {
+        if ($request->filled('country') && $request->country !== 'All') {
             $branches->where('country', $request->country);
         }
         return response()->json($branches->get());
