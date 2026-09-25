@@ -437,9 +437,13 @@ class VehicleController extends Controller
                 }, $promos);
 
                 $vehicleArr['discount_percent'] = floatval($vehicleArr['discount_percent'] ?? 0);
-                if (!isset($vehicleArr['original_price']) || empty($vehicleArr['original_price'])) {
+                // Only keep original_price when there is an actual discount; otherwise null
+                if ($vehicleArr['discount_percent'] <= 0) {
+                    $vehicleArr['original_price'] = null;
+                } elseif (!isset($vehicleArr['original_price']) || empty($vehicleArr['original_price'])) {
                     $vehicleArr['original_price'] = $vehicleArr['final_price'];
                 }
+
 
                 // Map included relation to flat array for frontend
                 $vehicleArr['what_is_included'] = array_map(function($inc) {
