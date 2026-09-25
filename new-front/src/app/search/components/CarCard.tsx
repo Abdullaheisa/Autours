@@ -719,11 +719,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
             {/* Row 2: Instant confirmation & Special Offers */}
             {(carData.supplier.instantConfirmation || specialOfferDetails.length > 0) && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1.5 border-t border-gray-200">
+              <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 pt-2 border-t border-gray-200">
                 {carData.supplier.instantConfirmation && (
-                  <div className="flex items-center gap-1.5">
-                    <img src={assets.icons.instant} alt="" className="w-4 h-4 object-contain shrink-0" aria-hidden="true" />
-                    <span className="text-[11px] font-black text-gray-700">Instant confirmation</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
+                    <span className="text-[13px] font-black text-gray-900">Instant confirmation</span>
                     <ChicTooltip
                       text="Receive instant booking confirmation right after completing your reservation!"
                       title="Instant Confirmation"
@@ -734,11 +734,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   </div>
                 )}
                 {specialOfferDetails.map((so: any) => (
-                  <div key={so.id || so.name} className="flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                      <Check size={10} className="stroke-[3]" />
+                  <div key={so.id || so.name} className="flex items-center gap-1.5 shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Check size={12} className="stroke-[3]" />
                     </span>
-                    <span className="text-[11px] font-black text-gray-800">{so.name}</span>
+                    <span className="text-[13px] font-black text-gray-900">{so.name}</span>
                     <ChicTooltip
                       text={so.description || "Special offer included with this vehicle."}
                       title={so.name}
@@ -1052,11 +1052,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
             {/* Instant Confirmation & Special Offers */}
             {(carData.supplier.instantConfirmation || specialOfferDetails.length > 0) && (
-              <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 shrink-0">
                 {carData.supplier.instantConfirmation && (
                   <div className="flex items-center gap-1.5 shrink-0">
                     <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                    <span className="text-xs font-black text-gray-700 whitespace-nowrap">Instant Confirmation</span>
+                    <span className="text-[13.5px] xl:text-[14px] font-black text-gray-900 whitespace-nowrap">Instant Confirmation</span>
                     <ChicTooltip
                       text="Receive instant booking confirmation right after completing your reservation!"
                       title="Instant Confirmation"
@@ -1068,10 +1068,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 )}
                 {specialOfferDetails.map((so: any) => (
                   <div key={so.id || so.name} className="flex items-center gap-1.5 shrink-0">
-                    <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                      <Check size={11} className="stroke-[3]" />
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Check size={12} className="stroke-[3]" />
                     </span>
-                    <span className="text-xs font-black text-gray-800 whitespace-nowrap">{so.name}</span>
+                    <span className="text-[13.5px] xl:text-[14px] font-black text-gray-900 whitespace-nowrap">{so.name}</span>
                     <ChicTooltip
                       text={so.description || "Special offer included with this vehicle."}
                       title={so.name}

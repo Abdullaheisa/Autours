@@ -102,16 +102,73 @@ export default function HeroSearch({
   const [heroBg, setHeroBg] = useState<string>(assets.hero.background);
   const [showAgeInfo, setShowAgeInfo] = useState(false);
   const ageInfoRef = useRef<HTMLDivElement>(null);
+  const [ageTooltipPos, setAgeTooltipPos] = useState<{
+    relativeLeft: number;
+    arrowLeft: number;
+    width: number;
+  } | null>(null);
+
+  const calculateAgeTooltipPosition = () => {
+    if (!ageInfoRef.current || typeof window === 'undefined') return;
+    const btnRect = ageInfoRef.current.getBoundingClientRect();
+    const screenW = window.innerWidth;
+    const tooltipW = Math.min(270, screenW - 32);
+    const btnCenterX = btnRect.left + btnRect.width / 2;
+
+    // Ideal centered position on screen:
+    let idealLeft = btnCenterX - tooltipW / 2;
+    // Clamp within screen boundaries:
+    if (idealLeft < 16) idealLeft = 16;
+    if (idealLeft + tooltipW > screenW - 16) {
+      idealLeft = screenW - 16 - tooltipW;
+    }
+
+    // Relative left to the button container:
+    const relativeLeft = idealLeft - btnRect.left;
+    // Arrow position inside the tooltip pointing at the button center:
+    const arrowLeft = Math.max(14, Math.min(tooltipW - 14, btnCenterX - idealLeft));
+
+    setAgeTooltipPos({
+      relativeLeft,
+      arrowLeft,
+      width: tooltipW,
+    });
+  };
+
+  const handleToggleAgeInfo = () => {
+    if (!showAgeInfo) {
+      calculateAgeTooltipPosition();
+      setShowAgeInfo(true);
+    } else {
+      setShowAgeInfo(false);
+    }
+  };
 
   useEffect(() => {
+    if (!showAgeInfo) return;
+
+    calculateAgeTooltipPosition();
+
+    const handleScrollOrResize = () => {
+      setShowAgeInfo(false);
+    };
+
     const handleClickOutside = (e: MouseEvent) => {
       if (ageInfoRef.current && !ageInfoRef.current.contains(e.target as Node)) {
         setShowAgeInfo(false);
       }
     };
+
+    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+    window.addEventListener('resize', handleScrollOrResize);
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAgeInfo]);
 
   useEffect(() => {
     referenceApi.getBackgrounds()
@@ -679,7 +736,10 @@ export default function HeroSearch({
                   <div
                     ref={ageInfoRef}
                     className="relative inline-flex items-center"
-                    onMouseEnter={() => setShowAgeInfo(true)}
+                    onMouseEnter={() => {
+                      calculateAgeTooltipPosition();
+                      setShowAgeInfo(true);
+                    }}
                     onMouseLeave={() => setShowAgeInfo(false)}
                   >
                     <button
@@ -687,7 +747,7 @@ export default function HeroSearch({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setShowAgeInfo((prev) => !prev);
+                        handleToggleAgeInfo();
                       }}
                       aria-label="Driver age info"
                       className="w-4 h-4 rounded-full bg-white/20 hover:bg-[#f9d602] hover:text-gray-950 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
@@ -696,15 +756,22 @@ export default function HeroSearch({
                     </button>
 
                     <AnimatePresence>
-                      {showAgeInfo && (
+                      {showAgeInfo && ageTooltipPos && (
                         <motion.div
                           initial={{ opacity: 0, y: 5, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                          exit={{ opacity: 0, y: 3, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute bottom-full mb-2.5 right-0 translate-x-2 sm:translate-x-0 w-64 sm:w-72 max-w-[calc(100vw-36px)] p-3 rounded-2xl bg-gray-950/95 backdrop-blur-md text-white shadow-2xl border border-white/15 z-[100] text-left pointer-events-none"
+                          style={{
+                            left: `${ageTooltipPos.relativeLeft}px`,
+                            width: `${ageTooltipPos.width}px`,
+                          }}
+                          className="absolute bottom-full mb-2.5 p-3.5 rounded-2xl bg-gray-950/95 backdrop-blur-md text-white shadow-2xl border border-white/15 text-left pointer-events-none z-[100]"
                         >
-                          <div className="absolute -bottom-1.5 right-3.5 w-3 h-3 bg-gray-950 rotate-45 border-b border-r border-white/15" />
+                          <div
+                            style={{ left: `${ageTooltipPos.arrowLeft}px` }}
+                            className="absolute -bottom-1.5 -translate-x-1/2 w-3 h-3 bg-gray-950 rotate-45 border-b border-r border-white/15"
+                          />
                           <div className="font-black text-[#f9d602] text-xs mb-1">
                             Drivers Between 30 - 65
                           </div>

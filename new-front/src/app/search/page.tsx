@@ -270,6 +270,12 @@ function SearchPageContent() {
 
 
   const hasValidSearch = searchParams.location && searchParams.dateFrom && searchParams.dateTo;
+  const isInitialLoading = !hasSearched || (isFiltering && vehicles.length === 0 && !filterError);
+
+  // 🚀 Full-Screen Fleet Loader: Only during initial search until backend response returns
+  if (hasValidSearch && isInitialLoading) {
+    return <Loader fullScreen={true} />;
+  }
 
   return (
     <main className="min-h-screen bg-gray-100">
@@ -326,12 +332,6 @@ function SearchPageContent() {
                   </div>
                 )}
               </div>
-
-              {isFiltering && displayedVehicles.length === 0 && (
-                <div className="w-full py-4">
-                  <Loader fullScreen={false} />
-                </div>
-              )}
 
               {filterError && !isFiltering && (
                 <div className="bg-white border border-red-200 rounded-2xl p-6 text-center shadow-sm">
