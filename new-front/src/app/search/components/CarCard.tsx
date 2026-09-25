@@ -884,9 +884,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <span className="text-xs md:text-sm font-bold text-gray-400 line-through tracking-tight">
                     {originalPriceParts.currency} {originalPriceParts.amount}
                   </span>
-                  <span className="bg-red-50 text-red-600 border border-red-200/80 px-1.5 py-0.5 rounded-md text-[10px] md:text-xs font-bold tracking-tight">
-                    {discountPercent}% OFF
-                  </span>
                 </div>
               )}
               <div className="text-xl md:text-2xl font-bold text-gray-950 tracking-tight leading-none">
@@ -1235,9 +1232,6 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-sm lg:text-base font-bold text-gray-400 line-through tracking-tight">
                       {originalPriceParts.currency} {originalPriceParts.amount}
-                    </span>
-                    <span className="bg-red-50 text-red-600 border border-red-200/80 px-1.5 py-0.5 rounded-md text-[11px] font-bold tracking-tight">
-                      {discountPercent}% OFF
                     </span>
                   </div>
                 )}
