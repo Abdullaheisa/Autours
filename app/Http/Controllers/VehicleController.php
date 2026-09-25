@@ -1276,7 +1276,18 @@ class VehicleController extends Controller
             });
         }
 
-        $vehicles = $query->with(['category', 'branch', 'fuelPolicy', 'vehiclePhoto'])
+        if ($request->filled('deposit_status')) {
+            $depositStatus = $request->deposit_status;
+            if ($depositStatus === 'with_deposit') {
+                $query->where('deposit_amount', '>', 0);
+            } elseif ($depositStatus === 'zero_deposit') {
+                $query->where(function ($q) {
+                    $q->whereNull('deposit_amount')->orWhere('deposit_amount', '<=', 0);
+                });
+            }
+        }
+
+        $vehicles = $query->with(['category:id,name', 'branch:id,name,city,country,currency,adresse', 'fuelPolicy:id,name', 'vehiclePhoto'])
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 15));
 
@@ -1304,9 +1315,18 @@ class VehicleController extends Controller
             }
         }
 
+        $depositStats = [
+            'total' => Vehicle::where('supplier', $supplier->id)->count(),
+            'with_deposit' => Vehicle::where('supplier', $supplier->id)->where('deposit_amount', '>', 0)->count(),
+            'zero_deposit' => Vehicle::where('supplier', $supplier->id)->where(function ($q) {
+                $q->whereNull('deposit_amount')->orWhere('deposit_amount', '<=', 0);
+            })->count(),
+        ];
+
         return response()->json([
             'status' => true,
             'data' => $vehicles,
+            'deposit_stats' => $depositStats,
         ]);
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -46,12 +46,15 @@ export default function CompanyDepositSection() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [countries, setCountries] = useState<string[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filters
   const [localSearch, setLocalSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedBranchFilter, setSelectedBranchFilter] = useState("all");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("all");
   const [selectedDepositFilter, setSelectedDepositFilter] = useState("all");
@@ -77,6 +80,21 @@ export default function CompanyDepositSection() {
   const itemsPerPage = 10;
   const isSearchMount = useRef(true);
 
+  // Fast Aggregate Stats State
+  const [depositStats, setDepositStats] = useState({
+    total: 0,
+    with_deposit: 0,
+    zero_deposit: 0,
+  });
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(localSearch);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [localSearch]);
+
   // Helper to resolve branch currency
   const getBranchCurrency = (branchIdOrObj: any): string => {
     if (typeof branchIdOrObj === "object" && branchIdOrObj?.currency) {
@@ -93,109 +111,94 @@ export default function CompanyDepositSection() {
     return branches[0]?.currency || vehicles[0]?.branch?.currency || "AED";
   }, [bulkScope, bulkBranchId, branches, vehicles]);
 
-  // Load Data
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [vehRes, branchRes, countryRes] = (await Promise.all([
-        supplierApi.getVehicles(1, 500),
-        supplierApi.getBranches(),
-        rentalTermsApi.getActiveCountries(),
-      ])) as any[];
-
-      const vehList = vehRes?.data?.data || vehRes?.data || (Array.isArray(vehRes) ? vehRes : []);
-      setVehicles(vehList);
-
-      const branchList = branchRes?.data?.data || branchRes?.data || (Array.isArray(branchRes) ? branchRes : []);
-      setBranches(branchList);
-
-      const countryList = countryRes?.data || (Array.isArray(countryRes) ? countryRes : []);
-      setCountries(countryList);
-    } catch (err) {
-      console.error("Failed to load deposit data:", err);
-      toast.error("Failed to load vehicles and branches.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Load Metadata (Branches & Countries) once on mount
   useEffect(() => {
-    loadData();
+    supplierApi
+      .getBranches()
+      .then((res: any) => {
+        const branchList = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+        if (Array.isArray(branchList)) setBranches(branchList);
+      })
+      .catch(() => {});
+
+    rentalTermsApi
+      .getActiveCountries()
+      .then((res: any) => {
+        const countryList = res?.data || (Array.isArray(res) ? res : []);
+        if (Array.isArray(countryList)) setCountries(countryList);
+      })
+      .catch(() => {});
   }, []);
 
-  // Reset page on search or filter change
+  // Fetch Vehicles with Server-Side Pagination and fast indexing
+  const fetchVehicles = useCallback(
+    async (page: number = 1) => {
+      setIsLoading(true);
+      try {
+        const activeSearch = (debouncedSearch || globalSearch || "").trim();
+        const filters: any = {};
+        if (selectedBranchFilter !== "all") filters.branch_id = selectedBranchFilter;
+        if (selectedCountryFilter !== "all") filters.country = selectedCountryFilter;
+        if (selectedDepositFilter !== "all") filters.deposit_status = selectedDepositFilter;
+        if (activeSearch) filters.search = activeSearch;
+
+        const response: any = await supplierApi.getVehicles(page, itemsPerPage, filters);
+        const resData: any = response?.data;
+        const list = resData?.data || (Array.isArray(resData) ? resData : []);
+
+        setVehicles(list);
+        setTotalPages(resData?.last_page || Math.max(1, Math.ceil((resData?.total || list.length) / itemsPerPage)));
+        setTotalCount(resData?.total ?? list.length);
+
+        if (response?.deposit_stats) {
+          setDepositStats(response.deposit_stats);
+        } else if (resData?.deposit_stats) {
+          setDepositStats(resData.deposit_stats);
+        }
+      } catch (err) {
+        console.error("Failed to load deposit data:", err);
+        toast.error("Failed to load vehicles.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      itemsPerPage,
+      debouncedSearch,
+      globalSearch,
+      selectedBranchFilter,
+      selectedCountryFilter,
+      selectedDepositFilter,
+    ]
+  );
+
+  // Re-fetch when page or server filters change
+  useEffect(() => {
+    fetchVehicles(currentPage);
+  }, [currentPage, fetchVehicles]);
+
+  // Reset page to 1 on filter or search change
   useEffect(() => {
     if (isSearchMount.current) {
       isSearchMount.current = false;
       return;
     }
     setCurrentPage(1);
-  }, [localSearch, globalSearch, selectedBranchFilter, selectedCountryFilter, selectedDepositFilter, setCurrentPage]);
+  }, [debouncedSearch, globalSearch, selectedBranchFilter, selectedCountryFilter, selectedDepositFilter, setCurrentPage]);
 
   // Derived Stats
   const stats = useMemo(() => {
-    const total = vehicles.length;
-    const withDeposit = vehicles.filter((v) => Number(v.deposit_amount) > 0).length;
-    const zeroDeposit = vehicles.filter(
-      (v) => Number(v.deposit_amount) === 0 || v.deposit_amount === null || v.deposit_amount === undefined
-    ).length;
-
     return [
-      { label: "Total Fleet", value: total, icon: <Car size={20} />, color: "blue" as const },
-      { label: "With Deposit", value: withDeposit, icon: <ShieldCheck size={20} />, color: "emerald" as const },
-      { label: "Zero Deposit", value: zeroDeposit, icon: <CheckCircle2 size={20} />, color: "amber" as const },
+      { label: "Total Fleet", value: depositStats.total, icon: <Car size={20} />, color: "blue" as const },
+      { label: "With Deposit", value: depositStats.with_deposit, icon: <ShieldCheck size={20} />, color: "emerald" as const },
+      { label: "Zero Deposit", value: depositStats.zero_deposit, icon: <CheckCircle2 size={20} />, color: "amber" as const },
     ];
-  }, [vehicles]);
-
-  // Filtered Vehicles
-  const filteredVehicles = useMemo(() => {
-    const activeSearch = (localSearch || globalSearch || "").toLowerCase().trim();
-
-    return vehicles.filter((v) => {
-      // Search by vehicle name, category, or branch
-      if (activeSearch) {
-        const name = (v.name || "").toLowerCase();
-        const cat = (v.category?.name || v.category || "").toLowerCase();
-        const branchName = (v.branch?.name || v.branch?.city || "").toLowerCase();
-        if (!name.includes(activeSearch) && !cat.includes(activeSearch) && !branchName.includes(activeSearch)) {
-          return false;
-        }
-      }
-
-      // Branch filter
-      if (selectedBranchFilter !== "all") {
-        const bId = String(v.pickup_loc || v.branch?.id || "");
-        if (bId !== String(selectedBranchFilter)) return false;
-      }
-
-      // Country filter
-      if (selectedCountryFilter !== "all") {
-        const c = (v.branch?.country || "").toLowerCase();
-        if (c !== selectedCountryFilter.toLowerCase()) return false;
-      }
-
-      // Deposit state filter
-      if (selectedDepositFilter === "with_deposit") {
-        if (Number(v.deposit_amount || 0) <= 0) return false;
-      } else if (selectedDepositFilter === "zero_deposit") {
-        if (Number(v.deposit_amount || 0) > 0) return false;
-      }
-
-      return true;
-    });
-  }, [vehicles, localSearch, globalSearch, selectedBranchFilter, selectedCountryFilter, selectedDepositFilter]);
-
-  // Paginated Subset
-  const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage) || 1;
-  const paginatedVehicles = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredVehicles.slice(start, start + itemsPerPage);
-  }, [filteredVehicles, currentPage, itemsPerPage]);
+  }, [depositStats]);
 
   // Selection Handlers
   const handleSelectAllOnPage = () => {
-    const pageIds = paginatedVehicles.map((v) => v.id);
-    const allSelected = pageIds.every((id) => selectedVehicleIds.includes(id));
+    const pageIds = vehicles.map((v) => v.id);
+    const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedVehicleIds.includes(id));
     if (allSelected) {
       setSelectedVehicleIds((prev) => prev.filter((id) => !pageIds.includes(id)));
     } else {
@@ -248,29 +251,10 @@ export default function CompanyDepositSection() {
       const res: any = await supplierApi.bulkUpdateDeposit(payload);
       toast.success(res?.data?.message || res?.message || "Deposit updated successfully!");
 
-      // Update local state
-      setVehicles((prev) =>
-        prev.map((v) => {
-          let matches = false;
-          if (bulkScope === "all") matches = true;
-          else if (bulkScope === "branch" && String(v.pickup_loc || v.branch?.id) === String(bulkBranchId)) matches = true;
-          else if (bulkScope === "country" && (v.branch?.country || "").toLowerCase() === bulkCountry.toLowerCase()) matches = true;
-          else if (bulkScope === "selected" && selectedVehicleIds.includes(v.id)) matches = true;
-
-          if (matches) {
-            return {
-              ...v,
-              deposit_amount: parsedAmount,
-              deposit_terms: bulkTerms.trim() || null,
-            };
-          }
-          return v;
-        })
-      );
-
       if (bulkScope === "selected") {
         setSelectedVehicleIds([]);
       }
+      fetchVehicles(currentPage);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.response?.data?.message || err?.message || "Failed to update deposit.");
@@ -313,6 +297,7 @@ export default function CompanyDepositSection() {
         )
       );
       setEditingVehicle(null);
+      fetchVehicles(currentPage);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || "Failed to save deposit");
     } finally {
@@ -322,6 +307,7 @@ export default function CompanyDepositSection() {
 
   const clearFilters = () => {
     setLocalSearch("");
+    setDebouncedSearch("");
     setSelectedBranchFilter("all");
     setSelectedCountryFilter("all");
     setSelectedDepositFilter("all");
@@ -555,7 +541,7 @@ export default function CompanyDepositSection() {
           <Loader2 size={32} className="animate-spin text-primary mx-auto mb-3" />
           <p className="text-sm font-bold text-gray-600">Loading vehicles deposit data...</p>
         </div>
-      ) : filteredVehicles.length === 0 ? (
+      ) : vehicles.length === 0 ? (
         <EmptyState
           title="No vehicles found"
           description="Try adjusting your filters or search criteria."
@@ -573,7 +559,7 @@ export default function CompanyDepositSection() {
                       onClick={handleSelectAllOnPage}
                       className="text-gray-400 hover:text-gray-600"
                     >
-                      {paginatedVehicles.every((v) => selectedVehicleIds.includes(v.id)) ? (
+                      {vehicles.length > 0 && vehicles.every((v) => selectedVehicleIds.includes(v.id)) ? (
                         <CheckSquare size={18} className="text-primary" />
                       ) : (
                         <Square size={18} />
@@ -588,7 +574,7 @@ export default function CompanyDepositSection() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm">
-                {paginatedVehicles.map((v) => {
+                {vehicles.map((v) => {
                   const isSelected = selectedVehicleIds.includes(v.id);
                   const depositVal = Number(v.deposit_amount || 0);
                   const hasDeposit = depositVal > 0;
@@ -672,17 +658,19 @@ export default function CompanyDepositSection() {
           </div>
 
           {/* 6. Pagination */}
-          <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, filteredVehicles.length)} of {filteredVehicles.length} vehicles
-            </span>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
+          {totalCount > itemsPerPage && (
+            <div className="p-4 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} vehicles
+              </span>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </div>
       )}
 

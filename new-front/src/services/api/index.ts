@@ -529,12 +529,13 @@ export const supplierApi = {
   updateIntegrationSettings: (data: { integration: boolean; webhook_url?: string }) =>
     apiClient.put('/api/external/supplier/integration-settings', data),
 
-  getVehicles: (page: number = 1, perPage: number = 15, filters?: { branch_id?: string; country?: string; search?: string; address?: string }) => {
+  getVehicles: (page: number = 1, perPage: number = 15, filters?: { branch_id?: string; country?: string; search?: string; address?: string; deposit_status?: string }) => {
     let url = `/api/external/supplier/vehicles?page=${page}&per_page=${perPage}`;
     if (filters?.branch_id) url += `&branch_id=${filters.branch_id}`;
     if (filters?.country)   url += `&country=${encodeURIComponent(filters.country)}`;
     if (filters?.search)    url += `&search=${encodeURIComponent(filters.search)}`;
     if (filters?.address)   url += `&address=${encodeURIComponent(filters.address)}`;
+    if (filters?.deposit_status && filters.deposit_status !== 'all') url += `&deposit_status=${encodeURIComponent(filters.deposit_status)}`;
     return apiClient.get<VehicleListResponse>(url);
   },
 
