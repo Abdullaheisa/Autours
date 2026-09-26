@@ -214,14 +214,99 @@ export default function PromosSection() {
     }
   };
 
-  const loadBranchesForCountry = async (country: string) => {
+  const loadFilterOptions = async (country: string, supplier: string) => {
     try {
-      const bRes: any = await profitApi.getBranches(undefined, country === "All" ? undefined : country);
+      const cParam = supplier !== "All" ? supplier : undefined;
+      const cRes: any = await profitApi.getCountries(cParam);
+      const cData = Array.isArray(cRes?.data) ? cRes.data : Array.isArray(cRes) ? cRes : [];
+      setModalCountries(cData);
+
+      const sParam = country !== "All" ? country : undefined;
+      const sRes: any = await profitApi.getSuppliers(sParam);
+      const sData = Array.isArray(sRes?.data) ? sRes.data : Array.isArray(sRes) ? sRes : [];
+      const mappedSuppliers = sData.map((item: any) => ({
+        id: String(item.id),
+        name: item.company || item.name,
+      }));
+      setModalSuppliers(mappedSuppliers);
+
+      const bCompParam = supplier !== "All" ? supplier : undefined;
+      const bCountryParam = country !== "All" ? country : undefined;
+      const bRes: any = await profitApi.getBranches(bCompParam, bCountryParam);
       const bData = Array.isArray(bRes?.data) ? bRes.data : Array.isArray(bRes) ? bRes : [];
       setModalBranches(bData);
     } catch (err) {
-      console.error("Failed to load branches list", err);
+      console.warn("Failed to load filter options", err);
     }
+  };
+
+  const handleCountryFilterChange = async (newCountry: string) => {
+    setModalCountryFilter(newCountry);
+    setModalCurrentPage(1);
+
+    try {
+      const sParam = newCountry !== "All" ? newCountry : undefined;
+      const sRes: any = await profitApi.getSuppliers(sParam);
+      const sData = Array.isArray(sRes?.data) ? sRes.data : Array.isArray(sRes) ? sRes : [];
+      const mappedSuppliers = sData.map((item: any) => ({
+        id: String(item.id),
+        name: item.company || item.name,
+      }));
+      setModalSuppliers(mappedSuppliers);
+
+      let effectiveSupplier = modalSupplierFilter;
+      if (modalSupplierFilter !== "All" && !mappedSuppliers.some(s => s.id === modalSupplierFilter)) {
+        effectiveSupplier = "All";
+        setModalSupplierFilter("All");
+      }
+
+      const bCompParam = effectiveSupplier !== "All" ? effectiveSupplier : undefined;
+      const bCountryParam = newCountry !== "All" ? newCountry : undefined;
+      const bRes: any = await profitApi.getBranches(bCompParam, bCountryParam);
+      const bData = Array.isArray(bRes?.data) ? bRes.data : Array.isArray(bRes) ? bRes : [];
+      setModalBranches(bData);
+
+      if (modalBranchFilter !== "All" && !bData.some((b: any) => String(b.id) === String(modalBranchFilter))) {
+        setModalBranchFilter("All");
+      }
+    } catch (err) {
+      console.warn("Failed to update country filters", err);
+    }
+  };
+
+  const handleSupplierFilterChange = async (newSupplier: string) => {
+    setModalSupplierFilter(newSupplier);
+    setModalCurrentPage(1);
+
+    try {
+      const cParam = newSupplier !== "All" ? newSupplier : undefined;
+      const cRes: any = await profitApi.getCountries(cParam);
+      const cData = Array.isArray(cRes?.data) ? cRes.data : Array.isArray(cRes) ? cRes : [];
+      setModalCountries(cData);
+
+      let effectiveCountry = modalCountryFilter;
+      if (modalCountryFilter !== "All" && !cData.includes(modalCountryFilter)) {
+        effectiveCountry = "All";
+        setModalCountryFilter("All");
+      }
+
+      const bCompParam = newSupplier !== "All" ? newSupplier : undefined;
+      const bCountryParam = effectiveCountry !== "All" ? effectiveCountry : undefined;
+      const bRes: any = await profitApi.getBranches(bCompParam, bCountryParam);
+      const bData = Array.isArray(bRes?.data) ? bRes.data : Array.isArray(bRes) ? bRes : [];
+      setModalBranches(bData);
+
+      if (modalBranchFilter !== "All" && !bData.some((b: any) => String(b.id) === String(modalBranchFilter))) {
+        setModalBranchFilter("All");
+      }
+    } catch (err) {
+      console.warn("Failed to update supplier filters", err);
+    }
+  };
+
+  const handleBranchFilterChange = (newBranch: string) => {
+    setModalBranchFilter(newBranch);
+    setModalCurrentPage(1);
   };
 
   // Open modal to assign promo to vehicles
@@ -240,13 +325,7 @@ export default function PromosSection() {
     setIsAssignModalOpen(true);
     setIsLoadingVehicles(true);
     try {
-      const cRes: any = await profitApi.getCountries();
-      const cData = Array.isArray(cRes?.data) ? cRes.data : Array.isArray(cRes) ? cRes : [];
-      setModalCountries(cData);
-
-      const sRes: any = await profitApi.getSuppliers();
-      const sData = Array.isArray(sRes?.data) ? sRes.data : Array.isArray(sRes) ? sRes : [];
-      setModalSuppliers(sData.map((item: any) => ({ id: String(item.id), name: item.name })));
+      await loadFilterOptions("All", "All");
 
       let activeVehicleIds: number[] = [];
       const mappedRes: any = await apiClient.get(`/api/supplier/promo?included_id=${promo.id}`);
@@ -840,10 +919,7 @@ export default function PromosSection() {
                   <div className="flex gap-2">
                     <select
                       value={modalSupplierFilter}
-                      onChange={(e) => {
-                        setModalSupplierFilter(e.target.value);
-                        setModalCurrentPage(1);
-                      }}
+                      onChange={(e) => handleSupplierFilterChange(e.target.value)}
                       className="px-3 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs font-semibold text-gray-700 outline-none"
                     >
                       <option value="All">All Suppliers</option>
@@ -853,12 +929,7 @@ export default function PromosSection() {
                     </select>
                     <select
                       value={modalCountryFilter}
-                      onChange={(e) => {
-                        setModalCountryFilter(e.target.value);
-                        setModalBranchFilter("All");
-                        setModalCurrentPage(1);
-                        loadBranchesForCountry(e.target.value);
-                      }}
+                      onChange={(e) => handleCountryFilterChange(e.target.value)}
                       className="px-3 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs font-semibold text-gray-700 outline-none"
                     >
                       <option value="All">All Countries</option>
@@ -868,10 +939,7 @@ export default function PromosSection() {
                     </select>
                     <select
                       value={modalBranchFilter}
-                      onChange={(e) => {
-                        setModalBranchFilter(e.target.value);
-                        setModalCurrentPage(1);
-                      }}
+                      onChange={(e) => handleBranchFilterChange(e.target.value)}
                       className="px-3 py-2 bg-gray-50 border border-gray-250 rounded-xl text-xs font-semibold text-gray-700 outline-none max-w-[160px] truncate"
                     >
                       <option value="All">All Branches</option>

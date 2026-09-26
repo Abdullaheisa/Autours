@@ -26,14 +26,22 @@ class CountryController extends Controller
 
     public function index(Request $request)
     {
-        return Branch::query()
+        $query = Branch::query()
             ->whereHas('company', function ($query) {
                 $query->where('role', 'active_supplier');
-            })
+            });
+
+        $supplier = $request->get('supplier_id', $request->get('company_id', $request->get('supplier')));
+        if (!empty($supplier) && $supplier !== 'All') {
+            $query->where('company_id', $supplier);
+        }
+
+        return $query
             ->distinct('country')
             ->get()
             ->unique('country')
-            ->pluck('country');
+            ->pluck('country')
+            ->values();
     }
 
 }

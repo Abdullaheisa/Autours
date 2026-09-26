@@ -454,8 +454,9 @@ class UserController extends Controller
 
 
         $branches = Branch::query();
-        if ($request->filled('company_id') && $request->company_id !== 'All') {
-            $branches->where('company_id', $request->company_id);
+        $supplierId = $request->get('company_id', $request->get('supplier_id', $request->get('supplier')));
+        if (!empty($supplierId) && $supplierId !== 'All') {
+            $branches->where('company_id', $supplierId);
         } else if ($companyId && $user && $user->role === 'active_supplier') {
             $branches->where('company_id', $companyId);
         }

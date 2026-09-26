@@ -135,12 +135,26 @@ export default function HeroSearch({
     });
   };
 
-  const handleToggleAgeInfo = () => {
-    if (!showAgeInfo) {
-      calculateAgeTooltipPosition();
-      setShowAgeInfo(true);
-    } else {
+  const lastAgeOpenedAt = useRef<number>(0);
+
+  const handleOpenAgeInfo = () => {
+    lastAgeOpenedAt.current = Date.now();
+    calculateAgeTooltipPosition();
+    setShowAgeInfo(true);
+  };
+
+  const handleToggleAgeInfo = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (showAgeInfo) {
+      if (Date.now() - lastAgeOpenedAt.current < 350) {
+        return;
+      }
       setShowAgeInfo(false);
+    } else {
+      handleOpenAgeInfo();
     }
   };
 
@@ -153,7 +167,7 @@ export default function HeroSearch({
       setShowAgeInfo(false);
     };
 
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (ageInfoRef.current && !ageInfoRef.current.contains(e.target as Node)) {
         setShowAgeInfo(false);
       }
@@ -161,12 +175,12 @@ export default function HeroSearch({
 
     window.addEventListener('scroll', handleScrollOrResize, { passive: true });
     window.addEventListener('resize', handleScrollOrResize);
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
 
     return () => {
       window.removeEventListener('scroll', handleScrollOrResize);
       window.removeEventListener('resize', handleScrollOrResize);
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside);
     };
   }, [showAgeInfo]);
 
@@ -736,19 +750,12 @@ export default function HeroSearch({
                   <div
                     ref={ageInfoRef}
                     className="relative inline-flex items-center"
-                    onMouseEnter={() => {
-                      calculateAgeTooltipPosition();
-                      setShowAgeInfo(true);
-                    }}
+                    onMouseEnter={handleOpenAgeInfo}
                     onMouseLeave={() => setShowAgeInfo(false)}
                   >
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleToggleAgeInfo();
-                      }}
+                      onClick={handleToggleAgeInfo}
                       aria-label="Driver age info"
                       className="w-4 h-4 rounded-full bg-white/20 hover:bg-[#f9d602] hover:text-gray-950 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
                     >

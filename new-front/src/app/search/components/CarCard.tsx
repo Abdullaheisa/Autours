@@ -84,6 +84,7 @@ function ChicTooltip({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastOpenedAt = useRef<number>(0);
   const [tooltipPos, setTooltipPos] = useState<{
     top: number;
     left: number;
@@ -138,8 +139,22 @@ function ChicTooltip({
   };
 
   const handleOpen = () => {
+    lastOpenedAt.current = Date.now();
     calculatePosition();
     setIsOpen(true);
+  };
+
+  const handleToggle = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOpen) {
+      if (Date.now() - lastOpenedAt.current < 350) {
+        return;
+      }
+      setIsOpen(false);
+    } else {
+      handleOpen();
+    }
   };
 
   useEffect(() => {
@@ -151,7 +166,7 @@ function ChicTooltip({
       setIsOpen(false);
     };
 
-    const handleDocumentClick = (e: MouseEvent) => {
+    const handleDocumentClick = (e: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
@@ -159,12 +174,12 @@ function ChicTooltip({
 
     window.addEventListener('scroll', handleScrollOrResize, { passive: true });
     window.addEventListener('resize', handleScrollOrResize);
-    document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('pointerdown', handleDocumentClick);
 
     return () => {
       window.removeEventListener('scroll', handleScrollOrResize);
       window.removeEventListener('resize', handleScrollOrResize);
-      document.removeEventListener('click', handleDocumentClick);
+      document.removeEventListener('pointerdown', handleDocumentClick);
     };
   }, [isOpen]);
 
@@ -191,14 +206,7 @@ function ChicTooltip({
       className="relative inline-flex items-center justify-center shrink-0 grow-0 w-4 h-4 group cursor-pointer"
       onMouseEnter={handleOpen}
       onMouseLeave={() => setIsOpen(false)}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (isOpen) {
-          setIsOpen(false);
-        } else {
-          handleOpen();
-        }
-      }}
+      onClick={handleToggle}
     >
       <button
         type="button"
@@ -522,60 +530,57 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     ? carData.inclusions
     : carData.inclusions.slice(0, 6);
 
-  const promosList = carData.promos || [];
+  const getPromoDescription = (promoName: string | null) => {
+    if (!promoName) return '';
+    const details = carData.promosDetails || [];
+    const found = details.find((pd: any) => {
+      const name = (pd.name || pd.what_is_included || '').toLowerCase().trim();
+      return name === promoName.toLowerCase().trim();
+    });
+    if (found?.description) return found.description;
+    const lower = promoName.toLowerCase();
+    if (lower.includes('cancel') || lower.includes('مجاني')) {
+      return 'Free cancellation up to 48 hours before pickup. If your plans change, cancel without penalty according to supplier terms.';
+    }
+    if (lower.includes('check')) {
+      return 'Complete your check-in online to save time at the counter and pick up your vehicle faster.';
+    }
+    return '';
+  };
 
-  let mainHighlight: string | null = null;
-  let hiddenPromos: string[] = [];
+  const { firstPromo, secondPromo, remainingPromos } = useMemo(() => {
+    const list = carData.promos || [];
+    if (list.length === 0) {
+      return { firstPromo: null, secondPromo: null, remainingPromos: [] };
+    }
 
-  if (promosList.length > 0) {
-    const freeCancelPromo = promosList.find((p: string) => {
+    const freeCancelIndex = list.findIndex((p: string) => {
       const text = p.toLowerCase();
       return (text.includes('free') && text.includes('cancel')) || text.includes('مجاني') || text.includes('كنسليشن');
     });
 
-    if (freeCancelPromo) {
-      mainHighlight = freeCancelPromo;
-      hiddenPromos = promosList.filter((p: string) => p !== freeCancelPromo);
-    } else {
-      mainHighlight = promosList[0];
-      hiddenPromos = promosList.slice(1);
+    let orderedList = [...list];
+    if (freeCancelIndex > 0) {
+      const [freeCancel] = orderedList.splice(freeCancelIndex, 1);
+      orderedList.unshift(freeCancel);
     }
-  }
 
-  hiddenPromos = Array.from(new Set(hiddenPromos));
+    // Deduplicate
+    orderedList = Array.from(new Set(orderedList));
 
-  // Find promo details / description for mainHighlight
-  const mainHighlightDetail = useMemo(() => {
-    if (!mainHighlight) return null;
-    const details = carData.promosDetails || [];
-    return details.find((pd: any) => {
-      const name = (pd.name || pd.what_is_included || '').toLowerCase().trim();
-      return name === mainHighlight?.toLowerCase().trim();
-    }) || null;
-  }, [mainHighlight, carData.promosDetails]);
+    const first = orderedList[0] || null;
+    const second = orderedList[1] || null;
+    const remaining = orderedList.slice(2);
 
-  // Extract special offers (e.g. Online Check-in, Free Additional Driver, Free Child Seat)
-  const specialOfferDetails = useMemo(() => {
-    const details = carData.promosDetails || [];
-    return details.filter((pd: any) => {
-      if (pd.is_special_offer) return true;
-      const name = (pd.name || pd.what_is_included || '').toLowerCase().trim();
-      return (
-        name.includes('online check') ||
-        name.includes('check-in') ||
-        name.includes('check in') ||
-        name.includes('additional driver') ||
-        name.includes('child seat') ||
-        name.includes('baby seat')
-      );
-    });
-  }, [carData.promosDetails]);
+    return {
+      firstPromo: first,
+      secondPromo: second,
+      remainingPromos: remaining,
+    };
+  }, [carData.promos]);
 
-  const mainHighlightDesc = mainHighlightDetail?.description || (
-    mainHighlight?.toLowerCase().includes('cancel') || mainHighlight?.includes('مجاني')
-      ? 'Free cancellation up to 48 hours before pickup. If your plans change, cancel without penalty according to supplier terms.'
-      : ''
-  );
+  const firstPromoDesc = useMemo(() => getPromoDescription(firstPromo), [firstPromo, carData.promosDetails]);
+  const secondPromoDesc = useMemo(() => getPromoDescription(secondPromo), [secondPromo, carData.promosDetails]);
 
   // Calculate discount percentage strictly from vehicle profit discount
   const discountPercent = useMemo(() => {
@@ -602,20 +607,24 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     return null;
   }, [discountPercent, carData.price.amount, carData.price.currency]);
 
-  const renderHighlightWithLine = (highlightText: string, sizeClass: string, checkIcon: React.ReactNode) => {
-    const firstSpaceIdx = highlightText.indexOf(' ');
-    const firstWord = firstSpaceIdx !== -1 ? highlightText.substring(0, firstSpaceIdx) : highlightText;
-    const restOfText = firstSpaceIdx !== -1 ? highlightText.substring(firstSpaceIdx) : '';
-
+  const renderPromoItem = (promoText: string, promoDesc: string, tooltipPosition: 'top' | 'bottom' = 'top') => {
+    if (!promoText) return null;
     return (
-      <span className={`${sizeClass} font-black leading-tight break-words inline-flex items-center gap-1`}>
-        <span className="relative inline-flex items-center gap-1 pb-1">
-          {checkIcon}
-          <span>{firstWord}</span>
-          {/* <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--primary)] rounded-full" /> */}
+      <div className="inline-flex items-center gap-1 text-green-700 min-w-0 max-w-full">
+        <Check size={14} className="stroke-[3] shrink-0 text-green-700" />
+        <span className="text-[12px] xl:text-[13px] font-black text-green-700 truncate leading-tight">
+          {promoText}
         </span>
-        <span>{restOfText}</span>
-      </span>
+        {promoDesc && (
+          <ChicTooltip
+            text={promoDesc}
+            title={promoText}
+            variant="emerald"
+            align="right"
+            position={tooltipPosition}
+          />
+        )}
+      </div>
     );
   };
 
@@ -717,37 +726,18 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
 
-            {/* Row 2: Instant confirmation & Special Offers */}
-            {(carData.supplier.instantConfirmation || specialOfferDetails.length > 0) && (
-              <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 pt-2 border-t border-gray-200">
-                {carData.supplier.instantConfirmation && (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                    <span className="text-[13px] font-black text-gray-900">Instant confirmation</span>
-                    <ChicTooltip
-                      text="Receive instant booking confirmation right after completing your reservation!"
-                      title="Instant Confirmation"
-                      variant="gold"
-                      align="left"
-                      position="top"
-                    />
-                  </div>
-                )}
-                {specialOfferDetails.map((so: any) => (
-                  <div key={so.id || so.name} className="flex items-center gap-1.5 shrink-0">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                      <Check size={12} className="stroke-[3]" />
-                    </span>
-                    <span className="text-[13px] font-black text-gray-900">{so.name}</span>
-                    <ChicTooltip
-                      text={so.description || "Special offer included with this vehicle."}
-                      title={so.name}
-                      variant="emerald"
-                      align="left"
-                      position="top"
-                    />
-                  </div>
-                ))}
+            {/* Row 2: Instant confirmation */}
+            {carData.supplier.instantConfirmation && (
+              <div className="flex items-center gap-1.5 pt-2 border-t border-gray-200">
+                <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
+                <span className="text-[13px] font-black text-gray-900">Instant confirmation</span>
+                <ChicTooltip
+                  text="Receive instant booking confirmation right after completing your reservation!"
+                  title="Instant Confirmation"
+                  variant="gold"
+                  align="left"
+                  position="top"
+                />
               </div>
             )}
 
@@ -812,7 +802,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     <Globe size={16} className="text-blue-600" />
                   </button>
                   <div>
-                    <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Address: {availableBranches.length} branches </span>
+                    <span className="text-xs font-bold text-gray-500">Address: </span>
                     <span className="text-sm font-black text-gray-800">
                       {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
                         availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
@@ -823,7 +813,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="flex items-center gap-2.5">
                   <Fuel size={17} className="text-blue-600 shrink-0" />
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Fuel Policy: </span>
+                    <span className="text-xs font-bold text-gray-500">Fuel Policy: </span>
                     <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
                     <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="left" position="top" />
                   </div>
@@ -831,7 +821,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 <div className="flex items-start gap-2.5">
                   <PickupIcon pickupType={carData.pickupType} />
                   <div>
-                    <span className="text-xs font-black text-gray-600 uppercase tracking-wider">Pick-up: </span>
+                    <span className="text-xs font-bold text-gray-500">Pick-up: </span>
                     <span className="text-sm font-black text-gray-800"><PickupLabel pickupType={carData.pickupType} /></span>
                   </div>
                 </div>
@@ -841,39 +831,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         </AnimatePresence>
 
         <div className="p-4 pt-6">
-          {mainHighlight && (
-            <div className="flex justify-start mb-8">
-              <div className="inline-flex items-center gap-1.5 text-green-700">
-                {renderHighlightWithLine(mainHighlight, "text-xs md:text-sm", <Check size={14} className="stroke-[3] shrink-0" />)}
-                {mainHighlightDesc && (
-                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="left" position="top" />
-                )}
-                {hiddenPromos.length > 0 && (
-                  <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm shrink-0">
-                    <span className="text-[10px] font-black">+{hiddenPromos.length}</span>
-                    <div className="absolute bottom-full left-0 mb-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
-                      <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45" />
-                      <div className="flex flex-col gap-1.5">
-                        {hiddenPromos.map((p: string, idx: number) => {
-                          const pDetail = (carData.promosDetails || []).find((pd: any) =>
-                            (pd.name || pd.what_is_included || '').toLowerCase().trim() === p.toLowerCase().trim()
-                          );
-                          const pDesc = pDetail?.description;
-                          return (
-                            <div key={idx} className="flex items-start gap-1.5">
-                              <span className="text-green-100 mt-0.5 shrink-0"><Check size={10} className="stroke-[3]" /></span>
-                              <div className="flex flex-col min-w-0">
-                                <span className="leading-snug font-bold">{p}</span>
-                                {pDesc && <span className="text-[10px] text-gray-300 leading-snug mt-0.5">{pDesc}</span>}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+          {(firstPromo || secondPromo) && (
+            <div className="flex flex-col gap-1.5 justify-start mb-6">
+              {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
+              {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'top')}
             </div>
           )}
 
@@ -938,7 +899,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                                   e.stopPropagation();
                                   setSelectedBranchId(b.id);
                                   setIsMobileDropdownOpen(false);
-                                }}
+                                								}}
                                 className={`w-full text-left text-xs py-2.5 px-4 transition-colors font-bold ${
                                   isSelected
                                     ? 'bg-[var(--primary)] text-gray-900'
@@ -1050,76 +1011,26 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               </div>
             </div>
 
-            {/* Instant Confirmation & Special Offers */}
-            {(carData.supplier.instantConfirmation || specialOfferDetails.length > 0) && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 shrink-0">
-                {carData.supplier.instantConfirmation && (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                    <span className="text-[13.5px] xl:text-[14px] font-black text-gray-900 whitespace-nowrap">Instant Confirmation</span>
-                    <ChicTooltip
-                      text="Receive instant booking confirmation right after completing your reservation!"
-                      title="Instant Confirmation"
-                      variant="gold"
-                      align="left"
-                      position="top"
-                    />
-                  </div>
-                )}
-                {specialOfferDetails.map((so: any) => (
-                  <div key={so.id || so.name} className="flex items-center gap-1.5 shrink-0">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                      <Check size={12} className="stroke-[3]" />
-                    </span>
-                    <span className="text-[13.5px] xl:text-[14px] font-black text-gray-900 whitespace-nowrap">{so.name}</span>
-                    <ChicTooltip
-                      text={so.description || "Special offer included with this vehicle."}
-                      title={so.name}
-                      variant="emerald"
-                      align="left"
-                      position="top"
-                    />
-                  </div>
-                ))}
+            {/* Instant Confirmation */}
+            {carData.supplier.instantConfirmation && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
+                <span className="text-[13.5px] xl:text-[14px] font-black text-gray-900 whitespace-nowrap">Instant Confirmation</span>
+                <ChicTooltip
+                  text="Receive instant booking confirmation right after completing your reservation!"
+                  title="Instant Confirmation"
+                  variant="gold"
+                  align="left"
+                  position="top"
+                />
               </div>
             )}
 
           </div>
 
-          <div className="hidden lg:flex lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 min-w-0 items-center justify-start px-4 lg:px-5">
-            {mainHighlight && (
-              <div className="inline-flex items-center gap-1.5 text-green-700">
-                {renderHighlightWithLine(mainHighlight, "text-sm lg:text-base", <Check size={16} className="stroke-[3] shrink-0" />)}
-                {mainHighlightDesc && (
-                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="right" position="bottom" />
-                )}
-                {hiddenPromos.length > 0 && (
-                  <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
-                    <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2.5 rounded-xl shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto text-left">
-                      <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 rotate-45" />
-                      <div className="flex flex-col gap-2">
-                        {hiddenPromos.map((p: string, idx: number) => {
-                          const pDetail = (carData.promosDetails || []).find((pd: any) =>
-                            (pd.name || pd.what_is_included || '').toLowerCase().trim() === p.toLowerCase().trim()
-                          );
-                          const pDesc = pDetail?.description;
-                          return (
-                            <div key={idx} className="flex items-start gap-1.5">
-                              <span className="text-green-100 mt-0.5 shrink-0"><Check size={12} className="stroke-[3]" /></span>
-                              <div className="flex flex-col min-w-0">
-                                <span className="leading-snug font-bold">{p}</span>
-                                {pDesc && <span className="text-[10px] text-gray-300 leading-snug mt-0.5">{pDesc}</span>}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="hidden lg:flex lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 min-w-0 flex-col justify-center items-start gap-1 px-4 lg:px-5">
+            {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
+            {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
           </div>
         </div>
 
@@ -1159,11 +1070,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               )}
             </div>
 
-            <div className="w-[45%] xl:w-[40%] p-2 pt-10 xl:pt-14 space-y-2.5 min-w-0">
-              <div className="flex items-start gap-1.5">
-                <button onClick={openMap} className="shrink-0 pt-0.5"><Globe size={16} className="text-blue-600" /></button>
+            <div className="w-[48%] xl:w-[44%] p-2.5 pt-6 xl:pt-10 space-y-2.5 min-w-0 flex flex-col justify-center">
+              <div className="flex items-start gap-1.5 min-w-0">
+                <button onClick={openMap} className="shrink-0 pt-0.5" title="View on map"><Globe size={16} className="text-blue-600" /></button>
                 <div className="flex items-baseline gap-1 min-w-0">
-                  <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Address: </span>
+                  <span className="text-xs font-bold text-gray-500 shrink-0">Address: </span>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2">
                       {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
@@ -1176,53 +1087,26 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
               <div className="flex items-center gap-1.5 min-w-0">
                 <Fuel size={17} className="text-blue-600 shrink-0" />
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-[11px] md:text-xs font-black text-gray-600 uppercase tracking-wider shrink-0">Fuel Policy: </span>
-                  <span className="text-xs md:text-sm font-black text-gray-800 truncate">{carData.fuelPolicy}</span>
+                  <span className="text-xs font-bold text-gray-500 shrink-0">Fuel Policy: </span>
+                  <span className="text-xs md:text-sm font-black text-gray-800 break-words">{carData.fuelPolicy}</span>
                   <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="right" position="top" />
                 </div>
               </div>
               <div className="flex items-start gap-1.5 min-w-0">
                 <PickupIcon pickupType={carData.pickupType} />
-                <div className="min-w-0">
-                  <span className="text-xs md:text-sm font-black text-gray-600 shrink-0">Pick-up: </span>
-                  <span className="text-xs md:text-sm font-black text-gray-800 truncate"><PickupLabel pickupType={carData.pickupType} /></span>
+                <div className="flex items-baseline gap-1 min-w-0">
+                  <span className="text-xs font-bold text-gray-500 shrink-0">Pick-up: </span>
+                  <span className="text-xs md:text-sm font-black text-gray-800 break-words"><PickupLabel pickupType={carData.pickupType} /></span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-4 lg:pt-6 flex flex-col lg:items-start items-start justify-center lg:justify-between gap-5 lg:gap-0 self-stretch">
-            {mainHighlight && (
-              <div className="inline-flex lg:hidden items-center gap-1.5 text-green-700">
-                {renderHighlightWithLine(mainHighlight, "text-sm lg:text-base", <Check size={16} className="stroke-[3] shrink-0" />)}
-                {mainHighlightDesc && (
-                  <ChicTooltip text={mainHighlightDesc} title={mainHighlight} variant="emerald" align="right" position="bottom" />
-                )}
-                {hiddenPromos.length > 0 && (
-                  <div className="relative group cursor-pointer flex items-center justify-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 border border-green-200 shadow-sm hover:bg-green-100 transition-colors shrink-0">
-                    <span className="text-[11px] font-black">+{hiddenPromos.length}</span>
-                    <div className="absolute bottom-full right-0 mb-2 w-56 bg-gray-900 text-white text-xs font-medium px-3 py-2.5 rounded-xl shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto text-left">
-                      <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 rotate-45" />
-                      <div className="flex flex-col gap-2">
-                        {hiddenPromos.map((p: string, idx: number) => {
-                          const pDetail = (carData.promosDetails || []).find((pd: any) =>
-                            (pd.name || pd.what_is_included || '').toLowerCase().trim() === p.toLowerCase().trim()
-                          );
-                          const pDesc = pDetail?.description;
-                          return (
-                            <div key={idx} className="flex items-start gap-1.5">
-                              <span className="text-green-100 mt-0.5 shrink-0"><Check size={12} className="stroke-[3]" /></span>
-                              <div className="flex flex-col min-w-0">
-                                <span className="leading-snug font-bold">{p}</span>
-                                {pDesc && <span className="text-[10px] text-gray-300 leading-snug mt-0.5">{pDesc}</span>}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
+            {(firstPromo || secondPromo) && (
+              <div className="inline-flex lg:hidden flex-col gap-1.5 items-start text-green-700">
+                {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'bottom')}
+                {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
               </div>
             )}
 
