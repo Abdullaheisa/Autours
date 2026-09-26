@@ -255,7 +255,7 @@ export default function PromosSection() {
       setModalSuppliers(mappedSuppliers);
 
       let effectiveSupplier = modalSupplierFilter;
-      if (modalSupplierFilter !== "All" && !mappedSuppliers.some(s => s.id === modalSupplierFilter)) {
+      if (modalSupplierFilter !== "All" && !mappedSuppliers.some((s: any) => s.id === modalSupplierFilter)) {
         effectiveSupplier = "All";
         setModalSupplierFilter("All");
       }
