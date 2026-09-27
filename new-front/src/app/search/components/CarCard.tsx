@@ -523,7 +523,37 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   }, [vehicle, daysNumber, currencyCode, allRates, filteredSuppliers, fetchedCurrency]);
 
   const openMap = () => {
-    window.open(`https://www.google.com/maps?q=$${carData.supplier.lat},${carData.supplier.lng}`, '_blank');
+    const selectedBranch =
+      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId)) ||
+      (vehicle as any).branch ||
+      (availableBranches.length > 0 ? availableBranches[0] : null);
+
+    const branchName = (selectedBranch?.name || selectedBranch?.location || (vehicle as any).location || '').toString().trim();
+    const branchAddress = (selectedBranch?.adresse || selectedBranch?.location_address || selectedBranch?.address || '').toString().trim();
+    const supplierAddress = (carData.supplier.address || '').toString().trim();
+
+    const city = (selectedBranch?.city || (vehicle as any).city || (vehicle as any).location_city || '').toString().trim();
+    const country = (selectedBranch?.country || (vehicle as any).country || '').toString().trim();
+
+    // Prioritize the airport / location name (e.g. "Dubai International Airport")
+    let query = branchName || branchAddress || supplierAddress;
+
+    if (query) {
+      const lower = query.toLowerCase();
+      if (city && !lower.includes(city.toLowerCase())) {
+        query += `, ${city}`;
+      }
+      if (country && !lower.includes(country.toLowerCase())) {
+        query += `, ${country}`;
+      }
+    } else {
+      query = 'Airport';
+    }
+
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    if (typeof window !== 'undefined') {
+      window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const displayedInclusions = showAllInclusions
@@ -798,16 +828,28 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
               <div className="px-4 pb-4 space-y-2.5">
                 <div className="flex items-start gap-2.5">
-                  <button onClick={openMap} className="shrink-0 pt-0.5">
-                    <Globe size={16} className="text-blue-600" />
+                  <button
+                    type="button"
+                    onClick={openMap}
+                    className="shrink-0 pt-0.5 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                    title="View location on Google Maps"
+                    aria-label="View location on Google Maps"
+                  >
+                    <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors" />
                   </button>
-                  <div>
-                    <span className="text-xs font-bold text-gray-500">Address: </span>
-                    <span className="text-sm font-black text-gray-800">
-                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
-                        availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
-                        carData.supplier.address}
-                    </span>
+                  <div
+                    onClick={openMap}
+                    className="cursor-pointer group/addr flex flex-col"
+                    title="View location on Google Maps"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-gray-500">Address: </span>
+                      <span className="text-sm font-black text-gray-800 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
+                        {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                          availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
+                          carData.supplier.address}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -1072,11 +1114,23 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
             <div className="w-[48%] xl:w-[44%] p-2.5 pt-6 xl:pt-10 space-y-2.5 min-w-0 flex flex-col justify-center">
               <div className="flex items-start gap-1.5 min-w-0">
-                <button onClick={openMap} className="shrink-0 pt-0.5" title="View on map"><Globe size={16} className="text-blue-600" /></button>
-                <div className="flex items-baseline gap-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={openMap}
+                  className="shrink-0 pt-0.5 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                  title="View location on Google Maps"
+                  aria-label="View location on Google Maps"
+                >
+                  <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors" />
+                </button>
+                <div
+                  onClick={openMap}
+                  className="flex items-baseline gap-1 min-w-0 cursor-pointer group/addr"
+                  title="View location on Google Maps"
+                >
                   <span className="text-xs font-bold text-gray-500 shrink-0">Address: </span>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2">
+                    <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
                       {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
                       availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
                       carData.supplier.address}
