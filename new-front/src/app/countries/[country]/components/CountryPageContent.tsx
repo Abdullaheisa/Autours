@@ -9,7 +9,7 @@ import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
 
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { MapPin, Star, ArrowRight } from 'lucide-react';
 import { CountryPageData } from '@/data/countryPages';
 import { getCitiesByCountrySlug } from '@/data/cityPages';
 import Navbar from '@/components/shared/layout/Navbar';
@@ -271,51 +271,93 @@ export default function CountryPageContent({ data }: Props) {
                 </div>
               </section>
 
-              {/* Dedicated Cities Showcase Grid */}
-              <section className="py-14 bg-gradient-to-b from-gray-50/80 to-white border-b border-gray-100">
+              {/* Dedicated Cities Showcase Grid — CountryPlaceCard style */}
+              <section className="py-10 sm:py-14 bg-gray-50 border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="text-center max-w-3xl mx-auto mb-10">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-primary/20 text-gray-900 uppercase tracking-wider mb-2">
-                      <MapPin size={13} className="text-gray-900" /> Rental Destinations
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
-                      Explore Car Rental Cities in {data.name}
-                    </h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                      Compare deals across trusted rental providers in {data.name}'s top cities with instant confirmation and transparent pricing.
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6 sm:mb-8">
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full mb-2.5">
+                        <MapPin className="w-3 h-3" /> Top Destinations
+                      </span>
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-black uppercase italic tracking-tight font-title leading-snug">
+                        Top Destinations in {data.name}
+                      </h2>
+                      <p className="text-gray-400 text-xs sm:text-sm font-medium mt-1 max-w-xl leading-relaxed">
+                        Explore {data.name}&apos;s most iconic cities and landmarks with the freedom of your own rental car — from dazzling skyscrapers to serene desert landscapes.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {relatedCities.map((city: any) => (
-                      <Link
-                        key={city.slug}
-                        href={`/cities/${city.slug}`}
-                        className="group relative bg-white rounded-2xl p-6 border border-gray-200 hover:border-primary/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden"
-                      >
-                        <div className="absolute top-0 right-0 w-28 h-28 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/25 transition-all pointer-events-none" />
-                        <div>
-                          <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center font-bold mb-4 group-hover:scale-110 transition-transform">
-                            <MapPin size={22} className="text-gray-900" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {relatedCities.map((city: any, idx: number) => {
+                      // Resolve city image: city.image (uploaded) -> matching highlight place -> travel_info image -> curated fallbacks
+                      const highlightPlaces = data.highlights?.places || [];
+                      const matchingHighlight = highlightPlaces.find(
+                        (p) => p.name.toLowerCase() === city.name.toLowerCase()
+                      );
+                      const cityImage =
+                        (city.image ? `/storage/${city.image}` : null) ||
+                        matchingHighlight?.image ||
+                        city.travel_info?.image ||
+                        'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80';
+
+                      const attractionsCount = matchingHighlight?.attractions?.length || city.highlights?.places?.length || 0;
+                      const cityDescription =
+                        matchingHighlight?.description ||
+                        city.hero_lead ||
+                        `Compare airport and downtown car rental rates in ${city.name} from leading suppliers.`;
+
+                      return (
+                        <Link
+                          key={city.slug}
+                          href={`/cities/${city.slug}`}
+                          className="group relative bg-white rounded-2xl overflow-hidden cursor-pointer border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 select-none w-full flex flex-col h-full"
+                        >
+                          {/* Image */}
+                          <div className="relative overflow-hidden h-48 sm:h-52 shrink-0">
+                            <img
+                              src={cityImage}
+                              alt={city.name}
+                              loading="lazy"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <span className="bg-primary text-black text-xs font-black uppercase tracking-wider px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg">
+                                <ArrowRight className="w-3.5 h-3.5" /> Explore
+                              </span>
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 p-3.5 flex items-end justify-between">
+                              <h3 className="text-white text-sm font-black leading-tight drop-shadow flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                                {city.name}
+                              </h3>
+                              <span className="w-6 h-6 rounded-full bg-primary text-black text-[10px] font-black flex items-center justify-center shadow shrink-0">
+                                {String(idx + 1).padStart(2, '0')}
+                              </span>
+                            </div>
                           </div>
-                          <h3 className="text-lg font-black text-gray-900 group-hover:text-primary transition-colors">
-                            {city.name} Car Rental
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">
-                            {city.hero_lead || `Compare airport and downtown car rental rates in ${city.name} from leading suppliers.`}
-                          </p>
-                        </div>
-                        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                          <span className="text-xs font-bold text-gray-900 group-hover:underline">
-                            View {city.name} Deals
-                          </span>
-                          <span className="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-primary flex items-center justify-center text-gray-700 group-hover:text-black font-bold transition-colors">
-                            →
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
+
+                          {/* Body */}
+                          <div className="p-4 flex flex-col justify-between flex-grow">
+                            <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium line-clamp-3">
+                              {cityDescription}
+                            </p>
+                            <p className="text-primary text-[10px] font-black uppercase tracking-wide mt-2 shrink-0 flex items-center gap-1">
+                              <Star className="w-3 h-3 fill-primary" />
+                              {attractionsCount > 0
+                                ? `${attractionsCount} top attractions inside`
+                                : `Explore ${city.name} car rentals & deals`}
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
+
+                  <p className="text-center text-gray-400 text-xs font-semibold mt-4 sm:mt-5">
+                    Click any card to explore attractions &amp; details
+                  </p>
                 </div>
               </section>
             </>
