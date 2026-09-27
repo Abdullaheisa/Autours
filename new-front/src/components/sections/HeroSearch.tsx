@@ -21,6 +21,12 @@ import { referenceApi } from '@/services/api';
 import { LocationBranch } from '@/types';
 import { getLocationDisplayLabel, getLocationPickupValue } from '@/utils/location';
 import { worldCountries, WorldCountry } from '@/data/worldCountries';
+import {
+  detectUserCountry,
+  getUserCountrySync,
+  saveUserCountry,
+  DEFAULT_FALLBACK_COUNTRY,
+} from '@/utils/userCountry';
 
 import { BACKEND_URL } from '@/config/api';
 
@@ -34,12 +40,7 @@ const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) =>
   `${i.toString().padStart(2, '0')}:00`
 );
 
-const DEFAULT_COUNTRY: WorldCountry = {
-  name: "Egypt",
-  code: "+20",
-  iso: "EG",
-  currency: "EGP"
-};
+const DEFAULT_COUNTRY: WorldCountry = DEFAULT_FALLBACK_COUNTRY;
 
 const TRUST_BADGES = [
   'Instant Confirmation',
@@ -72,20 +73,39 @@ export default function HeroSearch({
   const [driverAge25to70, setDriverAge25to70] = useState(true);
   const [driverAge, setDriverAge] = useState(30);
 
-  // Country Selection State
-  const [selectedCountry, setSelectedCountry] = useState<WorldCountry>(DEFAULT_COUNTRY);
+  // Country Selection State (auto-detected via IP with fast fetch)
+  const [selectedCountry, setSelectedCountry] = useState<WorldCountry>(DEFAULT_FALLBACK_COUNTRY);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
-  // Keep country in sync if currency is changed elsewhere (e.g. Navbar)
+  // 100% Automatic Fast IP-based Country Detection on Mount
   useEffect(() => {
-    if (currencyCode && currencyCode !== selectedCountry.currency) {
-      const matchingCountry = worldCountries.find((c) => c.currency === currencyCode);
-      if (matchingCountry) {
-        setSelectedCountry(matchingCountry);
-      }
+    let isMounted = true;
+
+    // 1. Immediately restore cached country if present (0ms instant)
+    const cached = getUserCountrySync();
+    if (cached) {
+      setSelectedCountry(cached);
     }
-  }, [currencyCode]);
+
+    // 2. Fast auto-fetch country based on client IP (<50ms)
+    detectUserCountry()
+      .then((detected) => {
+        if (isMounted && detected) {
+          const isManual =
+            typeof window !== 'undefined' &&
+            sessionStorage.getItem('autours_user_manual_country') === 'true';
+          if (!isManual) {
+            setSelectedCountry(detected);
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const [locations, setLocations] = useState<LocationBranch[]>([]);
   const [showLocations, setShowLocations] = useState(false);
@@ -286,6 +306,7 @@ export default function HeroSearch({
 
   const handleCountrySelect = (c: WorldCountry) => {
     setSelectedCountry(c);
+    saveUserCountry(c, true);
     setShowCountryDropdown(false);
     setCountrySearch('');
     if (c.currency) {
@@ -688,6 +709,7 @@ export default function HeroSearch({
                         />
                       </div>
                     </div>
+
                     <div className="overflow-y-auto max-h-[240px] p-1.5 space-y-0.5">
                       {filteredCountries.length > 0 ? (
                         filteredCountries.map((c) => (
