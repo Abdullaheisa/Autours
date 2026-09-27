@@ -168,6 +168,7 @@ class SyncRoutesVehicles extends Command
                                     'FreeMiles'  => $rate['FreeMiles'] ?? null,
                                     'MileageUnit'=> $rate['MileageUnit'] ?? 'KM',
                                     'Deposit'    => $rate['Deposit'] ?? null,
+                                    'CurrencyCode' => $currencyCode,
                                     'CDW_Excess' => $rate['CDW_Excess'] ?? null,
                                     'TP_Excess'  => $rate['TP_Excess'] ?? null,
                                     'TaxDesc'    => $rate['TaxDesc'] ?? null,
@@ -243,9 +244,11 @@ class SyncRoutesVehicles extends Command
                 $taxesIncluded = Included::firstOrCreate(['what_is_included' => 'Airport surcharges and local taxes']);
                 $vehicleInclusions[] = $taxesIncluded->id;
                 
-                if (!empty($model['Deposit'])) {
-                    // Use canonical Security Deposit (no amount embedded in the name)
-                    $inc = Included::firstOrCreate(['what_is_included' => 'Security Deposit']);
+                $depAmt = !empty($model['Deposit']) ? (float)$model['Deposit'] : 0;
+                if ($depAmt > 0) {
+                    $depCurr = $model['CurrencyCode'] ?? 'USD';
+                    $cleanDep = $depAmt == (int)$depAmt ? (int)$depAmt : $depAmt;
+                    $inc = Included::firstOrCreate(['what_is_included' => "Security Deposit: {$cleanDep} {$depCurr}"]);
                     $vehicleInclusions[] = $inc->id;
                 }
                 
@@ -293,6 +296,9 @@ class SyncRoutesVehicles extends Command
                         'activation'           => true,
                         'instant_confirmation' => 1,
                     ];
+                    if ($depAmt > 0) {
+                        $updateData['deposit_amount'] = $depAmt;
+                    }
 
                     if (!empty($model['classImage'])) {
                         $updateData['photo'] = $model['classImage'];
@@ -317,6 +323,7 @@ class SyncRoutesVehicles extends Command
                         'price'                => $dayPrice,
                         'week_price'           => $weekPrice,
                         'month_price'          => $monthPrice,
+                        'deposit_amount'       => $depAmt,
                         'instant_confirmation' => 1,
                     ]);
 

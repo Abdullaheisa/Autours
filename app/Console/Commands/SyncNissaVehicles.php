@@ -410,6 +410,9 @@ class SyncNissaVehicles extends Command
                             'activation' => true,
                             'instant_confirmation' => 1,
                         ];
+                        if (!empty($priceData['provision']) && (float)$priceData['provision'] > 0) {
+                            $updateData['deposit_amount'] = (float)$priceData['provision'];
+                        }
                         if ($vehicle->supplier != $supplierUser->id) {
                             $updateData['supplier'] = $supplierUser->id;
                         }
@@ -438,6 +441,7 @@ class SyncNissaVehicles extends Command
                             'price' => $priceData['day_value'],
                             'week_price' => $priceData['week_price'],
                             'month_price' => $priceData['month_price'],
+                            'deposit_amount' => (!empty($priceData['provision']) && (float)$priceData['provision'] > 0) ? (float)$priceData['provision'] : 0,
                             'instant_confirmation' => 1,
                         ]);
 
@@ -621,6 +625,16 @@ class SyncNissaVehicles extends Command
                 $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
                 $includedIds[] = $inc->id;
             }
+        }
+
+        // Check if there is a security deposit provision
+        if (!empty($priceData['provision']) && (float) $priceData['provision'] > 0) {
+            $prov = (float) $priceData['provision'];
+            $currency = ($priceData['currency'] ?? 'TRY') === 'TL' ? 'TRY' : ($priceData['currency'] ?? 'TRY');
+            $cleanProv = $prov == (int)$prov ? (int)$prov : $prov;
+            $depositText = "Security Deposit: {$cleanProv} {$currency}";
+            $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $depositText]);
+            $includedIds[] = $inc->id;
         }
 
         if (!empty($includedIds)) {

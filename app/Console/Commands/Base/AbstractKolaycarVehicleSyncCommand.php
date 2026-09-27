@@ -119,6 +119,8 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
                     if (!isset($allVehiclesByTag[$tag])) {
                         $allVehiclesByTag[$tag] = $carData;
                         $allVehiclesByTag[$tag]['parsed_prices'] = [];
+                    } elseif (!empty($carData['DEPOSITPRICE']) && empty($allVehiclesByTag[$tag]['DEPOSITPRICE'])) {
+                        $allVehiclesByTag[$tag]['DEPOSITPRICE'] = $carData['DEPOSITPRICE'];
                     }
 
                     $dPrice = (float) ($carData['DAILYPRICE'] ?? ($carData['TOTALPRICE'] ?? 0));
@@ -180,8 +182,10 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
                     ->where('description', 'LIKE', "%{$descriptionTag}%")
                     ->first();
 
+                $depositPrice = (float) ($carData['DEPOSITPRICE'] ?? 0);
+
                 if ($vehicle) {
-                    $vehicle->update([
+                    $updateData = [
                         'name' => $normalizedName,
                         'description' => $descriptionTag . ' Vendor:' . $vendorId . ' ' . $vehicleName,
                         'category' => $categoryId,
@@ -189,7 +193,11 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
                         'activation' => true,
-                    ]);
+                    ];
+                    if ($depositPrice > 0) {
+                        $updateData['deposit_amount'] = $depositPrice;
+                    }
+                    $vehicle->update($updateData);
                     $this->updatedCount++;
 
                     // In prices-only mode, skip updating specifications, photos, and inclusions
@@ -220,6 +228,7 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
+                        'deposit_amount' => $depositPrice,
                         'instant_confirmation' => 1,
                     ]);
                     
@@ -246,6 +255,12 @@ abstract class AbstractKolaycarVehicleSyncCommand extends AbstractVehicleSyncCom
                         if (!empty($condName)) {
                             $inclusions[] = $condName;
                         }
+                    }
+
+                    if ($depositPrice > 0) {
+                        $depCurrency = $branch->currency ?: 'TRY';
+                        $cleanDep = $depositPrice == (int)$depositPrice ? (int)$depositPrice : $depositPrice;
+                        $inclusions[] = "Security Deposit: {$cleanDep} {$depCurrency}";
                     }
                     
                     $kmLimit = (string) ($carData['TOTALKMLIMIT'] ?? '');

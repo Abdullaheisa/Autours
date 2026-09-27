@@ -200,15 +200,21 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                     ->where('description', 'LIKE', "%{$descriptionTag}%")
                     ->first();
 
+                $depositPrice = (float) ($carData['DEPOSITPRICE'] ?? 0);
+
                 if ($vehicle) {
-                    $vehicle->update([
+                    $updateData = [
                         'name' => $normalizedName,
                         'category' => $categoryId,
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
                         'activation' => true,
-                    ]);
+                    ];
+                    if ($depositPrice > 0) {
+                        $updateData['deposit_amount'] = $depositPrice;
+                    }
+                    $vehicle->update($updateData);
                     $this->updatedCount++;
 
                     if ($pricesOnly) {
@@ -237,6 +243,7 @@ class SyncAutofixVehicles extends AbstractKolaycarVehicleSyncCommand
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
+                        'deposit_amount' => $depositPrice,
                         'instant_confirmation' => 1,
                     ]);
                     

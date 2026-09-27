@@ -76,10 +76,45 @@ export function getVehicleDepositPrice(
             const currMatch = text.match(/\b([A-Z]{3})\b/);
             if (currMatch) {
               const code = currMatch[1].toUpperCase();
-              if (allRates[code] || fallbackRates[code]) {
-                depositBaseCurrency = code;
+              const normCode = code === 'TL' ? 'TRY' : code;
+              if (allRates[normCode] || fallbackRates[normCode]) {
+                depositBaseCurrency = normCode;
               }
             }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // If still not found, inspect rental_terms (for suppliers like SurPrice, Green Motion, Jimpisoft, U-Save)
+  if (rawDeposit <= 0 && Array.isArray(vehicle.rental_terms)) {
+    for (const term of vehicle.rental_terms) {
+      const title = (typeof term === 'object' && term ? (term.title || term.name || '') : '').trim();
+      const desc = (typeof term === 'object' && term ? (term.description || term.desc || '') : '')
+        .replace(/<[^>]*>/g, ' ')
+        .trim();
+      const text = `${title} ${desc}`;
+      const lower = text.toLowerCase();
+
+      if (
+        lower.includes('deposit') &&
+        !lower.includes('zero deposit') &&
+        !lower.includes('no deposit') &&
+        !lower.includes('without deposit')
+      ) {
+        const match1 = text.match(/(?:deposit|pre-?authori[sz]ation)[^\d]{1,60}?\b([A-Z]{3})\s*(\d+(?:[.,]\d+)?)/i);
+        const match2 = text.match(/(?:deposit|pre-?authori[sz]ation)[^\d]{1,60}?(\d+(?:[.,]\d+)?)\s*([A-Z]{3})\b/i);
+        const m = match1 || match2;
+        if (m) {
+          const code = (match1 ? m[1] : m[2]).toUpperCase();
+          const normCode = code === 'TL' ? 'TRY' : code;
+          const amtStr = match1 ? m[2] : m[1];
+          const parsed = parseFloat(amtStr.replace(/,/g, ''));
+          if (!isNaN(parsed) && parsed > 0 && (allRates[normCode] || fallbackRates[normCode])) {
+            rawDeposit = parsed;
+            depositBaseCurrency = normCode;
             break;
           }
         }
