@@ -44,6 +44,19 @@ export const cityPageApi = {
   togglePublish: (id: number) => apiClient.patch(`/api/city-pages/${id}/toggle-publish`, {}),
 };
 
+// Country Page API - uses /api/country-pages endpoints
+export const countryPageApi = {
+  getAll: () => apiClient.get("/api/country-pages?per_page=1000"),
+  getPublished: () => apiClient.get("/api/country-pages/published"),
+  getById: (id: number) => apiClient.get(`/api/country-pages/${id}`),
+  getBySlug: (slug: string) => apiClient.get(`/api/country-pages/slug/${slug}`),
+  create: (data: unknown) => apiClient.post("/api/country-pages", data),
+  update: (id: number, data: unknown) => apiClient.post(`/api/country-pages/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/api/country-pages/${id}`),
+  togglePublish: (id: number) => apiClient.patch(`/api/country-pages/${id}/toggle-publish`, {}),
+};
+
+
 
 // Blog Category API
 export const blogCategoryApi = {

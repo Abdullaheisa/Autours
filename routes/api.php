@@ -440,4 +440,21 @@ Route::prefix('city-pages')->group(function () {
     });
 });
 
+// Country Pages
+Route::prefix('country-pages')->group(function () {
+    // Public routes
+    Route::get('/', [\App\Http\Controllers\CountryPageController::class, 'index'])->name('country-pages.index');
+    Route::get('/published', [\App\Http\Controllers\CountryPageController::class, 'published'])->name('country-pages.published');
+    Route::get('/slug/{slug}', [\App\Http\Controllers\CountryPageController::class, 'showBySlug'])->name('country-pages.show-by-slug');
+    Route::get('/{countryPage}', [\App\Http\Controllers\CountryPageController::class, 'show'])->name('country-pages.show');
+
+    // Protected routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [\App\Http\Controllers\CountryPageController::class, 'store'])->name('country-pages.store');
+        Route::post('/{countryPage}', [\App\Http\Controllers\CountryPageController::class, 'update'])->name('country-pages.update');
+        Route::delete('/{countryPage}', [\App\Http\Controllers\CountryPageController::class, 'destroy'])->name('country-pages.destroy');
+        Route::patch('/{countryPage}/toggle-publish', [\App\Http\Controllers\CountryPageController::class, 'togglePublish'])->name('country-pages.toggle-publish');
+    });
+});
+
 Route::get('clear-opcache', function() { opcache_reset(); return 'OK'; });

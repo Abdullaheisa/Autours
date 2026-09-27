@@ -1,74 +1,4 @@
-import { assets } from '@/config/assets';
-
-export interface CountryPageData {
-  slug: string;
-  name: string;
-  heroBadge: string;
-  heroTitle: string;
-  heroHighlight: string;
-  heroLead: string;
-  heroBottomTitle: string;
-  travelInfo: {
-    title: string;
-    subtitle: string;
-    benefits: {
-      title: string;
-      description: string;
-    }[];
-    image: string;
-  };
-  steps: {
-    title: string;
-    description: string;
-  }[];
-  documents: {
-    items: string[];
-  };
-  gallery?: {
-    big: string;
-    small1: string;
-    small2: string;
-    label: string;
-  };
-  faqs: {
-    q: string;
-    a: string;
-  }[];
-  highlights?: {
-    title?: string;
-    subtitle?: string;
-    places: {
-      name: string;
-      description: string;
-      image?: string;
-      tags?: string[];
-      attractions?: {
-        name: string;
-        description: string;
-        image: string;
-      }[];
-    }[];
-  };
-  partnersDescription?: string;
-  ctaTitle?: string;
-  ctaDescription?: string;
-  ctaPrimaryText?: string;
-  ctaSecondaryText?: string;
-  cities?: {
-    id: number;
-    name: string;
-    slug: string;
-    country: string;
-    country_slug?: string;
-    image?: string | null;
-    hero_badge?: string | null;
-    hero_title?: string;
-    hero_highlight?: string;
-    is_published?: boolean;
-  }[];
-}
-
-export const countryPagesData: Record<string, CountryPageData> = {
+{
   "uae": {
     "slug": "uae",
     "name": "United Arab Emirates",
@@ -2465,4 +2395,4 @@ export const countryPagesData: Record<string, CountryPageData> = {
     "ctaPrimaryText": "Search Cars Now",
     "ctaSecondaryText": "Contact Support"
   }
-};
+}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, UserCircle, Building2, BookOpen, TrendingUp, Car, Upload,
   Grid3X3, Settings2, Crown, Users, CalendarCheck, Star, FileText, CheckCircle2,
-  Mail, Palette, LogOut, ChevronLeft, ChevronRight, BarChart3, Gift, ListTree, Tag, ListChecks, ChevronDown, MapPin
+  Mail, Palette, LogOut, ChevronLeft, ChevronRight, BarChart3, Gift, ListTree, Tag, ListChecks, ChevronDown, MapPin, Globe
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -14,7 +14,7 @@ import { getLogoUrl } from "@/utils/getImageUrl";
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, UserCircle, Building2, BookOpen, TrendingUp, Car, Upload,
   Grid3X3, Settings2, Crown, Users, CalendarCheck, Star, FileText, CheckCircle2,
-  Mail, Palette, LogOut, BarChart3, Gift, ListTree, Tag, ListChecks, MapPin
+  Mail, Palette, LogOut, BarChart3, Gift, ListTree, Tag, ListChecks, MapPin, Globe
 };
 
 type SidebarEntry = 
@@ -85,6 +85,7 @@ const adminSidebarStructure: SidebarEntry[] = [
     icon: "BookOpen",
     children: [
       { id: "blogs", label: "Blogs", icon: "BookOpen" },
+      { id: "country-pages", label: "Country Pages", icon: "Globe" },
       { id: "city-pages", label: "City Pages", icon: "MapPin" },
       { id: "contest-popup", label: "Contest Control", icon: "Gift" },
       { id: "subscribers", label: "Subscribers", icon: "Mail" },

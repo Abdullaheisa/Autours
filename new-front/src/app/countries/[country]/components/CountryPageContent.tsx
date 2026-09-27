@@ -9,6 +9,7 @@ import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
 
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 import { CountryPageData } from '@/data/countryPages';
 import { getCitiesByCountrySlug } from '@/data/cityPages';
 import Navbar from '@/components/shared/layout/Navbar';
@@ -236,32 +237,88 @@ export default function CountryPageContent({ data }: Props) {
           description={data.partnersDescription}
         />
 
-        {/* Popular Cities in this country (Cross-linking) */}
+        {/* Popular Cities in this country (Cross-linking & Showcase) */}
         {(() => {
-          const relatedCities = getCitiesByCountrySlug(data.slug);
-          if (relatedCities.length === 0) return null;
+          const relatedCities = (data.cities && data.cities.length > 0)
+            ? data.cities
+            : getCitiesByCountrySlug(data.slug);
+
+          if (!relatedCities || relatedCities.length === 0) return null;
+
           return (
-            <section className="py-6 bg-primary/10 border-b border-primary/20">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-wide">
-                    Popular Rental Cities in {data.name}:
-                  </span>
+            <>
+              {/* Quick links banner */}
+              <section className="py-6 bg-primary/10 border-b border-primary/20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <MapPin size={16} className="text-gray-900" />
+                    <span className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-wide">
+                      Popular Rental Cities in {data.name}:
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {relatedCities.map((city: any) => (
+                      <Link
+                        key={city.slug}
+                        href={`/cities/${city.slug}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-primary text-gray-900 text-xs font-black uppercase tracking-wider border border-gray-200 hover:border-primary shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                      >
+                        <span>{city.name} Car Rental</span>
+                        <span className="text-primary group-hover:text-black font-bold">→</span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {relatedCities.map((city) => (
-                    <Link
-                      key={city.slug}
-                      href={`/cities/${city.slug}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-primary text-gray-900 text-xs font-black uppercase tracking-wider border border-gray-200 hover:border-primary shadow-sm hover:shadow-md transition-all cursor-pointer"
-                    >
-                      <span>{city.name} Car Rental</span>
-                      <span className="text-primary group-hover:text-black">→</span>
-                    </Link>
-                  ))}
+              </section>
+
+              {/* Dedicated Cities Showcase Grid */}
+              <section className="py-14 bg-gradient-to-b from-gray-50/80 to-white border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="text-center max-w-3xl mx-auto mb-10">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-primary/20 text-gray-900 uppercase tracking-wider mb-2">
+                      <MapPin size={13} className="text-gray-900" /> Rental Destinations
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
+                      Explore Car Rental Cities in {data.name}
+                    </h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Compare deals across trusted rental providers in {data.name}'s top cities with instant confirmation and transparent pricing.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {relatedCities.map((city: any) => (
+                      <Link
+                        key={city.slug}
+                        href={`/cities/${city.slug}`}
+                        className="group relative bg-white rounded-2xl p-6 border border-gray-200 hover:border-primary/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-28 h-28 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/25 transition-all pointer-events-none" />
+                        <div>
+                          <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center font-bold mb-4 group-hover:scale-110 transition-transform">
+                            <MapPin size={22} className="text-gray-900" />
+                          </div>
+                          <h3 className="text-lg font-black text-gray-900 group-hover:text-primary transition-colors">
+                            {city.name} Car Rental
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                            {city.hero_lead || `Compare airport and downtown car rental rates in ${city.name} from leading suppliers.`}
+                          </p>
+                        </div>
+                        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-900 group-hover:underline">
+                            View {city.name} Deals
+                          </span>
+                          <span className="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-primary flex items-center justify-center text-gray-700 group-hover:text-black font-bold transition-colors">
+                            →
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </>
           );
         })()}
 

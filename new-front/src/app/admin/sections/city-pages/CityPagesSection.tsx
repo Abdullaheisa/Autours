@@ -9,7 +9,7 @@ import {
 import SectionLayout from "@/components/shared/SectionLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import StatsCard from "@/components/ui/StatsCard";
-import { cityPageApi } from "@/services/api";
+import { cityPageApi, countryPageApi } from "@/services/api";
 import toast from "react-hot-toast";
 
 /* ───────── Types ───────── */
@@ -118,13 +118,20 @@ export default function CityPagesSection() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const [countries, setCountries] = useState<any[]>([]);
+
   /* ── Fetch ── */
   const loadData = async () => {
     setLoading(true);
     try {
-      const res: any = await cityPageApi.getAll();
+      const [res, countriesRes]: [any, any] = await Promise.all([
+        cityPageApi.getAll(),
+        countryPageApi.getAll().catch(() => ({ data: [] })),
+      ]);
       const data = res?.data?.data?.data || res?.data?.data || [];
       setCityPages(Array.isArray(data) ? data : []);
+      const cData = countriesRes?.data?.data || countriesRes?.data || [];
+      setCountries(Array.isArray(cData) ? cData : []);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load city pages");
@@ -254,6 +261,34 @@ export default function CityPagesSection() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* ── Basic Info ── */}
           <Section title="Basic Information" icon={<Globe size={16} className="text-primary" />} defaultOpen>
+            {countries.length > 0 && (
+              <div className="mb-3">
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Quick Select Country
+                </label>
+                <select
+                  value={form.country_slug}
+                  onChange={(e) => {
+                    const selected = countries.find((c) => c.slug === e.target.value);
+                    if (selected) {
+                      setForm((f) => ({
+                        ...f,
+                        country: selected.name,
+                        country_slug: selected.slug,
+                      }));
+                    }
+                  }}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                >
+                  <option value="">-- Choose from existing Country Pages --</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.slug}>
+                      {c.name} ({c.slug})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input label="City Name" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="e.g. Dubai" required />
               <Input label="Slug (auto-generated)" value={form.slug} onChange={(v) => setForm((f) => ({ ...f, slug: v }))} placeholder="e.g. dubai" />
@@ -503,7 +538,18 @@ export default function CityPagesSection() {
                         <span className="font-bold text-gray-900">{c.name}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-gray-600">{c.country}</td>
+                    <td className="px-5 py-4">
+                      <a
+                        href={`/countries/${c.country_slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-600 hover:text-primary transition-colors font-medium inline-flex items-center gap-1"
+                        title="View Country Landing Page"
+                      >
+                        <span>{c.country}</span>
+                        <Globe size={11} className="text-gray-400" />
+                      </a>
+                    </td>
                     <td className="px-5 py-4"><code className="text-xs bg-gray-100 px-2 py-1 rounded-lg font-mono text-gray-600">/cities/{c.slug}</code></td>
                     <td className="px-5 py-4 text-center">
                       <button onClick={() => handleTogglePublish(c.id)}

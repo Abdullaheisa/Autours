@@ -105,6 +105,7 @@ export const sidebarItems = [
   { id: "bookings-calendar", label: "Bookings Calendar", icon: "CalendarCheck" },
   { id: "companies", label: "My Companies", icon: "Building2" },
   { id: "blogs", label: "Blogs", icon: "BookOpen" },
+  { id: "country-pages", label: "Country Pages", icon: "Globe" },
   { id: "city-pages", label: "City Pages", icon: "MapPin" },
   { id: "profit", label: "Profit Margin", icon: "TrendingUp" },
   { id: "vehicles", label: "Vehicles Photos", icon: "Car" },
