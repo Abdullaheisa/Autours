@@ -17,6 +17,7 @@ import CategoryFilterBar from './components/CategoryFilterBar';
 import Loader from '@/components/ui/Loader';
 import { RootState, AppDispatch } from '@/store';
 import { setSearchParams, setFilterParams, fetchVehicles, setPage, resetFilters } from '@/store/slices/searchSlice';
+import { setCurrency, currencySymbols } from '@/store/slices/currencySlice';
 import type { FilterPayload, Currency } from '@/types';
 import { FILTER_SPEC_NAMES } from '@/constants/filterSpecNames';
 import { getVehicleDepositPrice } from '@/utils/vehiclePrice';
@@ -166,6 +167,12 @@ function SearchPageContent() {
     const supplierParam = urlParams.get('supplier');
     const st = urlParams.get('st') || '10:00';
     const et = urlParams.get('et') || '10:00';
+    const currencyParam = urlParams.get('currency');
+
+    // Sync currency from URL if specified
+    if (currencyParam && currencySymbols[currencyParam as Currency] && currencyParam !== currencyCode) {
+      dispatch(setCurrency(currencyParam as Currency));
+    }
 
     if (location && start && end) {
       const urlSearchKey = `${location}|${start}|${end}|${st}|${et}`;
@@ -191,7 +198,7 @@ function SearchPageContent() {
         }
       }
     }
-  }, [urlParams, dispatch]);
+  }, [urlParams, currencyCode, dispatch]);
 
   const lastFetchedSignature = useRef<string>('');
 

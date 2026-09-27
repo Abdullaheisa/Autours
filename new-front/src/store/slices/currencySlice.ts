@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import type { Currency } from '@/types';
+import { getUserCountrySync } from '@/utils/userCountry';
 
 // Re-export for any files that still import Currency from this slice
 export type { Currency };
@@ -326,9 +327,9 @@ export const fetchExchangeRates = createAsyncThunk(
 );
 
 const initialState: CurrencyState = {
-  code: 'EGP',
-  symbol: 'EGP',
-  rate: 48.5,
+  code: 'AED',
+  symbol: 'AED',
+  rate: 3.67,
   allRates: fallbackRates,
   isLoading: false,
   error: null,
@@ -352,15 +353,26 @@ const currencySlice = createSlice({
     },
     initCurrency: (state) => {
       if (typeof window !== 'undefined') {
-        // 1. Restore selected currency
+        // 1. Check if user explicitly chose a currency manually
+        const isManual = localStorage.getItem('autours_user_manual_currency') === 'true';
         const savedCurrency = localStorage.getItem('selected_currency') as Currency;
-        if (savedCurrency && currencySymbols[savedCurrency]) {
+
+        if (isManual && savedCurrency && currencySymbols[savedCurrency]) {
           state.code = savedCurrency;
           state.symbol = currencySymbols[savedCurrency];
         } else {
-          state.code = 'EGP';
-          state.symbol = 'EGP';
-          localStorage.setItem('selected_currency', 'EGP');
+          // 2. Check if IP detection or country cache has a currency for the user
+          const cachedCountry = getUserCountrySync();
+          if (cachedCountry?.currency && currencySymbols[cachedCountry.currency as Currency]) {
+            state.code = cachedCountry.currency as Currency;
+            state.symbol = currencySymbols[cachedCountry.currency as Currency];
+          } else if (savedCurrency && currencySymbols[savedCurrency] && savedCurrency !== 'EGP') {
+            state.code = savedCurrency;
+            state.symbol = currencySymbols[savedCurrency];
+          } else {
+            state.code = 'AED';
+            state.symbol = 'AED';
+          }
         }
 
         // 2. Restore cached rates

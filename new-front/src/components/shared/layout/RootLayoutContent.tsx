@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/store';
-import { initCurrency, fetchExchangeRates } from '@/store/slices/currencySlice';
+import { initCurrency, setCurrency, fetchExchangeRates, currencySymbols, Currency } from '@/store/slices/currencySlice';
 import { restoreAuth } from '@/store/slices/authSlice';
+import { detectUserCountry } from '@/utils/userCountry';
 import ContestPopup from '@/components/shared/layout/ContestPopup';
 import AIChatAssistant from '@/components/chat/AIChatAssistant';
 
@@ -46,10 +47,24 @@ export default function RootLayoutContent({ children }: { children: React.ReactN
 
     // Restore auth status from localStorage/sessionStorage
     dispatch(restoreAuth());
-    // Restore saved currency from localStorage
+    // Restore saved currency from localStorage / cached country
     dispatch(initCurrency());
     // Fetch live exchange rates from API
     dispatch(fetchExchangeRates(false));
+
+    // Fast IP-based country & currency auto-detection (<50ms)
+    detectUserCountry()
+      .then((detected) => {
+        if (detected?.currency && currencySymbols[detected.currency as Currency]) {
+          const isManual =
+            typeof window !== 'undefined' &&
+            localStorage.getItem('autours_user_manual_currency') === 'true';
+          if (!isManual) {
+            dispatch(setCurrency(detected.currency as Currency));
+          }
+        }
+      })
+      .catch(() => {});
   }, [dispatch]);
 
   return (

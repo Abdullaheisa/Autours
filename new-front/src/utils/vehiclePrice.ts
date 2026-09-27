@@ -40,6 +40,7 @@ export function getVehicleDisplayPrice(
 
 /**
  * Converts a vehicle's raw deposit amount from its base currency to the target currency.
+ * Inspects both `deposit_amount` and vehicle inclusions (e.g. "Security Deposit: 7000 TRY").
  */
 export function getVehicleDepositPrice(
   vehicle: Vehicle | null | undefined,
@@ -48,17 +49,53 @@ export function getVehicleDepositPrice(
   fetchedCurrency?: string
 ): number {
   if (!vehicle) return 0;
-  const rawDeposit = Number(vehicle.deposit_amount ?? (vehicle as any)?.deposit ?? 0);
+  let rawDeposit = Number(vehicle.deposit_amount ?? (vehicle as any)?.deposit ?? 0);
+  let depositBaseCurrency = (
+    fetchedCurrency ||
+    vehicle.baseCurrency ||
+    (vehicle.branch as any)?.currency ||
+    'AED'
+  ).toUpperCase();
+
+  // If deposit_amount is not set directly, inspect inclusions/what_is_included
+  if (rawDeposit <= 0) {
+    const rawInclusions = [
+      ...(Array.isArray(vehicle.included) ? vehicle.included : []),
+      ...(Array.isArray((vehicle as any)?.what_is_included) ? (vehicle as any).what_is_included : []),
+    ];
+
+    for (const item of rawInclusions) {
+      const text = (typeof item === 'string' ? item : item?.what_is_included || item?.name || item?.description || '').trim();
+      const lower = text.toLowerCase();
+      if (lower.includes('deposit') && !lower.includes('zero') && !lower.includes('no deposit') && !lower.includes('without deposit')) {
+        const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+        if (numMatch) {
+          const parsed = parseFloat(numMatch[1].replace(/,/g, ''));
+          if (!isNaN(parsed) && parsed > 0) {
+            rawDeposit = parsed;
+            const currMatch = text.match(/\b([A-Z]{3})\b/);
+            if (currMatch) {
+              const code = currMatch[1].toUpperCase();
+              if (allRates[code] || fallbackRates[code]) {
+                depositBaseCurrency = code;
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
   if (rawDeposit <= 0) return 0;
 
-  const priceCurrency = (fetchedCurrency || vehicle.baseCurrency || 'AED').toUpperCase();
   const targetCurr = (currencyCode || 'AED').toUpperCase();
 
-  if (priceCurrency === targetCurr) {
+  if (depositBaseCurrency === targetCurr) {
     return Math.round(rawDeposit);
   }
 
-  const rateToBase = allRates[priceCurrency] || fallbackRates[priceCurrency] || 1;
+  const rateToBase = allRates[depositBaseCurrency] || fallbackRates[depositBaseCurrency] || 1;
   const usdValue = rawDeposit / rateToBase;
   return Math.round(convertFromUsd(usdValue, targetCurr, allRates));
 }

@@ -15,7 +15,7 @@ import CalendarRangePicker from '@/components/shared/CalendarRangePicker';
 import { assets } from '@/config/assets';
 import { RootState, AppDispatch } from '@/store';
 import { setSearchParams, resetFilters } from '@/store/slices/searchSlice';
-import { setCurrency } from '@/store/slices/currencySlice';
+import { setCurrency, currencySymbols, Currency } from '@/store/slices/currencySlice';
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { referenceApi } from '@/services/api';
 import { LocationBranch } from '@/types';
@@ -78,7 +78,7 @@ export default function HeroSearch({
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
-  // 100% Automatic Fast IP-based Country Detection on Mount
+  // 100% Automatic Fast IP-based Country & Currency Detection on Mount
   useEffect(() => {
     let isMounted = true;
 
@@ -86,17 +86,30 @@ export default function HeroSearch({
     const cached = getUserCountrySync();
     if (cached) {
       setSelectedCountry(cached);
+      const isManualCurr =
+        typeof window !== 'undefined' &&
+        localStorage.getItem('autours_user_manual_currency') === 'true';
+      if (!isManualCurr && cached.currency && currencySymbols[cached.currency as Currency]) {
+        dispatch(setCurrency(cached.currency as Currency));
+      }
     }
 
     // 2. Fast auto-fetch country based on client IP (<50ms)
     detectUserCountry()
       .then((detected) => {
         if (isMounted && detected) {
-          const isManual =
+          const isManualCountry =
             typeof window !== 'undefined' &&
             sessionStorage.getItem('autours_user_manual_country') === 'true';
-          if (!isManual) {
+          if (!isManualCountry) {
             setSelectedCountry(detected);
+          }
+
+          const isManualCurrency =
+            typeof window !== 'undefined' &&
+            localStorage.getItem('autours_user_manual_currency') === 'true';
+          if (!isManualCurrency && detected.currency && currencySymbols[detected.currency as Currency]) {
+            dispatch(setCurrency(detected.currency as Currency));
           }
         }
       })
@@ -105,7 +118,7 @@ export default function HeroSearch({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [dispatch]);
 
   const [locations, setLocations] = useState<LocationBranch[]>([]);
   const [showLocations, setShowLocations] = useState(false);
@@ -309,8 +322,11 @@ export default function HeroSearch({
     saveUserCountry(c, true);
     setShowCountryDropdown(false);
     setCountrySearch('');
-    if (c.currency) {
-      dispatch(setCurrency(c.currency as any));
+    if (c.currency && currencySymbols[c.currency as Currency]) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('autours_user_manual_currency');
+      }
+      dispatch(setCurrency(c.currency as Currency));
     }
   };
 

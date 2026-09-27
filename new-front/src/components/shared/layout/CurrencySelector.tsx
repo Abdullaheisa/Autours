@@ -216,6 +216,9 @@ export default function CurrencySelector({
   }, []);
 
   const handleCurrencySelect = (currencyCode: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('autours_user_manual_currency', 'true');
+    }
     dispatch(setCurrency(currencyCode as any));
     setIsOpen(false);
     setSearch('');
@@ -232,7 +235,7 @@ export default function CurrencySelector({
   }, [search]);
 
   // Base currency for initial server render to match Redux initialState
-  const displayCode = mounted && currentCode ? currentCode : 'EGP';
+  const displayCode = mounted && currentCode ? currentCode : 'AED';
   const currentCurrency = getCurrencyItem(displayCode);
 
   if (variant === 'mobile-dropdown') {

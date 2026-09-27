@@ -15,6 +15,7 @@ import { getVehicleImageUrl, getLogoUrl } from '@/utils/getImageUrl';
 import { assets } from '@/config/assets';
 import { formatPrice, formatPriceParts } from '@/utils/currency';
 import { getVehicleDisplayPrice, getVehicleDepositPrice } from '@/utils/vehiclePrice';
+import { fallbackRates } from '@/store/slices/currencySlice';
 import type { Currency } from '@/types';
 import RentalTermsModal from './RentalTermsModal';
 
@@ -303,7 +304,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       : [];
 
   const { code: currencyCode, allRates } = useSelector((state: RootState) => state.currency);
-  const { filteredSuppliers, fetchedCurrency } = useSelector((state: RootState) => state.search);
+  const { vehicles, filteredSuppliers, fetchedCurrency } = useSelector((state: RootState) => state.search);
 
   const formatSpecDisplay = (val: any, label: string) => {
     const sVal = String(val ?? '').trim();
@@ -416,12 +417,71 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       'meet_and_greet'
     );
 
+    // 1. Resolve Deposit Amount (handles both deposit_amount and inclusions with currency conversion)
     const depositAmount = getVehicleDepositPrice(
       vehicle,
       currencyCode as Currency,
       allRates,
       fetchedCurrency
     );
+
+    // 2. Resolve Deposit Category (Low, Average, High, Zero)
+    let depositCategory: 'Low' | 'Average' | 'High' | 'Zero' | null = null;
+    let depositBadgeColor = '';
+
+    if (depositAmount > 0) {
+      // Dynamic 3-tier categorization matching SearchFilters & search/page.tsx
+      const allDeposits = (vehicles || [])
+        .map(v => getVehicleDepositPrice(v, currencyCode as Currency, allRates, fetchedCurrency))
+        .filter(d => d > 0)
+        .sort((a, b) => a - b);
+
+      if (allDeposits.length >= 2) {
+        const min = allDeposits[0];
+        const max = allDeposits[allDeposits.length - 1];
+        if (max > min) {
+          const tier1 = min + (max - min) / 3;
+          const tier2 = min + 2 * (max - min) / 3;
+
+          if (depositAmount <= tier1) {
+            depositCategory = 'Low';
+            depositBadgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+          } else if (depositAmount <= tier2) {
+            depositCategory = 'Average';
+            depositBadgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+          } else {
+            depositCategory = 'High';
+            depositBadgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
+          }
+        }
+      }
+
+      // Fallback USD thresholds if fleet has only 1 vehicle or uniform values
+      if (!depositCategory) {
+        const rateToUsd = (allRates && allRates[currencyCode]) || fallbackRates[currencyCode] || 1;
+        const inUsd = depositAmount / (rateToUsd > 0 ? rateToUsd : 1);
+        if (inUsd <= 350) {
+          depositCategory = 'Low';
+          depositBadgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        } else if (inUsd <= 850) {
+          depositCategory = 'Average';
+          depositBadgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+        } else {
+          depositCategory = 'High';
+          depositBadgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
+        }
+      }
+    } else {
+      const isZeroDepositExplicit = (vehicle.included || []).some((i: any) => {
+        const text = (typeof i === 'string' ? i : i?.what_is_included || i?.name || '').toLowerCase();
+        return text.includes('zero deposit') || text.includes('no deposit') || text.includes('بدون تأمين');
+      });
+      if (isZeroDepositExplicit) {
+        depositCategory = 'Zero';
+        depositBadgeColor = 'bg-teal-50 text-teal-700 border-teal-200';
+      }
+    }
+
     const depositTerms = vehicle.deposit_terms || (vehicle as any)?.depositTerms || null;
 
     const inclusions = (vehicle.included || [])
@@ -447,13 +507,18 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         lower === 'low deposit' ||
         lower === 'average deposit' ||
         lower === 'high deposit' ||
-        lower.startsWith('deposit:')
+        lower.startsWith('deposit:') ||
+        lower.includes('deposit')
       );
     });
 
-    // Only add Deposit to inclusions if there is an actual deposit (> 0)
+    // Add Deposit category with price at top of inclusions
     if (depositAmount > 0) {
-      filteredInclusions.unshift(`Deposit: ${formatPrice(depositAmount, currencyCode as Currency)}`);
+      const formattedDeposit = formatPrice(depositAmount, currencyCode as Currency);
+      const depositLabel = depositCategory ? `${depositCategory} Deposit: ${formattedDeposit}` : `Deposit: ${formattedDeposit}`;
+      filteredInclusions.unshift(depositLabel);
+    } else if (depositCategory === 'Zero') {
+      filteredInclusions.unshift('Zero Deposit');
     }
 
     const totalPrice = getVehicleDisplayPrice(
@@ -470,6 +535,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       name: trimmedName,
       type: getSpec('type') !== 'N/A' ? getSpec('type') : (vehicle.category || 'Economy'),
       depositAmount,
+      depositCategory,
+      depositBadgeColor,
       depositTerms,
       image: getVehicleImageUrl(imgSource),
       transmission: getSpec('transmission'),
@@ -520,7 +587,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       promos: vehicle.promos || (vehicle.promo ? [vehicle.promo] : []),
       promosDetails: (vehicle as any).promos_details || [],
     };
-  }, [vehicle, daysNumber, currencyCode, allRates, filteredSuppliers, fetchedCurrency]);
+  }, [vehicle, daysNumber, currencyCode, allRates, filteredSuppliers, fetchedCurrency, vehicles]);
 
   const openMap = () => {
     const selectedBranch =
@@ -800,12 +867,16 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     {displayedInclusions.map((inc, i) => {
                       const isDeposit = inc.toLowerCase().includes('deposit');
                       const depositDesc = isDeposit 
-                        ? (carData.depositTerms || (inc.toLowerCase().includes('zero') ? "No security deposit is required for this vehicle." : "Refundable security deposit collected at counter upon vehicle pickup and released upon return."))
+                        ? (carData.depositTerms || (carData.depositAmount > 0 
+                            ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                            : "No security deposit is required for this vehicle."))
                         : null;
                       return (
-                        <div key={i} className="flex items-start gap-1.5">
+                        <div key={i} className="flex items-start gap-1.5 min-w-0">
                           <Check size={14} className="text-green-600 shrink-0 mt-0.5" />
-                          <span className="text-xs font-bold text-gray-700 break-words">{inc}</span>
+                          <span className="text-xs font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap">
+                            <span>{inc}</span>
+                          </span>
                           {depositDesc && (
                             <ChicTooltip
                               text={depositDesc}
@@ -1087,12 +1158,16 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 {displayedInclusions.map((inc, i) => {
                   const isDeposit = inc.toLowerCase().includes('deposit');
                   const depositDesc = isDeposit 
-                    ? (carData.depositTerms || (inc.toLowerCase().includes('zero') ? "No security deposit is required for this vehicle." : "Refundable security deposit collected at counter upon vehicle pickup and released upon return."))
+                    ? (carData.depositTerms || (carData.depositAmount > 0 
+                        ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                        : "No security deposit is required for this vehicle."))
                     : null;
                   return (
                     <div key={i} className="flex items-start gap-1.5 min-w-0">
                       <Check size={13} className="text-green-600 shrink-0 mt-0.5 md:mt-1" />
-                      <span className="text-xs md:text-sm font-bold text-gray-700 break-words" title={inc}>{inc}</span>
+                      <span className="text-xs md:text-sm font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap" title={inc}>
+                        <span>{inc}</span>
+                      </span>
                       {depositDesc && (
                         <ChicTooltip
                           text={depositDesc}
