@@ -132,7 +132,31 @@ const searchSlice = createSlice({
   initialState,
   reducers: {
     setSearchParams: (state, action: PayloadAction<Partial<SearchParams>>) => {
-      state.searchParams = { ...state.searchParams, ...action.payload };
+      const prev = state.searchParams;
+      const next = action.payload;
+      const isCoreSearchChange =
+        (next.location !== undefined && next.location !== prev.location) ||
+        (next.dateFrom !== undefined && next.dateFrom !== prev.dateFrom) ||
+        (next.dateTo !== undefined && next.dateTo !== prev.dateTo) ||
+        (next.startTime !== undefined && next.startTime !== prev.startTime) ||
+        (next.endTime !== undefined && next.endTime !== prev.endTime);
+
+      state.searchParams = { ...state.searchParams, ...next };
+
+      if (isCoreSearchChange) {
+        state.hasSearched = false;
+        state.vehicles = [];
+        state.isFiltering = true;
+        state.filterError = null;
+        state.currentPage = 1;
+      }
+    },
+    startNewSearch: (state) => {
+      state.hasSearched = false;
+      state.vehicles = [];
+      state.isFiltering = true;
+      state.filterError = null;
+      state.currentPage = 1;
     },
     setFilterParams: (state, action: PayloadAction<Partial<FilterParams>>) => {
       state.filterParams = { ...state.filterParams, ...action.payload };
@@ -187,11 +211,14 @@ const searchSlice = createSlice({
     builder
       .addCase(initiateSearch.pending, (state) => {
         state.isSearching = true;
+        state.hasSearched = false;
+        state.vehicles = [];
+        state.isFiltering = true;
         state.searchError = null;
+        state.filterError = null;
       })
       .addCase(initiateSearch.fulfilled, (state, action) => {
         state.isSearching = false;
-        state.hasSearched = true;
         state.searchParams.location = action.payload.pickupLoc;
         state.searchParams.dateFrom = action.payload.date_from;
         state.searchParams.dateTo = action.payload.date_to;
@@ -279,6 +306,7 @@ const searchSlice = createSlice({
 
 export const {
   setSearchParams,
+  startNewSearch,
   setFilterParams,
   toggleFilterParam,
   resetFilters,

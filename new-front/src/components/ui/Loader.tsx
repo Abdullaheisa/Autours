@@ -201,9 +201,9 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-primary/15 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-2xl px-4 sm:px-6 flex flex-col items-center z-10 space-y-6">
+      <div className="relative w-full max-w-4xl px-4 sm:px-6 flex flex-col items-center z-10 space-y-6">
         
-        {/* ── 1. Top Brand Header with Spinning Alloy Wheel 'O' ── */}
+        {/* ── 1. Top Brand Header with Spinning Alloy Wheel 'O' (Logo Only) ── */}
         <motion.div
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -249,23 +249,6 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
             <span className="text-3xl sm:text-4xl font-black italic tracking-tighter text-gray-900">
               URS
             </span>
-          </div>
-
-          {/* Active Searched Country Badge with Real Flag */}
-          <div className="mt-3 inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-gray-200/90 shadow-sm">
-            <div className="relative w-6 h-4.5 rounded overflow-hidden shadow-2xs shrink-0 border border-gray-100">
-              <img
-                src={`https://flagcdn.com/w80/${countryIso}.png`}
-                alt={resolvedCountry}
-                className="w-full h-full object-cover"
-                loading="eager"
-              />
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-              <span className="text-gray-500 font-semibold">Scanning fleet in</span>
-              <span className="text-amber-800 font-black uppercase tracking-tight">{resolvedCountry}</span>
-            </div>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
           </div>
         </motion.div>
 
@@ -330,26 +313,26 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
           </div>
         </motion.div>
 
-        {/* ── 3. Bottom Section: Trust Perks ── */}
+        {/* ── 3. Bottom Section: Trust Perks (Large Icons & Full Text) ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2.5"
+          className="w-full grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
         >
           {TRUST_PERKS.map((perk, idx) => {
             const Icon = perk.icon;
             return (
               <div
                 key={idx}
-                className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-white border border-gray-200 shadow-2xs text-left"
+                className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white border border-gray-200 shadow-sm text-left hover:border-amber-300 transition-colors"
               >
-                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0">
-                  <Icon size={16} />
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Icon size={20} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-black text-gray-900 leading-tight truncate">{perk.title}</p>
-                  <p className="text-[10px] font-medium text-gray-400 truncate">{perk.desc}</p>
+                  <p className="text-xs sm:text-sm font-black text-gray-900 leading-snug">{perk.title}</p>
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 leading-tight mt-0.5">{perk.desc}</p>
                 </div>
               </div>
             );
@@ -361,14 +344,14 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="w-full max-w-md space-y-2 pt-1"
+          className="w-full max-w-lg space-y-2 pt-1"
         >
-          <div className="flex items-center justify-between text-xs font-bold">
-            <span className="flex items-center gap-1.5 text-gray-600">
-              <Sparkles size={13} className="text-primary animate-pulse" />
+          <div className="flex items-center justify-between text-xs font-bold gap-2">
+            <span className="flex items-center gap-1.5 text-gray-600 truncate">
+              <Sparkles size={13} className="text-primary animate-pulse shrink-0" />
               Aggregating best rates & verifying live fleet in {resolvedCountry}...
             </span>
-            <span className="font-mono text-gray-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 font-extrabold">
+            <span className="font-mono text-gray-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 font-extrabold shrink-0">
               {Math.round(progress)}%
             </span>
           </div>
