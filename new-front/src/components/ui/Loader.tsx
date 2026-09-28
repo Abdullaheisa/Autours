@@ -114,7 +114,7 @@ const DEFAULT_SUPPLIERS = [
 ];
 
 const TRUST_PERKS = [
-  { icon: ShieldCheck, title: 'Free Cancellation', desc: 'Up to 48 hours before pickup' },
+  { icon: ShieldCheck, title: 'Free Cancellation', desc: 'Up to 48h before pickup' },
   { icon: Clock, title: 'Flexible Extension', desc: 'Easy booking adjustments' },
   { icon: CreditCard, title: 'No Hidden Fees', desc: '100% price transparency' },
   { icon: Zap, title: 'Instant Confirmation', desc: 'Direct supplier booking' },
@@ -293,8 +293,8 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
             </span>
           </div>
 
-          {/* Suppliers Logos - Single Horizontal Row, Centered, Logos Only */}
-          <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full overflow-x-auto py-1">
+          {/* Suppliers Logos - Single Horizontal Row, Centered on desktop, Start-aligned on mobile to prevent clipping */}
+          <div className="flex flex-row items-center justify-start sm:justify-center gap-2.5 sm:gap-4 w-full overflow-x-auto py-1 px-1.5 no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {displayedSuppliers.map((sup: any, idx: number) => {
               const rawLogo = sup.logo || sup.company_logo;
               const logo = rawLogo ? getLogoUrl(rawLogo) : null;
@@ -338,8 +338,8 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
                   <Icon size={20} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-black text-gray-900 truncate">{perk.title}</p>
-                  <p className="text-[11px] font-semibold text-gray-500 truncate mt-0.5">{perk.desc}</p>
+                  <p className="text-xs sm:text-sm font-black text-gray-900 leading-snug truncate sm:whitespace-normal">{perk.title}</p>
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 leading-tight mt-0.5">{perk.desc}</p>
                 </div>
               </div>
             );

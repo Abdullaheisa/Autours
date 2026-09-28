@@ -16,7 +16,7 @@ import CarCardSkeleton from './components/CarCardSkeleton';
 import CategoryFilterBar from './components/CategoryFilterBar';
 import Loader from '@/components/ui/Loader';
 import { RootState, AppDispatch } from '@/store';
-import { setSearchParams, setFilterParams, fetchVehicles, setPage, resetFilters } from '@/store/slices/searchSlice';
+import { setSearchParams, setFilterParams, fetchVehicles, setPage, resetFilters, resetForNewSearch } from '@/store/slices/searchSlice';
 import { setCurrency, currencySymbols } from '@/store/slices/currencySlice';
 import type { FilterPayload, Currency } from '@/types';
 import { FILTER_SPEC_NAMES } from '@/constants/filterSpecNames';
@@ -49,6 +49,7 @@ function SearchPageContent() {
     daysNumber,
     maxPrice,
     minPrice,
+    isSearching,
     isFiltering,
     filterError,
     hasSearched,
@@ -187,6 +188,9 @@ function SearchPageContent() {
       if (lastProcessedUrlSearch.current !== urlSearchKey) {
         lastProcessedUrlSearch.current = urlSearchKey;
 
+        // Reset search state to trigger full screen loader immediately
+        dispatch(resetForNewSearch());
+
         // Sync currency from URL only if user hasn't explicitly chosen a manual currency
         const isManual = typeof window !== 'undefined' && localStorage.getItem('autours_user_manual_currency') === 'true';
         if (currencyParam && currencySymbols[currencyParam as Currency] && !isManual) {
@@ -252,8 +256,9 @@ function SearchPageContent() {
   }, []);
 
   const handleReSearch = useCallback(() => {
+    dispatch(resetForNewSearch());
     setIsSearchDrawerOpen(false);
-  }, []);
+  }, [dispatch]);
 
   const displayedVehicles = useMemo(() => {
     if (!filterParams.deposit || filterParams.deposit.length === 0) {
@@ -289,7 +294,7 @@ function SearchPageContent() {
 
 
   const hasValidSearch = searchParams.location && searchParams.dateFrom && searchParams.dateTo;
-  const isInitialLoading = !hasSearched || (isFiltering && vehicles.length === 0 && !filterError);
+  const isInitialLoading = !hasSearched || isSearching || (isFiltering && vehicles.length === 0 && !filterError);
 
   // 🚀 Full-Screen Fleet Loader: Only during initial search until backend response returns
   if (hasValidSearch && isInitialLoading) {

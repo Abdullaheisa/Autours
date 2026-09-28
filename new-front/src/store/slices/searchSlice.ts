@@ -198,6 +198,14 @@ const searchSlice = createSlice({
       };
       state.currentPage = 1;
     },
+    resetForNewSearch: (state) => {
+      state.hasSearched = false;
+      state.isSearching = true;
+      state.isFiltering = true;
+      state.vehicles = [];
+      state.filterError = null;
+      state.searchError = null;
+    },
     resetSearch: () => initialState,
     clearErrors: (state) => {
       state.searchError = null;
@@ -307,6 +315,7 @@ const searchSlice = createSlice({
 export const {
   setSearchParams,
   startNewSearch,
+  resetForNewSearch,
   setFilterParams,
   toggleFilterParam,
   resetFilters,
