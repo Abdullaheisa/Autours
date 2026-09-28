@@ -144,6 +144,7 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
                         'activation' => true,
                         'instant_confirmation' => 1,
                     ]);
+                    $this->syncVehicleSpecifications($vehicle, $groupDetails);
                     $this->syncVehicleInclusions($vehicle, $groupDetails);
                     $syncedVehicleIds[] = $vehicle->id;
                     $this->updatedCount++;
@@ -291,7 +292,7 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Air Conditioner',
-                'value' => $ac ? 'Yes' : 'No',
+                'value' => $ac ? 'Air Conditioning' : 'No AC',
                 'icon' => $this->specDefinitions['Air Conditioner']['icon'],
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -299,24 +300,103 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
         }
 
         $bags = $groupDetails['Luggages'] ?? null;
-        if ($bags !== null && isset($this->specDefinitions['Suitcase'])) {
+        if ($bags !== null) {
+            if (isset($this->specDefinitions['Suitcase'])) {
+                $suitcaseVal = (int)$bags > 1 ? 'Large' : 'Medium';
+                $records[] = [
+                    'vehicle_id' => $vehicle->id,
+                    'name' => 'Suitcase',
+                    'value' => $suitcaseVal,
+                    'icon' => $this->specDefinitions['Suitcase']['icon'] ?? 'suitcase',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            if (isset($this->specDefinitions['Number of Luggages'])) {
+                $records[] = [
+                    'vehicle_id' => $vehicle->id,
+                    'name' => 'Number of Luggages',
+                    'value' => (string)$bags,
+                    'icon' => $this->specDefinitions['Number of Luggages']['icon'] ?? 'suitcase',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        $seats = $groupDetails['Passengers'] ?? null;
+        if ($seats !== null) {
+            if (isset($this->specDefinitions['Number of seats'])) {
+                $records[] = [
+                    'vehicle_id' => $vehicle->id,
+                    'name' => 'Number of seats',
+                    'value' => (string)$seats,
+                    'icon' => $this->specDefinitions['Number of seats']['icon'] ?? 'user',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            if (isset($this->specDefinitions['Number of Adults'])) {
+                $records[] = [
+                    'vehicle_id' => $vehicle->id,
+                    'name' => 'Number of Adults',
+                    'value' => (string)$seats,
+                    'icon' => $this->specDefinitions['Number of Adults']['icon'] ?? 'user',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        $fuel = $groupDetails['FuelType'] ?? null;
+        if ($fuel) {
+            $fuelType = stripos($fuel, 'diesel') !== false ? 'Diesel' : 'Petrol';
+            if (isset($this->specDefinitions['Fuel Type'])) {
+                $records[] = [
+                    'vehicle_id' => $vehicle->id,
+                    'name' => 'Fuel Type',
+                    'value' => $fuelType,
+                    'icon' => $this->specDefinitions['Fuel Type']['icon'] ?? 'fuel',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            if (isset($this->specDefinitions['Fuel'])) {
+                $records[] = [
+                    'vehicle_id' => $vehicle->id,
+                    'name' => 'Fuel',
+                    'value' => $fuelType,
+                    'icon' => $this->specDefinitions['Fuel']['icon'] ?? 'fuel',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+        
+        $sipp = $groupDetails['Sipp'] ?? '';
+        $doors = '4';
+        if (strlen($sipp) >= 2) {
+            $char = strtoupper($sipp[1]);
+            if (in_array($char, ['B', 'C'])) $doors = '2';
+            else if (in_array($char, ['D', 'F', 'W', 'V'])) $doors = '5';
+        }
+
+        if (isset($this->specDefinitions['Doors'])) {
             $records[] = [
                 'vehicle_id' => $vehicle->id,
-                'name' => 'Suitcase',
-                'value' => (string)$bags,
-                'icon' => $this->specDefinitions['Suitcase']['icon'] ?? 'suitcase',
+                'name' => 'Doors',
+                'value' => $doors,
+                'icon' => $this->specDefinitions['Doors']['icon'] ?? 'door',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
-
-        $seats = $groupDetails['Passengers'] ?? null;
-        if ($seats !== null && isset($this->specDefinitions['Number of seats'])) {
+        if (isset($this->specDefinitions['Number of Doors'])) {
             $records[] = [
                 'vehicle_id' => $vehicle->id,
-                'name' => 'Number of seats',
-                'value' => (string)$seats,
-                'icon' => $this->specDefinitions['Number of seats']['icon'] ?? 'user',
+                'name' => 'Number of Doors',
+                'value' => $doors,
+                'icon' => $this->specDefinitions['Number of Doors']['icon'] ?? 'door',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
