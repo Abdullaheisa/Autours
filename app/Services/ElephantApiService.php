@@ -146,17 +146,57 @@ class ElephantApiService
      */
     public function insertReservation(array $data): array
     {
-        $response = $this->client()->post("{$this->baseUrl}/reservations/InsertReservation", $data);
+        $xml = '<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <InsertintoResXML xmlns="http://tempuri.org/">
+      <myusername>' . htmlspecialchars($this->username) . '</myusername>
+      <mypassword>' . htmlspecialchars($this->password) . '</mypassword>
+      <ClientName>' . htmlspecialchars(($data['firstname'] ?? '') . ' ' . ($data['lastname'] ?? '')) . '</ClientName>
+      <CountryOfOrigin></CountryOfOrigin>
+      <Group>' . htmlspecialchars($data['vehiclegroup'] ?? '') . '</Group>
+      <CheckOutDate>' . htmlspecialchars(explode('T', $data['dateTimeFrom'] ?? '')[0] . 'T00:00:00') . '</CheckOutDate>
+      <CheckOutTime>' . htmlspecialchars('1900-01-01T' . (explode('T', $data['dateTimeFrom'] ?? 'T00:00:00')[1])) . '</CheckOutTime>
+      <CheckInDate>' . htmlspecialchars(explode('T', $data['dateTimeTo'] ?? '')[0] . 'T00:00:00') . '</CheckInDate>
+      <CheckInTime>' . htmlspecialchars('1900-01-01T' . (explode('T', $data['dateTimeTo'] ?? 'T00:00:00')[1])) . '</CheckInTime>
+      <DelPlace>' . htmlspecialchars($data['pickupplace'] ?? '') . '</DelPlace>
+      <RetPlace>' . htmlspecialchars($data['dropoffplace'] ?? '') . '</RetPlace>
+      <FlightNo>' . htmlspecialchars($data['flightnumber'] ?? '') . '</FlightNo>
+      <Remarks>' . htmlspecialchars($data['remarks'] ?? '') . '</Remarks>
+      <Equip></Equip>
+      <RefNo>' . htmlspecialchars($data['ref_no'] ?? uniqid('AUT-')) . '</RefNo>
+      <PaymentMethod>' . htmlspecialchars($data['pm'] ?? 'L') . '</PaymentMethod>
+    </InsertintoResXML>
+  </soap:Body>
+</soap:Envelope>';
+
+        $response = Http::withHeaders([
+            'SOAPAction' => 'http://tempuri.org/InsertintoResXML'
+        ])->withBody($xml, 'text/xml; charset=utf-8')
+          ->post('https://backoffice.cycarrental.com/xml/CarhireWebService.asmx');
 
         if (!$response->successful()) {
-            Log::error('Elephant API: InsertReservation failed', [
+            Log::error('Elephant API: InsertReservation (SOAP) failed', [
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
             return [];
         }
 
-        return $response->json() ?? [];
+        $body = $response->body();
+        if (preg_match('/<ConfID[^>]*ID="([^"]+)"/', $body, $matches)) {
+            return ['RefNo' => $matches[1]];
+        }
+        
+        if (preg_match('/<ReservationRef>(.*?)<\/ReservationRef>/', $body, $matches)) {
+            return ['RefNo' => $matches[1]];
+        }
+        
+        if (preg_match('/<ErrorMessage>(.*?)<\/ErrorMessage>/', $body, $matches)) {
+            return ['Message' => $matches[1]];
+        }
+
+        return ['Message' => 'Unknown error parsing SOAP response: ' . $body];
     }
 
     /**

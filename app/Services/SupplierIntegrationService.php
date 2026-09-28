@@ -3658,7 +3658,8 @@ class SupplierIntegrationService
                         'flightnumber' => $rental->flight_number ?? '',
                         'remarks' => $rental->notes ?? 'Autours Reservation',
                         'lang' => 'en',
-                        'pm' => 'Local' // Or FullCredit depending on what was collected
+                        'pm' => 'Local', // Or FullCredit depending on what was collected
+                        'ref_no' => 'AUT-' . ($rental->reservation_no ?? $rental->id)
                     ];
 
                     $response = $service->insertReservation($reservationData);

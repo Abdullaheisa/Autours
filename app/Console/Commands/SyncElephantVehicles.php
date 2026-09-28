@@ -122,13 +122,12 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
                 $groupDetails = $vehicleGroups[$groupCode] ?? [];
                 $vehicleName = $this->normalizeVehicleName($groupDetails['ShortDescription'] ?? $rateInfo['MakeModel'] ?? $groupCode);
                 
-                $weekPrice = $rateInfo['RateCharge'];
-                $dayPrice = round($weekPrice / 7, 2);
-                $monthPrice = $rates30[$groupCode]['RateCharge'] ?? ($dayPrice * 30);
+                $weekTotal = $rateInfo['RateCharge'];
+                $dayPrice = round($weekTotal / 7, 2);
+                $weekPrice = $dayPrice;
                 
-                if ($monthPrice > $dayPrice * 15 && $monthPrice > 500) {
-                    $monthPrice = round($monthPrice / 30, 2);
-                }
+                $monthTotal = $rates30[$groupCode]['RateCharge'] ?? ($dayPrice * 30);
+                $monthPrice = round($monthTotal / 30, 2);
 
                 $tag = "[ELEPHANT-GROUP-ID:{$groupCode}]";
                 

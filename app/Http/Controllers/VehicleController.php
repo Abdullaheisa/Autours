@@ -1743,7 +1743,7 @@ class VehicleController extends Controller
             }
             $selectedVehicle->discount_percent = $discountPercent;
 
-            if ($currency != $selectedVehicle->branch->currency) {
+            if ($selectedVehicle->branch && $currency != $selectedVehicle->branch->currency) {
                 $rate = CurrencyRate::query()->where('currency_from', $selectedVehicle->branch->currency)->where('currency_to', $currency)->first();
                 if ($rate != null) {
                     $selectedVehicle->final_price *= $rate->rate;
