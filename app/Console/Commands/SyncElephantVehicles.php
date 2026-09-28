@@ -145,7 +145,7 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
                         'instant_confirmation' => 1,
                     ]);
                     $this->syncVehicleSpecifications($vehicle, $groupDetails);
-                    $this->syncVehicleInclusions($vehicle, $groupDetails);
+                    $this->syncVehicleInclusions($vehicle, $groupDetails, $rateInfo);
                     $syncedVehicleIds[] = $vehicle->id;
                     $this->updatedCount++;
                 } else {
@@ -182,7 +182,7 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
                     ]);
 
                     $this->syncVehicleSpecifications($vehicle, $groupDetails);
-                    $this->syncVehicleInclusions($vehicle, $groupDetails);
+                    $this->syncVehicleInclusions($vehicle, $groupDetails, $rateInfo);
                     $syncedVehicleIds[] = $vehicle->id;
                     $this->createdCount++;
                 }
@@ -214,10 +214,15 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
         foreach ($data as $item) {
             $group = $item['VehicleGroup']['Group'] ?? '';
             $price = $item['Charges']['Calculation']['TotalAmount'] ?? 0;
+            $excess = $item['Charges']['Calculation']['Excess'] ?? null;
+            $currency = $item['Charges']['Currency']['Symbol'] ?? '€';
+            
             if ($group && $price > 0) {
                 $rates[$group] = [
                     'RateCharge' => (float)$price,
                     'MakeModel' => $item['VehicleGroup']['ShortDescription'] ?? $group,
+                    'Excess' => $excess,
+                    'Currency' => $currency,
                     'RawData' => $item,
                 ];
             }
@@ -407,7 +412,7 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
         }
     }
 
-    private function syncVehicleInclusions(Vehicle $vehicle, array $groupDetails): void
+    private function syncVehicleInclusions(Vehicle $vehicle, array $groupDetails, array $rateInfo = []): void
     {
         $includedIds = [];
 
@@ -418,6 +423,12 @@ class SyncElephantVehicles extends AbstractVehicleSyncCommand
             'Airport surcharges and local taxes',
             'Unlimited Mileage'
         ];
+        
+        $excess = $rateInfo['Excess'] ?? null;
+        $currency = $rateInfo['Currency'] ?? '€';
+        if ($excess !== null && (float)$excess > 0) {
+            $standardCoverages[] = "Security Deposit: {$currency}{$excess}";
+        }
         
         foreach ($standardCoverages as $cov) {
             $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $cov]);
