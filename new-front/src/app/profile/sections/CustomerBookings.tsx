@@ -6,7 +6,7 @@ import { RootState } from "@/store";
 import { rentalApi, bookingApi } from "@/services/api";
 import { axiosClient } from "@/services/api/axiosClient";
 import { getVehicleImageUrl } from "@/utils/getImageUrl";
-import { formatPrice } from "@/utils/currency";
+import { formatPrice, normalizeToUsd, convertFromUsd } from "@/utils/currency";
 import toast from 'react-hot-toast';
 import { Download, XCircle, RotateCcw, Star, Calendar, MapPin, AlertCircle } from "lucide-react";
 import ReviewModal from "../components/ReviewModal";
@@ -16,6 +16,7 @@ import { getLocationDisplayLabel, getLocationPickupValue } from "@/utils/locatio
 
 export default function CustomerBookings() {
   const { user: sessionUser } = useSelector((state: RootState) => state.auth);
+  const { code: currencyCode, allRates } = useSelector((state: RootState) => state.currency);
   const [rentals, setRentals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
@@ -178,6 +179,12 @@ export default function CustomerBookings() {
         const hoursRemaining = startDateTime > 0 ? (startDateTime - nowMs) / (1000 * 60 * 60) : 999;
         const isWithin24Hours = !hasStarted && hoursRemaining <= 24;
 
+        // Convert Price dynamically
+        const basePrice = rental.price || 0;
+        const baseCurrency = rental.currency || 'AED';
+        const priceInUsd = normalizeToUsd(basePrice, baseCurrency, allRates);
+        const displayPrice = convertFromUsd(priceInUsd, currencyCode as any, allRates);
+
         return (
           <div key={rental.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
             {/* Image Section */}
@@ -221,7 +228,7 @@ export default function CustomerBookings() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary-600">
-                      {formatPrice(rental.price, rental.currency)}
+                      {formatPrice(displayPrice, currencyCode as any)}
                     </p>
                     <p className="text-xs text-gray-500">Total Price</p>
                   </div>

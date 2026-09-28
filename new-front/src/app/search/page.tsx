@@ -158,6 +158,7 @@ function SearchPageContent() {
   }, [buildFilterPayload, dispatch]);
 
   const lastProcessedUrlSearch = useRef<string>('');
+  const lastProcessedUrlCurrency = useRef<string>('');
 
   useEffect(() => {
     const location = urlParams.get('location');
@@ -169,8 +170,9 @@ function SearchPageContent() {
     const et = urlParams.get('et') || '10:00';
     const currencyParam = urlParams.get('currency');
 
-    // Sync currency from URL if specified
-    if (currencyParam && currencySymbols[currencyParam as Currency] && currencyParam !== currencyCode) {
+    // Sync currency from URL if specified, but only if the URL param actually changed
+    if (currencyParam && currencySymbols[currencyParam as Currency] && lastProcessedUrlCurrency.current !== currencyParam) {
+      lastProcessedUrlCurrency.current = currencyParam;
       dispatch(setCurrency(currencyParam as Currency));
     }
 
