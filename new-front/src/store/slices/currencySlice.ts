@@ -342,13 +342,11 @@ const currencySlice = createSlice({
   reducers: {
     setCurrency: (state, action: PayloadAction<Currency>) => {
       const code = action.payload;
-      if (currencySymbols[code]) {
-        state.code = code;
-        state.symbol = currencySymbols[code];
-        state.rate = state.allRates[code] ?? fallbackRates[code] ?? 1;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('selected_currency', code);
-        }
+      state.code = code;
+      state.symbol = currencySymbols[code] || code;
+      state.rate = state.allRates[code] ?? fallbackRates[code] ?? 1;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selected_currency', code);
       }
     },
     initCurrency: (state) => {
@@ -357,18 +355,18 @@ const currencySlice = createSlice({
         const isManual = localStorage.getItem('autours_user_manual_currency') === 'true';
         const savedCurrency = localStorage.getItem('selected_currency') as Currency;
 
-        if (isManual && savedCurrency && currencySymbols[savedCurrency]) {
+        if (isManual && savedCurrency) {
           state.code = savedCurrency;
-          state.symbol = currencySymbols[savedCurrency];
+          state.symbol = currencySymbols[savedCurrency] || savedCurrency;
         } else {
           // 2. Check if IP detection or country cache has a currency for the user
           const cachedCountry = getUserCountrySync();
           if (cachedCountry?.currency && currencySymbols[cachedCountry.currency as Currency]) {
             state.code = cachedCountry.currency as Currency;
             state.symbol = currencySymbols[cachedCountry.currency as Currency];
-          } else if (savedCurrency && currencySymbols[savedCurrency] && savedCurrency !== 'EGP') {
+          } else if (savedCurrency && savedCurrency !== 'EGP') {
             state.code = savedCurrency;
-            state.symbol = currencySymbols[savedCurrency];
+            state.symbol = currencySymbols[savedCurrency] || savedCurrency;
           } else {
             state.code = 'AED';
             state.symbol = 'AED';
