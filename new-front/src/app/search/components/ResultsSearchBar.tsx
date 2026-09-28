@@ -14,6 +14,7 @@ import { setSearchParams, initiateSearch, resetFilters } from '@/store/slices/se
 import { vehicleApi } from '@/services/api/vehicleApi';
 import { LocationBranch } from '@/types';
 import { getLocationDisplayLabel, getLocationPickupValue, stripLocationAbbreviation } from '@/utils/location';
+import { resolveDestinationCountry, getCountryIso } from '@/utils/countryUtils';
 
 const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) =>
   `${i.toString().padStart(2, '0')}:00`
@@ -158,6 +159,8 @@ export default function ResultsSearchBar({
       // Continue anyway
     }
 
+    const destCountry = matched?.country || resolveDestinationCountry(location.trim() || pickup);
+
     const params = new URLSearchParams();
     params.set('location', pickup);
     params.set('locationLabel', location.trim());
@@ -166,6 +169,10 @@ export default function ResultsSearchBar({
     params.set('st', startTime);
     params.set('et', endTime);
     params.set('currency', currencyCode);
+    if (destCountry) {
+      params.set('country', (getCountryIso(destCountry) || '').toUpperCase());
+      params.set('countryName', destCountry);
+    }
     if (!preventRedirect) {
       router.replace(`/search?${params.toString()}`);
     }

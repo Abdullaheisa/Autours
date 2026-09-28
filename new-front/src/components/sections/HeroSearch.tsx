@@ -27,6 +27,7 @@ import {
   saveUserCountry,
   DEFAULT_FALLBACK_COUNTRY,
 } from '@/utils/userCountry';
+import { resolveDestinationCountry, getCountryIso } from '@/utils/countryUtils';
 
 import { BACKEND_URL } from '@/config/api';
 
@@ -351,6 +352,7 @@ export default function HeroSearch({
     );
     const pickup = matched ? getLocationPickupValue(matched) : location.trim();
     const label = location.trim();
+    const destCountry = matched?.country || resolveDestinationCountry(label || pickup);
     const finalAge = driverAge25to70 ? 30 : driverAge;
     const isManualCurrency = typeof window !== 'undefined' && localStorage.getItem('autours_user_manual_currency') === 'true';
     const activeCurrency = isManualCurrency
@@ -378,8 +380,10 @@ export default function HeroSearch({
     params.set('st', startTime);
     params.set('et', endTime);
     params.set('currency', activeCurrency);
-    params.set('country', selectedCountry.iso);
-    params.set('countryName', selectedCountry.name);
+    if (destCountry) {
+      params.set('country', (getCountryIso(destCountry) || '').toUpperCase());
+      params.set('countryName', destCountry);
+    }
     params.set('residence_country', selectedCountry.name);
     params.set('driver_age', String(finalAge));
     if (!driverAge25to70) {

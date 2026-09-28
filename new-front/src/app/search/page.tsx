@@ -293,8 +293,8 @@ function SearchPageContent() {
 
 
 
-  const hasValidSearch = searchParams.location && searchParams.dateFrom && searchParams.dateTo;
-  const isInitialLoading = !hasSearched || isSearching || (isFiltering && vehicles.length === 0 && !filterError);
+  const hasValidSearch = Boolean(searchParams.location && searchParams.dateFrom && searchParams.dateTo);
+  const isInitialLoading = !hasSearched && !filterError;
 
   // 🚀 Full-Screen Fleet Loader: Only during initial search until backend response returns
   if (hasValidSearch && isInitialLoading) {

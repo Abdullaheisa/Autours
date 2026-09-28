@@ -100,18 +100,28 @@ const COUNTRY_FALLBACK_SUPPLIERS: Record<string, Array<{ id: number | string; na
     { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
     { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
   ],
+  'Bahrain': [
+    { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
+    { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
+  ],
+  'Georgia': [
+    { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
+    { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
+  ],
+  'Cyprus': [
+    { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
+    { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
+  ],
 };
-
-const DEFAULT_SUPPLIERS = [
-  { id: 46, name: 'DRIVUS', logo: 'DRIVUS_logo71ad64bc92aa187e5c988f88b6805f95.png' },
-  { id: 'gm', name: 'Green Motion', logo: 'Green Motion_logo15e5433e6eb1f5b83c72d85ec798635f.png' },
-  { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
-  { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
-  { id: 23, name: 'AUTORENT', logo: 'AUTORENT_logo33136a96e9bc3dc6b8eb26e468436406.jpg' },
-  { id: 8, name: 'KTC', logo: 'KTC_logodc11c608f2e44e287d25dbed9df19519.png' },
-  { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
-  { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
-];
 
 const TRUST_PERKS = [
   { icon: ShieldCheck, title: 'Free Cancellation', desc: 'Up to 48h before pickup' },
@@ -139,10 +149,10 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
       (reduxParams as any)?.location;
 
     const countryParam =
-      searchParams?.get('country') ||
       searchParams?.get('countryName') ||
-      (reduxParams as any)?.country ||
-      (reduxParams as any)?.countryName;
+      searchParams?.get('country') ||
+      (reduxParams as any)?.countryName ||
+      (reduxParams as any)?.country;
 
     return resolveDestinationCountry(locParam, countryParam);
   }, [searchParams, reduxParams]);
@@ -154,6 +164,7 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
 
   useEffect(() => {
     let isMounted = true;
+    setCountrySuppliers([]);
     
     // Fetch live active suppliers with fleet in this specific country
     apiClient
@@ -167,13 +178,13 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
           setCountrySuppliers(withVehicles.length > 0 ? withVehicles : raw);
         } else {
           // Check local fallback
-          const fallback = COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry] || DEFAULT_SUPPLIERS;
+          const fallback = COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry] || [];
           setCountrySuppliers(fallback);
         }
       })
       .catch(() => {
         if (!isMounted) return;
-        const fallback = COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry] || DEFAULT_SUPPLIERS;
+        const fallback = COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry] || [];
         setCountrySuppliers(fallback);
       });
 
@@ -182,15 +193,17 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
     };
   }, [resolvedCountry]);
 
-  // Priority: Filtered Suppliers from active search query > Country Suppliers from API > Country Fallback
+  // Priority: Filtered Suppliers from active search query > Country Suppliers from API > Country Fallback (Strictly matching destination country only)
   const displayedSuppliers = useMemo(() => {
     let list: any[] = [];
     if (filteredSuppliers && filteredSuppliers.length > 0) {
       list = filteredSuppliers;
     } else if (countrySuppliers.length > 0) {
       list = countrySuppliers;
+    } else if (COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry]) {
+      list = COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry];
     } else {
-      list = COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry] || DEFAULT_SUPPLIERS;
+      list = [];
     }
     // Filter to items with valid logos and limit to 8 for a clean single row
     const withLogos = list.filter((s: any) => Boolean(s.logo || s.company_logo));
@@ -294,30 +307,43 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
           </div>
 
           {/* Suppliers Logos - Single Horizontal Row, Centered on desktop, Start-aligned on mobile to prevent clipping */}
-          <div className="flex flex-row items-center justify-start sm:justify-center gap-2.5 sm:gap-4 w-full overflow-x-auto py-1 px-1.5 no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {displayedSuppliers.map((sup: any, idx: number) => {
-              const rawLogo = sup.logo || sup.company_logo;
-              const logo = rawLogo ? getLogoUrl(rawLogo) : null;
-              if (!logo) return null;
+          {displayedSuppliers.length > 0 ? (
+            <div className="flex flex-row items-center justify-start sm:justify-center gap-2.5 sm:gap-4 w-full overflow-x-auto py-1 px-1.5 no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {displayedSuppliers.map((sup: any, idx: number) => {
+                const rawLogo = sup.logo || sup.company_logo;
+                const logo = rawLogo ? getLogoUrl(rawLogo) : null;
+                if (!logo) return null;
 
-              return (
-                <motion.div
-                  key={sup.id || idx}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: idx * 0.04 }}
-                  className="flex-1 min-w-[85px] max-w-[145px] h-16 sm:h-20 bg-white hover:bg-amber-50/40 rounded-2xl border border-gray-200/90 hover:border-amber-400/80 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-center p-2.5 sm:p-3 shrink-0 group"
+                return (
+                  <motion.div
+                    key={sup.id || idx}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: idx * 0.04 }}
+                    className="flex-1 min-w-[85px] max-w-[145px] h-16 sm:h-20 bg-white hover:bg-amber-50/40 rounded-2xl border border-gray-200/90 hover:border-amber-400/80 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-center p-2.5 sm:p-3 shrink-0 group"
+                  >
+                    <img
+                      src={logo}
+                      alt={sup.name || "Supplier"}
+                      className="w-full h-full object-contain filter drop-shadow-2xs transition-transform duration-200 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-row items-center justify-center gap-3 w-full py-1.5">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex-1 min-w-[85px] max-w-[145px] h-16 sm:h-20 bg-gray-50/80 rounded-2xl border border-gray-150 animate-pulse flex items-center justify-center"
                 >
-                  <img
-                    src={logo}
-                    alt="Supplier"
-                    className="w-full h-full object-contain filter drop-shadow-2xs transition-transform duration-200 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                </motion.div>
-              );
-            })}
-          </div>
+                  <Building2 size={20} className="text-gray-300" />
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* ── 3. Bottom Section: Trust Perks (Single-line per card, Wide layout) ── */}

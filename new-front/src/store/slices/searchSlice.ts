@@ -146,6 +146,9 @@ const searchSlice = createSlice({
       if (isCoreSearchChange) {
         state.hasSearched = false;
         state.vehicles = [];
+        state.filteredCategories = [];
+        state.filteredSuppliers = [];
+        state.count = 0;
         state.isFiltering = true;
         state.filterError = null;
         state.currentPage = 1;
@@ -154,6 +157,9 @@ const searchSlice = createSlice({
     startNewSearch: (state) => {
       state.hasSearched = false;
       state.vehicles = [];
+      state.filteredCategories = [];
+      state.filteredSuppliers = [];
+      state.count = 0;
       state.isFiltering = true;
       state.filterError = null;
       state.currentPage = 1;
@@ -203,6 +209,9 @@ const searchSlice = createSlice({
       state.isSearching = true;
       state.isFiltering = true;
       state.vehicles = [];
+      state.filteredCategories = [];
+      state.filteredSuppliers = [];
+      state.count = 0;
       state.filterError = null;
       state.searchError = null;
     },
@@ -247,6 +256,7 @@ const searchSlice = createSlice({
           // Stale response from a previous request — discard
           return;
         }
+        state.isSearching = false;
         state.isFiltering = false;
         state.hasSearched = true;
 
@@ -294,7 +304,9 @@ const searchSlice = createSlice({
         if (state.currentRequestId && state.currentRequestId !== action.meta.requestId) {
           return;
         }
+        state.isSearching = false;
         state.isFiltering = false;
+        state.hasSearched = true;
         state.filterError = action.payload as string;
       })
       .addCase(fetchCheapestVehicles.pending, (state) => {

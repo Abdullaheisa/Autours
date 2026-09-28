@@ -150,7 +150,7 @@ class VehicleController extends Controller
                         $q2->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
                     });
                 }
-            })->with('category', 'fuelPolicy', 'supplierUser.rentals.rentalRates','supplierUser.paymentMethods', 'profit', 'included', 'branch', 'locationType', 'specifications');
+            })->with('category', 'fuelPolicy', 'supplierUser.paymentMethods', 'profit', 'included', 'branch', 'locationType', 'specifications');
 
             if ($request->category) {
                 $query->whereIn('category', $request->category);
@@ -263,6 +263,11 @@ class VehicleController extends Controller
             $diffInDays = $startDate->diffInDays($endDate);
             $validVehicles = collect();
 
+            // Preload currency rates in memory once to eliminate N+1 database queries
+            $allCurrencyRates = CurrencyRate::all()->keyBy(function ($r) {
+                return strtoupper($r->currency_from) . '_' . strtoupper($r->currency_to);
+            });
+
             foreach ($vehicles as $vehicle) {
                 // Use profit margins if available, default to 0% markup
                 $perDayProfit   = floatval($vehicle->profit->per_day_profit   ?? 0);
@@ -296,7 +301,8 @@ class VehicleController extends Controller
                 $vehicle->discount_percent = $discountPercent;
 
                 if ($vehicle->branch && $currency != $vehicle->branch->currency) {
-                    $rate = CurrencyRate::query()->where('currency_from', $vehicle->branch->currency)->where('currency_to', $currency)->first();
+                    $currKey = strtoupper($vehicle->branch->currency) . '_' . strtoupper($currency);
+                    $rate = $allCurrencyRates->get($currKey);
                     if ($rate != null) {
                         $vehicle->final_price *= $rate->rate;
                         $vehicle->final_price = round($vehicle->final_price, 2);
@@ -317,57 +323,56 @@ class VehicleController extends Controller
             }
             $vehicles = $validVehicles;
 
-            $locationTypeIds = $vehicles->flatMap(function ($vehicle) {
-                return $vehicle->locationType->pluck('id');
-            })->unique()->filter()->values()->toArray();
-            $locationTypes = LocationType::query()->whereIn('id', $locationTypeIds)->get();
+            $locTypeCounts = [];
+            $paymentCounts = [];
+            $categoryCounts = [];
+            $supplierCounts = [];
 
+            foreach ($vehicles as $vehicle) {
+                if (!empty($vehicle->locationType)) {
+                    foreach ($vehicle->locationType as $lt) {
+                        $locTypeCounts[$lt->id] = ($locTypeCounts[$lt->id] ?? 0) + 1;
+                    }
+                }
+                if ($vehicle->supplierUser && !empty($vehicle->supplierUser->paymentMethods)) {
+                    foreach ($vehicle->supplierUser->paymentMethods as $pm) {
+                        $paymentCounts[$pm->id] = ($paymentCounts[$pm->id] ?? 0) + 1;
+                    }
+                }
+                $catId = $vehicle->getAttributes()['category'] ?? $vehicle->category;
+                if ($catId) {
+                    $categoryCounts[$catId] = ($categoryCounts[$catId] ?? 0) + 1;
+                }
+                $vSupplierId = $vehicle->supplierUser ? $vehicle->supplierUser->id : ($vehicle->getAttributes()['supplier'] ?? null);
+                if ($vSupplierId) {
+                    $supplierCounts[$vSupplierId] = ($supplierCounts[$vSupplierId] ?? 0) + 1;
+                }
+            }
+
+            $locationTypes = LocationType::query()->whereIn('id', array_keys($locTypeCounts))->get();
             foreach ($locationTypes as $locationType) {
-                $locationType->vehicle_count = 0;
-                foreach ($vehicles as $vehicle) {
-                    if (isset($vehicle->locationType) && count($vehicle->locationType) && $vehicle->locationType[0]->id == $locationType->id) {
-                        $locationType->vehicle_count++;
-                    }
-                }
+                $locationType->vehicle_count = $locTypeCounts[$locationType->id] ?? 0;
             }
 
-            foreach ($paymentMethods as $paymentMethod) {
-                $paymentMethod->vehicle_count = 0;
-                foreach ($vehicles as $vehicle) {
-                    if ($vehicle->supplierUser && $vehicle->supplierUser->paymentMethods && count($vehicle->supplierUser->paymentMethods) && $vehicle->supplierUser->paymentMethods[0]->id == $paymentMethod->id) {
-                        $paymentMethod->vehicle_count++;
-                    }
-                }
-            }
-
-            $paymentMethods = $paymentMethods->filter(function($method) {
+            $paymentMethods = $paymentMethods->map(function ($method) use ($paymentCounts) {
+                $method->vehicle_count = $paymentCounts[$method->id] ?? 0;
+                return $method;
+            })->filter(function ($method) {
                 return $method->vehicle_count > 0;
             })->values();
 
-            $categoryIds = $vehicles->pluck('category')->unique()->filter()->values()->toArray();
             $categories = Category::query()
-                ->whereIn('id', $categoryIds)
+                ->whereIn('id', array_keys($categoryCounts))
                 ->orderBy('sort')
                 ->get();
             foreach ($categories as $category) {
-                $category->vehicle_count = 0;
-                foreach ($vehicles as $vehicle) {
-                    if (isset($vehicle->category) && $vehicle->category == $category->id) {
-                        $category->vehicle_count++;
-                    }
-                }
-            }
-            foreach ($suppliers as $supplier) {
-                $supplier->vehicle_count = 0;
-                foreach ($vehicles as $vehicle) {
-                    $vehicleSupplierId = $vehicle->supplierUser ? $vehicle->supplierUser->id : ($vehicle->getAttributes()['supplier'] ?? null);
-                    if ($vehicleSupplierId == $supplier->id) {
-                        $supplier->vehicle_count++;
-                    }
-                }
+                $category->vehicle_count = $categoryCounts[$category->id] ?? 0;
             }
 
-            $suppliers = $suppliers->filter(function($supplier) {
+            $suppliers = $suppliers->map(function ($supplier) use ($supplierCounts) {
+                $supplier->vehicle_count = $supplierCounts[$supplier->id] ?? 0;
+                return $supplier;
+            })->filter(function ($supplier) {
                 return $supplier->vehicle_count > 0;
             })->values();
 
