@@ -84,6 +84,10 @@ class SupplierIntegrationService
             return $this->sendViaExpy($rental, $supplier, $eventType);
         }
 
+        if ($supplier->integration_type === 'elephant') {
+            return $this->sendViaElephant($rental, $supplier, $eventType);
+        }
+
         // Default: webhook integration
         if (!empty($supplier->webhook_url)) {
             $payload = $this->buildPayload($rental, $eventType);
@@ -186,6 +190,12 @@ class SupplierIntegrationService
 
         if ($supplier->integration_type === 'expy') {
             return $supplier->integration === true;
+        }
+
+        if ($supplier->integration_type === 'elephant') {
+            return $supplier->integration === true
+                && !empty($supplier->api_key)
+                && !empty($supplier->api_password);
         }
 
         // For webhook suppliers, we need integration enabled + webhook URL
@@ -3596,6 +3606,99 @@ class SupplierIntegrationService
             Log::error('Fleetrez reservation cancellation failed', [
                 'rental_id' => $rental->id,
                 'reservation_no' => $externalNo,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send reservation to Elephant API.
+     */
+    private function sendViaElephant(Rental $rental, User $supplier, string $eventType): bool
+    {
+        try {
+            $service = new ElephantApiService($supplier->api_key, $supplier->api_password);
+
+            switch ($eventType) {
+                case 'new_rental':
+                    $pickupDateStr = Carbon::parse($rental->start_date)->format('Y-m-d\TH:i:s');
+                    $returnDateStr = Carbon::parse($rental->end_date)->format('Y-m-d\TH:i:s');
+
+                    $pickupLocationCode = $rental->vehicle->branch->station_id ?? '';
+                    $returnLocationCode = $rental->vehicle->return_branch->station_id ?? $pickupLocationCode;
+                    
+                    if (empty($pickupLocationCode)) {
+                        throw new \Exception("Missing station ID for branch.");
+                    }
+
+                    $vehicleGroupId = null;
+                    if (preg_match('/\[ELEPHANT-GROUP-ID:([a-zA-Z0-9_-]+)\]/', $rental->vehicle->description ?? '', $matches)) {
+                        $vehicleGroupId = $matches[1];
+                    } else {
+                        throw new \Exception("Vehicle {$rental->vehicle->id} does not have an [ELEPHANT-GROUP-ID:XYZ] in description.");
+                    }
+
+                    // Create reservation
+                    $customerFirst = $rental->customer->first_name ?? 'Unknown';
+                    $customerLast = $rental->customer->last_name ?? 'Unknown';
+                    $customerPhone = $rental->customer->phone ?? '';
+                    $customerEmail = $rental->customer->email ?? '';
+
+                    $reservationData = [
+                        'vehiclegroup' => $vehicleGroupId,
+                        'pickupplace' => $pickupLocationCode,
+                        'dropoffplace' => $returnLocationCode,
+                        'dateTimeFrom' => $pickupDateStr,
+                        'dateTimeTo' => $returnDateStr,
+                        'firstname' => $customerFirst,
+                        'lastname' => $customerLast,
+                        'email' => $customerEmail,
+                        'mobile' => $customerPhone,
+                        'flightnumber' => $rental->flight_number ?? '',
+                        'remarks' => $rental->notes ?? 'Autours Reservation',
+                        'lang' => 'en',
+                        'pm' => 'Local' // Or FullCredit depending on what was collected
+                    ];
+
+                    $response = $service->insertReservation($reservationData);
+                    
+                    $refNo = $response['ReferenceNumber'] ?? $response['RefNo'] ?? $response['Id'] ?? null;
+                    if (isset($response['Message']) && !$refNo) {
+                        throw new \Exception("Supplier booking failed: " . json_encode($response));
+                    }
+
+                    if ($refNo) {
+                        $rental->update(['external_reservation_id' => $refNo]);
+                        Log::info('Elephant reservation created', ['rental_id' => $rental->id, 'ref_no' => $refNo]);
+                        return true;
+                    }
+
+                    throw new \Exception("Supplier booking failed: No booking reference returned. Response: " . json_encode($response));
+
+                case 'amend_rental':
+                    throw new \Exception("Elephant API does not support amending reservations directly.");
+
+                case 'cancel_rental':
+                    $externalNo = $rental->external_reservation_id;
+                    if (!$externalNo) {
+                        return true; // nothing to cancel
+                    }
+
+                    $response = $service->cancelReservation($externalNo);
+                    if (isset($response['Message']) && str_contains(strtolower($response['Message']), 'error')) {
+                        throw new \Exception("Supplier cancellation failed: " . json_encode($response));
+                    }
+                    
+                    Log::info('Elephant reservation cancelled', ['rental_id' => $rental->id, 'ref_no' => $externalNo]);
+                    return true;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Elephant API Error', [
+                'rental_id' => $rental->id,
+                'event' => $eventType,
                 'error' => $e->getMessage()
             ]);
             return false;
