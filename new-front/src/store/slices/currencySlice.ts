@@ -347,6 +347,7 @@ const currencySlice = createSlice({
       state.rate = state.allRates[code] ?? fallbackRates[code] ?? 1;
       if (typeof window !== 'undefined') {
         localStorage.setItem('selected_currency', code);
+        localStorage.setItem('autours_user_manual_currency', 'true');
       }
     },
     initCurrency: (state) => {

@@ -158,7 +158,17 @@ function SearchPageContent() {
   }, [buildFilterPayload, dispatch]);
 
   const lastProcessedUrlSearch = useRef<string>('');
-  const lastProcessedUrlCurrency = useRef<string>('');
+
+  // Keep URL query param in sync when currency is changed manually
+  useEffect(() => {
+    if (typeof window !== 'undefined' && currencyCode) {
+      const currentUrl = new URL(window.location.href);
+      if (currentUrl.searchParams.has('location') && currentUrl.searchParams.get('currency') !== currencyCode) {
+        currentUrl.searchParams.set('currency', currencyCode);
+        window.history.replaceState(null, '', currentUrl.toString());
+      }
+    }
+  }, [currencyCode]);
 
   useEffect(() => {
     const location = urlParams.get('location');
@@ -170,18 +180,18 @@ function SearchPageContent() {
     const et = urlParams.get('et') || '10:00';
     const currencyParam = urlParams.get('currency');
 
-    // Sync currency from URL if specified, but only if the URL param actually changed
-    if (currencyParam && currencySymbols[currencyParam as Currency] && lastProcessedUrlCurrency.current !== currencyParam) {
-      lastProcessedUrlCurrency.current = currencyParam;
-      dispatch(setCurrency(currencyParam as Currency));
-    }
-
     if (location && start && end) {
       const urlSearchKey = `${location}|${start}|${end}|${st}|${et}`;
 
       // إذا كان هذا بحثاً جديداً من الـ URL (أو أول تحميل للصفحة):
       if (lastProcessedUrlSearch.current !== urlSearchKey) {
         lastProcessedUrlSearch.current = urlSearchKey;
+
+        // Sync currency from URL only if user hasn't explicitly chosen a manual currency
+        const isManual = typeof window !== 'undefined' && localStorage.getItem('autours_user_manual_currency') === 'true';
+        if (currencyParam && currencySymbols[currencyParam as Currency] && !isManual) {
+          dispatch(setCurrency(currencyParam as Currency));
+        }
 
         // تصفير جميع الفلاتر السابقة فوراً لضمان عدم تسريب أي شركة أو فلتر من بحث سابق
         dispatch(resetFilters());
@@ -200,7 +210,7 @@ function SearchPageContent() {
         }
       }
     }
-  }, [urlParams, currencyCode, dispatch]);
+  }, [urlParams, dispatch]);
 
   const lastFetchedSignature = useRef<string>('');
 

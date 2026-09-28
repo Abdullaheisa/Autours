@@ -352,7 +352,10 @@ export default function HeroSearch({
     const pickup = matched ? getLocationPickupValue(matched) : location.trim();
     const label = location.trim();
     const finalAge = driverAge25to70 ? 30 : driverAge;
-    const activeCurrency = (selectedCountry.currency || currencyCode) as string;
+    const isManualCurrency = typeof window !== 'undefined' && localStorage.getItem('autours_user_manual_currency') === 'true';
+    const activeCurrency = isManualCurrency
+      ? (currencyCode || selectedCountry.currency || 'AED')
+      : (selectedCountry.currency || currencyCode || 'AED');
 
     dispatch(resetFilters());
     dispatch(setSearchParams({

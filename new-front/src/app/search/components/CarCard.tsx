@@ -188,15 +188,15 @@ function ChicTooltip({
 
   const variantStyles = {
     gold: {
-      btn: 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 hover:text-amber-900 border-amber-400/50',
+      btn: 'bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-900 border-amber-300/70',
       badge: 'text-amber-400',
     },
     emerald: {
-      btn: 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 hover:text-emerald-900 border-emerald-400/50',
+      btn: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-900 border-emerald-300/70',
       badge: 'text-emerald-400',
     },
     blue: {
-      btn: 'bg-blue-500/15 hover:bg-blue-500/25 text-blue-800 hover:text-blue-900 border-blue-400/50',
+      btn: 'bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-900 border-blue-300/70',
       badge: 'text-blue-400',
     },
   }[variant];
@@ -212,9 +212,9 @@ function ChicTooltip({
       <button
         type="button"
         aria-label="More information"
-        className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200 border shadow-xs focus:outline-none shrink-0 ${variantStyles.btn}`}
+        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center transition-all duration-200 border shadow-2xs focus:outline-none shrink-0 ${variantStyles.btn}`}
       >
-        <Info size={10} className="stroke-[2.5]" />
+        <Info size={10} className="stroke-[2.2]" />
       </button>
 
       <AnimatePresence>
@@ -707,9 +707,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   const renderPromoItem = (promoText: string, promoDesc: string, tooltipPosition: 'top' | 'bottom' = 'top') => {
     if (!promoText) return null;
     return (
-      <div className="inline-flex items-center gap-1 text-green-700 min-w-0 max-w-full">
-        <Check size={14} className="stroke-[3] shrink-0 text-green-700" />
-        <span className="text-[12px] xl:text-[13px] font-black text-green-700 truncate leading-tight">
+      <div className="inline-flex items-center gap-1.5 text-emerald-700 min-w-0 max-w-full py-0.5">
+        <Check size={14} className="stroke-[2.5] shrink-0 text-emerald-600" />
+        <span className="text-xs xl:text-[13px] font-bold text-emerald-800 tracking-tight truncate leading-snug">
           {promoText}
         </span>
         {promoDesc && (
@@ -1151,7 +1151,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
           <div className='flex bg-green-100/35 rounded-xl mx-5 lg:mx-0 lg:ml-4 mb-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0'>
             <div className="w-[55%] xl:w-[60%] p-2 pt-3 min-w-0">
               <div className="mb-2">
-                <h4 className="text-xs md:text-sm font-black text-green-700">What is Included!</h4>
+                <h4 className="text-xs md:text-sm font-bold text-emerald-800">What is Included!</h4>
                 <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
               </div>
               <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
@@ -1164,8 +1164,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     : null;
                   return (
                     <div key={i} className="flex items-start gap-1.5 min-w-0">
-                      <Check size={13} className="text-green-600 shrink-0 mt-0.5 md:mt-1" />
-                      <span className="text-xs md:text-sm font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap" title={inc}>
+                      <Check size={13} className="text-emerald-600 shrink-0 mt-0.5 md:mt-1 stroke-[2.2]" />
+                      <span className="text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap" title={inc}>
                         <span>{inc}</span>
                       </span>
                       {depositDesc && (
@@ -1181,7 +1181,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                 })}
               </div>
               {carData.inclusions.length > 6 && (
-                <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-xs font-black text-gray-800 underline hover:text-gray-600">
+                <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-xs font-bold text-gray-800 underline hover:text-gray-600">
                   {showAllInclusions ? 'Show Less' : 'Show More +'}
                 </button>
               )}

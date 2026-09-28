@@ -23,77 +23,94 @@ const COUNTRY_FALLBACK_SUPPLIERS: Record<string, Array<{ id: number | string; na
     { id: 8, name: 'KTC', logo: 'KTC_logodc11c608f2e44e287d25dbed9df19519.png' },
     { id: 6, name: 'Highway', logo: 'Highway_logodc11c608f2e44e287d25dbed9df19519.png' },
     { id: 23, name: 'AUTORENT', logo: 'AUTORENT_logo33136a96e9bc3dc6b8eb26e468436406.jpg' },
-    { id: 46, name: 'DRIVUS', logo: 'DRIVUS_logo71ad64bc92aa187e5c988f88b6805f95.jpg' },
+    { id: 46, name: 'DRIVUS', logo: 'DRIVUS_logo71ad64bc92aa187e5c988f88b6805f95.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
+    { id: 'gm', name: 'Green Motion', logo: 'Green Motion_logo15e5433e6eb1f5b83c72d85ec798635f.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
   ],
   'Qatar': [
-    { id: 2, name: 'SAFETY', logo: '' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
-    { id: 'qa-1', name: 'Oasis Rent A Car', logo: '/img/suppliers/oasis.png' },
-    { id: 'qa-2', name: 'Al Muftah', logo: '/img/suppliers/almuftah.png' },
-    { id: 'qa-3', name: 'Regency Fleet', logo: '/img/suppliers/regency.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
+    { id: 2, name: 'SAFETY', logo: 'Safety_logoc2a776f97547a1f42c01489ae4c3093a.png' },
   ],
   'Saudi Arabia': [
-    { id: 'sa-1', name: 'Yelo', logo: '/img/suppliers/yelo.png' },
-    { id: 'sa-2', name: 'Key Rent A Car', logo: '/img/suppliers/key.png' },
-    { id: 'sa-3', name: 'Lumi', logo: '/img/suppliers/lumi.png' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
+    { id: 'wefaq', name: 'AL WEFAQ', logo: 'AL WEFAQ RNT A CAR_logo.png' },
   ],
   'Egypt': [
-    { id: 9, name: 'FLEXI', logo: '' },
-    { id: 137, name: 'Autowill', logo: '' },
+    { id: 46, name: 'DRIVUS', logo: 'DRIVUS_logo71ad64bc92aa187e5c988f88b6805f95.png' },
+    { id: 'gm', name: 'Green Motion', logo: 'Green Motion_logo15e5433e6eb1f5b83c72d85ec798635f.png' },
+    { id: 137, name: 'Autowill', logo: 'Autowill_logo323b1fe06e02889217b68f9376061dff.png' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
   ],
   'Turkey': [
-    { id: 136, name: 'Niss a car rental', logo: '' },
-    { id: 96, name: 'essence car rental', logo: '' },
-    { id: 137, name: 'Autowill', logo: '' },
-    { id: 56, name: 'EMR', logo: '' },
-    { id: 140, name: 'XDrive Mobility', logo: '' },
+    { id: 56, name: 'EMR', logo: 'EMR_logo323b1fe06e02889217b68f9376061dff.png' },
+    { id: 137, name: 'Autowill', logo: 'Autowill_logo323b1fe06e02889217b68f9376061dff.png' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 'sx', name: 'Sixt', logo: 'SIXT_logo.png' },
+    { id: 140, name: 'XDrive Mobility', logo: 'XDrive Mobility_logo35b20acbc5264b77db20690e3d849bf7.png' },
   ],
   'Jordan': [
-    { id: 7, name: 'RAMA', logo: '' },
-    { id: 19, name: 'Auto Nation', logo: '' },
-    { id: 15, name: 'U-SAVE', logo: '' },
-    { id: 16, name: 'European', logo: '' },
-    { id: 20, name: 'EASY RENTAL', logo: '' },
-    { id: 21, name: 'GO RENTAL', logo: '' },
+    { id: 7, name: 'RAMA', logo: 'RAMA_logodc11c608f2e44e287d25dbed9df19519.png' },
+    { id: 19, name: 'Auto Nation', logo: 'AUTONATION_logocd1b09dfedc3d305fb14df86356c1fa0.png' },
+    { id: 15, name: 'U-SAVE', logo: 'U-SAVE_logodc11c608f2e44e287d25dbed9df19519.png' },
+    { id: 16, name: 'European', logo: 'European_logod8540df3cf540dbcb561d4625cd7abb9.png' },
+    { id: 21, name: 'GO RENTAL', logo: 'GO RENTAL_logof286ceda378c5cc4622aba3ac6afe972.png' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
   ],
   'Morocco': [
-    { id: 3, name: 'sovoycars', logo: '' },
-    { id: 143, name: 'MY Mobirent', logo: '' },
-    { id: 137, name: 'Autowill', logo: '' },
-    { id: 56, name: 'EMR', logo: '' },
+    { id: 3, name: 'sovoycars', logo: 'sovoycars_logo494db40510120e2f266017cd1b761075.png' },
+    { id: 143, name: 'MY Mobirent', logo: 'MY Mobirent_logo323b1fe06e02889217b68f9376061dff.png' },
+    { id: 137, name: 'Autowill', logo: 'Autowill_logo323b1fe06e02889217b68f9376061dff.png' },
+    { id: 56, name: 'EMR', logo: 'EMR_logo323b1fe06e02889217b68f9376061dff.png' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
   ],
   'Kuwait': [
-    { id: 14, name: 'Royal Star', logo: '' },
-    { id: 30, name: 'Autocapitalkw', logo: '' },
-    { id: 51, name: 'SMARTAUTO', logo: '' },
+    { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
+    { id: 'gm', name: 'Green Motion', logo: 'Green Motion_logo15e5433e6eb1f5b83c72d85ec798635f.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
+    { id: 51, name: 'SMARTAUTO', logo: 'SMARTAUTO_logo95627d408e4b9ecaf6a37a02f0a49a44.jpg' },
+    { id: 30, name: 'Autocapitalkw', logo: 'Autocapitalkw_logo64a3191ce7f060dd4f0abc1361f3d53f.jpg' },
+    { id: 14, name: 'Royal Star', logo: 'Royal Star_logo779b164104b2daee4d690f6ae57ca45d.jpg' },
   ],
   'Oman': [
-    { id: 38, name: 'MAHD', logo: '' },
+    { id: 38, name: 'MAHD', logo: 'MAHD_logo4c949f544080391662eeba1eda4ac590.png' },
     { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
     { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
+    { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+    { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
   ],
 };
 
 const DEFAULT_SUPPLIERS = [
-  { id: 8, name: 'KTC', logo: 'KTC_logodc11c608f2e44e287d25dbed9df19519.png' },
-  { id: 6, name: 'Highway', logo: 'Highway_logodc11c608f2e44e287d25dbed9df19519.png' },
-  { id: 23, name: 'AUTORENT', logo: 'AUTORENT_logo33136a96e9bc3dc6b8eb26e468436406.jpg' },
-  { id: 46, name: 'DRIVUS', logo: 'DRIVUS_logo71ad64bc92aa187e5c988f88b6805f95.jpg' },
-  { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+  { id: 46, name: 'DRIVUS', logo: 'DRIVUS_logo71ad64bc92aa187e5c988f88b6805f95.png' },
+  { id: 'gm', name: 'Green Motion', logo: 'Green Motion_logo15e5433e6eb1f5b83c72d85ec798635f.png' },
   { id: 92, name: 'SurPrice', logo: 'SurPrice_logoadcc35f05ca2ced812ea6ab40e289120.png' },
+  { id: 89, name: 'ROUTES', logo: 'ROUTES_logo8c422a890bdb5721681a2b13f6e0bfa7.png' },
+  { id: 23, name: 'AUTORENT', logo: 'AUTORENT_logo33136a96e9bc3dc6b8eb26e468436406.jpg' },
+  { id: 8, name: 'KTC', logo: 'KTC_logodc11c608f2e44e287d25dbed9df19519.png' },
+  { id: 'hz', name: 'Hertz', logo: 'hertz_logo.png' },
+  { id: 'av', name: 'Avis', logo: 'AVIS_logo.png' },
 ];
 
 const TRUST_PERKS = [
@@ -167,13 +184,18 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
 
   // Priority: Filtered Suppliers from active search query > Country Suppliers from API > Country Fallback
   const displayedSuppliers = useMemo(() => {
+    let list: any[] = [];
     if (filteredSuppliers && filteredSuppliers.length > 0) {
-      return filteredSuppliers.slice(0, 8);
+      list = filteredSuppliers;
+    } else if (countrySuppliers.length > 0) {
+      list = countrySuppliers;
+    } else {
+      list = COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry] || DEFAULT_SUPPLIERS;
     }
-    if (countrySuppliers.length > 0) {
-      return countrySuppliers.slice(0, 8);
-    }
-    return COUNTRY_FALLBACK_SUPPLIERS[resolvedCountry] || DEFAULT_SUPPLIERS;
+    // Filter to items with valid logos and limit to 8 for a clean single row
+    const withLogos = list.filter((s: any) => Boolean(s.logo || s.company_logo));
+    const finalList = withLogos.length > 0 ? withLogos : list;
+    return finalList.slice(0, 8);
   }, [filteredSuppliers, countrySuppliers, resolvedCountry]);
 
   // Fast, natural loading progress
@@ -201,7 +223,7 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-primary/15 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-4xl px-4 sm:px-6 flex flex-col items-center z-10 space-y-6">
+      <div className="relative w-full max-w-5xl xl:max-w-6xl px-4 sm:px-6 flex flex-col items-center z-10 space-y-5 sm:space-y-6">
         
         {/* ── 1. Top Brand Header with Spinning Alloy Wheel 'O' (Logo Only) ── */}
         <motion.div
@@ -252,7 +274,7 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
           </div>
         </motion.div>
 
-        {/* ── 2. Middle Section: Available Suppliers in the Searched Country ── */}
+        {/* ── 2. Middle Section: Available Suppliers (Single Row, Logos Only, Centered) ── */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -266,73 +288,58 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
                 Verified Suppliers in {resolvedCountry}
               </span>
             </div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200/60">
               Live Price Match
             </span>
           </div>
 
-          {/* Suppliers Logos Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+          {/* Suppliers Logos - Single Horizontal Row, Centered, Logos Only */}
+          <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full overflow-x-auto py-1">
             {displayedSuppliers.map((sup: any, idx: number) => {
-              const name = sup.name || sup.company || 'Rental Supplier';
-              const logo = sup.logo || sup.company_logo ? getLogoUrl(sup.logo || sup.company_logo) : null;
-              const count = sup.vehicle_count || sup.vehiclesCount;
+              const rawLogo = sup.logo || sup.company_logo;
+              const logo = rawLogo ? getLogoUrl(rawLogo) : null;
+              if (!logo) return null;
 
               return (
                 <motion.div
                   key={sup.id || idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  className="flex items-center gap-2.5 p-2 bg-gray-50/80 hover:bg-amber-50/50 rounded-2xl border border-gray-200/80 transition-colors shadow-2xs group"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: idx * 0.04 }}
+                  className="flex-1 min-w-[85px] max-w-[145px] h-16 sm:h-20 bg-white hover:bg-amber-50/40 rounded-2xl border border-gray-200/90 hover:border-amber-400/80 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-center p-2.5 sm:p-3 shrink-0 group"
                 >
-                  <div className="relative w-12 h-8 rounded-lg overflow-hidden bg-white border border-gray-200 flex items-center justify-center shrink-0 p-0.5">
-                    {logo ? (
-                      <img src={logo} alt={name} className="w-full h-full object-contain" />
-                    ) : (
-                      <span className="text-[11px] font-black text-gray-600">{name.charAt(0)}</span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-gray-900 truncate group-hover:text-amber-700 transition-colors">
-                      {name}
-                    </p>
-                    {count !== undefined && count > 0 ? (
-                      <p className="text-[10px] font-semibold text-gray-400 truncate">
-                        {count} Vehicles
-                      </p>
-                    ) : (
-                      <p className="text-[10px] font-bold text-emerald-600 truncate">
-                        Verified Partner
-                      </p>
-                    )}
-                  </div>
+                  <img
+                    src={logo}
+                    alt="Supplier"
+                    className="w-full h-full object-contain filter drop-shadow-2xs transition-transform duration-200 group-hover:scale-105"
+                    loading="lazy"
+                  />
                 </motion.div>
               );
             })}
           </div>
         </motion.div>
 
-        {/* ── 3. Bottom Section: Trust Perks (Large Icons & Full Text) ── */}
+        {/* ── 3. Bottom Section: Trust Perks (Single-line per card, Wide layout) ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
+          className="w-full grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
         >
           {TRUST_PERKS.map((perk, idx) => {
             const Icon = perk.icon;
             return (
               <div
                 key={idx}
-                className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white border border-gray-200 shadow-sm text-left hover:border-amber-300 transition-colors"
+                className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white/95 border border-gray-200/90 shadow-sm text-left hover:border-amber-300 transition-colors"
               >
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
                   <Icon size={20} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-black text-gray-900 leading-snug">{perk.title}</p>
-                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 leading-tight mt-0.5">{perk.desc}</p>
+                  <p className="text-xs sm:text-sm font-black text-gray-900 truncate">{perk.title}</p>
+                  <p className="text-[11px] font-semibold text-gray-500 truncate mt-0.5">{perk.desc}</p>
                 </div>
               </div>
             );
@@ -344,9 +351,9 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="w-full max-w-lg space-y-2 pt-1"
+          className="w-full max-w-xl space-y-2 pt-1"
         >
-          <div className="flex items-center justify-between text-xs font-bold gap-2">
+          <div className="flex items-center justify-between text-xs font-bold gap-3">
             <span className="flex items-center gap-1.5 text-gray-600 truncate">
               <Sparkles size={13} className="text-primary animate-pulse shrink-0" />
               Aggregating best rates & verifying live fleet in {resolvedCountry}...
