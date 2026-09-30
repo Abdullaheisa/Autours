@@ -140,12 +140,11 @@ class SyncSurpriceBranches extends Command
                             [
                                 'created_by' => $supplierUser->id,
                                 'title' => $title,
-                                'branch_id' => $branch->id,
+                                'country' => $resolvedCountry,
                             ],
                             [
                                 'description' => $policy['text'] ?? '',
                                 'status' => 'approved',
-                                'country' => $resolvedCountry,
                             ]
                         );
 
