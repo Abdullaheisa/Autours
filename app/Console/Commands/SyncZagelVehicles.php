@@ -265,6 +265,15 @@ class SyncZagelVehicles extends Command
             'راديو' => 'Radio',
             'نظام صوت فاخر' => 'Premium Audio System',
             'أقفال كهربائية' => 'Power Locks',
+            'تشغيل عن بُعد' => 'Remote Start',
+            'تشغيل عن بعد' => 'Remote Start',
+            'دخول بدون مفتاح' => 'Keyless Entry',
+            'دفع رباعي' => '4WD',
+            'دفع رباعى' => '4WD',
+            'ملاحة GPS' => 'GPS Navigation',
+            'فتحة سقف' => 'Sunroof',
+            'مقاعد مدفأة' => 'Heated Seats',
+            'مصابيح ضباب' => 'Fog Lights',
         ];
 
         $includedIds = [];
