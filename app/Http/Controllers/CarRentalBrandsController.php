@@ -157,7 +157,7 @@ class CarRentalBrandsController extends Controller
             $matchedSupplier = null;
 
             // 1. First check if a seeded or saved CarRentalBrand matches slug
-            $brandDetails = CarRentalBrand::where('slug', $brandSlugLower)->first();
+            $brandDetails = CarRentalBrand::whereRaw('LOWER(slug) = ?', [$brandSlugLower])->first();
             if ($brandDetails && $brandDetails->user_id) {
                 $matchedSupplier = User::find($brandDetails->user_id);
             }

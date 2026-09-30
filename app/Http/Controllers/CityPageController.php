@@ -98,7 +98,7 @@ class CityPageController extends Controller
     public function showBySlug(string $slug): JsonResponse
     {
         try {
-            $cityPage = CityPage::where('slug', $slug)
+            $cityPage = CityPage::whereRaw('LOWER(slug) = ?', [strtolower($slug)])
                 ->where('is_published', true)
                 ->first();
 
