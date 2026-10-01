@@ -87,16 +87,19 @@ class SyncZagelBranches extends Command
                 $normalizedName = 'Salalah International Airport';
             }
 
+            $finalName = $normalizedName ?: $locationName;
+            $finalAddress = $normalizedName ?: ($address ?: $locationName);
+
             $branch = Branch::updateOrCreate(
                 [
                     'company_id' => $supplierUserId,
                     'station_id' => $locationId,
                 ],
                 [
-                    'name' => $locationName,
+                    'name' => $finalName,
                     'normalized_name' => $normalizedName ?: $locationName,
-                    'location' => $locationName,
-                    'adresse' => $address ?: $locationName,
+                    'location' => $finalName,
+                    'adresse' => $finalAddress,
                     'city' => $city,
                     'country' => 'Oman',
                     'currency' => 'OMR',

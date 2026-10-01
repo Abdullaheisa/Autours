@@ -258,6 +258,7 @@ class CarRentalBrandsController extends Controller
         // 1. Fetch all active branches for this supplier in a single fast query
         $branches = Branch::where('company_id', $userId)
             ->where('activation', 1)
+            ->with('airport')
             ->get();
 
         if ($branches->isEmpty()) {
@@ -305,9 +306,13 @@ class CarRentalBrandsController extends Controller
                              $branch->airport_id !== null || 
                              $isAirportByName;
 
+                $displayName = $isAirport 
+                    ? ($branch->normalized_name ?: ($branch->airport?->airport_name ?: $branch->name))
+                    : ($branch->normalized_name ?: $branch->name);
+
                 $formattedBranch = [
                     'id' => (string) $branch->id,
-                    'name' => $branch->name,
+                    'name' => $displayName,
                     'type' => $isAirport ? 'airport' : 'city',
                     'city' => $branch->city,
                     'address' => $branch->adresse,

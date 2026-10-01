@@ -1494,6 +1494,9 @@ class VehicleController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function ($branch) {
+                if ($branch->airport) {
+                    $branch->name = $branch->airport->airport_name;
+                }
                 if (empty($branch->abriviation) && $branch->airport) {
                     $branch->abriviation = $branch->airport->iata_code;
                 }
@@ -1557,6 +1560,9 @@ class VehicleController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function ($branch) {
+                if ($branch->airport) {
+                    $branch->name = $branch->airport->airport_name;
+                }
                 if (empty($branch->abriviation) && $branch->airport) {
                     $branch->abriviation = $branch->airport->iata_code;
                 }
