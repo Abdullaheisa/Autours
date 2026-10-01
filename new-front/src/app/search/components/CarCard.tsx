@@ -542,7 +542,12 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       transmission: getSpec('transmission'),
       fuelType: getSpec('fuel'),
       seats: getSpec('seats'),
-      doors: getSpec('doors'),
+      doors: (() => {
+        const d = getSpec('doors');
+        if (!d || d === 'N/A' || d === '0' || d === 0) return '4';
+        if (d === '3' || d === 3) return '4';
+        return d;
+      })(),
       suitcases: (() => {
         const s = getSpec('suitcase') !== 'N/A'
           ? getSpec('suitcase')
@@ -552,7 +557,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         }
         return s;
       })(),
-      ac: getSpec('air conditioning') !== 'No' ? 'Air Conditioning' : 'No A/C',
+      ac: (() => {
+        const a = getSpec('air conditioning');
+        if (a === 'No' || a === 'No AC' || a === 'false') return 'No A/C';
+        return 'Air Conditioning';
+      })(),
       supplier: {
         name: supplierName.toString().trim(),
         logo: getLogoUrl(logoStr),

@@ -186,62 +186,109 @@ class SyncZagelVehicles extends Command
         $records = [];
         $now = now()->toDateTimeString();
 
-        $doors = $data['doors'] ?? null;
-        if ($doors && isset($this->specDefinitions['Doors'])) {
+        $vName = strtolower($vehicle->name);
+        $isSuv = str_contains($vName, 'tahoe') ||
+                 str_contains($vName, 'pajero') ||
+                 str_contains($vName, 'armada') ||
+                 str_contains($vName, 'gx460') ||
+                 str_contains($vName, 'rouge') ||
+                 str_contains($vName, 'rogue') ||
+                 str_contains($vName, 'tucson') ||
+                 str_contains($vName, 'sportage') ||
+                 str_contains($vName, 'jetour') ||
+                 str_contains($vName, 'zrv') ||
+                 str_contains($vName, 'pailot') ||
+                 str_contains($vName, 'pilot') ||
+                 str_contains($vName, 'soul');
+
+        $isSevenSeater = str_contains($vName, 'tahoe') ||
+                         str_contains($vName, 'armada') ||
+                         str_contains($vName, 'pajero') ||
+                         str_contains($vName, 'gx460') ||
+                         str_contains($vName, 'pailot') ||
+                         str_contains($vName, 'pilot');
+
+        // Resolve doors: sedans have 4 doors, SUVs have 5 doors. Never allow invalid values like 3.
+        $doors = (int) ($data['doors'] ?? 0);
+        if ($doors < 4) {
+            $doors = $isSuv ? 5 : 4;
+        } elseif ($doors === 4 && $isSuv && (str_contains($vName, 'tahoe') || str_contains($vName, 'armada') || str_contains($vName, 'pajero') || str_contains($vName, 'gx460'))) {
+            $doors = 5;
+        }
+
+        if (isset($this->specDefinitions['Doors'])) {
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Doors',
                 'value' => (string) $doors,
-                'icon' => $this->specDefinitions['Doors']['icon'],
+                'icon' => $this->specDefinitions['Doors']['icon'] ?? 'DoorOpen',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
 
-        $seats = $data['seats'] ?? null;
-        if ($seats && isset($this->specDefinitions['Number of seats'])) {
+        // Resolve seats: 7 for large SUVs, 5 for all other consumer cars
+        $seats = (int) ($data['seats'] ?? 0);
+        if ($isSevenSeater && $seats < 7) {
+            $seats = 7;
+        } elseif (!$isSevenSeater && $seats < 5) {
+            $seats = 5;
+        }
+
+        if (isset($this->specDefinitions['Number of seats'])) {
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Number of seats',
                 'value' => (string) $seats,
-                'icon' => $this->specDefinitions['Number of seats']['icon'],
+                'icon' => $this->specDefinitions['Number of seats']['icon'] ?? 'Armchair',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
 
         $transmission = strtolower($data['transmission'] ?? '');
-        if ($transmission && isset($this->specDefinitions['Transmission'])) {
-            $transVal = str_contains($transmission, 'auto') ? 'Automatic' : 'Manual';
+        if (isset($this->specDefinitions['Transmission'])) {
+            $transVal = str_contains($transmission, 'man') ? 'Manual' : 'Automatic';
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Transmission',
                 'value' => $transVal,
-                'icon' => $this->specDefinitions['Transmission']['icon'],
+                'icon' => $this->specDefinitions['Transmission']['icon'] ?? 'Settings2',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
 
         $fuel = $data['fuel_type'] ?? '';
-        if ($fuel && isset($this->specDefinitions['Fuel'])) {
+        if (isset($this->specDefinitions['Fuel'])) {
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Fuel',
-                'value' => ucfirst(strtolower($fuel)),
-                'icon' => $this->specDefinitions['Fuel']['icon'] ?? 'gas-pump',
+                'value' => !empty($fuel) ? ucfirst(strtolower($fuel)) : 'Petrol',
+                'icon' => $this->specDefinitions['Fuel']['icon'] ?? 'Fuel',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
-        
-        $features = $data['features'] ?? [];
-        if (in_array('تكييف', $features) && isset($this->specDefinitions['Air Conditioner'])) {
+
+        if (isset($this->specDefinitions['Suitcase'])) {
+            $records[] = [
+                'vehicle_id' => $vehicle->id,
+                'name' => 'Suitcase',
+                'value' => $isSevenSeater ? 'Large' : 'Medium',
+                'icon' => $this->specDefinitions['Suitcase']['icon'] ?? 'Luggage',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        // All modern passenger rental vehicles in Oman feature Air Conditioning
+        if (isset($this->specDefinitions['Air Conditioner'])) {
             $records[] = [
                 'vehicle_id' => $vehicle->id,
                 'name' => 'Air Conditioner',
-                'value' => 'Yes',
-                'icon' => $this->specDefinitions['Air Conditioner']['icon'],
+                'value' => 'Air Conditioning',
+                'icon' => $this->specDefinitions['Air Conditioner']['icon'] ?? 'Wind',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -276,8 +323,12 @@ class SyncZagelVehicles extends Command
             'مصابيح ضباب' => 'Fog Lights',
         ];
 
-        $includedIds = [];
         $uniqueFeatures = array_unique($features);
+        if (!in_array('تكييف', $uniqueFeatures)) {
+            $uniqueFeatures[] = 'تكييف';
+        }
+
+        $includedIds = [];
         foreach ($uniqueFeatures as $feat) {
             $feat = trim($feat);
             if (isset($translationMap[$feat])) {
