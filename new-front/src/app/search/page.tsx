@@ -57,6 +57,7 @@ function SearchPageContent() {
     totalPages,
     perPage,
     count,
+    fetchedCurrency,
   } = useSelector((state: RootState) => state.search);
 
   const buildFilterPayload = useCallback((): FilterPayload | null => {
@@ -267,7 +268,7 @@ function SearchPageContent() {
 
     // Get converted deposits for vehicles with deposit > 0
     const deposits = vehicles
-      .map(v => getVehicleDepositPrice(v, currencyCode as Currency, allRates))
+      .map(v => getVehicleDepositPrice(v, currencyCode as Currency, allRates, fetchedCurrency))
       .filter(d => d > 0)
       .sort((a, b) => a - b);
 
@@ -279,7 +280,7 @@ function SearchPageContent() {
     const tier2 = min === max ? max : min + 2 * (max - min) / 3;
 
     return vehicles.filter(v => {
-      const deposit = getVehicleDepositPrice(v, currencyCode as Currency, allRates);
+      const deposit = getVehicleDepositPrice(v, currencyCode as Currency, allRates, fetchedCurrency);
       if (deposit <= 0) return false;
 
       return filterParams.deposit.some((range: string) => {
@@ -289,7 +290,7 @@ function SearchPageContent() {
         return true;
       });
     });
-  }, [vehicles, filterParams.deposit, currencyCode, allRates]);
+  }, [vehicles, filterParams.deposit, currencyCode, allRates, fetchedCurrency]);
 
 
 

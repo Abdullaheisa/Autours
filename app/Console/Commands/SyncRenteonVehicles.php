@@ -35,7 +35,8 @@ class SyncRenteonVehicles extends AbstractVehicleSyncCommand
     protected $signature = 'renteon:sync-vehicles
                             {--pickup-date= : Pickup date (yyyy-MM-dd), defaults to tomorrow}
                             {--full : Check availability for ALL Renteon branches, otherwise only checks branches that already have vehicles}
-                            {--prices-only : Only refresh per-branch prices, do not create vehicles or specs}';
+                            {--prices-only : Only refresh per-branch prices, do not create vehicles or specs}
+                            {--dry-run : Run without making persistent database changes}';
 
     /**
      * The console command description.
@@ -226,13 +227,29 @@ class SyncRenteonVehicles extends AbstractVehicleSyncCommand
 
         $progress->finish();
 
-        // 7. Clean up branches without vehicles only in full sync mode
-        if (!$this->hasOption('prices-only') || !$this->option('prices-only')) {
-            foreach ($allBranches as $branch) {
-                if ($branch->vehicles()->count() === 0) {
-                    $branch->delete();
-                    $this->deactivatedCount++;
+        // 7. Clean up branches without vehicles
+        $pricesOnly = $this->hasOption('prices-only') && $this->option('prices-only');
+        $dryRun = $this->hasOption('dry-run') && $this->option('dry-run');
+
+        if (!$pricesOnly) {
+            $branchesDeleted = 0;
+            $emptyBranches = Branch::where('company_id', $supplierUser->id)
+                ->whereDoesntHave('vehicles', function ($q) {
+                    $q->whereNull('deleted_at');
+                })
+                ->get();
+
+            foreach ($emptyBranches as $emptyBranch) {
+                if (!$dryRun) {
+                    $emptyBranch->delete();
                 }
+                $this->deactivatedCount++;
+                $branchesDeleted++;
+                $this->warn("Deleted empty branch: {$emptyBranch->name} (ID: {$emptyBranch->id})");
+            }
+
+            if ($branchesDeleted > 0) {
+                $this->info("Deleted {$branchesDeleted} empty branches.");
             }
         }
 
