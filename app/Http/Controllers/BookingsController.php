@@ -302,12 +302,18 @@ class BookingsController extends Controller
             $prefix = strlen($cleanAscii) >= 2 ? strtoupper(substr($cleanAscii, 0, 2)) : 'AE';
             $count = Rental::query()->count();
             $suffix_count = str_pad((string)($count + 1), 4, '0', STR_PAD_LEFT);
+            $extrasPrice = max(0, (float)$request->input('extras_price', 0));
+            $extrasList = $request->input('extras', null);
+
             $oldRental = null;
             $item->order_number = $prefix . 'ATR' . $suffix_count;
             $item->vehicle_id = $request->id;
-            $item->price = $vehicleWithPrice->final_price;
+            $item->price = $vehicleWithPrice->final_price + $extrasPrice;
             $item->profit_margin = $vehicleWithPrice->rate;
-            $item->supplier_price = $vehicleWithPrice->supplier_price;
+            $item->supplier_price = $vehicleWithPrice->supplier_price + $extrasPrice;
+            $item->extras = $extrasList;
+            $item->extras_price = $extrasPrice;
+            $item->flight_number = $request->input('flight_number', null);
             $item->start_date = Carbon::parse($request->date_from);
             $item->end_date = Carbon::parse($request->date_to);
             $item->start_time = Carbon::parse($request->time_from);
@@ -564,6 +570,21 @@ class BookingsController extends Controller
             $numbersString = env('ULTRAMSG_NOTIFY_NUMBERS') ?: env('WHATSAPP_NOTIFY_NUMBERS') ?: '96560480382,201067320128';
             $numbers = array_filter(array_map('trim', explode(',', $numbersString)));
 
+            $flightInfo = !empty($rental->flight_number) ? "\n✈️ *رقم رحلة الطيران:* " . $rental->flight_number : '';
+            
+            $extrasText = '';
+            if (!empty($rental->extras) && is_array($rental->extras)) {
+                $extraNames = [];
+                foreach ($rental->extras as $ex) {
+                    $name = is_array($ex) ? ($ex['name'] ?? $ex['id'] ?? '') : (string)$ex;
+                    $qty = is_array($ex) && isset($ex['qty']) && (int)$ex['qty'] > 1 ? " (x{$ex['qty']})" : '';
+                    if ($name) $extraNames[] = $name . $qty;
+                }
+                if (!empty($extraNames)) {
+                    $extrasText = "\n🎁 *الإضافات المختارة:* " . implode(', ', $extraNames);
+                }
+            }
+
             $message = "🔔 *حجز سيارة جديد على Autours*\n\n"
                      . "👤 *اسم العميل:* " . $customerName . "\n"
                      . "📞 *رقم العميل:* " . $customerPhone . "\n"
@@ -573,7 +594,9 @@ class BookingsController extends Controller
                      . "📅 *تاريخ ووقت الاستلام:* " . $startDate . " " . $startTime . "\n"
                      . "📅 *تاريخ ووقت التسليم:* " . $endDate . " " . $endTime . "\n"
                      . "⏱️ *مدة الحجز:* " . $duration . " يوم/أيام\n"
-                     . "💰 *القيمة الإجمالية:* " . $price . " " . $currency;
+                     . "💰 *القيمة الإجمالية:* " . $price . " " . $currency
+                     . $flightInfo
+                     . $extrasText;
 
             foreach ($numbers as $number) {
                 // Ensure international format (numbers only)

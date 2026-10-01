@@ -39,6 +39,7 @@ const companySidebarNav: SidebarItem[] = [
     children: [
       { id: "branches", label: "Branches", icon: "Building2" },
       { id: "payment-methods", label: "Payment Methods", icon: "CreditCard" },
+      { id: "extras-pricing", label: "Extras Pricing", icon: "Tag" },
       { id: "promos", label: "Promos", icon: "Ticket" },
     ]
   },

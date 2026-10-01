@@ -1,20 +1,23 @@
 'use client';
 
-import { Suspense, useEffect, useCallback, useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useCallback, useState, useRef, useMemo } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
-import { useRouter } from 'next/navigation';
-import { bookingApi, authApi } from '@/services/api';
+import { bookingApi, authApi, extrasPricingApi } from '@/services/api';
 import { axiosClient as apiClient } from '@/services/api/axiosClient';
 import toast from 'react-hot-toast';
 import Stepper from '@/app/search/components/Stepper';
 import SearchSummary from '@/app/search/components/SearchSummary';
 import CarCard from '@/app/search/components/CarCard';
-import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle } from 'lucide-react';
+import BookingChecklist from './components/BookingChecklist';
+import { ExtraItem, convertExtraPrice } from './components/BookingExtras';
+import FlightDetailsInput from './components/FlightDetailsInput';
+import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle, Sparkles, ArrowLeft } from 'lucide-react';
 import { RootState, AppDispatch } from '@/store';
-import { fetchVehicles } from '@/store/slices/searchSlice';
+import { fetchVehicles, restoreSearchSession } from '@/store/slices/searchSlice';
 import { restoreAuth, logout } from '@/store/slices/authSlice';
 import { Vehicle, Currency } from '@/types';
 import { worldCountries } from '@/data/worldCountries';
@@ -49,7 +52,73 @@ const COUNTRY_CODES = [
   { country: 'United States',        code: '1',   iso: 'US', flag: '🇺🇸' },
 ];
 
-const SUPPORTED_BACKEND_CURRENCIES = ['USD', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 'JOD', 'MAD', 'TRY', 'GEL'];
+const SUPPORTED_BACKEND_CURRENCIES = [
+  'USD', 'EUR', 'GBP', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 
+  'JOD', 'MAD', 'TRY', 'GEL', 'CHF', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'PLN'
+];
+
+const DEFAULT_EXTRAS: ExtraItem[] = [
+  {
+    id: 'additional_driver',
+    name: 'Additional Driver',
+    description: 'Share the driving with an additional qualified driver on the rental agreement.',
+    price: 15.00,
+    currency: 'USD',
+    type: 'boolean',
+    max_qty: 1,
+    badge: 'Popular',
+  },
+  {
+    id: 'booster_cushion',
+    name: 'Booster Cushion',
+    description: 'For older children (approx. 4–11 years, 15–36 kg) to ensure safe seatbelt positioning.',
+    price: 10.00,
+    currency: 'USD',
+    type: 'quantity',
+    max_qty: 3,
+    badge: null,
+  },
+  {
+    id: 'child_booster_seat',
+    name: 'Child Booster Seat',
+    description: 'High-back booster seat suitable for children from 15 to 36 kg.',
+    price: 12.00,
+    currency: 'USD',
+    type: 'quantity',
+    max_qty: 3,
+    badge: 'Family Favorite',
+  },
+  {
+    id: 'infant_seat',
+    name: 'Infant Seat',
+    description: 'Rear-facing safety seat designed for infants from birth up to 13 kg.',
+    price: 15.00,
+    currency: 'USD',
+    type: 'quantity',
+    max_qty: 2,
+    badge: null,
+  },
+  {
+    id: 'gps',
+    name: 'Navigation System (GPS)',
+    description: 'Portable satellite navigation system with up-to-date maps and voice directions.',
+    price: 20.00,
+    currency: 'USD',
+    type: 'boolean',
+    max_qty: 1,
+    badge: 'Recommended',
+  },
+  {
+    id: 'toddler_seat',
+    name: 'Toddler Seat',
+    description: 'Forward-facing seat with 5-point harness for toddlers from 9 to 18 kg.',
+    price: 12.00,
+    currency: 'USD',
+    type: 'quantity',
+    max_qty: 3,
+    badge: null,
+  },
+];
 
 const extractLaravelError = (errorResponse: any): string => {
   if (!errorResponse) return '';
@@ -100,6 +169,33 @@ function BookingContent() {
   const [country, setCountry] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [flightNumber, setFlightNumber] = useState('');
+
+  // ── Extras & Add-ons state (Passed from /options page) ─────────────────────
+  const [extrasList, setExtrasList] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
+  const [selectedExtras, setSelectedExtras] = useState<Record<string, number>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const param = searchParams.get('extras');
+        if (param) return JSON.parse(decodeURIComponent(param));
+        const saved = sessionStorage.getItem('autours_selected_extras');
+        if (saved) return JSON.parse(saved);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    const param = searchParams.get('extras');
+    if (param) {
+      try {
+        setSelectedExtras(JSON.parse(decodeURIComponent(param)));
+      } catch {}
+    }
+  }, [searchParams]);
+
   const isCustomer = Boolean(
     isAuthenticated &&
     loggedInUser &&
@@ -121,8 +217,6 @@ function BookingContent() {
   }, [dispatch]);
 
   // ── Profile prefill: only runs for authenticated customers ──────────────────
-  const [profilePrefillDone, setProfilePrefillDone] = useState(false);
-
   const applyProfileData = useCallback((profile: any) => {
     if (!profile) return;
     const nameParts = (profile.name || '').split(' ');
@@ -157,7 +251,6 @@ function BookingContent() {
         setPhone(cleaned);
       }
     }
-    setProfilePrefillDone(true);
   }, []);
 
   // Mount-time fetch: only for customer accounts
@@ -174,17 +267,74 @@ function BookingContent() {
 
   // ── UI state ─────────────────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showCodeDropdown, setShowCodeDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
-  // ── Vehicle selection (locked to prevent re-fetch swaps) ─────────────────────
+  // ── Vehicle selection (locked to prevent re-fetch swaps & restored from session) ─
   const bookId = searchParams.get('bookId');
-  const [lockedVehicle, setLockedVehicle] = useState<Vehicle | null>(null);
+  const [restoredVehicle, setRestoredVehicle] = useState<Vehicle | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('autours_selected_vehicle');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return null;
+  });
+
+  const [lockedVehicle, setLockedVehicle] = useState<Vehicle | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('autours_selected_vehicle');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return null;
+  });
   const hasLockedRef = useRef(false);
+
+  // Restore search session and parameters if page is reloaded
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedParamsStr = sessionStorage.getItem('autours_search_params');
+        const savedVehicleStr = sessionStorage.getItem('autours_selected_vehicle');
+        const savedDays = sessionStorage.getItem('autours_days_number');
+        const savedCurr = sessionStorage.getItem('autours_fetched_currency');
+
+        const parsedParams = savedParamsStr ? JSON.parse(savedParamsStr) : null;
+        const parsedVehicle = savedVehicleStr ? JSON.parse(savedVehicleStr) : null;
+        const parsedDays = savedDays ? parseInt(savedDays, 10) : undefined;
+
+        if (parsedVehicle && !lockedVehicle) {
+          setLockedVehicle(parsedVehicle);
+          hasLockedRef.current = true;
+        }
+
+        if ((!searchStateParams.location || !vehicles.length) && (parsedParams || parsedVehicle)) {
+          dispatch(
+            restoreSearchSession({
+              searchParams: parsedParams || undefined,
+              daysNumber: parsedDays || undefined,
+              vehicles: parsedVehicle ? [parsedVehicle] : undefined,
+              fetchedCurrency: savedCurr || undefined,
+            })
+          );
+        }
+      } catch (e) {
+        console.error('Failed to restore search session in booking:', e);
+      }
+    }
+  }, [dispatch]);
 
   // When vehicles list updates (initial load or re-fetch), find/update the selected vehicle
   useEffect(() => {
-    if (!vehicles.length) return;
+    if (!vehicles.length) {
+      if (!lockedVehicle && restoredVehicle) {
+        setLockedVehicle(restoredVehicle);
+        hasLockedRef.current = true;
+      }
+      return;
+    }
 
     if (!hasLockedRef.current) {
       // First time: find by ID, bookId, or branch_vehicle_ids
@@ -214,7 +364,6 @@ function BookingContent() {
       }
 
       // If URL has vehicleId or bookId, but we didn't find a match yet, do not lock or fallback yet.
-      // Wait until the list is fully loaded or search parameters are resolved.
       if (!found && (vehicleId || bookId)) {
         return;
       }
@@ -242,15 +391,140 @@ function BookingContent() {
         }
       }
     }
-  }, [vehicles, vehicleId, bookId]);
+  }, [vehicles, vehicleId, bookId, lockedVehicle, restoredVehicle]);
 
-  const selectedVehicle = lockedVehicle || vehicles[0] || null;
+  const selectedVehicle =
+    lockedVehicle ||
+    (vehicleId ? vehicles.find((v: Vehicle) => v.id.toString() === vehicleId) : null) ||
+    vehicles[0] ||
+    restoredVehicle ||
+    null;
+
+  // Persist selected vehicle and current search params to sessionStorage whenever they change
+  useEffect(() => {
+    if (selectedVehicle && typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('autours_selected_vehicle', JSON.stringify(selectedVehicle));
+        if (searchStateParams?.location) {
+          sessionStorage.setItem('autours_search_params', JSON.stringify(searchStateParams));
+        }
+        if (daysNumber) {
+          sessionStorage.setItem('autours_days_number', String(daysNumber));
+        }
+        if (fetchedCurrency) {
+          sessionStorage.setItem('autours_fetched_currency', fetchedCurrency);
+        }
+      } catch (e) {}
+    }
+  }, [selectedVehicle, searchStateParams, daysNumber, fetchedCurrency]);
+
+  // Compute reliable rental days (never 0)
+  const rentalDays = useMemo(() => {
+    if (daysNumber && daysNumber > 0) return daysNumber;
+    if (searchStateParams?.dateFrom && searchStateParams?.dateTo) {
+      const start = new Date(searchStateParams.dateFrom).getTime();
+      const end = new Date(searchStateParams.dateTo).getTime();
+      const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      if (diff > 0) return diff;
+    }
+    if (typeof window !== "undefined") {
+      try {
+        const savedParams = sessionStorage.getItem("autours_search_params");
+        if (savedParams) {
+          const parsed = JSON.parse(savedParams);
+          if (parsed.dateFrom && parsed.dateTo) {
+            const start = new Date(parsed.dateFrom).getTime();
+            const end = new Date(parsed.dateTo).getTime();
+            const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+            if (diff > 0) return diff;
+          }
+        }
+      } catch {}
+    }
+    return 1;
+  }, [daysNumber, searchStateParams]);
+
+  // ── Fetch supplier/branch/country customized extras pricing ──────────────────
+  useEffect(() => {
+    if (!selectedVehicle && !vehicleId && !bookId) return;
+
+    const supplierId =
+      selectedVehicle?.supplier?.id ||
+      selectedVehicle?.supplier_id ||
+      (typeof (selectedVehicle as any)?.supplier === "number"
+        ? (selectedVehicle as any).supplier
+        : undefined);
+
+    const actualVehicleToBook = bookId || selectedVehicle?.id?.toString() || vehicleId || "";
+
+    const availableBranches = (selectedVehicle as any)?.available_branches || [];
+    const branchVehicleIds = (selectedVehicle as any)?.branch_vehicle_ids || {};
+    let resolvedBranchId: number | string | undefined = undefined;
+
+    if (actualVehicleToBook && Object.keys(branchVehicleIds).length > 0) {
+      const match = Object.entries(branchVehicleIds).find(
+        ([_, vId]) => String(vId) === String(actualVehicleToBook)
+      );
+      if (match) resolvedBranchId = Number(match[0]);
+    }
+    if (!resolvedBranchId) {
+      resolvedBranchId =
+        (selectedVehicle as any)?.branch?.id ||
+        (selectedVehicle as any)?.pickup_loc ||
+        (selectedVehicle as any)?.branch_id ||
+        availableBranches[0]?.id;
+    }
+
+    const country =
+      (selectedVehicle as any)?.branch?.country ||
+      availableBranches[0]?.country ||
+      (searchStateParams as any)?.country;
+
+    const currentVehicleId = selectedVehicle?.id || vehicleId || undefined;
+
+    extrasPricingApi
+      .getPricing({
+        supplier_id: supplierId,
+        branch_id: resolvedBranchId,
+        country: country,
+        vehicle_id: currentVehicleId ?? undefined,
+      })
+      .then((res: any) => {
+        const items = Array.isArray(res?.data) 
+          ? res.data 
+          : Array.isArray(res?.data?.data) 
+          ? res.data.data 
+          : Array.isArray(res) 
+          ? res 
+          : [];
+        setExtrasList(items);
+      })
+      .catch(() => {
+        // Keep fallback
+      });
+  }, [selectedVehicle, bookId, vehicleId, (searchStateParams as any)?.country]);
 
   // ── Price calculation ────────────────────────────────────────────────────────
-  const totalPrice = selectedVehicle
-    ? getVehicleDisplayPrice(selectedVehicle, currencyCode as Currency, allRates, daysNumber || 1, fetchedCurrency)
+  const baseVehiclePrice = selectedVehicle
+    ? getVehicleDisplayPrice(selectedVehicle, currencyCode as Currency, allRates, rentalDays, fetchedCurrency)
     : 0;
-  const dailyPrice = daysNumber && daysNumber > 0 ? Math.round(totalPrice / daysNumber) : totalPrice;
+  const dailyPrice = Math.round(baseVehiclePrice / rentalDays);
+
+  // Calculate selected extras total (flat fee per entire rental)
+  const extrasTotalPriceRaw = extrasList.reduce((acc, extra) => {
+    const extraId = extra.key || extra.id;
+    const qty = selectedExtras[extraId] || 0;
+    if (qty > 0) {
+      const basePrice = extra.price !== undefined ? extra.price : (extra.price_usd || 0);
+      const baseCurrency = extra.currency || "USD";
+      const unitPrice = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates);
+      return acc + (unitPrice * qty);
+    }
+    return acc;
+  }, 0);
+  const extrasTotalPrice = Math.round(extrasTotalPriceRaw * 100) / 100;
+
+  const grandTotalPrice = Math.round((baseVehiclePrice + extrasTotalPrice) * 100) / 100;
 
   // ── Re-fetch on currency change ──────────────────────────────────────────────
   const doFetch = useCallback(() => {
@@ -268,6 +542,14 @@ function BookingContent() {
   }, [dispatch, searchStateParams, currencyCode]);
 
   useEffect(() => { doFetch(); }, [currencyCode]);
+
+  // ── Extra change handler ─────────────────────────────────────────────────────
+  const handleExtraChange = (id: string, qty: number) => {
+    setSelectedExtras(prev => ({
+      ...prev,
+      [id]: qty,
+    }));
+  };
 
   // ── Register then Book ───────────────────────────────────────────────────────
   const handleBook = async () => {
@@ -387,7 +669,27 @@ function BookingContent() {
         }
       }
 
-      // Step 2: Book vehicle
+      // Step 2: Prepare formatted extras and book vehicle
+      const formattedExtras = extrasList
+        .filter((e) => (selectedExtras[e.key || e.id] || 0) > 0)
+        .map((e) => {
+          const extraId = e.key || e.id;
+          const qty = selectedExtras[extraId];
+          const basePrice = e.price !== undefined ? e.price : (e.price_usd || 0);
+          const baseCurrency = e.currency || "USD";
+          const unitPrice = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates);
+          return {
+            id: extraId,
+            name: e.name,
+            qty: qty,
+            price: basePrice,
+            base_currency: baseCurrency,
+            unit_price: unitPrice,
+            total_price: unitPrice * qty,
+            currency: currencyCode,
+          };
+        });
+
       const backendCurrency = SUPPORTED_BACKEND_CURRENCIES.includes(currencyCode) ? currencyCode : 'AED';
       const actualVehicleToBook = searchParams.get('bookId') || selectedVehicle.id;
       const driverAge = searchParams.get('driver_age') || searchParams.get('age') || (searchStateParams.driverAge ? String(searchStateParams.driverAge) : '30');
@@ -403,9 +705,12 @@ function BookingContent() {
           time_to: searchStateParams.endTime || '10:00',
           currency: backendCurrency,
           vehicle: actualVehicleToBook,
-          price: selectedVehicle.final_price,
+          price: grandTotalPrice,
           driver_age: driverAge,
           residence_country: residenceCountry,
+          flight_number: flightNumber.trim() || undefined,
+          extras: formattedExtras.length > 0 ? formattedExtras : undefined,
+          extras_price: extrasTotalPrice,
         }),
         {
           loading: 'Processing your booking...',
@@ -427,21 +732,36 @@ function BookingContent() {
   // ── Render ───────────────────────────────────────────────────────────────────
   const actualVehicleToBook = searchParams.get('bookId') || selectedVehicle?.id?.toString() || vehicleId || '';
 
+  const selectedExtrasCount = Object.values(selectedExtras).filter(q => q > 0).length;
+
   return (
-    <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-10">
+    <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-8">
+
+      {/* Back Link */}
+      <div className="mb-4">
+        <Link
+          href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}&extras=${encodeURIComponent(JSON.stringify(selectedExtras))}`}
+          className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors group cursor-pointer"
+        >
+          <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-primary group-hover:text-gray-900 flex items-center justify-center transition-colors">
+            <ArrowLeft size={14} />
+          </div>
+          <span>Back to Extras &amp; Options</span>
+        </Link>
+      </div>
 
       {/* Mobile Summary + Car */}
       <div className="lg:hidden mb-6 space-y-4">
         <SearchSummary hideEditButton={true} forceMobileLayout={true} />
         {selectedVehicle && (
-          <CarCard vehicle={selectedVehicle} daysNumber={daysNumber} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
+          <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
         )}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
 
         {/* ── LEFT SIDEBAR ────────────────────────────────────────────────────── */}
-        <aside className="w-full lg:w-[300px] shrink-0 space-y-5 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
+        <aside className="w-full lg:w-[320px] shrink-0 space-y-5 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
           <div className="hidden lg:block">
             <SearchSummary hideEditButton={true} />
           </div>
@@ -453,27 +773,71 @@ function BookingContent() {
             </div>
             <div className="p-5 space-y-3">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-gray-900">{totalPrice.toLocaleString()}</span>
+                <span className="text-3xl font-black text-gray-900">
+                  {grandTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                </span>
                 <span className="text-xl font-black text-gray-600">{currencyCode}</span>
               </div>
               <p className="text-xs text-green-700 font-bold">
-                ✓ For {daysNumber} {daysNumber === 1 ? 'day' : 'days'}
+                ✓ For {rentalDays} {rentalDays === 1 ? 'day' : 'days'}
               </p>
-              <div className="pt-3 border-t border-gray-100 space-y-2">
-                {[
-                  { label: 'Daily Rate',     value: `${dailyPrice.toLocaleString()} ${currencyCode}` },
-                  { label: 'Rental Cost',    value: `${totalPrice.toLocaleString()} ${currencyCode}` },
-                  { label: 'Extras',         value: `0 ${currencyCode}` },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between text-sm text-gray-600 font-medium">
-                    <span>{label}</span>
-                    <span className="text-gray-900">{value}</span>
+
+              <div className="pt-3 border-t border-gray-100 space-y-2.5">
+                <div className="flex justify-between text-sm text-gray-600 font-medium">
+                  <span>Daily Rate</span>
+                  <span className="text-gray-900 font-bold">{dailyPrice.toLocaleString()} {currencyCode}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-600 font-medium">
+                  <span>Rental Cost</span>
+                  <span className="text-gray-900 font-bold">{baseVehiclePrice.toLocaleString()} {currencyCode}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm text-gray-600 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <span>Selected Extras</span>
+                    {selectedExtrasCount > 0 && (
+                      <span className="px-1.5 py-0.2 bg-blue-100 text-blue-800 text-[10px] font-black rounded-full">
+                        {selectedExtrasCount}
+                      </span>
+                    )}
+                    <Link
+                      href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}&extras=${encodeURIComponent(JSON.stringify(selectedExtras))}`}
+                      className="text-primary-800 hover:underline text-[10px] font-bold ml-0.5"
+                    >
+                      (Edit)
+                    </Link>
+                  </span>
+                  <span className={extrasTotalPrice > 0 ? "text-blue-700 font-black" : "text-gray-900 font-bold"}>
+                    {extrasTotalPrice > 0 ? `+${extrasTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "0.00"} {currencyCode}
+                  </span>
+                </div>
+
+                {/* Extras itemized list in sidebar */}
+                {selectedExtrasCount > 0 && (
+                  <div className="pl-2 pr-1 py-1.5 bg-gray-50 rounded-xl space-y-1 text-xs border border-gray-100">
+                    {extrasList.map(ex => {
+                      const extraId = ex.key || ex.id;
+                      const qty = selectedExtras[extraId] || 0;
+                      if (qty <= 0) return null;
+                      const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
+                      const baseCurrency = ex.currency || "USD";
+                      const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
+                      return (
+                        <div key={extraId} className="flex justify-between text-[11px] text-gray-600">
+                          <span className="truncate max-w-[140px]">• {ex.name} {qty > 1 ? `(x${qty})` : ''}</span>
+                          <span className="font-semibold text-gray-900">{itemTotal.toFixed(2)} {currencyCode}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
+
                 <div className="h-px bg-gray-200 my-1" />
-                <div className="flex justify-between font-black text-gray-900">
-                  <span>Grand Total</span>
-                  <span>{totalPrice.toLocaleString()} {currencyCode}</span>
+                <div className="flex justify-between items-baseline font-black text-gray-900">
+                  <span className="text-base">Grand Total</span>
+                  <span className="text-xl text-primary-700">
+                    {grandTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencyCode}
+                  </span>
                 </div>
               </div>
             </div>
@@ -486,7 +850,7 @@ function BookingContent() {
           {/* Desktop Car Card */}
           <div className="hidden lg:block">
             {selectedVehicle ? (
-              <CarCard vehicle={selectedVehicle} daysNumber={daysNumber} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
+              <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
             ) : (
               <div className="p-8 bg-white rounded-2xl border border-gray-100 text-center text-gray-500">
                 No vehicle selected.
@@ -494,16 +858,92 @@ function BookingContent() {
             )}
           </div>
 
-          {/* ── Registration Form ──────────────────────────────────────────────── */}
+          {/* ── 1. Checklist Before Pick-up Section ───────────────────────────── */}
+          <BookingChecklist
+            pickupTime={searchStateParams.startTime || '10:00'}
+            depositAmount={selectedVehicle?.deposit}
+            currencyCode={currencyCode}
+          />
+
+          {/* ── 2. Selected Extras Summary Card (Replaced big extras selector) ── */}
+          {selectedExtrasCount > 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-200/90 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-black text-gray-900">
+                      Selected Add-ons ({selectedExtrasCount})
+                    </h4>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      Included in Total Price
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {extrasList
+                      .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
+                      .map((ex) => {
+                        const qty = selectedExtras[ex.key || ex.id];
+                        const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
+                        const baseCurrency = ex.currency || "USD";
+                        const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
+                        return (
+                          <span
+                            key={ex.key || ex.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-xs font-bold"
+                          >
+                            <span className="text-emerald-600 font-black">✓</span>
+                            <span>{ex.name} {qty > 1 ? `(x${qty})` : ""}</span>
+                            <span className="text-gray-400 font-semibold">• {itemTotal.toFixed(2)} {currencyCode}</span>
+                          </span>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}&extras=${encodeURIComponent(JSON.stringify(selectedExtras))}`}
+                className="shrink-0 px-4 py-2 rounded-xl border-2 border-primary hover:bg-primary text-gray-900 font-black text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap"
+              >
+                Change Extras
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
+                  <Sparkles size={15} />
+                </div>
+                <span className="text-gray-600 font-medium">
+                  Need child seats, an additional driver, or a GPS system?
+                </span>
+              </div>
+              <Link
+                href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}`}
+                className="px-4 py-1.5 rounded-xl bg-primary/20 hover:bg-primary text-gray-900 font-black text-xs transition-colors shrink-0 whitespace-nowrap"
+              >
+                + Add Extras
+              </Link>
+            </div>
+          )}
+
+          {/* ── 3. Registration & Flight Details Form ─────────────────────────── */}
           <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
             <div className="mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
                   <User size={16} className="text-gray-900" />
                 </div>
-                <h2 className="text-[20px] font-black tracking-tight text-gray-900">Register to Continue</h2>
+                <h2 className="text-[20px] font-black tracking-tight text-gray-900">
+                  Driver &amp; Booking Information
+                </h2>
               </div>
-              <p className="text-sm text-gray-500 mt-1 ml-11">Complete your details to book this vehicle</p>
+              <p className="text-sm text-gray-500 mt-1 ml-11">
+                Complete your details and flight info to confirm your reservation
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -567,7 +1007,6 @@ function BookingContent() {
               <div className="md:col-span-1">
                 <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  {/* Code Dropdown */}
                   <div className="relative w-full sm:w-28 shrink-0">
                     <select
                       value={mobileCode}
@@ -598,7 +1037,7 @@ function BookingContent() {
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => { setShowCountryDropdown(!showCountryDropdown); setShowCodeDropdown(false); }}
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
                     className="w-full flex items-center justify-between gap-2 px-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 bg-white"
                   >
                     <span className="flex items-center gap-2 text-left">
@@ -658,7 +1097,15 @@ function BookingContent() {
                 )}
               </div>
 
-              {/* ── 3 Checkboxes (same as legacy) ────────────────────────────── */}
+              {/* ── Flight Details (Optional) ─────────────────────────────────── */}
+              <div className="md:col-span-2 pt-2 border-t border-gray-100">
+                <FlightDetailsInput
+                  value={flightNumber}
+                  onChange={setFlightNumber}
+                />
+              </div>
+
+              {/* ── Checkboxes ────────────────────────────────────────────────── */}
               <div className="pt-4 border-t border-gray-100 space-y-4 md:col-span-2">
 
                 <CheckboxItem
@@ -692,7 +1139,7 @@ function BookingContent() {
                 <button
                   onClick={handleBook}
                   disabled={isSubmitting || isManagementAccount}
-                  className="w-full py-4 px-8 bg-primary text-gray-900 rounded-xl font-black text-[16px] transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
+                  className="w-full py-4 px-8 bg-primary text-gray-900 rounded-xl font-black text-[16px] transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/10 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -702,7 +1149,7 @@ function BookingContent() {
                   ) : isManagementAccount ? (
                     'Cannot Book with Management Account'
                   ) : (
-                    'Confirm Booking'
+                    `Confirm Booking • ${grandTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currencyCode}`
                   )}
                 </button>
               </div>
@@ -751,7 +1198,7 @@ export default function BookingPage() {
   return (
     <main className="min-h-screen bg-[#fcfcfc]">
       <Navbar />
-      <Stepper currentStep={3} />
+      <Stepper currentStep={4} />
       <Suspense fallback={<div className="p-20 text-center text-gray-400">Loading...</div>}>
         <BookingContent />
       </Suspense>

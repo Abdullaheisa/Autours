@@ -57,7 +57,24 @@ function SearchPageContent() {
     totalPages,
     perPage,
     count,
+    fetchedCurrency,
   } = useSelector((state: RootState) => state.search);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && searchParams.location && searchParams.dateFrom && searchParams.dateTo) {
+      try {
+        sessionStorage.setItem('autours_search_params', JSON.stringify(searchParams));
+        if (daysNumber) {
+          sessionStorage.setItem('autours_days_number', String(daysNumber));
+        }
+        if (fetchedCurrency) {
+          sessionStorage.setItem('autours_fetched_currency', fetchedCurrency);
+        }
+      } catch (e) {
+        console.error('Failed to sync search params to sessionStorage', e);
+      }
+    }
+  }, [searchParams, daysNumber, fetchedCurrency]);
 
   const buildFilterPayload = useCallback((): FilterPayload | null => {
     if (!searchParams.location || !searchParams.dateFrom || !searchParams.dateTo) return null;

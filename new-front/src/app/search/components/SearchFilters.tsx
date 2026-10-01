@@ -208,7 +208,7 @@ function FiltersContent({
       <div className="bg-yellow-50 px-5 py-3.5 border-b-2 border-yellow-100 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={14} className="text-yellow-700" />
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-800">Filter By</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.1em] text-gray-900">Filter By</h3>
         </div>
         <button
           onClick={onClearAll}
@@ -545,15 +545,27 @@ function FilterSection({ title, children, badge, expanded = false, isLast = fals
   const [isOpen, setIsOpen] = useState(expanded);
   return (
     <div className={`px-4 pt-3.5 pb-0 transition-colors ${!isLast ? 'border-b-2 border-gray-150' : ''}`}>
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between group pb-3.5">
-        <div className="flex items-center gap-2">
-          <span className="text-[13.5px] font-black text-gray-900 tracking-tight uppercase group-hover:text-amber-600 transition-colors">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between group pb-3.5 cursor-pointer select-none text-left"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="w-1.5 h-3.5 rounded-full bg-primary inline-block shrink-0 group-hover:scale-y-110 transition-transform" />
+          <span className="text-[13px] sm:text-[13.5px] font-black text-gray-950 uppercase tracking-[0.08em] group-hover:text-amber-600 transition-colors truncate">
             {title}
           </span>
-          {badge && <span className="bg-primary/10 text-primary-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">{badge}</span>}
+          {badge && (
+            <span className="bg-primary/15 text-gray-950 text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0">
+              {badge}
+            </span>
+          )}
         </div>
         <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown size={16} className={`text-gray-400 ${isOpen ? 'text-yellow-500' : ''}`} />
+          <ChevronDown
+            size={16}
+            className={`transition-colors stroke-[2.5] ${isOpen ? 'text-amber-500' : 'text-gray-400 group-hover:text-gray-600'}`}
+          />
         </motion.div>
       </button>
 

@@ -26,11 +26,16 @@ class Rental extends Model
         'payment_method_id',
         'external_reservation_no',
         'driver_age',
-        'residence_country'
+        'residence_country',
+        'extras',
+        'extras_price',
+        'flight_number'
     ];
 
     protected $casts = [
-        'rate' => 'decimal:1'
+        'rate' => 'decimal:1',
+        'extras' => 'array',
+        'extras_price' => 'decimal:2'
     ];
     public function vehicle() {
         return $this->belongsTo(Vehicle::class, 'vehicle_id', 'id')->withTrashed();

@@ -191,6 +191,70 @@ export const bookingApi = {
   cancel: (data: unknown) => apiClient.post("/cancel/booking", data),
 };
 
+// Extras Pricing API
+export const extrasPricingApi = {
+  // Public: get active extras for checkout (scoped by supplier, branch, country, vehicle_id)
+  getPricing: (
+    params?:
+      | {
+          supplier_id?: number | string;
+          branch_id?: number | string;
+          country?: string;
+          vehicle_id?: number | string;
+        }
+      | number
+      | string
+  ) => {
+    if (typeof params === "object" && params !== null) {
+      return apiClient.get("/api/extras-pricing", { params });
+    }
+    return apiClient.get("/api/extras-pricing", { params: { supplier_id: params } });
+  },
+
+  // Admin: full CRUD for the extras catalog
+  getAllAdmin: () => apiClient.get("/api/admin/extras"),
+  create: (data: unknown) => apiClient.post("/api/admin/extras", data),
+  update: (id: number | string, data: unknown) => apiClient.put(`/api/admin/extras/${id}`, data),
+  delete: (id: number | string) => apiClient.delete(`/api/admin/extras/${id}`),
+  toggleActive: (id: number | string) => apiClient.post(`/api/admin/extras/${id}/toggle-active`),
+
+  // Admin: per-supplier extras management
+  adminGetSupplierExtras: (supplierId: number | string) => apiClient.get(`/api/admin/supplier/${supplierId}/extras`),
+  adminSaveSupplierExtras: (supplierId: number | string, extras: unknown[]) =>
+    apiClient.post(`/api/admin/supplier/${supplierId}/extras`, { extras }),
+
+  // Admin: bulk apply profit/price to all or filtered suppliers
+  adminBulkApply: (data: {
+    scope: 'all' | 'company' | 'country' | 'branch';
+    supplier_id?: number | string;
+    country?: string;
+    branch_id?: number | string;
+    profit_percent?: number | null;
+    custom_price?: number | null;
+    enable_all?: boolean;
+    extra_ids?: number[];
+  }) => apiClient.post('/api/admin/extras/bulk-apply', data),
+
+  // Supplier (company): get catalog with own config + save changes
+  supplierGetCatalog: () => apiClient.get("/api/supplier/extras/catalog"),
+  supplierSaveExtras: (extras: unknown[]) => apiClient.post("/api/supplier/extras/save", { extras }),
+
+  // Supplier: branch-scoped extras
+  supplierGetBranchCatalog: (branch_id: string | number) => apiClient.get(`/api/supplier/extras/catalog`, { params: { branch_id } }),
+  supplierSaveBranchExtras: (branch_id: string | number, extras: unknown[]) =>
+    apiClient.post(`/api/supplier/extras/save`, { extras, branch_id }),
+
+  // Supplier: country-scoped extras
+  supplierGetCountryCatalog: (country: string) => apiClient.get(`/api/supplier/extras/catalog`, { params: { country } }),
+  supplierSaveCountryExtras: (country: string, extras: unknown[]) =>
+    apiClient.post(`/api/supplier/extras/save`, { extras, country }),
+
+  // Legacy compat
+  updateSupplierPricing: (pricing: Record<string, number>) => apiClient.post("/api/supplier/extras-pricing", { pricing }),
+  updateAdminPricing: (supplier_id: number | string, pricing: Record<string, number>) =>
+    apiClient.post("/api/admin/extras-pricing", { supplier_id, pricing }),
+};
+
 // Membership / Requests API
 export const membershipApi = {
   getRequests: () => apiClient.get("/api/admin/get/requests"),

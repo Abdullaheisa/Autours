@@ -223,6 +223,32 @@ const searchSlice = createSlice({
     applyLocalFilters: () => {
       // الفلترة بالكامل اتقلت لصفحة الـ SearchPage عبر useMemo لأداء أسرع ومنع التضارب
     },
+    restoreSearchSession: (
+      state,
+      action: PayloadAction<{
+        searchParams?: Partial<SearchParams>;
+        daysNumber?: number;
+        vehicles?: Vehicle[];
+        fetchedCurrency?: string;
+      }>
+    ) => {
+      if (action.payload.searchParams) {
+        state.searchParams = { ...state.searchParams, ...action.payload.searchParams };
+      }
+      if (action.payload.daysNumber !== undefined && action.payload.daysNumber > 0) {
+        state.daysNumber = action.payload.daysNumber;
+      }
+      if (action.payload.vehicles && action.payload.vehicles.length > 0) {
+        state.vehicles = action.payload.vehicles;
+        state.count = action.payload.vehicles.length;
+      }
+      if (action.payload.fetchedCurrency) {
+        state.fetchedCurrency = action.payload.fetchedCurrency;
+      }
+      state.hasSearched = true;
+      state.isSearching = false;
+      state.isFiltering = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -335,6 +361,7 @@ export const {
   clearErrors,
   applyLocalFilters,
   setPage,
+  restoreSearchSession,
 } = searchSlice.actions;
 export const fetchCheapestVehicles = createAsyncThunk(
   'search/fetchCheapestVehicles',

@@ -59,6 +59,9 @@ export default function CompanyRentalsSection() {
         country: r.residence_country || r.customer?.country || "UAE",
         driver_age: r.driver_age || null,
         residence_country: r.residence_country || r.customer?.country || null,
+        flight_number: r.flight_number || null,
+        extras: r.extras || null,
+        extras_price: r.extras_price || null,
         duration: r.number_of_days || (r.start_date && r.end_date ? Math.ceil(Math.abs(new Date(r.end_date).getTime() - new Date(r.start_date).getTime()) / (1000 * 60 * 60 * 24)) : 1),
         period: r.start_date && r.end_date ? `${r.start_date} - ${r.end_date}` : (r.start_date || "N/A"),
         startedAt: r.start_date || r.created_at || "N/A",
@@ -272,11 +275,21 @@ export default function CompanyRentalsSection() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-gray-900">{rental.customerName}</span>
-                          <div className="flex items-center gap-1.5 mt-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                             <span className="text-[10px] text-gray-400 font-medium">{rental.country}</span>
                             {rental.driver_age && (
                               <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
                                 Age: {rental.driver_age}
+                              </span>
+                            )}
+                            {rental.flight_number && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200" title={`Flight: ${rental.flight_number}`}>
+                                ✈️ {rental.flight_number}
+                              </span>
+                            )}
+                            {rental.extras && Array.isArray(rental.extras) && rental.extras.length > 0 && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200" title={rental.extras.map((e: any) => e.name || e).join(', ')}>
+                                🎁 {rental.extras.length} {rental.extras.length === 1 ? 'extra' : 'extras'}
                               </span>
                             )}
                           </div>

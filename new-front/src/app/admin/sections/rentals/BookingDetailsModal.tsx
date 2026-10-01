@@ -405,6 +405,24 @@ export default function BookingDetailsModal({
                     </span>
                   )}
                 </div>
+
+                {/* Flight Number if present */}
+                {(rental.flight_number || rental.raw?.flight_number) && (
+                  <div className="flex items-center justify-between bg-sky-50 px-3 py-2 rounded-xl border border-sky-200 text-sky-900">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs">✈️</span>
+                      <span className="font-semibold text-xs">Flight Number:</span>
+                      <span className="font-black text-xs uppercase tracking-wider">{rental.flight_number || rental.raw?.flight_number}</span>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(rental.flight_number || rental.raw?.flight_number, "Flight Number")}
+                      className="p-1 text-sky-600 hover:text-sky-800 rounded transition-colors"
+                      title="Copy Flight Number"
+                    >
+                      {copiedField === "Flight Number" ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -620,6 +638,37 @@ export default function BookingDetailsModal({
                 </span>
               </div>
             </div>
+
+            {/* Extras breakdown if available */}
+            {((rental.extras && Array.isArray(rental.extras) && rental.extras.length > 0) || (rental.raw?.extras && Array.isArray(rental.raw.extras) && rental.raw.extras.length > 0)) && (
+              <div className="mt-4 pt-3.5 border-t border-gray-200/60">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-black text-gray-800 flex items-center gap-1.5">
+                    <span>🎁 Selected Add-ons / Extras</span>
+                  </span>
+                  {(rental.extras_price || rental.raw?.extras_price) && (
+                    <span className="text-xs font-extrabold text-blue-700">
+                      Total Extras: +{rental.extras_price || rental.raw?.extras_price} {rental.currency || ""}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {(rental.extras || rental.raw?.extras || []).map((ex: any, idx: number) => {
+                    const name = typeof ex === 'object' ? (ex.name || ex.id) : String(ex);
+                    const qty = typeof ex === 'object' && ex.qty ? ex.qty : 1;
+                    const price = typeof ex === 'object' && ex.total_price ? `${ex.total_price} ${ex.currency || rental.currency || ""}` : "";
+                    return (
+                      <div key={idx} className="bg-white px-3 py-2 rounded-xl border border-gray-200 flex items-center justify-between text-xs">
+                        <span className="font-semibold text-gray-800 truncate">
+                          • {name} {qty > 1 ? `(x${qty})` : ''}
+                        </span>
+                        {price && <span className="font-bold text-gray-900 shrink-0 ml-2">{price}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Rating & Review (if present) */}

@@ -119,6 +119,7 @@ export const sidebarItems = [
   { id: "reviews", label: "Rental Reviews", icon: "Star" },
   { id: "included", label: "What is included?", icon: "CheckCircle2" },
   { id: "bulk-inclusions", label: "Bulk Inclusions", icon: "ListChecks" },
+  { id: "extras-pricing", label: "Extras Pricing", icon: "Tag" },
   { id: "promos", label: "Promos", icon: "Tag" },
   { id: "subscribers", label: "Subscribers", icon: "Mail" },
   { id: "contest-popup", label: "Contest Control", icon: "Gift" },

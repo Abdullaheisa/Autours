@@ -20,6 +20,7 @@ import PromosSection from "./sections/promos/PromosSection";
 import CompanyRentalReviewsSection from "./sections/rental-reviews/CompanyRentalReviewsSection";
 import CompanyBulkUploadSection from "./sections/bulk-upload/CompanyBulkUploadSection";
 import CompanyDepositSection from "./sections/deposit/CompanyDepositSection";
+import CompanyExtrasPricingSection from "./sections/extras/CompanyExtrasPricingSection";
 import EditVehicleSection from "./sections/create-vehicle/EditVehicleSection";
 import NotificationsSection from "@/app/admin/sections/notifications/NotificationsSection";
 
@@ -29,6 +30,7 @@ const pageTitles: Record<string, string> = {
   calendar: "Bookings Calendar",
   branches: "Branches",
   "payment-methods": "Payment Methods",
+  "extras-pricing": "Extras & Add-ons Pricing",
   "create-vehicle": "Create Vehicle",
   deposit: "Security Deposit",
   "price-list": "Price List",
@@ -115,6 +117,7 @@ export default function CompanyDashboard() {
       case "calendar":        return <CompanyCalendarSection />;
       case "branches":        return <BranchesSection />;
       case "payment-methods": return <PaymentMethodsSection />;
+      case "extras-pricing":  return <CompanyExtrasPricingSection />;
       case "create-vehicle":  return <CreateVehicleSection onBack={() => setActiveItem("vehicles", true)} />;
       case "edit-vehicle":    return <EditVehicleSection vehicleId={editVehicleId!} onBack={() => setActiveItem("vehicles", true)} />;
       case "price-list":      return <PriceListSection />;

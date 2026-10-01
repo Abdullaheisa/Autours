@@ -20,3 +20,6 @@ yarn-error.log
 project_reference.md
 yarn.lock
 autours.sql
+.agents/
+*.zip
+*.bak

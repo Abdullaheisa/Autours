@@ -40,6 +40,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cancel/booking', [\App\Http\Controllers\BookingsController::class, 'cancelBooking']);
 });
 Route::get('/booking/{id}', [\App\Http\Controllers\BookingsController::class, 'bookingInvoice']);
+Route::get('/extras-pricing', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'getPricing']);
+Route::post('/supplier/extras-pricing', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'updateSupplierPricing'])->middleware('auth:sanctum');
+Route::post('/admin/extras-pricing', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'updateAdminPricing'])->middleware('auth:sanctum');
+
+// Admin Extras Management CRUD
+Route::get('/admin/extras', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminIndex'])->middleware('auth:sanctum');
+Route::post('/admin/extras', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminStore'])->middleware('auth:sanctum');
+Route::put('/admin/extras/{id}', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminUpdate'])->middleware('auth:sanctum');
+Route::delete('/admin/extras/{id}', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminDestroy'])->middleware('auth:sanctum');
+Route::post('/admin/extras/{id}/toggle-active', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminToggleActive'])->middleware('auth:sanctum');
+
+// Admin: Manage extras per supplier
+Route::get('/admin/supplier/{supplierId}/extras', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminGetSupplierExtras'])->middleware('auth:sanctum');
+Route::post('/admin/supplier/{supplierId}/extras', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminSaveSupplierExtras'])->middleware('auth:sanctum');
+
+// Admin: Bulk apply profit/price across all or filtered suppliers
+Route::post('/admin/extras/bulk-apply', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminBulkApply'])->middleware('auth:sanctum');
+
+// Supplier: Get extras catalog + their own config, and save
+Route::get('/supplier/extras/catalog', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'supplierGetCatalog'])->middleware('auth:sanctum');
+Route::post('/supplier/extras/save', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'supplierSaveExtras'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {

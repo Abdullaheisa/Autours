@@ -204,7 +204,7 @@ function ChicTooltip({
   return (
     <div
       ref={containerRef}
-      className="relative inline-flex items-center justify-center shrink-0 grow-0 w-4 h-4 group cursor-pointer"
+      className="relative inline-flex items-center justify-center shrink-0 grow-0 group cursor-pointer"
       onMouseEnter={handleOpen}
       onMouseLeave={() => setIsOpen(false)}
       onClick={handleToggle}
@@ -212,9 +212,9 @@ function ChicTooltip({
       <button
         type="button"
         aria-label="More information"
-        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center transition-all duration-200 border shadow-2xs focus:outline-none shrink-0 ${variantStyles.btn}`}
+        className={`w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center transition-all duration-200 border shadow-2xs focus:outline-none shrink-0 ${variantStyles.btn}`}
       >
-        <Info size={10} className="stroke-[2.2]" />
+        <Info size={11} className="stroke-[2.2]" />
       </button>
 
       <AnimatePresence>
@@ -304,7 +304,26 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       : [];
 
   const { code: currencyCode, allRates } = useSelector((state: RootState) => state.currency);
-  const { vehicles, filteredSuppliers, fetchedCurrency } = useSelector((state: RootState) => state.search);
+  const { vehicles, filteredSuppliers, fetchedCurrency, searchParams } = useSelector((state: RootState) => state.search);
+
+  const handlePersistVehicle = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('autours_selected_vehicle', JSON.stringify(vehicle));
+        if (searchParams && searchParams.location) {
+          sessionStorage.setItem('autours_search_params', JSON.stringify(searchParams));
+        }
+        if (daysNumber) {
+          sessionStorage.setItem('autours_days_number', String(daysNumber));
+        }
+        if (fetchedCurrency) {
+          sessionStorage.setItem('autours_fetched_currency', fetchedCurrency);
+        }
+      } catch (e) {
+        console.error('Failed to cache vehicle selection', e);
+      }
+    }
+  };
 
   const formatSpecDisplay = (val: any, label: string) => {
     const sVal = String(val ?? '').trim();
@@ -707,9 +726,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   const renderPromoItem = (promoText: string, promoDesc: string, tooltipPosition: 'top' | 'bottom' = 'top') => {
     if (!promoText) return null;
     return (
-      <div className="inline-flex items-center gap-1.5 text-emerald-700 min-w-0 max-w-full py-0.5">
-        <Check size={14} className="stroke-[2.5] shrink-0 text-emerald-600" />
-        <span className="text-xs xl:text-[13px] font-bold text-emerald-800 tracking-tight truncate leading-snug">
+      <div className="inline-flex items-center gap-1.5 min-w-0 max-w-full py-0.5 select-none">
+        <Check size={16} className="stroke-[3] shrink-0 text-emerald-600" />
+        <span className="text-[13px] sm:text-[13.5px] xl:text-sm font-extrabold text-emerald-700 tracking-wide truncate leading-snug">
           {promoText}
         </span>
         {promoDesc && (
@@ -945,7 +964,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         <div className="p-4 pt-6">
           {(firstPromo || secondPromo) && (
-            <div className="flex flex-col gap-1.5 justify-start mb-6">
+            <div className="flex flex-wrap gap-2 justify-start mb-4">
               {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
               {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'top')}
             </div>
@@ -1029,7 +1048,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   </div>
                 )}
                 <Link
-                  href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                  href={`/options?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                  onClick={handlePersistVehicle}
                   className="px-4 md:px-6 py-2 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] md:text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
                 >
                   Book Now
@@ -1141,7 +1161,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
           </div>
 
-          <div className="hidden lg:flex lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 min-w-0 flex-col justify-center items-start gap-1 px-4 lg:px-5">
+          <div className="hidden lg:flex lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 min-w-0 flex-col justify-center items-start gap-2 px-3 lg:px-4">
             {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
             {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
           </div>
@@ -1231,9 +1251,9 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
             </div>
           </div>
 
-          <div className="w-full lg:w-[210px] xl:w-[240px] 2xl:w-[260px] lg:shrink-0 p-4 lg:p-5 pt-4 lg:pt-6 flex flex-col lg:items-start items-start justify-center lg:justify-between gap-5 lg:gap-0 self-stretch">
+          <div className="w-full lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 p-4 lg:p-5 pt-4 lg:pt-6 flex flex-col lg:items-start items-start justify-center lg:justify-between gap-5 lg:gap-0 self-stretch">
             {(firstPromo || secondPromo) && (
-              <div className="inline-flex lg:hidden flex-col gap-1.5 items-start text-green-700">
+              <div className="inline-flex lg:hidden flex-wrap gap-2 items-start">
                 {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'bottom')}
                 {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
               </div>
@@ -1317,7 +1337,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     </div>
                   )}
                   <Link
-                    href={`/booking?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                    href={`/options?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                    onClick={handlePersistVehicle}
                     className="w-auto lg:w-full py-2 lg:py-2.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] lg:text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
                   >
                     Book Now

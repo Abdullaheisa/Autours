@@ -81,10 +81,11 @@
             <td class="border-color" style=" width: 47%; text-align: left;background-color: #faefac">
                 <h3 style="background: #ffd719">Customer Name</h3>
                 <p>{{(isset($rental) && $rental->customer) ? $rental->customer->name : ''}}</p>
-                @if(isset($rental) && ($rental->residence_country || $rental->driver_age))
+                @if(isset($rental) && ($rental->residence_country || $rental->driver_age || $rental->flight_number))
                 <p style="font-size: 11px; margin-top: 4px; color: #444;">
                     @if($rental->residence_country) <strong>Country of Residence:</strong> {{$rental->residence_country}} @endif
                     @if($rental->driver_age) &nbsp;&nbsp; <strong>Driver Age:</strong> {{$rental->driver_age}} @endif
+                    @if($rental->flight_number) &nbsp;&nbsp; <strong>Flight Number:</strong> {{$rental->flight_number}} @endif
                 </p>
                 @endif
             </td>
@@ -92,6 +93,14 @@
             <td class="border-color" style=" width: 47%; background-color: #faefac">
                 <h3 style="background: #ffd719">Supplier</h3>
                 <p>{{(isset($rental) && $rental->supplier) ?  $rental->supplier->name : ''}}</p>
+                @if(isset($rental) && !empty($rental->extras) && is_array($rental->extras) && count($rental->extras) > 0)
+                <div style="font-size: 11px; margin-top: 4px; color: #333;">
+                    <strong>Selected Extras:</strong>
+                    @foreach($rental->extras as $extraItem)
+                        {{ is_array($extraItem) ? ($extraItem['name'] ?? $extraItem['id']) : $extraItem }}@if(!$loop->last), @endif
+                    @endforeach
+                </div>
+                @endif
             </td>
         </tr>
     </table>

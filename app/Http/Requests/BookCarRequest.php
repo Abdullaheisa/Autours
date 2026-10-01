@@ -29,7 +29,12 @@ class BookCarRequest extends FormRequest
             'pickupLoc' => 'required',
             'time_from' => 'required|date_format:H:i',
             'time_to' => 'required|date_format:H:i',
-            'old_rental_id' => 'nullable|integer|exists:rentals,id'
+            'old_rental_id' => 'nullable|integer|exists:rentals,id',
+            'flight_number' => 'nullable|string|max:50',
+            'extras' => 'nullable|array',
+            'extras_price' => 'nullable|numeric|min:0',
+            'driver_age' => 'nullable|string|max:20',
+            'residence_country' => 'nullable|string|max:100',
         ];
     }
 }

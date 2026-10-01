@@ -42,7 +42,8 @@ class User extends Authenticatable
         'api_password',
         'default_pricing_mode',
         'default_custom_price_tiers',
-        'vehicles_hidden'
+        'vehicles_hidden',
+        'extras_pricing'
     ];
 
     /**
@@ -65,6 +66,7 @@ class User extends Authenticatable
         'integration' => 'boolean',
         'default_custom_price_tiers' => 'array',
         'vehicles_hidden' => 'boolean',
+        'extras_pricing' => 'array',
     ];
 
     public function vehicles() {

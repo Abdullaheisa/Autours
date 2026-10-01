@@ -19,6 +19,7 @@ import RentalsSection from "@/app/admin/sections/rentals/RentalsSection";
 import RentalReviewsSection from "@/app/admin/sections/rental-reviews/RentalReviewsSection";
 import WhatIsIncludedSection from "@/app/admin/sections/what-is-included/WhatIsIncludedSection";
 import BulkInclusionsSection from "@/app/admin/sections/bulk-inclusions/BulkInclusionsSection";
+import AdminExtrasPricingSection from "@/app/admin/sections/extras/AdminExtrasPricingSection";
 import PromosSection from "@/app/admin/sections/promos/PromosSection";
 import SubscribersSection from "@/app/admin/sections/subscribers/SubscribersSection";
 import ContestPopupControlPage from "@/app/admin/sections/contest-control/ContestPopupControlPage";
@@ -48,6 +49,7 @@ const pageTitles: Record<string, string> = {
   reviews: "Rental Reviews",
   included: "What is included?",
   "bulk-inclusions": "Bulk Inclusions",
+  "extras-pricing": "Rental Extras Pricing",
   promos: "Promos",
   subscribers: "Subscribers",
   "contest-popup": "Contest Campaign Control",
@@ -151,6 +153,7 @@ export default function AdminDashboard() {
       case "reviews":     return <RentalReviewsSection />;
       case "included":    return <WhatIsIncludedSection />;
       case "bulk-inclusions": return <BulkInclusionsSection />;
+      case "extras-pricing": return <AdminExtrasPricingSection />;
       case "promos":      return <PromosSection />;
       case "subscribers": return <SubscribersSection />;
       case "contest-popup": return <ContestPopupControlPage />;

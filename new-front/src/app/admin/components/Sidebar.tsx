@@ -74,6 +74,7 @@ const adminSidebarStructure: SidebarEntry[] = [
     children: [
       { id: "included", label: "What is included?", icon: "CheckCircle2" },
       { id: "bulk-inclusions", label: "Bulk Inclusions", icon: "ListChecks" },
+      { id: "extras-pricing", label: "Extras Pricing", icon: "Tag" },
       { id: "promos", label: "Promos", icon: "Tag" },
     ]
   },
