@@ -288,6 +288,12 @@ class SyncEmrVehicles extends Command
                     $priceData['day_value'] = round($baseDayValue * $multiplier, 2);
                     $priceData['week_price'] = round($dayValue7 * $multiplier, 2);
                     $priceData['month_price'] = round($dayValue30 * $multiplier, 2);
+
+                    // Convert provision / deposit from TL to branch currency
+                    $rawProvision = (float) ($groups1[$groupId]['provision'] ?? $groups7[$groupId]['provision'] ?? $groups30[$groupId]['provision'] ?? $priceData['provision'] ?? 0);
+                    $priceData['provision'] = $rawProvision > 0 ? round($rawProvision * $multiplier, 2) : 0;
+                    $priceData['currency'] = $branchCurrency;
+
                     $stationPrices[$branchId][$groupId] = $priceData;
                 }
             }
@@ -384,9 +390,7 @@ class SyncEmrVehicles extends Command
                             'activation' => true,
                             'instant_confirmation' => 1,
                         ];
-                        if (!empty($priceData['provision']) && (float)$priceData['provision'] > 0) {
-                            $updateData['deposit_amount'] = (float)$priceData['provision'];
-                        }
+                        $updateData['deposit_amount'] = (!empty($priceData['provision']) && (float)$priceData['provision'] > 0) ? (float)$priceData['provision'] : 0;
                         if ($vehicle->supplier != $supplierUser->id) {
                             $updateData['supplier'] = $supplierUser->id;
                         }
@@ -394,10 +398,7 @@ class SyncEmrVehicles extends Command
                             $updateData['photo'] = $photoFilename;
                         }
                         $vehicle->update($updateData);
-
-                        if (!$pricesOnly) {
-                            $this->syncInclusions($vehicle, $priceData);
-                        }
+                        $this->syncInclusions($vehicle, $priceData);
 
                         $updated++;
                     } else {
@@ -614,7 +615,13 @@ class SyncEmrVehicles extends Command
         }
 
         if (!empty($includedIds)) {
-            $vehicle->included()->syncWithoutDetaching($includedIds);
+            $existingOtherIds = $vehicle->included()
+                ->where('what_is_included', 'NOT LIKE', 'Security Deposit:%')
+                ->where('what_is_included', 'NOT LIKE', '%Mileage%')
+                ->pluck('included.id')
+                ->toArray();
+
+            $vehicle->included()->sync(array_unique(array_merge($existingOtherIds, $includedIds)));
         }
     }
 
