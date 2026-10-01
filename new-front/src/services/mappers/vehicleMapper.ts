@@ -57,7 +57,11 @@ export const vehicleMapper = {
         if (!val || val === '0' || val === 0) return 'Medium';
         return val;
       })(),
-      ac: specMap['air conditioner'] === 'Air Conditioning' || specMap['air conditioner'] === 'Yes' || !!(raw.ac),
+      doors: (() => {
+        const d = parseInt(specMap['doors'] || specMap['number of doors'] || raw.doors);
+        return (!d || d === 3) ? 4 : d;
+      })(),
+      ac: specMap['air conditioner'] === 'Air Conditioning' || specMap['air conditioner'] === 'Yes' || (specMap['air conditioner'] !== 'No' && specMap['air conditioner'] !== 'No AC' && specMap['air conditioner'] !== undefined) || !!(raw.ac),
       baseCurrency: branch.currency || 'AED',
       supplier: {
         id: supplierId,

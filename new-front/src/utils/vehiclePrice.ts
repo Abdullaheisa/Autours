@@ -64,6 +64,7 @@ export function getVehicleDepositPrice(
       ...(Array.isArray((vehicle as any)?.what_is_included) ? (vehicle as any).what_is_included : []),
     ];
 
+    // 1. Look for explicit deposit in inclusions
     for (const item of rawInclusions) {
       const text = (typeof item === 'string' ? item : item?.what_is_included || item?.name || item?.description || '').trim();
       const lower = text.toLowerCase();
@@ -86,6 +87,32 @@ export function getVehicleDepositPrice(
         }
       }
     }
+
+    // 2. Fallback: Look for Excess in inclusions (e.g. "Collision Damage Waiver (Excess: 1500 GBP)")
+    if (rawDeposit <= 0) {
+      for (const item of rawInclusions) {
+        const text = (typeof item === 'string' ? item : item?.what_is_included || item?.name || item?.description || '').trim();
+        const lower = text.toLowerCase();
+        if (lower.includes('excess') && !lower.includes('zero excess') && !lower.includes('no excess') && !lower.includes('without excess')) {
+          const numMatch = text.match(/excess:\s*(\d+(?:[.,]\d+)?)/i) || text.match(/(\d+(?:[.,]\d+)?)/);
+          if (numMatch) {
+            const parsed = parseFloat(numMatch[1].replace(/,/g, ''));
+            if (!isNaN(parsed) && parsed > 0) {
+              rawDeposit = parsed;
+              const currMatch = text.match(/\b([A-Z]{3})\b/);
+              if (currMatch) {
+                const code = currMatch[1].toUpperCase();
+                const normCode = code === 'TL' ? 'TRY' : code;
+                if (allRates[normCode] || fallbackRates[normCode]) {
+                  depositBaseCurrency = normCode;
+                }
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
   }
 
   // If still not found, inspect rental_terms (for suppliers like SurPrice, Green Motion, Jimpisoft, U-Save)
@@ -104,13 +131,14 @@ export function getVehicleDepositPrice(
         !lower.includes('no deposit') &&
         !lower.includes('without deposit')
       ) {
+        const matchTable = text.match(/Deposit Amount\s*\(([A-Z]{3})\)[^\d]{1,200}?(\d+(?:[.,]\d+)?)/i);
         const match1 = text.match(/(?:deposit|pre-?authori[sz]ation)[^\d]{1,60}?\b([A-Z]{3})\s*(\d+(?:[.,]\d+)?)/i);
         const match2 = text.match(/(?:deposit|pre-?authori[sz]ation)[^\d]{1,60}?(\d+(?:[.,]\d+)?)\s*([A-Z]{3})\b/i);
-        const m = match1 || match2;
+        const m = matchTable || match1 || match2;
         if (m) {
-          const code = (match1 ? m[1] : m[2]).toUpperCase();
+          const code = (matchTable ? m[1] : match1 ? m[1] : m[2]).toUpperCase();
           const normCode = code === 'TL' ? 'TRY' : code;
-          const amtStr = match1 ? m[2] : m[1];
+          const amtStr = matchTable ? m[2] : match1 ? m[2] : m[1];
           const parsed = parseFloat(amtStr.replace(/,/g, ''));
           if (!isNaN(parsed) && parsed > 0 && (allRates[normCode] || fallbackRates[normCode])) {
             rawDeposit = parsed;

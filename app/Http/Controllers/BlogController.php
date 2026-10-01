@@ -150,7 +150,7 @@ class BlogController extends Controller
     public function showBySlug(string $slug): JsonResponse
     {
         try {
-            $blog = Blog::where('slug', $slug)->first();
+            $blog = Blog::whereRaw('LOWER(slug) = ?', [strtolower($slug)])->first();
 
             if (!$blog) {
                 return response()->json([

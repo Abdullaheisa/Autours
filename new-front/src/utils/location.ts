@@ -50,7 +50,9 @@ const AIRPORT_NAMES: Record<string, string> = {
   'ULH': 'AlUla International Airport',
   'YNB': 'Yanbu Airport',
   'BAH': 'Bahrain International Airport',
-  'DOH': 'Hamad International Airport'
+  'DOH': 'Hamad International Airport',
+  'MCT': 'Muscat International Airport',
+  'SLL': 'Salalah International Airport'
 };
 
 /** Helper to strip any trailing airport abbreviation (e.g. " (DXB)", " - DXB") from a location label */

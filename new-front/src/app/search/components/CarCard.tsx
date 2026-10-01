@@ -561,7 +561,12 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       transmission: getSpec('transmission'),
       fuelType: getSpec('fuel'),
       seats: getSpec('seats'),
-      doors: getSpec('doors'),
+      doors: (() => {
+        const d = getSpec('doors');
+        if (!d || d === 'N/A' || d === '0' || d === 0) return '4';
+        if (d === '3' || d === 3) return '4';
+        return d;
+      })(),
       suitcases: (() => {
         const s = getSpec('suitcase') !== 'N/A'
           ? getSpec('suitcase')
@@ -571,7 +576,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         }
         return s;
       })(),
-      ac: getSpec('air conditioning') !== 'No' ? 'Air Conditioning' : 'No A/C',
+      ac: (() => {
+        const a = getSpec('air conditioning');
+        if (a === 'No' || a === 'No AC' || a === 'false') return 'No A/C';
+        return 'Air Conditioning';
+      })(),
       supplier: {
         name: supplierName.toString().trim(),
         logo: getLogoUrl(logoStr),
@@ -614,7 +623,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       (vehicle as any).branch ||
       (availableBranches.length > 0 ? availableBranches[0] : null);
 
-    const branchName = (selectedBranch?.name || selectedBranch?.location || (vehicle as any).location || '').toString().trim();
+    const branchName = (selectedBranch?.normalized_name || selectedBranch?.name || selectedBranch?.location || (vehicle as any).location || '').toString().trim();
     const branchAddress = (selectedBranch?.adresse || selectedBranch?.location_address || selectedBranch?.address || '').toString().trim();
     const supplierAddress = (carData.supplier.address || '').toString().trim();
 
@@ -935,7 +944,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     <div>
                       <span className="text-xs font-bold text-gray-500">Address: </span>
                       <span className="text-sm font-black text-gray-800 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
-                        {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                        {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.normalized_name ||
+                          availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
                           availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
                           carData.supplier.address}
                       </span>
@@ -1006,7 +1016,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                       <span className="block truncate">
                         <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
                         <span className="text-gray-700 font-extrabold">
-                          {availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
+                          {availableBranches.find((b: any) => b.id === selectedBranchId)?.normalized_name || availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
                         </span>
                       </span>
                       <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
@@ -1038,7 +1048,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                                     : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
                                 }`}
                               >
-                                <span className="font-extrabold">{b.name || b.location}</span>
+                                <span className="font-extrabold">{b.normalized_name || b.name || b.location}</span>
                               </button>
                             );
                           })}
@@ -1226,7 +1236,8 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   <span className="text-xs font-bold text-gray-500 shrink-0">Address: </span>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
-                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.normalized_name ||
+                      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
                       availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
                       carData.supplier.address}
                     </span>
@@ -1295,7 +1306,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                         <span className="block truncate">
                           <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
                           <span className="text-gray-700 font-extrabold">
-                            {availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
+                            {availableBranches.find((b: any) => b.id === selectedBranchId)?.normalized_name || availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
                           </span>
                         </span>
                         <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
@@ -1327,7 +1338,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                                       : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
                                   }`}
                                 >
-                                  <span className="font-extrabold">{b.name || b.location}</span>
+                                  <span className="font-extrabold">{b.normalized_name || b.name || b.location}</span>
                                 </button>
                               );
                             })}

@@ -105,6 +105,10 @@ class Kernel extends ConsoleKernel
          $schedule->command('greenmotion:sync-vehicles --real')->dailyAt('10:45')->withoutOverlapping();
          $schedule->command('greenmotion:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
 
+         // Sync Zagel Express branches and full vehicles daily
+         $schedule->command('zagel:sync-branches')->dailyAt('11:00')->withoutOverlapping();
+         $schedule->command('zagel:sync-vehicles')->dailyAt('11:15')->withoutOverlapping();
+
          // Sync exchange rates every 4 hours without overlapping
          $schedule->command('sync:exchange-rates')->everyFourHours()->withoutOverlapping();
      }   

@@ -163,12 +163,12 @@ function FiltersContent({
 }: any) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const { vehicles } = useSelector((state: RootState) => state.search);
+  const { vehicles, fetchedCurrency } = useSelector((state: RootState) => state.search);
   const { allRates } = useSelector((state: RootState) => state.currency);
 
   const depositCounts = useMemo(() => {
     const deposits = (vehicles || [])
-      .map(v => getVehicleDepositPrice(v, currencyCode as Currency, allRates))
+      .map(v => getVehicleDepositPrice(v, currencyCode as Currency, allRates, fetchedCurrency))
       .filter(d => d > 0)
       .sort((a, b) => a - b);
 

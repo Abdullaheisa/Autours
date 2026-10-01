@@ -32,6 +32,7 @@ class SyncXdriveVehicles extends Command
     protected $signature = 'xdrive:sync-vehicles
                             {--pickup-date= : Pickup date (yyyy-MM-dd HH:mm), defaults to tomorrow 10:00}
                             {--dropoff-date= : Dropoff date (yyyy-MM-dd HH:mm), defaults to day-after-tomorrow 10:00}
+                            {--station-id= : Sync only a specific station ID (e.g. 134)}
                             {--prices-only : Only refresh per-branch prices, do not re-create vehicles}
                             {--concurrency=15 : Number of concurrent API requests per batch}
                             {--timeout=15 : HTTP request timeout per API call in seconds}
@@ -212,9 +213,13 @@ class SyncXdriveVehicles extends Command
         }
 
         // Filter out branches that were empty last time (unless full-sync)
+        $stationIdOpt = $this->option('station-id');
         $filteredStationMap = [];
         foreach ($stationToBranchMap as $stationId => $branchId) {
-            if (! $fullSync && in_array((string) $branchId, $cachedEmptyBranches, true)) {
+            if ($stationIdOpt && (string) $stationId !== (string) $stationIdOpt) {
+                continue;
+            }
+            if (! $stationIdOpt && ! $fullSync && in_array((string) $branchId, $cachedEmptyBranches, true)) {
                 continue;
             }
             $filteredStationMap[$stationId] = $branchId;
@@ -398,6 +403,12 @@ class SyncXdriveVehicles extends Command
                     $priceData['day_value'] = round($baseDayValue * $multiplier, 2);
                     $priceData['week_price'] = round($dayValue7 * $multiplier, 2);
                     $priceData['month_price'] = round($dayValue30 * $multiplier, 2);
+
+                    // Convert provision / deposit from TRY to branch currency
+                    $rawProvision = (float) ($groups1[$groupId]['provision'] ?? $groups7[$groupId]['provision'] ?? $groups30[$groupId]['provision'] ?? $priceData['provision'] ?? 0);
+                    $priceData['provision'] = $rawProvision > 0 ? round($rawProvision * $multiplier, 2) : 0;
+                    $priceData['currency'] = $branchCurrency;
+
                     $stationPrices[$branchId][$groupId] = $priceData;
                 }
             }
@@ -442,6 +453,11 @@ class SyncXdriveVehicles extends Command
                     }
                 }
 
+                $groupExistingVehicles = $existingVehiclesByGroup[$groupId] ?? [];
+                if (empty($branchesWithPrice) && empty($groupExistingVehicles)) {
+                    continue;
+                }
+
                 // Get group details
                 $groupName = (string) ($group['group_name'] ?? '');
                 $brand = (string) ($group['brand'] ?? '');
@@ -461,8 +477,6 @@ class SyncXdriveVehicles extends Command
                 }
 
                 $categoryId = $this->resolveCategoryFromSipp($sipp);
-
-                $groupExistingVehicles = $existingVehiclesByGroup[$groupId] ?? [];
 
                 // Determine if we actually need to download the image
                 $needsImageDownload = false;
@@ -503,9 +517,7 @@ class SyncXdriveVehicles extends Command
                             'instant_confirmation' => 1,
                             'category' => $categoryId,
                         ];
-                        if (!empty($priceData['provision']) && (float)$priceData['provision'] > 0) {
-                            $updateData['deposit_amount'] = (float)$priceData['provision'];
-                        }
+                        $updateData['deposit_amount'] = (!empty($priceData['provision']) && (float)$priceData['provision'] > 0) ? (float)$priceData['provision'] : 0;
                         if ($vehicle->supplier != $supplierUser->id) {
                             $updateData['supplier'] = $supplierUser->id;
                         }
@@ -513,9 +525,7 @@ class SyncXdriveVehicles extends Command
                             $updateData['photo'] = $photoFilename;
                         }
                         $vehicle->update($updateData);
-                        if (!$pricesOnly) {
-                            $this->syncInclusions($vehicle, $priceData);
-                        }
+                        $this->syncInclusions($vehicle, $priceData);
                         $updated++;
                     } else {
                         if ($pricesOnly) {
@@ -560,6 +570,7 @@ class SyncXdriveVehicles extends Command
                 // Deactivate vehicles for this group at branches that no longer have prices
                 $pricedBranchIds = array_keys($branchesWithPrice);
                 $missingBranchVehicles = Vehicle::where('description', 'LIKE', '%[Xdrive-GROUP-ID:' . $groupId . ']%')
+                    ->whereIn('pickup_loc', array_values($filteredStationMap))
                     ->whereNotIn('pickup_loc', $pricedBranchIds)
                     ->where('activation', true)
                     ->get();
@@ -579,7 +590,7 @@ class SyncXdriveVehicles extends Command
         // ------------------------------------------------------------------
         // 8. Delete orphaned Xdrive vehicles no longer in any group
         // ------------------------------------------------------------------
-        if (! $pricesOnly && ! empty($syncedVehicleIds)) {
+        if (! $pricesOnly && ! empty($syncedVehicleIds) && empty($stationIdOpt) && empty($limit)) {
             $orphaned = Vehicle::where('description', 'LIKE', '%[Xdrive-GROUP-ID:%')
                 ->whereNotIn('id', $syncedVehicleIds)
                 ->get();
@@ -731,7 +742,13 @@ class SyncXdriveVehicles extends Command
         }
 
         if (!empty($includedIds)) {
-            $vehicle->included()->syncWithoutDetaching($includedIds);
+            $existingOtherIds = $vehicle->included()
+                ->where('what_is_included', 'NOT LIKE', 'Security Deposit:%')
+                ->where('what_is_included', 'NOT LIKE', '%Mileage%')
+                ->pluck('included.id')
+                ->toArray();
+
+            $vehicle->included()->sync(array_unique(array_merge($existingOtherIds, $includedIds)));
         }
     }
 

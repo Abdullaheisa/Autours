@@ -188,8 +188,14 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                 $image = $carData['@attributes']['image'] ?? '';
                 $localPhotoUrl = $this->resolveLocalPhoto($normalizedName) ?: $image;
 
+                $rawDeposit = (float) $this->extractString($carData['deposit'] ?? null, '0');
+                if ($rawDeposit <= 0) {
+                    $rawDeposit = (float) $this->extractString($carData['excess'] ?? null, '0');
+                }
+                $depositPrice = $rawDeposit > 0 ? round($rawDeposit * $rateMultiplier, 2) : 0;
+
                 if ($vehicle) {
-                    $vehicle->update([
+                    $updateData = [
                         'name' => $normalizedName,
                         'photo' => $localPhotoUrl ?: $vehicle->photo,
                         'category' => $categoryId,
@@ -197,7 +203,11 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
                         'activation' => true,
-                    ]);
+                    ];
+                    if ($depositPrice > 0) {
+                        $updateData['deposit_amount'] = $depositPrice;
+                    }
+                    $vehicle->update($updateData);
                     $this->updatedCount++;
 
                     if ($pricesOnly) {
@@ -220,6 +230,7 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
                         'price' => $dayPrice,
                         'week_price' => $weekPrice,
                         'month_price' => $monthPrice,
+                        'deposit_amount' => $depositPrice,
                         'instant_confirmation' => 1,
                     ]);
                     
@@ -411,9 +422,9 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
         }
 
         // CDW and TP (often standard with an excess)
+        $currency = $branch->currency ?? 'GBP';
         $excessValue = (float) $this->extractString($carData['excess'] ?? null, '0');
         if ($excessValue > 0) {
-            $currency = $branch->currency ?? 'GBP';
             $incText = "Collision Damage Waiver (Excess: {$excessValue} {$currency})";
             $inc = \App\Models\Included::firstOrCreate(['what_is_included' => $incText]);
             $includedIds[] = $inc->id;
@@ -421,6 +432,17 @@ class SyncGreenMotionVehicles extends AbstractVehicleSyncCommand
             $tpText = "Theft Protection (Excess: {$excessValue} {$currency})";
             $incTp = \App\Models\Included::firstOrCreate(['what_is_included' => $tpText]);
             $includedIds[] = $incTp->id;
+        }
+
+        // Security Deposit
+        $depositValue = $vehicle->deposit_amount > 0 ? (float) $vehicle->deposit_amount : (float) $this->extractString($carData['deposit'] ?? null, '0');
+        if ($depositValue <= 0) {
+            $depositValue = $excessValue;
+        }
+        if ($depositValue > 0) {
+            $depText = "Security Deposit: {$depositValue} {$currency}";
+            $incDep = \App\Models\Included::firstOrCreate(['what_is_included' => $depText]);
+            $includedIds[] = $incDep->id;
         }
 
         if (!empty($includedIds)) {
