@@ -31,8 +31,8 @@ export default function PriceBreakdownCard({
   onRemoveExtra,
 }: PriceBreakdownCardProps) {
   const safeDays = rentalDays > 0 ? rentalDays : 1;
-  const dailyPrice = Math.round((baseVehiclePrice / safeDays) * 100) / 100;
-  const extrasTotalPrice = extrasItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const dailyPrice = Math.round(baseVehiclePrice / safeDays);
+  const extrasTotalPrice = Math.round(extrasItems.reduce((sum, item) => sum + item.totalPrice, 0));
 
   return (
     <div className="bg-white rounded-2xl border-2 border-primary overflow-hidden shadow-sm">
@@ -53,10 +53,7 @@ export default function PriceBreakdownCard({
         <div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold text-gray-900 tracking-tight">
-              {grandTotalPrice.toLocaleString(undefined, {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2,
-              })}
+              {Math.round(grandTotalPrice).toLocaleString()}
             </span>
             <span className="text-xl font-semibold text-gray-600">{currencyCode}</span>
           </div>
@@ -71,10 +68,7 @@ export default function PriceBreakdownCard({
           <div className="flex justify-between text-sm text-gray-600 font-medium">
             <span>Daily Rate</span>
             <span className="text-gray-900 font-semibold">
-              {dailyPrice.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}{" "}
+              {dailyPrice.toLocaleString()}{" "}
               {currencyCode}
             </span>
           </div>
@@ -83,10 +77,7 @@ export default function PriceBreakdownCard({
           <div className="flex justify-between text-sm text-gray-600 font-medium">
             <span>Rental Cost</span>
             <span className="text-gray-900 font-semibold">
-              {baseVehiclePrice.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}{" "}
+              {Math.round(baseVehiclePrice).toLocaleString()}{" "}
               {currencyCode}
             </span>
           </div>
@@ -109,11 +100,8 @@ export default function PriceBreakdownCard({
               }
             >
               {extrasTotalPrice > 0
-                ? `+${extrasTotalPrice.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                : "0.00"}{" "}
+                ? `+${extrasTotalPrice.toLocaleString()}`
+                : "0"}{" "}
               {currencyCode}
             </span>
           </div>
@@ -148,10 +136,7 @@ export default function PriceBreakdownCard({
                     </span>
                   </div>
                   <span className="font-semibold text-gray-900 shrink-0 text-right">
-                    {item.totalPrice.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
+                    {Math.round(item.totalPrice).toLocaleString()}{" "}
                     {currencyCode}
                   </span>
                 </div>
@@ -165,10 +150,7 @@ export default function PriceBreakdownCard({
           <div className="flex justify-between items-baseline text-gray-900 pt-1">
             <span className="text-sm font-bold">Grand Total</span>
             <span className="text-xl font-bold text-primary-700">
-              {grandTotalPrice.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}{" "}
+              {Math.round(grandTotalPrice).toLocaleString()}{" "}
               {currencyCode}
             </span>
           </div>

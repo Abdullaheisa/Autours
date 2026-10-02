@@ -854,16 +854,13 @@ function OptionsContent() {
                                     {currencyCode}
                                   </span>
                                   <span className="text-lg sm:text-xl font-black text-gray-950 font-sans tracking-tight">
-                                    {displayTotalPrice.toLocaleString(undefined, {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })}
+                                    {Math.round(displayTotalPrice).toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mt-0.5">
                                   {qty > 1 ? (
                                     <span>
-                                      {qty} × {displayUnitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencyCode}
+                                      {qty} × {Math.round(displayUnitPrice).toLocaleString()} {currencyCode}
                                     </span>
                                   ) : rentalDays > 1 ? (
                                     `Total for ${rentalDays} days`

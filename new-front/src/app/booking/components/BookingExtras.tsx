@@ -150,12 +150,12 @@ export default function BookingExtras({
                 {/* Price Block */}
                 <div className="text-left sm:text-right">
                   <div className="text-[15px] sm:text-[16px] font-black text-gray-900 leading-tight">
-                    {currencyCode} {displayTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {currencyCode} {Math.round(displayTotalPrice).toLocaleString()}
                   </div>
                   <div className="text-[10px] text-gray-400 font-semibold uppercase mt-0.5">
                     {qty > 1 ? (
                       <span>
-                        {qty} × {displayUnitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencyCode}
+                        {qty} × {Math.round(displayUnitPrice).toLocaleString()} {currencyCode}
                       </span>
                     ) : (
                       "per rental"
