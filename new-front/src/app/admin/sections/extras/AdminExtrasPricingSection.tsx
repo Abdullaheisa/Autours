@@ -11,9 +11,18 @@ import {
   Building2,
   Save,
   TrendingUp,
+  Layers,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Check,
+  MapPin,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { extrasPricingApi, companyApi, profitApi } from "@/services/api";
+import { getLogoUrl } from "@/utils/getImageUrl";
 import SectionLayout from "@/components/shared/SectionLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import CustomSelect, { CustomSelectOption } from "@/components/ui/CustomSelect";
@@ -36,7 +45,23 @@ const EMPTY_FORM: ExtraFormData = {
 };
 
 export default function AdminExtrasPricingSection() {
-  const [activeTab, setActiveTab] = useState<"manage" | "bulk" | "overrides">("manage");
+  const [activeTab, setActiveTab] = useState<"manage" | "overview" | "overrides" | "bulk">("manage");
+
+  // Overview State
+  const [overviewData, setOverviewData] = useState<any[]>([]);
+  const [isLoadingOverview, setIsLoadingOverview] = useState(false);
+  const [overviewSearch, setOverviewSearch] = useState("");
+  const [overviewStatusFilter, setOverviewStatusFilter] = useState<"all" | "enabled" | "disabled">("all");
+  const [overviewCountryFilter, setOverviewCountryFilter] = useState<string>("all");
+  const [overviewBranchFilter, setOverviewBranchFilter] = useState<"all" | "with_branches" | "no_branches">("all");
+  const [expandedSuppliers, setExpandedSuppliers] = useState<Record<number, boolean>>({});
+
+  const toggleSupplierExpand = (supplierId: number) => {
+    setExpandedSuppliers((prev) => ({
+      ...prev,
+      [supplierId]: !prev[supplierId],
+    }));
+  };
 
   // Catalog State
   const [extrasList, setExtrasList] = useState<ExtraItem[]>([]);
@@ -63,6 +88,7 @@ export default function AdminExtrasPricingSection() {
   const [supplierFilterCountry, setSupplierFilterCountry] = useState("");
   const [supplierFilterBranch, setSupplierFilterBranch] = useState("");
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const [selectedBranchOverrideId, setSelectedBranchOverrideId] = useState("");
   const [overrideCatalog, setOverrideCatalog] = useState<any[]>([]);
   const [overrideLocalData, setOverrideLocalData] = useState<
     Record<number, { enabled: boolean; custom_price: number; profit_percent: number }>
@@ -102,7 +128,14 @@ export default function AdminExtrasPricingSection() {
         : Array.isArray(res)
         ? res
         : [];
-      setSuppliers(list);
+      // Restrict to active suppliers with cars only
+      const activeSuppliers = list.filter((s: any) => {
+        const isSupplier = s.role === "active_supplier" || s.role === "supplier";
+        const isNotHidden = !s.vehicles_hidden;
+        const hasCars = s.vehicles_count === undefined || Number(s.vehicles_count) > 0;
+        return isSupplier && isNotHidden && hasCars;
+      });
+      setSuppliers(activeSuppliers);
     } catch {
       // Fallback
     }
@@ -125,7 +158,9 @@ export default function AdminExtrasPricingSection() {
         supplierFilterCountry || undefined
       );
       const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-      setBranches(list);
+      // Only active branches
+      const activeBranches = list.filter((b: any) => b.activation === 1 || b.activation === "1" || b.activation === true);
+      setBranches(activeBranches);
     } catch {
       // Fallback
     }
@@ -151,7 +186,10 @@ export default function AdminExtrasPricingSection() {
     const loadOverrides = async () => {
       setIsLoadingOverrides(true);
       try {
-        const res: any = await extrasPricingApi.adminGetSupplierExtras(Number(selectedSupplierId));
+        const res: any = await extrasPricingApi.adminGetSupplierExtras(
+          Number(selectedSupplierId),
+          { branch_id: selectedBranchOverrideId || undefined }
+        );
         const list = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res?.data?.data)
@@ -177,7 +215,98 @@ export default function AdminExtrasPricingSection() {
       }
     };
     loadOverrides();
-  }, [selectedSupplierId]);
+  }, [selectedSupplierId, selectedBranchOverrideId]);
+
+  const fetchOverview = useCallback(async () => {
+    setIsLoadingOverview(true);
+    try {
+      const res: any = await extrasPricingApi.adminGetExtrasOverview();
+      const list = Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.data?.data)
+        ? res.data.data
+        : Array.isArray(res)
+        ? res
+        : [];
+      setOverviewData(list);
+    } catch {
+      toast.error("Failed to load companies overview");
+    } finally {
+      setIsLoadingOverview(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "overview") {
+      fetchOverview();
+    }
+  }, [activeTab, fetchOverview]);
+
+  const overviewCountries = useMemo(() => {
+    return Array.from(new Set(overviewData.map((s) => s.country).filter(Boolean))).sort() as string[];
+  }, [overviewData]);
+
+  const filteredOverviewData = useMemo(() => {
+    return overviewData.filter((s) => {
+      // 1. Text search
+      if (overviewSearch.trim()) {
+        const q = overviewSearch.toLowerCase();
+        const matchesCompany = s.supplier_name?.toLowerCase().includes(q);
+        const matchesCountry = s.country?.toLowerCase().includes(q);
+        const matchesBranch = s.branches?.some((b: any) =>
+          b.name?.toLowerCase().includes(q) || b.city?.toLowerCase().includes(q)
+        );
+        if (!matchesCompany && !matchesCountry && !matchesBranch) return false;
+      }
+
+      // 2. Status filter
+      if (overviewStatusFilter === "enabled" && s.is_all_disabled) return false;
+      if (overviewStatusFilter === "disabled" && !s.is_all_disabled) return false;
+
+      // 3. Country filter
+      if (overviewCountryFilter !== "all" && s.country !== overviewCountryFilter) return false;
+
+      // 4. Branches filter
+      const branchCount = s.branches?.length || 0;
+      if (overviewBranchFilter === "with_branches" && branchCount === 0) return false;
+      if (overviewBranchFilter === "no_branches" && branchCount > 0) return false;
+
+      return true;
+    });
+  }, [overviewData, overviewSearch, overviewStatusFilter, overviewCountryFilter, overviewBranchFilter]);
+
+  const handleToggleSupplierExtras = async (
+    supplierId: number,
+    enable: boolean,
+    branchId?: number | string
+  ) => {
+    try {
+      await extrasPricingApi.adminToggleSupplierExtras(supplierId, {
+        enable,
+        branch_id: branchId ? Number(branchId) : undefined,
+      });
+      toast.success(
+        enable
+          ? "All extras enabled for this supplier/branch! 🎉"
+          : "All extras cancelled/disabled for this supplier/branch!"
+      );
+      if (activeTab === "overview") {
+        fetchOverview();
+      }
+      if (activeTab === "overrides" && String(selectedSupplierId) === String(supplierId)) {
+        setOverrideLocalData((prev) => {
+          const next = { ...prev };
+          Object.keys(next).forEach((k) => {
+            const id = Number(k);
+            if (next[id]) next[id] = { ...next[id], enabled: enable };
+          });
+          return next;
+        });
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update extras status");
+    }
+  };
 
   // ─── FILTERED EXTRAS ───
   const filteredExtras = useMemo(() => {
@@ -343,7 +472,11 @@ export default function AdminExtrasPricingSection() {
         custom_price: overrideLocalData[item.id]?.custom_price ?? item.custom_price,
         profit_percent: overrideLocalData[item.id]?.profit_percent ?? item.profit_percent,
       }));
-      await extrasPricingApi.adminSaveSupplierExtras(Number(selectedSupplierId), payload);
+      await extrasPricingApi.adminSaveSupplierExtras(
+        Number(selectedSupplierId),
+        payload,
+        { branch_id: selectedBranchOverrideId ? Number(selectedBranchOverrideId) : undefined }
+      );
       toast.success("Saved company extras successfully! 🎉");
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to save configuration");
@@ -360,28 +493,17 @@ export default function AdminExtrasPricingSection() {
     <SectionLayout>
       <PageHeader
         title="Extras & Add-ons Pricing"
-        description="Create add-on services in standard USD ($), manage profit margins, and apply bulk markup across companies, countries, or branches."
+        description="Create add-on services, manage profit margins, and apply pricing across companies, countries, or branches."
         showAction={false}
       />
-
-      {/* Global Currency Notice */}
-      <div className="mt-4 p-3.5 bg-blue-50/90 border border-blue-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs text-blue-950">
-        <div className="flex items-center gap-2.5">
-          <span className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
-            $
-          </span>
-          <p className="leading-relaxed">
-            <strong>Standard Base Currency:</strong> All extra add-ons are priced in <strong>USD ($)</strong> across all companies and branches. At booking, prices convert dynamically into the customer's selected currency (AED, EUR, SAR, EGP, etc.) using live exchange rates, identical to vehicle pricing.
-          </p>
-        </div>
-      </div>
 
       {/* Tabs Bar */}
       <div className="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-2xl w-fit mt-6">
         {[
           { id: "manage", label: "Extras Catalog", icon: <Package size={15} />, count: extrasList.length },
+          { id: "overview", label: "Companies & Branches Status", icon: <Layers size={15} /> },
           { id: "bulk", label: "Bulk Apply", icon: <Zap size={15} /> },
-          { id: "overrides", label: "Per-Company", icon: <Building2 size={15} /> },
+          { id: "overrides", label: "Per-Company & Branch", icon: <Building2 size={15} /> },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -517,6 +639,412 @@ export default function AdminExtrasPricingSection() {
         </div>
       )}
 
+      {/* ─── TAB: OVERVIEW (COMPANIES & BRANCHES STATUS) ─── */}
+      {activeTab === "overview" && (
+        <div className="mt-5 space-y-4">
+          {/* Header & Search */}
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search companies, countries, or branches..."
+                value={overviewSearch}
+                onChange={(e) => setOverviewSearch(e.target.value)}
+                className="w-full h-10 pl-10 pr-9 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-gray-900 font-medium"
+              />
+              {overviewSearch && (
+                <button
+                  onClick={() => setOverviewSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={fetchOverview}
+              disabled={isLoadingOverview}
+              className="h-10 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-2 cursor-pointer shrink-0"
+            >
+              <RefreshCw size={13} className={isLoadingOverview ? "animate-spin" : ""} /> Refresh Overview
+            </button>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Building2 size={20} />
+              </div>
+              <div>
+                <div className="text-xl font-black text-gray-900">{overviewData.length}</div>
+                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                  Total Suppliers
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <div className="text-xl font-black text-emerald-600">
+                  {overviewData.filter((s) => !s.is_all_disabled).length}
+                </div>
+                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                  Active Add-ons Enabled
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <XCircle size={20} />
+              </div>
+              <div>
+                <div className="text-xl font-black text-rose-600">
+                  {overviewData.filter((s) => s.is_all_disabled).length}
+                </div>
+                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                  All Add-ons Cancelled / Disabled
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Overview Filters Bar */}
+          <div className="bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 min-w-0">
+              {/* Text Search */}
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Filter by company, country, or branch..."
+                  value={overviewSearch}
+                  onChange={(e) => setOverviewSearch(e.target.value)}
+                  className="w-full h-10 pl-10 pr-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-colors"
+                />
+                {overviewSearch && (
+                  <button
+                    onClick={() => setOverviewSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Status Filter */}
+              <div className="w-full sm:w-44">
+                <CustomSelect
+                  value={overviewStatusFilter}
+                  onChange={(val) => setOverviewStatusFilter(val as any)}
+                  options={[
+                    { value: "all", label: "All Statuses" },
+                    { value: "enabled", label: "Extras Enabled" },
+                    { value: "disabled", label: "Extras Disabled" },
+                  ]}
+                  placeholder="Status"
+                />
+              </div>
+
+              {/* Country Filter */}
+              {overviewCountries.length > 0 && (
+                <div className="w-full sm:w-44">
+                  <CustomSelect
+                    value={overviewCountryFilter}
+                    onChange={(val) => setOverviewCountryFilter(val)}
+                    options={[
+                      { value: "all", label: "All Countries" },
+                      ...overviewCountries.map((c) => ({ value: c, label: c })),
+                    ]}
+                    placeholder="Country"
+                  />
+                </div>
+              )}
+
+              {/* Branch Filter */}
+              <div className="w-full sm:w-44">
+                <CustomSelect
+                  value={overviewBranchFilter}
+                  onChange={(val) => setOverviewBranchFilter(val as any)}
+                  options={[
+                    { value: "all", label: "All Companies" },
+                    { value: "with_branches", label: "With Branches" },
+                    { value: "no_branches", label: "No Branches" },
+                  ]}
+                  placeholder="Branches"
+                />
+              </div>
+            </div>
+
+            {/* Results Count & Reset */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+              <span className="text-xs font-bold text-gray-500">
+                Showing <strong className="text-gray-900">{filteredOverviewData.length}</strong> of {overviewData.length}
+              </span>
+              {filteredOverviewData.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allOpen = filteredOverviewData.every((s) => expandedSuppliers[s.supplier_id]);
+                    if (allOpen) {
+                      setExpandedSuppliers({});
+                    } else {
+                      const next: Record<number, boolean> = {};
+                      filteredOverviewData.forEach((s) => {
+                        next[s.supplier_id] = true;
+                      });
+                      setExpandedSuppliers(next);
+                    }
+                  }}
+                  className="text-xs font-bold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                >
+                  {filteredOverviewData.every((s) => expandedSuppliers[s.supplier_id])
+                    ? "Collapse All"
+                    : "Expand All"}
+                </button>
+              )}
+              {(overviewSearch || overviewStatusFilter !== "all" || overviewCountryFilter !== "all" || overviewBranchFilter !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOverviewSearch("");
+                    setOverviewStatusFilter("all");
+                    setOverviewCountryFilter("all");
+                    setOverviewBranchFilter("all");
+                  }}
+                  className="text-xs font-bold text-amber-600 hover:text-amber-700 underline cursor-pointer"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Overview List */}
+          {isLoadingOverview ? (
+            <div className="bg-white rounded-2xl border border-gray-200 p-16 flex flex-col items-center gap-3 text-gray-400">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs font-bold">Loading suppliers and branches status...</span>
+            </div>
+          ) : filteredOverviewData.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-400 text-xs font-bold">
+              No matching suppliers found.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredOverviewData.map((supplier) => {
+                const isExpanded = !!expandedSuppliers[supplier.supplier_id];
+                const logoUrl = supplier.logo ? getLogoUrl(supplier.logo) : "";
+
+                return (
+                  <div
+                    key={supplier.supplier_id}
+                    className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden transition-all"
+                  >
+                    {/* Supplier Row / Header */}
+                    <div
+                      onClick={() => toggleSupplierExpand(supplier.supplier_id)}
+                      className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-gray-50/50 hover:bg-gray-100/60 transition-colors cursor-pointer select-none ${
+                        isExpanded ? "border-b border-gray-100" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-3.5">
+                        {/* Company Logo / Fallback Badge */}
+                        <div className="w-12 h-12 rounded-xl bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center p-1.5 shrink-0 overflow-hidden relative">
+                          {logoUrl ? (
+                            <img
+                              src={logoUrl}
+                              alt={supplier.supplier_name}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                const fallback = e.currentTarget.parentElement?.querySelector(".company-fallback-badge");
+                                if (fallback) (fallback as HTMLElement).style.display = "flex";
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className={`company-fallback-badge w-full h-full items-center justify-center font-black text-xs uppercase rounded-lg ${
+                              logoUrl ? "hidden" : "flex"
+                            } ${
+                              supplier.is_all_disabled
+                                ? "bg-rose-50 text-rose-700"
+                                : "bg-emerald-50 text-emerald-800"
+                            }`}
+                          >
+                            {supplier.supplier_name ? supplier.supplier_name.slice(0, 2) : <Building2 size={18} />}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-sm font-black text-gray-900">{supplier.supplier_name}</h4>
+                            {supplier.country && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-200 text-gray-700">
+                                {supplier.country}
+                              </span>
+                            )}
+                            {supplier.is_all_disabled ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                                <XCircle size={12} /> All Extras Disabled
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <CheckCircle2 size={12} /> Enabled ({supplier.effective_enabled_count}/{supplier.total_active_extras})
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {supplier.branches?.length || 0} branches registered
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Supplier Actions & Chevron */}
+                      <div className="flex items-center gap-2 flex-wrap shrink-0">
+                        {supplier.is_all_disabled ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleSupplierExtras(supplier.supplier_id, true);
+                            }}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                          >
+                            <CheckCircle2 size={13} /> Enable All Extras
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleSupplierExtras(supplier.supplier_id, false);
+                            }}
+                            className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                          >
+                            <XCircle size={13} /> Disable All Extras
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSupplierId(String(supplier.supplier_id));
+                            setSelectedBranchOverrideId("");
+                            setActiveTab("overrides");
+                          }}
+                          className="px-3 py-1.5 bg-primary hover:bg-primary-600 text-gray-900 font-black text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                        >
+                          Edit Pricing
+                        </button>
+
+                        {/* Chevron Collapse Toggle Button */}
+                        <div
+                          className="w-8 h-8 rounded-xl bg-white border border-gray-200/80 flex items-center justify-center text-gray-500 hover:text-gray-900 shadow-2xs transition-all ml-1"
+                          title={isExpanded ? "Collapse branches" : "Expand branches"}
+                        >
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-200 ${
+                              isExpanded ? "rotate-180 text-primary-700" : "text-gray-400"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Branches List (Only shown when expanded) */}
+                    {isExpanded && (
+                      <div className="bg-white border-t border-gray-100">
+                        {supplier.branches && supplier.branches.length > 0 ? (
+                          <div className="divide-y divide-gray-100">
+                            {supplier.branches.map((branch: any) => (
+                              <div
+                                key={branch.id}
+                                className="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50/60 transition-colors"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <MapPin size={14} className="text-gray-400 shrink-0" />
+                                  <span className="text-xs font-bold text-gray-800 truncate">
+                                    {branch.name || `Branch #${branch.id}`}
+                                  </span>
+                                  {branch.city && (
+                                    <span className="text-[11px] text-gray-400 font-medium shrink-0">
+                                      ({branch.city})
+                                    </span>
+                                  )}
+                                  {branch.is_all_disabled ? (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 shrink-0">
+                                      Disabled for Branch
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                                      Enabled
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {branch.is_all_disabled ? (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleSupplierExtras(supplier.supplier_id, true, branch.id);
+                                      }}
+                                      className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      Enable for Branch
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleSupplierExtras(supplier.supplier_id, false, branch.id);
+                                      }}
+                                      className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      Disable Branch Extras
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSupplierId(String(supplier.supplier_id));
+                                      setSelectedBranchOverrideId(String(branch.id));
+                                      setActiveTab("overrides");
+                                    }}
+                                    className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[11px] font-bold cursor-pointer transition-colors"
+                                  >
+                                    Customize
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="px-5 py-4 text-xs text-gray-400 font-medium">
+                            No branches registered for this company
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ─── TAB: BULK APPLY ─── */}
       {activeTab === "bulk" && (
         <div className="mt-5">
@@ -616,7 +1144,7 @@ export default function AdminExtrasPricingSection() {
 
           {selectedSupplierId && (
             <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-3">
+              <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-black text-gray-900">
                     {selectedSupplierName} — Add-ons
@@ -625,17 +1153,71 @@ export default function AdminExtrasPricingSection() {
                     Customize prices and profit margins specifically for this supplier.
                   </p>
                 </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={overrideSearch}
-                    onChange={(e) => setOverrideSearch(e.target.value)}
-                    className="w-36 h-9 pl-9 pr-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:border-primary"
-                  />
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Quick Toggle 1-Click Buttons */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleToggleSupplierExtras(
+                        Number(selectedSupplierId),
+                        false,
+                        selectedBranchOverrideId
+                      )
+                    }
+                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <XCircle size={13} /> Disable All Extras
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleToggleSupplierExtras(
+                        Number(selectedSupplierId),
+                        true,
+                        selectedBranchOverrideId
+                      )
+                    }
+                    className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <CheckCircle2 size={13} /> Enable All Extras
+                  </button>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={overrideSearch}
+                      onChange={(e) => setOverrideSearch(e.target.value)}
+                      className="w-32 h-8 pl-8 pr-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:border-primary"
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Target Branch Selector */}
+              {branches.length > 0 && (
+                <div className="px-4 py-2.5 bg-blue-50/50 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="font-bold text-gray-700">Target Specific Branch:</span>
+                    <span className="text-gray-400 text-[11px]">(Optional — leave blank for company default)</span>
+                  </div>
+                  <div className="w-full sm:w-72">
+                    <CustomSelect
+                      value={selectedBranchOverrideId}
+                      onChange={setSelectedBranchOverrideId}
+                      options={[
+                        { value: "", label: "Entire Company (Default for all branches)" },
+                        ...branches.map((b) => ({
+                          value: String(b.id),
+                          label: `${b.name || b.location || `Branch #${b.id}`}${b.city ? ` — ${b.city}` : ""}`,
+                        })),
+                      ]}
+                      placeholder="Entire Company (Default)"
+                      searchable
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Quick Profit Margin Bar for this Company */}
               <div className="p-3 bg-amber-50/70 border-b border-amber-200/60 flex items-center justify-between gap-3 flex-wrap">
@@ -695,6 +1277,12 @@ export default function AdminExtrasPricingSection() {
                         item.name.toLowerCase().includes(overrideSearch.toLowerCase())
                     )
                     .map((extra: any, idx: number, arr: any[]) => {
+                      const activeBranch = branches.find(
+                        (b: any) => String(b.id) === String(selectedBranchOverrideId)
+                      );
+                      const currentScopeCurrency =
+                        activeBranch?.currency || extra.currency || "USD";
+
                       const values = overrideLocalData[extra.id] ?? {
                         enabled: extra.enabled,
                         custom_price: extra.custom_price,
@@ -703,7 +1291,7 @@ export default function AdminExtrasPricingSection() {
                       return (
                         <ExtraPricingRow
                           key={extra.id}
-                          item={extra}
+                          item={{ ...extra, currency: currentScopeCurrency }}
                           values={values}
                           priceLabel="Supplier Price"
                           borderBottom={idx < arr.length - 1}

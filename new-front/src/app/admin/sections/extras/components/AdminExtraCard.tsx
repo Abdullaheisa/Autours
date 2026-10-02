@@ -17,7 +17,7 @@ export interface ExtraItem {
   currency: string;
   is_active: boolean;
   final_price?: number;
-  faqs?: { question: string; answer: string }[];
+  faqs?: { question: string; answer?: string; points?: string[]; sections?: { headline?: string; points: string[] }[] }[];
 }
 
 export interface AdminExtraCardProps {
@@ -78,20 +78,17 @@ export default function AdminExtraCard({
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs shrink-0">
-              $
-            </span>
             <span className="text-sm font-black text-gray-900">
-              ${custPrice.toFixed(2)} <span className="text-xs text-gray-400 font-semibold">USD</span>
+              {custPrice.toFixed(2)}
             </span>
-            <span className="text-[10px] text-gray-400">/ rental</span>
+            <span className="text-[10px] text-gray-400 font-semibold">/ rental</span>
           </div>
           {pp > 0 && (
             <div className="text-[10px] mt-0.5">
               <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200/60 font-bold">
                 +{pp}% profit
               </span>
-              <span className="text-gray-400 ml-1">Cost: ${base.toFixed(2)}</span>
+              <span className="text-gray-400 ml-1">Cost: {base.toFixed(2)}</span>
             </div>
           )}
         </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
-import { Sparkles, X, Check, HelpCircle, Trash2, Plus } from "lucide-react";
+import React, { useState } from "react";
+import { Sparkles, X, Check, HelpCircle, Trash2, Plus, ChevronDown } from "lucide-react";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import CustomSelect from "@/components/ui/CustomSelect";
+import RichTextEditor from "@/components/shared/RichTextEditor";
 import { ExtraItem } from "./AdminExtraCard";
 
 const BADGE_SUGGESTIONS = [
@@ -15,10 +16,18 @@ const BADGE_SUGGESTIONS = [
   "Essential",
 ];
 
+export interface FaqSection {
+  headline?: string;
+  points: string[];
+}
+
 export interface ExtraFaq {
   question: string;
-  answer: string;
+  answer?: string;
+  sections?: FaqSection[];
+  points?: string[];
 }
+
 
 export interface ExtraFormData {
   name: string;
@@ -52,6 +61,30 @@ export default function CreateEditExtraModal({
   onSubmit,
   isSubmitting,
 }: CreateEditExtraModalProps) {
+  const [openFaqIndexes, setOpenFaqIndexes] = useState<Record<number, boolean>>({});
+
+  const toggleFaqOpen = (index: number) => {
+    setOpenFaqIndexes((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const faqs = formData.faqs || [];
+  const allFaqsOpen = faqs.length > 0 && faqs.every((_, i) => openFaqIndexes[i]);
+
+  const toggleAllFaqs = () => {
+    if (allFaqsOpen) {
+      setOpenFaqIndexes({});
+    } else {
+      const next: Record<number, boolean> = {};
+      faqs.forEach((_, i) => {
+        next[i] = true;
+      });
+      setOpenFaqIndexes(next);
+    }
+  };
+
   if (!isOpen) return null;
 
   const basePrice = Number(formData.price) || 0;
@@ -120,7 +153,7 @@ export default function CreateEditExtraModal({
                 <span className="text-xs font-black text-gray-900">Pricing & Profit</span>
                 <span className="text-xs text-gray-400">Flat fee per rental</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-gray-700 mb-1.5">
                     Base Cost <span className="text-red-500">*</span>
@@ -166,39 +199,20 @@ export default function CreateEditExtraModal({
                     </span>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1.5">
-                    Currency
-                  </label>
-                  <div className="h-10 px-3 rounded-xl border border-gray-200 bg-gray-100/90 flex items-center justify-between text-xs font-black text-gray-800 select-none">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">$</span>
-                      USD ($)
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fixed Base</span>
-                  </div>
-                </div>
               </div>
 
               <div className="flex items-center justify-between px-3 py-2.5 bg-white rounded-xl border border-gray-200/80">
                 <div>
-                  <span className="text-xs font-bold text-gray-600 block">Catalog Price (USD):</span>
-                  <span className="text-[10px] text-gray-400">Converts automatically to customer currency</span>
+                  <span className="text-xs font-bold text-gray-600 block">Default Price:</span>
+                  <span className="text-[10px] text-gray-400">Uses branch currency automatically</span>
                 </div>
                 <span className="font-black text-sm text-gray-900">
-                  ${calcPrice.toFixed(2)} USD
+                  {calcPrice.toFixed(2)}
                   {profit > 0 && (
                     <span className="ml-2 text-emerald-600 text-xs font-bold">
                       (+{formData.profit_percent}%)
                     </span>
                   )}
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 text-[11px] text-blue-800 flex items-start gap-2">
-                <span className="font-black shrink-0">💡 Note:</span>
-                <span>
-                  All add-on prices are standardized in <strong>USD ($)</strong> for all suppliers. At checkout, customers see prices converted to their selected currency (AED, SAR, EUR, etc.) matching vehicle price logic.
                 </span>
               </div>
             </div>
@@ -284,7 +298,7 @@ export default function CreateEditExtraModal({
 
             {/* Questions & Answers (FAQs) Manager */}
             <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-200/80 space-y-3">
-              <div className="flex items-center justify-between border-b border-blue-200/60 pb-2.5">
+              <div className="flex items-center justify-between border-b border-blue-200/60 pb-2.5 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
                     <HelpCircle size={14} />
@@ -298,75 +312,182 @@ export default function CreateEditExtraModal({
                     </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const current = formData.faqs || [];
-                    setFormData((prev) => ({
-                      ...prev,
-                      faqs: [...current, { question: "", answer: "" }],
-                    }));
-                  }}
-                  className="px-2.5 py-1.5 bg-white hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
-                >
-                  <Plus size={13} />
-                  <span>Add Question</span>
-                </button>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {faqs.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={toggleAllFaqs}
+                      className="px-2 py-1 bg-white hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                    >
+                      {allFaqsOpen ? "Collapse All" : "Expand All"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = formData.faqs || [];
+                      const newIndex = current.length;
+                      setFormData((prev) => ({
+                        ...prev,
+                        faqs: [
+                          ...current,
+                          {
+                            question: "",
+                            answer: "",
+                          },
+                        ],
+                      }));
+                      setOpenFaqIndexes((prev) => ({ ...prev, [newIndex]: true }));
+                    }}
+                    className="px-2.5 py-1.5 bg-white hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    <Plus size={13} />
+                    <span>Add Question</span>
+                  </button>
+                </div>
               </div>
 
-              {(!formData.faqs || formData.faqs.length === 0) ? (
+              {faqs.length === 0 ? (
                 <div className="p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center text-xs text-gray-400">
-                  No custom questions added yet. Click &ldquo;Add Question&rdquo; to add FAQs for this service.
+                  No custom questions added yet. Click &ldquo;Add Question&rdquo; to add questions.
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {formData.faqs.map((faq, index) => (
-                    <div
-                      key={index}
-                      className="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-2 relative"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                          Question #{index + 1}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = (formData.faqs || []).filter((_, i) => i !== index);
-                            setFormData((prev) => ({ ...prev, faqs: updated }));
-                          }}
-                          className="text-gray-400 hover:text-red-500 p-1 rounded-md hover:bg-red-50 text-xs cursor-pointer transition-colors"
-                          title="Remove question"
+                  {faqs.map((faq, index) => {
+                    const isOpen = !!openFaqIndexes[index];
+
+                    return (
+                      <div
+                        key={index}
+                        className={`bg-white rounded-xl border transition-all duration-200 overflow-hidden shadow-2xs ${
+                          isOpen
+                            ? "border-blue-300 ring-1 ring-blue-150"
+                            : "border-blue-100 hover:border-blue-200"
+                        }`}
+                      >
+                        {/* Question Header Bar: Clickable to toggle */}
+                        <div
+                          onClick={() => toggleFaqOpen(index)}
+                          className="px-3.5 py-2.5 flex items-center justify-between gap-2.5 cursor-pointer select-none bg-blue-50/40 hover:bg-blue-50/80 transition-colors"
                         >
-                          <Trash2 size={13} />
-                        </button>
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded shrink-0">
+                              Question #{index + 1}
+                            </span>
+                            <span
+                              className={`text-xs font-bold truncate ${
+                                faq.question ? "text-gray-900" : "text-gray-400 italic"
+                              }`}
+                            >
+                              {faq.question || "Untitled Question (Click to edit)..."}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const updated = (formData.faqs || []).filter((_, i) => i !== index);
+                                setFormData((prev) => ({ ...prev, faqs: updated }));
+                              }}
+                              className="text-gray-400 hover:text-red-500 p-1 rounded-md hover:bg-red-50 text-xs cursor-pointer transition-colors"
+                              title="Remove question"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+
+                            <div
+                              className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-blue-600 transition-colors"
+                              title={isOpen ? "Collapse" : "Expand"}
+                            >
+                              <ChevronDown
+                                size={15}
+                                className={`transition-transform duration-200 ${
+                                  isOpen ? "rotate-180 text-blue-600" : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Question Form Content (Shown when isOpen) */}
+                        {isOpen && (
+                          <div className="p-4 border-t border-blue-150/70 space-y-4 bg-white animate-in fade-in-50 duration-150">
+                            {/* Question Title */}
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-[11px] font-black text-gray-800 uppercase tracking-wider">
+                                  Question Title
+                                </label>
+                                <span className="text-[10px] text-gray-400">
+                                  Quick titles:
+                                </span>
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="e.g. Roadside Assistance Cancellation"
+                                value={faq.question}
+                                onChange={(e) => {
+                                  const updated = [...(formData.faqs || [])];
+                                  updated[index] = { ...updated[index], question: e.target.value };
+                                  setFormData((prev) => ({ ...prev, faqs: updated }));
+                                }}
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-250 text-xs font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                              />
+
+                              {/* Quick Title Suggestions */}
+                              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                {[
+                                  `Roadside Assistance Cancellation`,
+                                  `What is ${formData.name || "this service"}?`,
+                                  `Cancellation Policy & Terms`,
+                                  `Requirements & Conditions`,
+                                ].map((sugg, sIdx) => (
+                                  <button
+                                    key={sIdx}
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = [...(formData.faqs || [])];
+                                      updated[index] = { ...updated[index], question: sugg };
+                                      setFormData((prev) => ({ ...prev, faqs: updated }));
+                                    }}
+                                    className="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600 border border-gray-200 transition-colors cursor-pointer"
+                                  >
+                                    + {sugg}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Answer Content - RichTextEditor Box */}
+                            <div className="pt-2 border-t border-gray-100">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <label className="text-[11px] font-black text-gray-800 uppercase tracking-wider">
+                                  Answer &amp; Conditions
+                                </label>
+                                <span className="text-[10px] text-gray-500">
+                                  Use bold, headings &amp; bullet lists (• becomes ✔ for customer)
+                                </span>
+                              </div>
+                              <RichTextEditor
+                                value={faq.answer || ""}
+                                onChange={(html) => {
+                                  const updated = [...(formData.faqs || [])];
+                                  updated[index] = { ...updated[index], answer: html };
+                                  setFormData((prev) => ({ ...prev, faqs: updated }));
+                                }}
+                                placeholder="Write your answer content here... Use headings, bold text, and bullet lists for conditions"
+                                minHeight={180}
+                                className="rounded-xl border border-gray-250 shadow-2xs"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-
-                      <input
-                        type="text"
-                        placeholder="e.g. What is Last Minute Cancellation?"
-                        value={faq.question}
-                        onChange={(e) => {
-                          const updated = [...(formData.faqs || [])];
-                          updated[index] = { ...updated[index], question: e.target.value };
-                          setFormData((prev) => ({ ...prev, faqs: updated }));
-                        }}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-900 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      />
-
-                      <textarea
-                        rows={2}
-                        placeholder="Detailed explanation / answer..."
-                        value={faq.answer}
-                        onChange={(e) => {
-                          const updated = [...(formData.faqs || [])];
-                          updated[index] = { ...updated[index], answer: e.target.value };
-                          setFormData((prev) => ({ ...prev, faqs: updated }));
-                        }}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs text-gray-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none leading-relaxed"
-                      />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

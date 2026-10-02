@@ -51,16 +51,19 @@ Route::put('/admin/extras/{id}', [\App\Http\Controllers\Api\ExtrasPricingControl
 Route::delete('/admin/extras/{id}', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminDestroy'])->middleware('auth:sanctum');
 Route::post('/admin/extras/{id}/toggle-active', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminToggleActive'])->middleware('auth:sanctum');
 
-// Admin: Manage extras per supplier
+// Admin: Manage extras per supplier & branch
+Route::get('/admin/extras/overview', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminGetExtrasOverview'])->middleware('auth:sanctum');
 Route::get('/admin/supplier/{supplierId}/extras', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminGetSupplierExtras'])->middleware('auth:sanctum');
 Route::post('/admin/supplier/{supplierId}/extras', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminSaveSupplierExtras'])->middleware('auth:sanctum');
+Route::post('/admin/supplier/{supplierId}/extras/toggle', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminToggleSupplierExtras'])->middleware('auth:sanctum');
 
 // Admin: Bulk apply profit/price across all or filtered suppliers
 Route::post('/admin/extras/bulk-apply', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'adminBulkApply'])->middleware('auth:sanctum');
 
-// Supplier: Get extras catalog + their own config, and save
+// Supplier: Get extras catalog + their own config, save, and 1-click toggle
 Route::get('/supplier/extras/catalog', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'supplierGetCatalog'])->middleware('auth:sanctum');
 Route::post('/supplier/extras/save', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'supplierSaveExtras'])->middleware('auth:sanctum');
+Route::post('/supplier/extras/toggle', [\App\Http\Controllers\Api\ExtrasPricingController::class, 'supplierToggleExtras'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {

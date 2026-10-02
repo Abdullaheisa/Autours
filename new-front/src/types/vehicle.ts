@@ -56,6 +56,7 @@ export interface Vehicle {
   original_price?: number;
   deposit_amount?: number;
   deposit_terms?: string;
+  has_extras?: boolean;
 }
 
 export interface Car {

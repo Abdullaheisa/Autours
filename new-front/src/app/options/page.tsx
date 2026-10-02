@@ -44,8 +44,8 @@ import Navbar from "@/components/shared/layout/Navbar";
 import Footer from "@/components/shared/layout/Footer";
 import Stepper from "@/app/search/components/Stepper";
 import CarCard from "@/app/search/components/CarCard";
-import SearchSummary from "@/app/search/components/SearchSummary";
-import BookingChecklist from "@/app/booking/components/BookingChecklist";
+import PickupDropoffCard from "./components/PickupDropoffCard";
+import PriceBreakdownCard from "@/app/booking/components/PriceBreakdownCard";
 import ExtraFaqModal from "./components/ExtraFaqModal";
 
 const SUPPORTED_BACKEND_CURRENCIES = [
@@ -253,6 +253,7 @@ function OptionsContent() {
   // ── Extras List & Selected State ──
   const [extrasList, setExtrasList] = useState<ExtraItem[]>([]);
   const [isLoadingExtras, setIsLoadingExtras] = useState(true);
+  const [extrasLoaded, setExtrasLoaded] = useState(false);
   const [selectedExtras, setSelectedExtras] = useState<Record<string, number>>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -273,6 +274,14 @@ function OptionsContent() {
 
   const [selectedFaqExtra, setSelectedFaqExtra] = useState<ExtraItem | null>(null);
   const [showAllExtras, setShowAllExtras] = useState(false);
+  const [expandedExtras, setExpandedExtras] = useState<Record<string, boolean>>({});
+
+  const toggleExtraExpand = (extraId: string) => {
+    setExpandedExtras((prev) => ({
+      ...prev,
+      [extraId]: !prev[extraId],
+    }));
+  };
 
   // Progressive disclosure: show 2 extras by default unless expanded
   const visibleExtras = useMemo(() => {
@@ -354,8 +363,25 @@ function OptionsContent() {
       })
       .finally(() => {
         setIsLoadingExtras(false);
+        setExtrasLoaded(true);
       });
   }, [selectedVehicle, actualVehicleToBook, vehicleId, (searchStateParams as any)?.country]);
+
+  // Auto-redirect to booking if vehicle has no extras configured
+  useEffect(() => {
+    if ((selectedVehicle as any)?.has_extras === false) {
+      const targetUrl = `/booking?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}`;
+      router.replace(targetUrl);
+    }
+  }, [selectedVehicle, vehicleId, actualVehicleToBook, router]);
+
+  // Auto-redirect to booking if extras query returned 0 available extras
+  useEffect(() => {
+    if (extrasLoaded && !isLoadingExtras && extrasList.length === 0 && (selectedVehicle || vehicleId)) {
+      const targetUrl = `/booking?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}`;
+      router.replace(targetUrl);
+    }
+  }, [extrasLoaded, isLoadingExtras, extrasList.length, selectedVehicle, vehicleId, actualVehicleToBook, router]);
 
   // Clean up any selected extras that are no longer offered by the company/branch
   useEffect(() => {
@@ -439,6 +465,23 @@ function OptionsContent() {
 
   const selectedExtrasCount = Object.values(selectedExtras).filter((q) => q > 0).length;
 
+  const itemizedExtras = useMemo(() => {
+    return extrasList
+      .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
+      .map((ex) => {
+        const qty = selectedExtras[ex.key || ex.id];
+        const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
+        const baseCurrency = ex.currency || "USD";
+        const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
+        return {
+          id: ex.key || ex.id,
+          name: ex.name,
+          qty,
+          totalPrice: itemTotal,
+        };
+      });
+  }, [extrasList, selectedExtras, currencyCode, allRates]);
+
   // ── Extra change handler ──
   const handleExtraChange = (id: string, qty: number) => {
     setSelectedExtras((prev) => {
@@ -476,7 +519,7 @@ function OptionsContent() {
         bookId={actualVehicleToBook}
       />
 
-      <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-6">
+      <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-8">
         {/* Back Link */}
         <div className="mb-4">
           <Link
@@ -490,9 +533,8 @@ function OptionsContent() {
           </Link>
         </div>
 
-        {/* Mobile Search Summary + Car Card */}
+        {/* Mobile Pickup/Dropoff + Car Card */}
         <div className="lg:hidden mb-6 space-y-4">
-          <SearchSummary hideEditButton={true} forceMobileLayout={true} />
           {selectedVehicle && (
             <CarCard
               vehicle={selectedVehicle}
@@ -501,176 +543,52 @@ function OptionsContent() {
               preselectedBookId={actualVehicleToBook}
             />
           )}
+          <PriceBreakdownCard
+            rentalDays={rentalDays}
+            currencyCode={currencyCode}
+            baseVehiclePrice={baseVehiclePrice}
+            extrasItems={itemizedExtras}
+            grandTotalPrice={grandTotalPrice}
+          />
+          <PickupDropoffCard
+            pickupDate={searchStateParams.dateFrom}
+            pickupTime={searchStateParams.startTime || "10:00"}
+            dropoffDate={searchStateParams.dateTo}
+            dropoffTime={searchStateParams.endTime || "10:00"}
+            pickupBranch={(selectedVehicle as any)?.branch}
+            dropoffBranch={(selectedVehicle as any)?.branch}
+            fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || "Selected Location"}
+            supplierName={selectedVehicle?.supplier?.name}
+          />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* ── LEFT SIDEBAR: Trip Details & Price Summary ────────────────────────── */}
-          <aside className="w-full lg:w-[340px] shrink-0 space-y-5 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-            <div className="hidden lg:block">
-              <SearchSummary hideEditButton={true} />
-            </div>
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* ── LEFT SIDEBAR: Matches Search Page Width Identically ────────────────────────── */}
+          <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
+            {/* Price Breakdown / Invoice Card */}
+            <PriceBreakdownCard
+              rentalDays={rentalDays}
+              currencyCode={currencyCode}
+              baseVehiclePrice={baseVehiclePrice}
+              extrasItems={itemizedExtras}
+              grandTotalPrice={grandTotalPrice}
+            />
 
-            {/* Price Summary Card */}
-            <div className="bg-white rounded-3xl border-2 border-primary overflow-hidden shadow-sm">
-              <div className="bg-primary/10 px-5 py-3.5 border-b border-primary/20 flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-widest text-gray-600">
-                    Your Trip Summary
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">Live Price Breakdown</p>
-                </div>
-                {selectedExtrasCount > 0 && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black">
-                    +{selectedExtrasCount} Extras
-                  </span>
-                )}
-              </div>
-
-              <div className="p-5 space-y-4">
-                {/* Total Price */}
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-gray-900 tracking-tight">
-                      {grandTotalPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                    <span className="text-xl font-black text-gray-600">{currencyCode}</span>
-                  </div>
-                  <p className="text-xs text-emerald-700 font-bold mt-1 flex items-center gap-1.5">
-                    <CheckCircle2 size={13} className="shrink-0" />
-                    Includes VAT &amp; standard insurance for {rentalDays}{" "}
-                    {rentalDays === 1 ? "day" : "days"}
-                  </p>
-                </div>
-
-                {/* Breakdown */}
-                <div className="pt-3 border-t border-gray-100 space-y-2 text-xs">
-                  <div className="flex justify-between text-gray-600 font-medium">
-                    <span>Daily Rate</span>
-                    <span className="text-gray-900 font-bold">
-                      {dailyPrice.toLocaleString()} {currencyCode}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-gray-600 font-medium">
-                    <span>Base Vehicle Rental</span>
-                    <span className="text-gray-900 font-bold">
-                      {baseVehiclePrice.toLocaleString()} {currencyCode}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between text-gray-600 font-medium pt-1">
-                    <span className="flex items-center gap-1">
-                      <span>Optional Extras</span>
-                      {selectedExtrasCount > 0 && (
-                        <span className="px-1.5 py-0.2 bg-blue-100 text-blue-800 text-[10px] font-black rounded-full">
-                          {selectedExtrasCount}
-                        </span>
-                      )}
-                    </span>
-                    <span
-                      className={
-                        extrasTotalPrice > 0
-                          ? "text-blue-700 font-black text-xs"
-                          : "text-gray-900 font-bold text-xs"
-                      }
-                    >
-                      {extrasTotalPrice > 0
-                        ? `+${extrasTotalPrice.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}`
-                        : "0.00"}{" "}
-                      {currencyCode}
-                    </span>
-                  </div>
-
-                  {/* Itemized Extras List in Sidebar */}
-                  {selectedExtrasCount > 0 && (
-                    <div className="p-2.5 bg-gray-50/80 rounded-2xl space-y-1.5 border border-gray-100 animate-in fade-in duration-150">
-                      {extrasList.map((ex) => {
-                        const extraId = ex.key || ex.id;
-                        const qty = selectedExtras[extraId] || 0;
-                        if (qty <= 0) return null;
-                        const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
-                        const baseCurrency = ex.currency || "USD";
-                        const itemTotal =
-                          convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
-                        return (
-                          <div
-                            key={extraId}
-                            className="flex items-center justify-between text-[11px] text-gray-700 gap-2"
-                          >
-                            <span className="truncate">
-                              • {ex.name} {qty > 1 ? `(x${qty})` : ""}
-                            </span>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="font-bold text-gray-900">
-                                {itemTotal.toFixed(2)} {currencyCode}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleExtraChange(extraId, 0)}
-                                className="text-gray-400 hover:text-red-600 p-0.5 transition-colors cursor-pointer"
-                                title="Remove"
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <div className="h-px bg-gray-200 my-2" />
-
-                  <div className="flex justify-between items-baseline font-black text-gray-900 pt-1">
-                    <span className="text-sm">Grand Total</span>
-                    <span className="text-lg text-primary-700">
-                      {grandTotalPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{" "}
-                      {currencyCode}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Primary CTA Button */}
-                <button
-                  type="button"
-                  onClick={handleProceedToBooking}
-                  className="w-full py-3.5 px-4 bg-primary text-gray-900 font-black text-sm uppercase rounded-2xl hover:bg-primary-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
-                >
-                  <span>Continue to Booking</span>
-                  <ArrowRight size={16} />
-                </button>
-
-                {/* Skip Secondary Link */}
-                <div className="text-center pt-1">
-                  <button
-                    type="button"
-                    onClick={handleProceedToBooking}
-                    className="text-xs text-gray-500 hover:text-gray-900 font-bold underline transition-colors cursor-pointer"
-                  >
-                    Skip add-ons &amp; continue directly
-                  </button>
-                </div>
-              </div>
-
-              {/* Trust Badges */}
-              <div className="px-5 py-2.5 bg-gray-50/80 border-t border-gray-100 flex items-center justify-center text-[11.5px] text-gray-500">
-                <span className="flex items-center gap-1.5 font-bold text-emerald-700">
-                  <ShieldCheck size={14} /> Free Cancellation Included
-                </span>
-              </div>
-            </div>
+            {/* Pick-up and Drop-off Card */}
+            <PickupDropoffCard
+              pickupDate={searchStateParams.dateFrom}
+              pickupTime={searchStateParams.startTime || "10:00"}
+              dropoffDate={searchStateParams.dateTo}
+              dropoffTime={searchStateParams.endTime || "10:00"}
+              pickupBranch={(selectedVehicle as any)?.branch}
+              dropoffBranch={(selectedVehicle as any)?.branch}
+              fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || "Selected Location"}
+              supplierName={selectedVehicle?.supplier?.name}
+            />
           </aside>
 
-          {/* ── RIGHT MAIN CONTENT: Car Card & Extras Selection ─────────────────── */}
-          <div className="flex-1 min-w-0 space-y-6 w-full max-w-3xl lg:max-w-none mx-auto lg:mx-0">
+          {/* ── RIGHT MAIN CONTENT: Exactly matches Search Page Width ─────────────────── */}
+          <div className="flex-1 w-full min-w-0 space-y-4">
             {/* Desktop Car Card (Exact preservation of design & details) */}
             <div className="hidden lg:block">
               {selectedVehicle ? (
@@ -688,304 +606,279 @@ function OptionsContent() {
             </div>
 
             {/* Section Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-6 rounded-full bg-primary inline-block shrink-0" />
-                  <h3 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight">
-                    Rental Add-ons &amp; Extras
-                  </h3>
-                </div>
-                <p className="text-xs text-gray-500 pl-4.5">
-                  Official optional equipment and services offered by{" "}
-                  <span className="font-bold text-gray-800">
-                    {selectedVehicle?.supplier?.name || "the rental company"}
-                  </span>
-                  {(selectedVehicle as any)?.branch?.name ? ` at ${(selectedVehicle as any).branch.name}` : ""}
-                </p>
-              </div>
-
-              {!isLoadingExtras && extrasList.length > 0 && (
-                <div className="flex items-center gap-2 pl-4.5 sm:pl-0">
-                  <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold border border-gray-200 shadow-2xs">
-                    {extrasList.length > 2 && !showAllExtras
-                      ? `Showing 2 of ${extrasList.length} options`
-                      : `${extrasList.length} ${extrasList.length === 1 ? "option" : "options"} available`}
-                  </span>
-                  {selectedExtrasCount > 0 && (
-                    <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black border border-emerald-200 flex items-center gap-1 shadow-2xs animate-in fade-in duration-150">
-                      <Check size={12} className="stroke-[3]" /> {selectedExtrasCount} selected
+            {(isLoadingExtras || extrasList.length > 0) && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-6 rounded-full bg-primary inline-block shrink-0" />
+                    <h3 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight">
+                      Rental Add-ons &amp; Extras
+                    </h3>
+                  </div>
+                  <p className="text-xs text-gray-500 pl-4.5">
+                    Official optional equipment and services offered by{" "}
+                    <span className="font-bold text-gray-800">
+                      {selectedVehicle?.supplier?.name || "the rental company"}
                     </span>
-                  )}
+                    {(selectedVehicle as any)?.branch?.name ? ` at ${(selectedVehicle as any).branch.name}` : ""}
+                  </p>
                 </div>
-              )}
-            </div>
+
+                {!isLoadingExtras && extrasList.length > 0 && (
+                  <div className="flex items-center gap-2 pl-4.5 sm:pl-0">
+                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold border border-gray-200 shadow-2xs">
+                      {extrasList.length > 2 && !showAllExtras
+                        ? `Showing 2 of ${extrasList.length} options`
+                        : `${extrasList.length} ${extrasList.length === 1 ? "option" : "options"} available`}
+                    </span>
+                    {selectedExtrasCount > 0 && (
+                      <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black border border-emerald-200 flex items-center gap-1 shadow-2xs animate-in fade-in duration-150">
+                        <Check size={12} className="stroke-[3]" /> {selectedExtrasCount} selected
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── Extras Grid / Cards ─────────────────────────────────────────── */}
-            <div className="space-y-4">
-              {isLoadingExtras ? (
-                <div className="space-y-4">
-                  {[1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="bg-white rounded-2xl md:rounded-3xl border border-gray-200 p-5 sm:p-6 space-y-4 animate-pulse shadow-2xs"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-2xl bg-gray-200" />
-                          <div className="space-y-1.5">
-                            <div className="w-36 h-4 bg-gray-200 rounded-md" />
-                            <div className="w-24 h-3 bg-gray-150 rounded" />
+            {(isLoadingExtras || extrasList.length > 0) && (
+              <div className="space-y-4">
+                {isLoadingExtras ? (
+                  <div className="space-y-4">
+                    {[1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-white rounded-2xl md:rounded-3xl border border-gray-200 p-5 sm:p-6 space-y-4 animate-pulse shadow-2xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-2xl bg-gray-200" />
+                            <div className="space-y-1.5">
+                              <div className="w-36 h-4 bg-gray-200 rounded-md" />
+                              <div className="w-24 h-3 bg-gray-150 rounded" />
+                            </div>
                           </div>
+                          <div className="w-24 h-7 bg-gray-200 rounded-xl" />
                         </div>
-                        <div className="w-24 h-7 bg-gray-200 rounded-xl" />
+                        <div className="w-4/5 h-3 bg-gray-100 rounded" />
+                        <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                          <div className="w-28 h-5 bg-gray-200 rounded" />
+                          <div className="w-28 h-10 bg-gray-200 rounded-2xl" />
+                        </div>
                       </div>
-                      <div className="w-4/5 h-3 bg-gray-100 rounded" />
-                      <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                        <div className="w-28 h-5 bg-gray-200 rounded" />
-                        <div className="w-28 h-10 bg-gray-200 rounded-2xl" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : extrasList.length === 0 ? (
-                <div className="p-8 sm:p-12 bg-white rounded-3xl border border-dashed border-gray-250 text-center space-y-4 shadow-xs">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-100 shadow-sm">
-                    <Sparkles className="w-7 h-7" />
+                    ))}
                   </div>
-                  <div className="max-w-md mx-auto space-y-1.5">
-                    <h4 className="text-base sm:text-lg font-black text-gray-900">
-                      All Standard Equipment Included
-                    </h4>
-                    <p className="text-xs sm:text-[13px] text-gray-500 leading-relaxed">
-                      The rental company ({selectedVehicle?.supplier?.name || "supplier"}) includes all required standard equipment with this vehicle. No optional add-ons are required.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleProceedToBooking}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-gray-950 font-black text-xs uppercase tracking-wider rounded-2xl hover:bg-primary-600 active:scale-95 transition-all shadow-md cursor-pointer"
-                  >
-                    <span>Continue to Booking</span>
-                    <ArrowRight size={14} />
-                  </button>
-                </div>
-              ) : (
-                visibleExtras.map((extra) => {
-                  const extraId = extra.key || extra.id;
-                  const qty = selectedExtras[extraId] || 0;
-                  const isSelected = qty > 0;
-                  const extraConfig = getExtraConfig(extra.name, extraId);
+                ) : (
+                  visibleExtras.map((extra) => {
+                    const extraId = extra.key || extra.id;
+                    const qty = selectedExtras[extraId] || 0;
+                    const isSelected = qty > 0;
+                    const isExpanded = Boolean(expandedExtras[extraId]);
+                    const extraConfig = getExtraConfig(extra.name, extraId);
 
-                  const basePrice = extra.price !== undefined ? extra.price : (extra.price_usd || 0);
-                  const baseCurrency = extra.currency || "USD";
+                    const basePrice = extra.price !== undefined ? extra.price : (extra.price_usd || 0);
+                    const baseCurrency = extra.currency || "USD";
 
-                  const displayUnitPrice = convertExtraPrice(
-                    basePrice,
-                    baseCurrency,
-                    currencyCode,
-                    allRates
-                  );
-                  const displayTotalPrice = displayUnitPrice * (qty > 0 ? qty : 1);
+                    const displayUnitPrice = convertExtraPrice(
+                      basePrice,
+                      baseCurrency,
+                      currencyCode,
+                      allRates
+                    );
+                    const displayTotalPrice = displayUnitPrice * (qty > 0 ? qty : 1);
 
-                  return (
-                    <div
-                      key={extraId}
-                      className={`group relative bg-white rounded-2xl md:rounded-3xl border transition-all duration-200 overflow-hidden ${
-                        isSelected
-                          ? "border-primary ring-2 ring-primary/25 shadow-md bg-amber-50/15"
-                          : "border-gray-200 hover:border-gray-300 hover:shadow-md shadow-xs"
-                      }`}
-                    >
-                      {/* Card Top Accent Line when selected */}
-                      {isSelected && (
-                        <div className="h-1 bg-gradient-to-r from-primary via-amber-400 to-primary w-full" />
-                      )}
+                    return (
+                      <div
+                        key={extraId}
+                        className={`group relative bg-white rounded-2xl md:rounded-3xl border transition-all duration-200 overflow-hidden ${
+                          isSelected
+                            ? "border-primary ring-2 ring-primary/25 shadow-md bg-amber-50/15"
+                            : "border-gray-250 hover:border-gray-300 hover:shadow-md shadow-xs"
+                        }`}
+                      >
+                        {/* Card Top Accent Line when selected */}
+                        {isSelected && (
+                          <div className="h-1 bg-gradient-to-r from-primary via-amber-400 to-primary w-full" />
+                        )}
 
-                      <div className="p-4 sm:p-5 md:p-6 space-y-4">
-                        {/* Header row: Icon + Title + Badges + Info Help button */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 sm:gap-3.5 min-w-0">
+                        {/* Clickable Header Row: Title & Badges on Left, Info (?) & Chevron on Right */}
+                        <div
+                          onClick={() => toggleExtraExpand(extraId)}
+                          className={`p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer select-none transition-colors ${
+                            isExpanded ? "border-b border-gray-150 bg-gray-50/30" : "hover:bg-gray-50/50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
                             <div
-                              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-2xs ${
+                              className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-2xs ${
                                 isSelected ? extraConfig.selectedClass : extraConfig.colorClass
                               }`}
                             >
                               {extraConfig.icon}
                             </div>
 
-                            <div className="min-w-0 pt-0.5">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">
-                                  {extra.name}
-                                </h4>
-                                {(extra.badge || extraConfig.defaultBadge) && (
-                                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100/80 text-amber-900 border border-amber-200/60 shadow-2xs shrink-0 flex items-center gap-1">
-                                    <Sparkles size={11} className="text-amber-600" />
-                                    {extra.badge || extraConfig.defaultBadge}
-                                  </span>
-                                )}
-                                {isSelected && (
-                                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200/80 flex items-center gap-1 shrink-0 animate-in zoom-in-95 duration-150">
-                                    <Check size={12} className="stroke-[3]" /> Added
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 font-medium">
-                                <span className="inline-flex items-center gap-1">
-                                  <Clock size={12} className="text-gray-400" />
-                                  {extra.type === "quantity"
-                                    ? `Quantity option (up to ${extra.max_qty || 3})`
-                                    : "Flat rate for entire trip"}
+                            <div className="min-w-0 flex items-center gap-2.5 flex-wrap">
+                              <h4 className="text-[17px] sm:text-lg font-bold text-gray-950 tracking-tight leading-snug">
+                                {extra.name}
+                              </h4>
+                              {(extra.badge || extraConfig.defaultBadge) && (
+                                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide bg-amber-100/90 text-amber-900 border border-amber-250/70 shadow-2xs shrink-0 flex items-center gap-1">
+                                  <Sparkles size={11} className="text-amber-600" />
+                                  {extra.badge || extraConfig.defaultBadge}
                                 </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Info Icon Button (Opens FAQ Modal) */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedFaqExtra(extra)}
-                            className="w-8 h-8 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                            title={`Questions & details about ${extra.name}`}
-                            aria-label={`Questions & details about ${extra.name}`}
-                          >
-                            <HelpCircle size={18} className="stroke-[2]" />
-                          </button>
-                        </div>
-
-                        {/* Description text */}
-                        <p className="text-xs sm:text-[13.5px] text-gray-600 leading-relaxed max-w-2xl">
-                          {extra.description || "Optional add-on service provided for your vehicle rental."}
-                        </p>
-
-                        {/* Footer Row: Pricing & Action Controls */}
-                        <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          {/* Price block */}
-                          <div>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-2xl sm:text-[26px] font-black text-gray-950 font-sans tracking-tight">
-                                {currencyCode}{" "}
-                                {displayTotalPrice.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </span>
-                              {qty > 1 && (
-                                <span className="text-xs text-gray-400 font-bold">
-                                  ({displayUnitPrice.toFixed(2)} {currencyCode} × {qty})
+                              )}
+                              {isSelected && (
+                                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-250 flex items-center gap-1 shrink-0">
+                                  <Check size={12} className="stroke-[3]" /> Added
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs text-gray-500 font-medium block">
-                              total for entire rental ({rentalDays} {rentalDays === 1 ? "day" : "days"})
-                            </span>
                           </div>
 
-                          {/* Action button / quantity stepper */}
-                          <div className="flex items-center justify-end">
-                            {extra.type === "quantity" ? (
-                              isSelected ? (
-                                <div className="flex items-center gap-1.5 bg-gray-100/90 border border-gray-200/90 rounded-2xl p-1 shadow-inner">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleExtraChange(extraId, Math.max(0, qty - 1))}
-                                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 flex items-center justify-center active:scale-90 transition-all shadow-2xs cursor-pointer"
-                                    title="Decrease quantity"
-                                  >
-                                    <Minus size={14} strokeWidth={2.5} />
-                                  </button>
-                                  <span className="w-8 text-center text-sm font-black text-gray-950 font-sans select-none">
-                                    {qty}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleExtraChange(extraId, Math.min(extra.max_qty || 3, qty + 1))
-                                    }
-                                    disabled={qty >= (extra.max_qty || 3)}
-                                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-primary hover:text-gray-950 hover:border-primary flex items-center justify-center active:scale-90 transition-all disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-gray-700 shadow-2xs cursor-pointer"
-                                    title="Increase quantity"
-                                  >
-                                    <Plus size={14} strokeWidth={2.5} />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => handleExtraChange(extraId, 1)}
-                                  className="min-w-[120px] px-6 py-3 rounded-2xl bg-primary text-gray-950 font-black text-xs uppercase tracking-wider hover:bg-primary-600 hover:shadow-md active:scale-95 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                  <Plus size={15} strokeWidth={2.5} />
-                                  <span>Add</span>
-                                </button>
-                              )
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleExtraChange(extraId, isSelected ? 0 : 1)}
-                                className={`min-w-[120px] px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
-                                  isSelected
-                                    ? "bg-gray-950 text-white hover:bg-red-600 hover:border-red-600 border border-gray-950 group"
-                                    : "bg-primary text-gray-950 hover:bg-primary-600 hover:shadow-md"
+                          {/* Right Controls: Info (?) button and Chevron toggle */}
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            {/* Blue circular Info (?) Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedFaqExtra(extra);
+                              }}
+                              className="w-9 h-9 rounded-full text-blue-600 hover:text-blue-700 hover:bg-blue-50/80 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                              title={`Information & FAQs for ${extra.name}`}
+                              aria-label={`Information & FAQs for ${extra.name}`}
+                            >
+                              <HelpCircle size={22} className="stroke-[2.2]" />
+                            </button>
+
+                            {/* Chevron Toggle Button */}
+                            <div
+                              className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-200/90 flex items-center justify-center text-gray-500 hover:text-gray-900 shadow-2xs transition-all shrink-0"
+                              title={isExpanded ? "Collapse" : "Expand"}
+                            >
+                              <ChevronDown
+                                size={16}
+                                className={`transition-transform duration-200 ${
+                                  isExpanded ? "rotate-180 text-gray-800" : "text-gray-400"
                                 }`}
-                              >
-                                {isSelected ? (
-                                  <>
-                                    <Check size={15} strokeWidth={3} className="group-hover:hidden" />
-                                    <X size={15} strokeWidth={3} className="hidden group-hover:inline" />
-                                    <span className="group-hover:hidden">Added</span>
-                                    <span className="hidden group-hover:inline">Remove</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Plus size={15} strokeWidth={2.5} />
-                                    <span>Add</span>
-                                  </>
-                                )}
-                              </button>
-                            )}
+                              />
+                            </div>
                           </div>
                         </div>
+
+                        {/* Expanded Details Body: Clean enlarged description on Left, Price + Button on Right */}
+                        {isExpanded && (
+                          <div className="p-4 sm:p-5 md:p-6 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-5 animate-in fade-in-50 duration-200">
+                            {/* Left: Description with enlarged readable font */}
+                            <p className="text-[15px] sm:text-base font-normal text-slate-700 leading-relaxed max-w-xl antialiased">
+                              {extra.description || "Optional add-on service provided for your vehicle rental."}
+                            </p>
+
+                            {/* Right: Price (per day) and Action Button (Add / Remove) */}
+                            <div className="flex items-center justify-between md:justify-end gap-5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-150">
+                              {/* Price */}
+                              <div className="text-right">
+                                <div className="flex items-baseline justify-end gap-1.5">
+                                  <span className="text-xs sm:text-sm font-bold text-gray-500 tracking-wider">
+                                    {currencyCode}
+                                  </span>
+                                  <span className="text-xl sm:text-2xl font-black text-gray-950 font-sans tracking-tight">
+                                    {displayUnitPrice.toLocaleString(undefined, {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase mt-0.5">
+                                  per day
+                                </div>
+                              </div>
+
+                              {/* Action Button: Stepper for quantity or Add/Remove for boolean */}
+                              <div onClick={(e) => e.stopPropagation()}>
+                                {extra.type === "quantity" ? (
+                                  isSelected ? (
+                                    <div className="flex items-center gap-1.5 bg-gray-100/90 border border-gray-200/90 rounded-xl p-1 shadow-inner">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleExtraChange(extraId, Math.max(0, qty - 1))}
+                                        className="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 flex items-center justify-center active:scale-90 transition-all shadow-2xs cursor-pointer"
+                                        title="Decrease quantity"
+                                      >
+                                        <Minus size={14} strokeWidth={2.5} />
+                                      </button>
+                                      <span className="w-7 text-center text-sm font-black text-gray-950 font-sans select-none">
+                                        {qty}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleExtraChange(extraId, Math.min(extra.max_qty || 3, qty + 1))
+                                        }
+                                        disabled={qty >= (extra.max_qty || 3)}
+                                        className="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-primary hover:text-gray-950 hover:border-primary flex items-center justify-center active:scale-90 transition-all disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-gray-700 shadow-2xs cursor-pointer"
+                                        title="Increase quantity"
+                                      >
+                                        <Plus size={14} strokeWidth={2.5} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleExtraChange(extraId, 1)}
+                                      className="min-w-[115px] px-6 py-2.5 rounded-xl bg-primary text-gray-950 font-bold text-sm hover:bg-primary-600 active:scale-95 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                      <Plus size={16} strokeWidth={2.5} />
+                                      <span>Add</span>
+                                    </button>
+                                  )
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleExtraChange(extraId, isSelected ? 0 : 1)}
+                                    className={`min-w-[115px] px-6 py-2.5 rounded-xl font-bold text-sm active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                      isSelected
+                                        ? "border-2 border-blue-600 text-blue-600 bg-white hover:bg-blue-50"
+                                        : "bg-primary text-gray-950 hover:bg-primary-600 shadow-xs"
+                                    }`}
+                                  >
+                                    {isSelected ? "Remove" : "+ Add"}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                )}
 
-              {/* View More / Show Fewer Add-ons Button */}
-              {!isLoadingExtras && extrasList.length > 2 && (
-                <div className="pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowAllExtras((prev) => !prev)}
-                    className="w-full py-3.5 px-5 bg-white hover:bg-gray-50 border-2 border-dashed border-gray-250 hover:border-gray-400 rounded-2xl md:rounded-3xl font-black text-xs sm:text-sm text-gray-800 transition-all flex items-center justify-center gap-2 shadow-2xs group cursor-pointer"
-                  >
-                    {showAllExtras ? (
-                      <>
-                        <ChevronUp size={16} className="text-gray-500 group-hover:-translate-y-0.5 transition-transform" />
-                        <span>Show fewer options</span>
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown size={16} className="text-gray-500 group-hover:translate-y-0.5 transition-transform" />
-                        <span>View more add-ons (+{extrasList.length - 2} more available)</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Checklist Before Pick-up */}
-            <div className="pt-2">
-              <BookingChecklist
-                pickupTime={searchStateParams.startTime || "10:00"}
-                depositAmount={selectedVehicle?.deposit}
-                currencyCode={currencyCode}
-              />
-            </div>
+                {/* View More / Show Fewer Add-ons Button */}
+                {!isLoadingExtras && extrasList.length > 2 && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllExtras((prev) => !prev)}
+                      className="w-full py-3.5 px-5 bg-white hover:bg-gray-50 border-2 border-dashed border-gray-250 hover:border-gray-400 rounded-2xl md:rounded-3xl font-black text-xs sm:text-sm text-gray-800 transition-all flex items-center justify-center gap-2 shadow-2xs group cursor-pointer"
+                    >
+                      {showAllExtras ? (
+                        <>
+                          <ChevronUp size={16} className="text-gray-500 group-hover:-translate-y-0.5 transition-transform" />
+                          <span>Show fewer options</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown size={16} className="text-gray-500 group-hover:translate-y-0.5 transition-transform" />
+                          <span>View more add-ons (+{extrasList.length - 2} more available)</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Bottom Next Step Bar */}
             <div className="p-6 bg-white rounded-3xl border border-gray-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">

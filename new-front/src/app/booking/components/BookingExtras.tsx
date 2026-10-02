@@ -17,7 +17,7 @@ export interface ExtraItem {
   type: "boolean" | "quantity";
   max_qty?: number;
   badge?: string | null;
-  faqs?: { question: string; answer: string }[];
+  faqs?: { question: string; answer?: string; points?: string[]; sections?: { headline?: string; points: string[] }[] }[];
 }
 
 export interface SelectedExtra {
@@ -50,11 +50,11 @@ export function convertExtraPrice(
   const baseCode = (baseCurrency || "USD").toUpperCase();
   const targetCode = (targetCurrency || "USD").toUpperCase();
 
-  if (baseCode === targetCode && baseCode === "USD") {
+  if (baseCode === targetCode) {
     return Math.round(price * 100) / 100;
   }
 
-  // All extras are fixed in USD. If base is not USD for legacy reasons, normalize to USD first.
+  // Normalize base currency to USD if not already USD
   const priceInUsd = baseCode === "USD" 
     ? price 
     : normalizeToUsd(price, baseCode as Currency, allRates);

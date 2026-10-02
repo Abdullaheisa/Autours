@@ -18,6 +18,8 @@ use App\Models\LocationTypeVehicle;
 use App\Models\PaymentMethod;
 use App\Models\PaymentMethodSupplier;
 use App\Models\SupplierRentalTerm;
+use App\Models\SupplierExtra;
+use App\Models\Extra;
 use App\Models\VehicleIncluded;
 use App\Models\VehicleSpecification;
 use App\Services\EmrJsonApiService;
@@ -218,6 +220,21 @@ class VehicleController extends Controller
             $suppliers = User::query()->whereIn('id', $supplierIds)->where('role', 'active_supplier')->get();
             $paymentMethods = PaymentMethod::query()->whereIn('id', PaymentMethodSupplier::query()->whereIn('supplier_id', $supplierIds)->get()->pluck('payment_method_id')->toArray())->get();
 
+            // Pre-calculate active catalog extras and supplier/branch overrides
+            $activeCatalogExtras = Extra::where('is_active', true)->get(['id', 'key']);
+            $totalActiveExtrasCount = $activeCatalogExtras->count();
+
+            $allSupplierExtraRows = SupplierExtra::whereIn('supplier_id', $supplierIds)->get();
+            $branchOverrides = [];
+            $companyOverrides = [];
+            foreach ($allSupplierExtraRows as $row) {
+                if ($row->branch_id) {
+                    $branchOverrides["{$row->supplier_id}_{$row->branch_id}_{$row->extra_id}"] = (bool)$row->is_enabled;
+                } else {
+                    $companyOverrides["{$row->supplier_id}_{$row->extra_id}"] = (bool)$row->is_enabled;
+                }
+            }
+
             // Group vehicles to ensure sidebar aggregates only count unique models
             $groupedVehicles = collect();
             $groupedKeys = [];
@@ -314,6 +331,31 @@ class VehicleController extends Controller
                         }
                     }
                 }
+
+                $vSupplierId = $vehicle->supplierUser ? $vehicle->supplierUser->id : ($vehicle->getAttributes()['supplier'] ?? null);
+                $vBranchId = $vehicle->branch_id ?? ($vehicle->branch ? $vehicle->branch->id : null);
+
+                $hasExtras = false;
+                if ($totalActiveExtrasCount > 0) {
+                    foreach ($activeCatalogExtras as $catExtra) {
+                        $branchKey = "{$vSupplierId}_{$vBranchId}_{$catExtra->id}";
+                        $companyKey = "{$vSupplierId}_{$catExtra->id}";
+
+                        $isEnabled = true; // default enabled for active catalog extra
+                        if (isset($branchOverrides[$branchKey])) {
+                            $isEnabled = $branchOverrides[$branchKey];
+                        } elseif (isset($companyOverrides[$companyKey])) {
+                            $isEnabled = $companyOverrides[$companyKey];
+                        }
+
+                        if ($isEnabled) {
+                            $hasExtras = true;
+                            break;
+                        }
+                    }
+                }
+                $vehicle->has_extras = $hasExtras;
+                $vehicle->setAttribute('has_extras', $hasExtras);
 
                 if ($vehicle->final_price > 0) {
                     $validVehicles->push($vehicle);
@@ -1731,6 +1773,32 @@ class VehicleController extends Controller
             if ($location && $selectedVehicle) {
                 $selectedVehicle->available_branches = $selectedVehicle->branch ? collect([$selectedVehicle->branch]) : collect([]);
             }
+
+            $sId = $selectedVehicle->supplierUser ? $selectedVehicle->supplierUser->id : ($selectedVehicle->getAttributes()['supplier'] ?? null);
+            $bId = $selectedVehicle->branch_id ?? ($selectedVehicle->branch ? $selectedVehicle->branch->id : null);
+
+            $activeCatalogExtras = Extra::where('is_active', true)->get(['id']);
+            $hasExtras = false;
+            if ($activeCatalogExtras->count() > 0) {
+                $overrides = SupplierExtra::where('supplier_id', $sId)->get();
+                $bOverrides = $bId ? $overrides->where('branch_id', $bId)->keyBy('extra_id') : collect();
+                $cOverrides = $overrides->whereNull('branch_id')->whereNull('country')->keyBy('extra_id');
+
+                foreach ($activeCatalogExtras as $catExtra) {
+                    $override = ($bId && $bOverrides->has($catExtra->id))
+                        ? $bOverrides->get($catExtra->id)
+                        : $cOverrides->get($catExtra->id);
+
+                    $isEnabled = $override ? (bool)$override->is_enabled : true;
+                    if ($isEnabled) {
+                        $hasExtras = true;
+                        break;
+                    }
+                }
+            }
+            $selectedVehicle->has_extras = $hasExtras;
+            $selectedVehicle->setAttribute('has_extras', $hasExtras);
+
             $startDate = Carbon::parse($request->date_from);
             $endDate = Carbon::parse($request->date_to);
             $diffInDays = $startDate->diffInDays($endDate);

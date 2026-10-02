@@ -10,12 +10,13 @@ import { bookingApi, authApi, extrasPricingApi } from '@/services/api';
 import { axiosClient as apiClient } from '@/services/api/axiosClient';
 import toast from 'react-hot-toast';
 import Stepper from '@/app/search/components/Stepper';
-import SearchSummary from '@/app/search/components/SearchSummary';
+import PickupDropoffCard from '@/components/shared/PickupDropoffCard';
 import CarCard from '@/app/search/components/CarCard';
 import BookingChecklist from './components/BookingChecklist';
+import PriceBreakdownCard from './components/PriceBreakdownCard';
 import { ExtraItem, convertExtraPrice } from './components/BookingExtras';
 import FlightDetailsInput from './components/FlightDetailsInput';
-import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle, Sparkles, ArrowLeft } from 'lucide-react';
+import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle, Sparkles, ArrowLeft, PackageCheck } from 'lucide-react';
 import { RootState, AppDispatch } from '@/store';
 import { fetchVehicles, restoreSearchSession } from '@/store/slices/searchSlice';
 import { restoreAuth, logout } from '@/store/slices/authSlice';
@@ -523,8 +524,24 @@ function BookingContent() {
     return acc;
   }, 0);
   const extrasTotalPrice = Math.round(extrasTotalPriceRaw * 100) / 100;
-
   const grandTotalPrice = Math.round((baseVehiclePrice + extrasTotalPrice) * 100) / 100;
+
+  const itemizedExtras = useMemo(() => {
+    return extrasList
+      .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
+      .map((ex) => {
+        const qty = selectedExtras[ex.key || ex.id];
+        const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
+        const baseCurrency = ex.currency || "USD";
+        const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
+        return {
+          id: ex.key || ex.id,
+          name: ex.name,
+          qty,
+          totalPrice: itemTotal,
+        };
+      });
+  }, [extrasList, selectedExtras, currencyCode, allRates]);
 
   // ── Re-fetch on currency change ──────────────────────────────────────────────
   const doFetch = useCallback(() => {
@@ -735,117 +752,92 @@ function BookingContent() {
   const selectedExtrasCount = Object.values(selectedExtras).filter(q => q > 0).length;
 
   return (
-    <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-8">
+    <>
+      <Stepper
+        currentStep={4}
+        vehicleId={vehicleId || selectedVehicle?.id}
+        bookId={actualVehicleToBook}
+        hasExtras={(selectedVehicle as any)?.has_extras}
+      />
+      <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-8">
 
-      {/* Back Link */}
-      <div className="mb-4">
-        <Link
-          href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}&extras=${encodeURIComponent(JSON.stringify(selectedExtras))}`}
-          className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors group cursor-pointer"
-        >
-          <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-primary group-hover:text-gray-900 flex items-center justify-center transition-colors">
-            <ArrowLeft size={14} />
-          </div>
-          <span>Back to Extras &amp; Options</span>
-        </Link>
-      </div>
+        {/* Back Link */}
+        <div className="mb-4">
+          {(selectedVehicle as any)?.has_extras === false ? (
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-primary group-hover:text-gray-900 flex items-center justify-center transition-colors">
+                <ArrowLeft size={14} />
+              </div>
+              <span>Back to Search Results</span>
+            </Link>
+          ) : (
+            <Link
+              href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}&extras=${encodeURIComponent(JSON.stringify(selectedExtras))}`}
+              className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-primary group-hover:text-gray-900 flex items-center justify-center transition-colors">
+                <ArrowLeft size={14} />
+              </div>
+              <span>Back to Extras &amp; Options</span>
+            </Link>
+          )}
+        </div>
 
       {/* Mobile Summary + Car */}
       <div className="lg:hidden mb-6 space-y-4">
-        <SearchSummary hideEditButton={true} forceMobileLayout={true} />
         {selectedVehicle && (
           <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
         )}
+        <PriceBreakdownCard
+          rentalDays={rentalDays}
+          currencyCode={currencyCode}
+          baseVehiclePrice={baseVehiclePrice}
+          extrasItems={itemizedExtras}
+          grandTotalPrice={grandTotalPrice}
+        />
+        <PickupDropoffCard
+          pickupDate={searchStateParams.dateFrom}
+          pickupTime={searchStateParams.startTime || '10:00'}
+          dropoffDate={searchStateParams.dateTo}
+          dropoffTime={searchStateParams.endTime || '10:00'}
+          pickupBranch={(selectedVehicle as any)?.branch}
+          dropoffBranch={(selectedVehicle as any)?.branch}
+          fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
+          supplierName={selectedVehicle?.supplier?.name}
+        />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-        {/* ── LEFT SIDEBAR ────────────────────────────────────────────────────── */}
-        <aside className="w-full lg:w-[320px] shrink-0 space-y-5 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-          <div className="hidden lg:block">
-            <SearchSummary hideEditButton={true} />
-          </div>
+        {/* ── LEFT SIDEBAR: Matches Search Page Width Identically ────────────────────────── */}
+        <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
+          {/* 1. Price Breakdown Card (Invoice) */}
+          <PriceBreakdownCard
+            rentalDays={rentalDays}
+            currencyCode={currencyCode}
+            baseVehiclePrice={baseVehiclePrice}
+            extrasItems={itemizedExtras}
+            grandTotalPrice={grandTotalPrice}
+          />
 
-          {/* Price Summary */}
-          <div className="bg-white rounded-2xl border-2 border-primary overflow-hidden shadow-sm">
-            <div className="bg-primary/5 px-5 py-3 border-b border-primary/20">
-              <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">Total Rental Price</p>
-            </div>
-            <div className="p-5 space-y-3">
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-gray-900">
-                  {grandTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-xl font-black text-gray-600">{currencyCode}</span>
-              </div>
-              <p className="text-xs text-green-700 font-bold">
-                ✓ For {rentalDays} {rentalDays === 1 ? 'day' : 'days'}
-              </p>
-
-              <div className="pt-3 border-t border-gray-100 space-y-2.5">
-                <div className="flex justify-between text-sm text-gray-600 font-medium">
-                  <span>Daily Rate</span>
-                  <span className="text-gray-900 font-bold">{dailyPrice.toLocaleString()} {currencyCode}</span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600 font-medium">
-                  <span>Rental Cost</span>
-                  <span className="text-gray-900 font-bold">{baseVehiclePrice.toLocaleString()} {currencyCode}</span>
-                </div>
-                
-                <div className="flex justify-between text-sm text-gray-600 font-medium">
-                  <span className="flex items-center gap-1.5">
-                    <span>Selected Extras</span>
-                    {selectedExtrasCount > 0 && (
-                      <span className="px-1.5 py-0.2 bg-blue-100 text-blue-800 text-[10px] font-black rounded-full">
-                        {selectedExtrasCount}
-                      </span>
-                    )}
-                    <Link
-                      href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}&extras=${encodeURIComponent(JSON.stringify(selectedExtras))}`}
-                      className="text-primary-800 hover:underline text-[10px] font-bold ml-0.5"
-                    >
-                      (Edit)
-                    </Link>
-                  </span>
-                  <span className={extrasTotalPrice > 0 ? "text-blue-700 font-black" : "text-gray-900 font-bold"}>
-                    {extrasTotalPrice > 0 ? `+${extrasTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "0.00"} {currencyCode}
-                  </span>
-                </div>
-
-                {/* Extras itemized list in sidebar */}
-                {selectedExtrasCount > 0 && (
-                  <div className="pl-2 pr-1 py-1.5 bg-gray-50 rounded-xl space-y-1 text-xs border border-gray-100">
-                    {extrasList.map(ex => {
-                      const extraId = ex.key || ex.id;
-                      const qty = selectedExtras[extraId] || 0;
-                      if (qty <= 0) return null;
-                      const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
-                      const baseCurrency = ex.currency || "USD";
-                      const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
-                      return (
-                        <div key={extraId} className="flex justify-between text-[11px] text-gray-600">
-                          <span className="truncate max-w-[140px]">• {ex.name} {qty > 1 ? `(x${qty})` : ''}</span>
-                          <span className="font-semibold text-gray-900">{itemTotal.toFixed(2)} {currencyCode}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div className="h-px bg-gray-200 my-1" />
-                <div className="flex justify-between items-baseline font-black text-gray-900">
-                  <span className="text-base">Grand Total</span>
-                  <span className="text-xl text-primary-700">
-                    {grandTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencyCode}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* 2. Pick-up and drop-off Card Underneath the Invoice */}
+          <PickupDropoffCard
+            pickupDate={searchStateParams.dateFrom}
+            pickupTime={searchStateParams.startTime || '10:00'}
+            dropoffDate={searchStateParams.dateTo}
+            dropoffTime={searchStateParams.endTime || '10:00'}
+            pickupBranch={(selectedVehicle as any)?.branch}
+            dropoffBranch={(selectedVehicle as any)?.branch}
+            fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
+            supplierName={selectedVehicle?.supplier?.name}
+          />
         </aside>
 
-        {/* ── RIGHT CONTENT ───────────────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 space-y-6 w-full max-w-3xl lg:max-w-none mx-auto lg:mx-0">
+        {/* ── RIGHT CONTENT: Matches Search Page Width Identically ───────────────────── */}
+        <div className="flex-1 w-full min-w-0 space-y-4">
 
           {/* Desktop Car Card */}
           <div className="hidden lg:block">
@@ -869,8 +861,8 @@ function BookingContent() {
           {selectedExtrasCount > 0 ? (
             <div className="bg-white rounded-2xl border border-gray-200/90 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start sm:items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
-                  <Sparkles size={18} />
+                <div className="w-10 h-10 rounded-2xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0 shadow-2xs">
+                  <PackageCheck size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -911,11 +903,11 @@ function BookingContent() {
                 Change Extras
               </Link>
             </div>
-          ) : (
+          ) : (selectedVehicle as any)?.has_extras !== false ? (
             <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
-                  <Sparkles size={15} />
+                <div className="w-8 h-8 rounded-xl bg-primary/20 text-gray-900 flex items-center justify-center shrink-0">
+                  <PackageCheck size={16} />
                 </div>
                 <span className="text-gray-600 font-medium">
                   Need child seats, an additional driver, or a GPS system?
@@ -928,7 +920,7 @@ function BookingContent() {
                 + Add Extras
               </Link>
             </div>
-          )}
+          ) : null}
 
           {/* ── 3. Registration & Flight Details Form ─────────────────────────── */}
           <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
@@ -1159,7 +1151,8 @@ function BookingContent() {
         </div>
       </div>
     </div>
-  );
+  </>
+);
 }
 
 // ─── Reusable Checkbox ─────────────────────────────────────────────────────────
@@ -1198,7 +1191,6 @@ export default function BookingPage() {
   return (
     <main className="min-h-screen bg-[#fcfcfc]">
       <Navbar />
-      <Stepper currentStep={4} />
       <Suspense fallback={<div className="p-20 text-center text-gray-400">Loading...</div>}>
         <BookingContent />
       </Suspense>

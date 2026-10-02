@@ -50,6 +50,8 @@ export default function ExtraPricingRow({
   const defaultPriceLabel = mode === "admin" ? "Supplier Price" : "Your Price";
   const displayPriceLabel = priceLabel || defaultPriceLabel;
 
+  const currencyCode = (item.currency || "USD").toUpperCase();
+
   return (
     <div
       className={`p-5 transition-colors duration-150 ${
@@ -111,11 +113,11 @@ export default function ExtraPricingRow({
             /* Company View: ONLY price, absolutely NO profit % or customer price */
             <div className="max-w-xs">
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                {displayPriceLabel} ($ USD)
+                {displayPriceLabel} ({currencyCode})
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
-                  $
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-gray-500 pointer-events-none">
+                  {currencyCode}
                 </span>
                 <input
                   type="number"
@@ -124,7 +126,7 @@ export default function ExtraPricingRow({
                   value={values.custom_price}
                   onChange={(e) => onPriceChange(Math.max(0, parseFloat(e.target.value) || 0))}
                   placeholder="0.00"
-                  className="w-full h-10 pl-8 pr-3 border border-gray-200 rounded-xl text-sm font-black text-gray-900 bg-gray-50/70 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none text-right transition-all"
+                  className="w-full h-10 pl-14 pr-3 border border-gray-200 rounded-xl text-sm font-black text-gray-900 bg-gray-50/70 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none text-right transition-all"
                 />
               </div>
             </div>
@@ -133,11 +135,11 @@ export default function ExtraPricingRow({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                  Supplier Price ($ USD)
+                  Supplier Price ({currencyCode})
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
-                    $
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-gray-500 pointer-events-none">
+                    {currencyCode}
                   </span>
                   <input
                     type="number"
@@ -145,7 +147,7 @@ export default function ExtraPricingRow({
                     step={0.5}
                     value={values.custom_price}
                     onChange={(e) => onPriceChange(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full h-10 pl-8 pr-3 border border-gray-200 rounded-xl text-sm font-black text-gray-900 bg-gray-50/70 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none text-right transition-all"
+                    className="w-full h-10 pl-14 pr-3 border border-gray-200 rounded-xl text-sm font-black text-gray-900 bg-gray-50/70 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none text-right transition-all"
                   />
                 </div>
               </div>
@@ -177,11 +179,11 @@ export default function ExtraPricingRow({
                   Customer Price Preview
                 </span>
                 <div className="h-10 flex items-center px-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200">
-                  <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs mr-2 shrink-0">
-                    $
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-black text-xs mr-2 shrink-0">
+                    {currencyCode}
                   </span>
                   <span className="text-sm font-black text-emerald-800">
-                    ${customerPrice.toFixed(2)} USD
+                    {customerPrice.toFixed(2)} {currencyCode}
                   </span>
                   {profit > 0 && (
                     <span className="ml-1.5 text-[10px] font-black text-emerald-600">

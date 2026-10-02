@@ -219,9 +219,20 @@ export const extrasPricingApi = {
   toggleActive: (id: number | string) => apiClient.post(`/api/admin/extras/${id}/toggle-active`),
 
   // Admin: per-supplier extras management
-  adminGetSupplierExtras: (supplierId: number | string) => apiClient.get(`/api/admin/supplier/${supplierId}/extras`),
-  adminSaveSupplierExtras: (supplierId: number | string, extras: unknown[]) =>
-    apiClient.post(`/api/admin/supplier/${supplierId}/extras`, { extras }),
+  adminGetSupplierExtras: (
+    supplierId: number | string,
+    params?: { branch_id?: number | string; country?: string }
+  ) => apiClient.get(`/api/admin/supplier/${supplierId}/extras`, { params }),
+  adminSaveSupplierExtras: (
+    supplierId: number | string,
+    extras: unknown[],
+    params?: { branch_id?: number | string; country?: string }
+  ) => apiClient.post(`/api/admin/supplier/${supplierId}/extras`, { extras, ...params }),
+  adminToggleSupplierExtras: (
+    supplierId: number | string,
+    data: { enable: boolean; branch_id?: number | string; country?: string }
+  ) => apiClient.post(`/api/admin/supplier/${supplierId}/extras/toggle`, data),
+  adminGetExtrasOverview: () => apiClient.get("/api/admin/extras/overview"),
 
   // Admin: bulk apply profit/price to all or filtered suppliers
   adminBulkApply: (data: {
@@ -238,6 +249,11 @@ export const extrasPricingApi = {
   // Supplier (company): get catalog with own config + save changes
   supplierGetCatalog: () => apiClient.get("/api/supplier/extras/catalog"),
   supplierSaveExtras: (extras: unknown[]) => apiClient.post("/api/supplier/extras/save", { extras }),
+  supplierToggleExtras: (data: {
+    enable: boolean;
+    branch_id?: number | string;
+    country?: string;
+  }) => apiClient.post("/api/supplier/extras/toggle", data),
 
   // Supplier: branch-scoped extras
   supplierGetBranchCatalog: (branch_id: string | number) => apiClient.get(`/api/supplier/extras/catalog`, { params: { branch_id } }),

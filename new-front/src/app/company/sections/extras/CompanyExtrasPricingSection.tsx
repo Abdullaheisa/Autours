@@ -15,6 +15,8 @@ import {
   TrendingUp,
   PackageCheck,
   Package,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
@@ -176,6 +178,37 @@ export default function CompanyExtrasPricingSection() {
       return next;
     });
     toast.success(`$${v} price set on all extras — save to apply.`);
+  };
+
+  const [isDirectToggling, setIsDirectToggling] = useState(false);
+
+  const handleDirectToggleAll = async (enable: boolean) => {
+    setIsDirectToggling(true);
+    try {
+      await extrasPricingApi.supplierToggleExtras({
+        enable,
+        branch_id: scope === "branch" && selectedBranchId ? Number(selectedBranchId) : undefined,
+        country: scope === "country" && selectedCountry ? selectedCountry : undefined,
+      });
+      toast.success(
+        enable
+          ? "All extras enabled successfully! 🎉"
+          : "All extras cancelled/disabled successfully!"
+      );
+      setLocalData((prev) => {
+        const next = { ...prev };
+        Object.keys(next).forEach((k) => {
+          const id = Number(k);
+          if (next[id]) next[id] = { ...next[id], enabled: enable };
+        });
+        return next;
+      });
+      fetchCatalog();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update extras status");
+    } finally {
+      setIsDirectToggling(false);
+    }
   };
 
   const handleToggleAll = (enable: boolean) => {
@@ -526,25 +559,62 @@ export default function CompanyExtrasPricingSection() {
                 </button>
               </div>
 
-              {/* Toggle All */}
-              <div className="flex items-center gap-1">
+              {/* Toggle All (1-Click Instant) */}
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => handleToggleAll(true)}
-                  className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black rounded-xl border border-emerald-200 transition-colors cursor-pointer"
+                  disabled={isDirectToggling}
+                  onClick={() => handleDirectToggleAll(true)}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
-                  Enable All
+                  <CheckCircle2 size={13} />
+                  تفعيل كل الأوبشن بنقرة واحدة
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleToggleAll(false)}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl border border-gray-200 transition-colors cursor-pointer"
+                  disabled={isDirectToggling}
+                  onClick={() => handleDirectToggleAll(false)}
+                  className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 active:scale-95 disabled:opacity-50 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
-                  Disable All
+                  <XCircle size={13} />
+                  إلغاء كل الأوبشن بنقرة واحدة
                 </button>
               </div>
             </div>
           </div>
+
+          {/* Status Alert if All Cancelled / Disabled */}
+          {catalog.length > 0 && enabledCount === 0 && !isLoading && (
+            <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-rose-900 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                  <XCircle size={20} />
+                </div>
+                <div>
+                  <p className="font-black text-sm text-rose-950">جميع الأوبشن والإضافات ملغاة ومعطلة لهذا النطاق</p>
+                  <p className="text-rose-700 text-xs mt-0.5">
+                    لن تظهر أي إضافات للعملاء في البحث وصفحة الحجز لسيارات هذا النطاق (
+                    <strong>
+                      {scope === "company"
+                        ? "الشركة بالكامل"
+                        : scope === "country"
+                        ? `دولة ${selectedCountry}`
+                        : selectedBranchName}
+                    </strong>
+                    ).
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={isDirectToggling}
+                onClick={() => handleDirectToggleAll(true)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shrink-0 cursor-pointer transition-colors shadow-xs flex items-center gap-1.5"
+              >
+                <CheckCircle2 size={13} /> تفعيل كل الإضافات الآن
+              </button>
+            </div>
+          )}
 
           {/* Catalog Card */}
           <div className="mt-4 bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
@@ -600,6 +670,12 @@ export default function CompanyExtrasPricingSection() {
             ) : (
               <div>
                 {filteredCatalog.map((extra, index) => {
+                  const activeBranch = myBranches.find(
+                    (b: any) => String(b.id) === String(selectedBranchId)
+                  );
+                  const currentScopeCurrency =
+                    activeBranch?.currency || extra.currency || "USD";
+
                   const values = localData[extra.id] ?? {
                     enabled: false,
                     custom_price: extra.custom_price,
@@ -607,7 +683,7 @@ export default function CompanyExtrasPricingSection() {
                   return (
                     <ExtraPricingRow
                       key={extra.id}
-                      item={extra}
+                      item={{ ...extra, currency: currentScopeCurrency }}
                       values={values}
                       mode="company"
                       priceLabel="Your Price"

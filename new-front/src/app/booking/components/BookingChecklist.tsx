@@ -91,7 +91,7 @@ export default function BookingChecklist({
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-                  <span><strong>Autotours Purchase Voucher</strong> (digital or printed confirmation)</span>
+                  <span><strong>Autours Purchase Voucher</strong> (digital or printed confirmation)</span>
                 </div>
               </div>
             )}

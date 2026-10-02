@@ -228,3 +228,74 @@ body, html, button, input, select, textarea, .default-font {
 .scrollbar-thin::-webkit-scrollbar-thumb-thumb:hover {
   background: #d1d5db;
 }
+
+/* FAQ Rich Text Display in Modal */
+.faq-rich-content {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: #334155;
+}
+.faq-rich-content p {
+  margin-bottom: 0.65rem;
+}
+.faq-rich-content p:last-child {
+  margin-bottom: 0;
+}
+.faq-rich-content h1,
+.faq-rich-content h2,
+.faq-rich-content h3,
+.faq-rich-content h4,
+.faq-rich-content h5,
+.faq-rich-content h6 {
+  font-weight: 700;
+  color: #030712;
+  margin-top: 0.85rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.35;
+}
+.faq-rich-content h1 { font-size: 1.25rem; }
+.faq-rich-content h2 { font-size: 1.15rem; }
+.faq-rich-content h3,
+.faq-rich-content h4,
+.faq-rich-content h5,
+.faq-rich-content h6 { font-size: 1rem; }
+
+.faq-rich-content b,
+.faq-rich-content strong {
+  font-weight: 700;
+  color: #030712;
+}
+
+.faq-rich-content ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.65rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.faq-rich-content ul li {
+  position: relative;
+  padding-left: 1.65rem;
+  line-height: 1.55;
+}
+
+.faq-rich-content ul li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  color: #059669;
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+
+.faq-rich-content ol {
+  list-style: decimal;
+  padding-left: 1.35rem;
+  margin: 0.65rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}

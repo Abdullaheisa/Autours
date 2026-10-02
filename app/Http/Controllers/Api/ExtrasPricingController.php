@@ -8,6 +8,7 @@ use App\Models\SupplierExtra;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\Branch;
+use App\Services\CountryCurrencyResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -15,8 +16,61 @@ use Illuminate\Support\Str;
 class ExtrasPricingController extends Controller
 {
     /**
+     * Resolve the operating currency for a branch, country, or supplier.
+     */
+    protected function resolveScopeCurrency(?Branch $branch, ?string $country = null, ?int $supplierId = null): string
+    {
+        if ($branch) {
+            if (!empty($branch->currency)) {
+                return strtoupper(trim($branch->currency));
+            }
+            if (!empty($branch->country)) {
+                $code = CountryCurrencyResolver::resolveCountryCode($branch->country);
+                if (!empty($code)) {
+                    return CountryCurrencyResolver::resolveCurrency($code);
+                }
+                $c = CountryCurrencyResolver::resolveCurrencyByCountryName($branch->country);
+                if (!empty($c)) {
+                    return $c;
+                }
+            }
+        }
+
+        if (!empty($country)) {
+            $code = CountryCurrencyResolver::resolveCountryCode($country);
+            if (!empty($code)) {
+                return CountryCurrencyResolver::resolveCurrency($code);
+            }
+            $c = CountryCurrencyResolver::resolveCurrencyByCountryName($country);
+            if (!empty($c)) {
+                return $c;
+            }
+        }
+
+        if ($supplierId) {
+            $branchWithCurrency = Branch::where('company_id', $supplierId)
+                ->whereNotNull('currency')
+                ->where('currency', '!=', '')
+                ->first();
+            if ($branchWithCurrency && !empty($branchWithCurrency->currency)) {
+                return strtoupper(trim($branchWithCurrency->currency));
+            }
+
+            $supplier = User::find($supplierId);
+            if ($supplier && !empty($supplier->country)) {
+                $code = CountryCurrencyResolver::resolveCountryCode($supplier->country);
+                if (!empty($code)) {
+                    return CountryCurrencyResolver::resolveCurrency($code);
+                }
+            }
+        }
+
+        return 'USD';
+    }
+
+    /**
      * Get active extras for booking / public / customer checkout.
-     * Price returned is the final price including profit margin, all standardized in USD.
+     * Price returned is in the branch operating currency with profit margin applied.
      */
     public function getPricing(Request $request)
     {
@@ -66,6 +120,16 @@ class ExtrasPricingController extends Controller
             }
         }
 
+        $branchObj = null;
+        if ($branchId) {
+            $branchObj = Branch::find($branchId);
+        }
+        if (!$branchObj && isset($vehicle) && $vehicle && $vehicle->branch) {
+            $branchObj = $vehicle->branch;
+        }
+
+        $branchCurrency = $this->resolveScopeCurrency($branchObj, $country, $supplierId ? (int)$supplierId : null);
+
         $extras = Extra::where('is_active', true)->orderBy('id')->get();
 
         // Check legacy overrides on User model
@@ -83,7 +147,7 @@ class ExtrasPricingController extends Controller
             $supplierHasConfiguredExtras = SupplierExtra::where('supplier_id', $supplierId)->exists();
         }
 
-        $result = $extras->map(function ($item) use ($supplierId, $branchId, $country, $legacyOverrides, $supplierHasConfiguredExtras) {
+        $result = $extras->map(function ($item) use ($supplierId, $branchId, $country, $legacyOverrides, $supplierHasConfiguredExtras, $branchCurrency) {
             $override = null;
 
             // 1. Branch level override (highest priority)
@@ -115,8 +179,8 @@ class ExtrasPricingController extends Controller
             $basePrice = (float)$item->price;
             $profitPercent = (float)($item->profit_percent ?? 0);
 
-            // If a supplier is specified: only show what the supplier/branch explicitly selected/enabled!
-            $isEnabled = $supplierId ? false : true;
+            // Default to catalog active status unless explicitly overridden
+            $isEnabled = (bool)$item->is_active;
 
             if ($override) {
                 $isEnabled = (bool)$override->is_enabled;
@@ -146,7 +210,7 @@ class ExtrasPricingController extends Controller
                 'profit_percent' => $profitPercent,
                 'price' => $finalPrice,
                 'price_usd' => $finalPrice,
-                'currency' => 'USD',
+                'currency' => $branchCurrency,
                 'type' => $item->type ?? 'boolean',
                 'max_qty' => (int)($item->max_qty ?? 1),
                 'badge' => $item->badge,
@@ -322,6 +386,13 @@ class ExtrasPricingController extends Controller
         $branchId = $request->query('branch_id');
         $country = $request->query('country');
 
+        $targetBranch = null;
+        if ($branchId) {
+            $targetBranch = Branch::where('id', $branchId)->where('company_id', $user->id)->first()
+                ?: Branch::find($branchId);
+        }
+        $scopeCurrency = $this->resolveScopeCurrency($targetBranch, $country, $user->id);
+
         $allExtras = Extra::where('is_active', true)->orderBy('id')->get();
 
         // Load overrides matching the requested scope
@@ -345,14 +416,14 @@ class ExtrasPricingController extends Controller
                 ->keyBy('extra_id');
         }
 
-        $result = $allExtras->map(function ($extra) use ($supplierExtras, $companyExtras) {
+        $result = $allExtras->map(function ($extra) use ($supplierExtras, $companyExtras, $scopeCurrency) {
             $override = $supplierExtras->get($extra->id) ?? $companyExtras->get($extra->id);
             return [
                 'id'             => $extra->id,
                 'key'            => $extra->key,
                 'name'           => $extra->name,
                 'description'    => $extra->description,
-                'currency'       => $extra->currency ?? 'USD',
+                'currency'       => $scopeCurrency,
                 'type'           => $extra->type ?? 'boolean',
                 'max_qty'        => (int)($extra->max_qty ?? 1),
                 'badge'          => $extra->badge,
@@ -430,25 +501,48 @@ class ExtrasPricingController extends Controller
             return response()->json(['status' => false, 'message' => 'Supplier not found'], 404);
         }
 
-        $allExtras = Extra::where('is_active', true)->orderBy('id')->get();
-        $supplierExtras = SupplierExtra::where('supplier_id', $supplierId)
-            ->get()
-            ->keyBy('extra_id');
+        $branchId = $request->query('branch_id');
+        $country = $request->query('country');
 
-        $result = $allExtras->map(function ($extra) use ($supplierExtras) {
-            $override = $supplierExtras->get($extra->id);
+        $targetBranch = $branchId ? Branch::find($branchId) : null;
+        $scopeCurrency = $this->resolveScopeCurrency($targetBranch, $country, (int)$supplierId);
+
+        $allExtras = Extra::where('is_active', true)->orderBy('id')->get();
+
+        $query = SupplierExtra::where('supplier_id', $supplierId);
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        } elseif ($country) {
+            $query->where('country', $country)->whereNull('branch_id');
+        } else {
+            $query->whereNull('branch_id')->whereNull('country');
+        }
+        $supplierExtras = $query->get()->keyBy('extra_id');
+
+        // Fallback to company level if branch or country has no overrides yet
+        $companyExtras = collect();
+        if (($branchId || $country) && $supplierExtras->isEmpty()) {
+            $companyExtras = SupplierExtra::where('supplier_id', $supplierId)
+                ->whereNull('branch_id')
+                ->whereNull('country')
+                ->get()
+                ->keyBy('extra_id');
+        }
+
+        $result = $allExtras->map(function ($extra) use ($supplierExtras, $companyExtras, $scopeCurrency) {
+            $override = $supplierExtras->get($extra->id) ?? $companyExtras->get($extra->id);
             return [
                 'id'             => $extra->id,
                 'key'            => $extra->key,
                 'name'           => $extra->name,
                 'description'    => $extra->description,
-                'currency'       => $extra->currency ?? 'USD',
+                'currency'       => $scopeCurrency,
                 'type'           => $extra->type ?? 'boolean',
                 'max_qty'        => (int)($extra->max_qty ?? 1),
                 'badge'          => $extra->badge,
-                'enabled'        => $override ? (bool)$override->is_enabled : false,
+                'enabled'        => $override ? (bool)$override->is_enabled : (bool)$extra->is_active,
                 'custom_price'   => $override ? (float)$override->custom_price : (float)$extra->price,
-                'profit_percent' => $override ? (float)$override->profit_percent : 0,
+                'profit_percent' => $override ? (float)$override->profit_percent : (float)($extra->profit_percent ?? 0),
             ];
         });
 
@@ -459,7 +553,7 @@ class ExtrasPricingController extends Controller
     }
 
     /**
-     * Admin: Update a specific supplier's extras configuration
+     * Admin: Update a specific supplier's extras configuration (company, country, or branch scope)
      */
     public function adminSaveSupplierExtras(Request $request, $supplierId)
     {
@@ -468,14 +562,23 @@ class ExtrasPricingController extends Controller
             return response()->json(['status' => false, 'message' => 'Supplier not found'], 404);
         }
 
+        $branchId = $request->input('branch_id');
+        $country = $request->input('country');
         $extras = $request->input('extras', []);
 
         foreach ($extras as $item) {
             $extraId = $item['extra_id'] ?? null;
             if (!$extraId) continue;
 
+            $match = [
+                'supplier_id' => $supplierId,
+                'extra_id'    => $extraId,
+                'branch_id'   => $branchId ? (int)$branchId : null,
+                'country'     => $branchId ? null : ($country ?: null),
+            ];
+
             SupplierExtra::updateOrCreate(
-                ['supplier_id' => $supplierId, 'extra_id' => $extraId],
+                $match,
                 [
                     'is_enabled'     => (bool)($item['enabled'] ?? false),
                     'custom_price'   => max(0, (float)($item['custom_price'] ?? 0)),
@@ -487,6 +590,157 @@ class ExtrasPricingController extends Controller
         return response()->json([
             'status'  => true,
             'message' => 'Supplier extras updated successfully',
+        ]);
+    }
+
+    /**
+     * Admin: 1-Click enable or disable all extras for a company or branch
+     */
+    public function adminToggleSupplierExtras(Request $request, $supplierId)
+    {
+        $supplier = User::find($supplierId);
+        if (!$supplier) {
+            return response()->json(['status' => false, 'message' => 'Supplier not found'], 404);
+        }
+
+        $branchId = $request->input('branch_id');
+        $country = $request->input('country');
+        $enable = (bool)$request->input('enable', false);
+
+        $allExtras = Extra::where('is_active', true)->get();
+        foreach ($allExtras as $extra) {
+            $match = [
+                'supplier_id' => $supplierId,
+                'extra_id'    => $extra->id,
+                'branch_id'   => $branchId ? (int)$branchId : null,
+                'country'     => $branchId ? null : ($country ?: null),
+            ];
+
+            $existing = SupplierExtra::where($match)->first();
+            $customPrice = $existing ? (float)$existing->custom_price : (float)$extra->price;
+            $profit = $existing ? (float)$existing->profit_percent : (float)($extra->profit_percent ?? 0);
+
+            SupplierExtra::updateOrCreate($match, [
+                'is_enabled'     => $enable,
+                'custom_price'   => $customPrice,
+                'profit_percent' => $profit,
+            ]);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => $enable ? 'All add-ons enabled successfully' : 'All add-ons disabled/cancelled successfully',
+        ]);
+    }
+
+    /**
+     * Supplier: 1-Click enable or disable all extras for this company or a specific branch
+     */
+    public function supplierToggleExtras(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $branchId = $request->input('branch_id');
+        $country = $request->input('country');
+        $enable = (bool)$request->input('enable', false);
+
+        $allExtras = Extra::where('is_active', true)->get();
+        foreach ($allExtras as $extra) {
+            $match = [
+                'supplier_id' => $user->id,
+                'extra_id'    => $extra->id,
+                'branch_id'   => $branchId ? (int)$branchId : null,
+                'country'     => $branchId ? null : ($country ?: null),
+            ];
+
+            $existing = SupplierExtra::where($match)->first();
+            $customPrice = $existing ? (float)$existing->custom_price : (float)$extra->price;
+            $profit = $existing ? (float)$existing->profit_percent : (float)($extra->profit_percent ?? 0);
+
+            SupplierExtra::updateOrCreate($match, [
+                'is_enabled'     => $enable,
+                'custom_price'   => $customPrice,
+                'profit_percent' => $profit,
+            ]);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => $enable ? 'All add-ons enabled successfully' : 'All add-ons disabled/cancelled successfully',
+        ]);
+    }
+
+    /**
+     * Admin: Overview showing which companies and branches have extras enabled/disabled
+     */
+    public function adminGetExtrasOverview(Request $request)
+    {
+        $suppliers = User::where('role', 'active_supplier')
+            ->where(function ($q) {
+                $q->where('vehicles_hidden', false)->orWhereNull('vehicles_hidden');
+            })
+            ->whereHas('vehicles')
+            ->with(['branches' => function ($q) {
+                $q->where('activation', 1)
+                  ->whereHas('vehicles')
+                  ->select('id', 'name', 'city', 'country', 'company_id');
+            }])
+            ->get();
+
+        $activeExtras = Extra::where('is_active', true)->get();
+        $activeExtrasCount = $activeExtras->count();
+        $allOverrides = SupplierExtra::all();
+
+        $data = $suppliers->map(function ($supplier) use ($activeExtrasCount, $allOverrides) {
+            $companyOverrides = $allOverrides->where('supplier_id', $supplier->id)
+                ->whereNull('branch_id')
+                ->whereNull('country');
+
+            $disabledCount = $companyOverrides->where('is_enabled', false)->count();
+            $enabledCount = $companyOverrides->where('is_enabled', true)->count();
+
+            $isAllDisabled = ($activeExtrasCount > 0 && $disabledCount >= $activeExtrasCount);
+            $effectiveEnabledCount = $isAllDisabled ? 0 : ($companyOverrides->isEmpty() ? $activeExtrasCount : $enabledCount);
+
+            $branches = ($supplier->branches ?? collect())->map(function ($branch) use ($supplier, $allOverrides, $activeExtrasCount, $isAllDisabled) {
+                $branchOverrides = $allOverrides->where('supplier_id', $supplier->id)
+                    ->where('branch_id', $branch->id);
+
+                $bDisabled = $branchOverrides->where('is_enabled', false)->count();
+                $bEnabled = $branchOverrides->where('is_enabled', true)->count();
+
+                $branchAllDisabled = $branchOverrides->isNotEmpty()
+                    ? ($activeExtrasCount > 0 && $bDisabled >= $activeExtrasCount)
+                    : $isAllDisabled;
+
+                return [
+                    'id'               => $branch->id,
+                    'name'             => $branch->name,
+                    'city'             => $branch->city,
+                    'country'          => $branch->country,
+                    'is_all_disabled'  => $branchAllDisabled,
+                    'has_overrides'    => $branchOverrides->isNotEmpty(),
+                ];
+            });
+
+            return [
+                'supplier_id'             => $supplier->id,
+                'supplier_name'           => $supplier->name,
+                'logo'                    => $supplier->logo,
+                'country'                 => $supplier->country,
+                'total_active_extras'     => $activeExtrasCount,
+                'effective_enabled_count' => $effectiveEnabledCount,
+                'is_all_disabled'         => $isAllDisabled,
+                'branches'                => $branches,
+            ];
+        });
+
+        return response()->json([
+            'status' => true,
+            'data'   => $data,
         ]);
     }
 

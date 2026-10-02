@@ -123,6 +123,7 @@ export const vehicleMapper = {
       branch: branch,
       location: branch.name || branch.city || branch.country || '',
       pickup_loc: raw.pickup_loc || branch.id || '',
+      has_extras: raw.has_extras !== undefined ? Boolean(raw.has_extras) : undefined,
     };
   },
 

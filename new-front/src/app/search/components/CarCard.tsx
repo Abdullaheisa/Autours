@@ -325,6 +325,10 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     }
   };
 
+  const hasExtras = (vehicle as any).has_extras !== false;
+  const targetBookingPage = hasExtras ? '/options' : '/booking';
+  const bookUrl = `${targetBookingPage}?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`;
+
   const formatSpecDisplay = (val: any, label: string) => {
     const sVal = String(val ?? '').trim();
     if (!label) return sVal;
@@ -651,7 +655,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
     }
   };
 
-  const displayedInclusions = showAllInclusions
+  const displayedInclusions = showAllInclusions || hideBookingControls
     ? carData.inclusions
     : carData.inclusions.slice(0, 6);
 
@@ -1058,7 +1062,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   </div>
                 )}
                 <Link
-                  href={`/options?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                  href={bookUrl}
                   onClick={handlePersistVehicle}
                   className="px-4 md:px-6 py-2 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] md:text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
                 >
@@ -1210,7 +1214,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   );
                 })}
               </div>
-              {carData.inclusions.length > 6 && (
+              {carData.inclusions.length > 6 && !hideBookingControls && (
                 <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-xs font-bold text-gray-800 underline hover:text-gray-600">
                   {showAllInclusions ? 'Show Less' : 'Show More +'}
                 </button>
@@ -1348,7 +1352,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                     </div>
                   )}
                   <Link
-                    href={`/options?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`}
+                    href={bookUrl}
                     onClick={handlePersistVehicle}
                     className="w-auto lg:w-full py-2 lg:py-2.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] lg:text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
                   >

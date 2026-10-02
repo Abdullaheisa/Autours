@@ -5,19 +5,23 @@ interface StepperProps {
   currentStep: number;
   vehicleId?: string | number;
   bookId?: string | number;
+  hasExtras?: boolean;
 }
 
-const STEPS = [
+const ALL_STEPS = [
   { id: 1, label: 'Choose Your Location', shortLabel: 'Location' },
   { id: 2, label: 'Choose Your Car', shortLabel: 'Car' },
   { id: 3, label: 'Choose Your Options', shortLabel: 'Options' },
   { id: 4, label: 'Reserve Your Car', shortLabel: 'Reserve' },
 ];
 
-export default function Stepper({ currentStep, vehicleId, bookId }: StepperProps) {
+export default function Stepper({ currentStep, vehicleId, bookId, hasExtras }: StepperProps) {
+  const steps = hasExtras === false ? ALL_STEPS.filter((s) => s.id !== 3) : ALL_STEPS;
+
   const getStepHref = (stepId: number) => {
     if (stepId === 1 || stepId === 2) return '/search';
     if (stepId === 3) {
+      if (hasExtras === false) return undefined;
       if (vehicleId || bookId) {
         return `/options?vehicleId=${vehicleId || ''}&bookId=${bookId || ''}`;
       }
@@ -30,10 +34,11 @@ export default function Stepper({ currentStep, vehicleId, bookId }: StepperProps
     <div className="w-full bg-white border-b border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
       <div className="max-w-[1400px] xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 py-2">
         <div className="flex items-stretch gap-1.5 sm:gap-2 md:gap-3">
-          {STEPS.map((step) => {
+          {steps.map((step, idx) => {
             const isCompleted = currentStep > step.id;
-            const isActive = currentStep === step.id;
+            const isActive = currentStep === step.id || (hasExtras === false && currentStep >= 4 && step.id === 4);
             const href = isCompleted ? getStepHref(step.id) : undefined;
+            const stepNumber = idx + 1;
 
             const content = (
               <div
@@ -54,7 +59,7 @@ export default function Stepper({ currentStep, vehicleId, bookId }: StepperProps
                   {isCompleted ? (
                     <Check size={12} strokeWidth={3} />
                   ) : (
-                    step.id
+                    stepNumber
                   )}
                 </div>
 
