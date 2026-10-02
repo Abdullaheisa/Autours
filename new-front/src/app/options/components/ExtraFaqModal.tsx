@@ -165,8 +165,8 @@ export default function ExtraFaqModal({
                 key={index}
                 className={`transition-all duration-200 overflow-hidden ${
                   isExpanded
-                    ? "border-2 border-blue-500 rounded-2xl bg-white p-5 sm:p-6 shadow-xs"
-                    : "border border-blue-150 hover:border-blue-300 rounded-xl bg-white p-4 hover:shadow-2xs"
+                    ? "border-2 border-amber-500 rounded-2xl bg-white p-5 sm:p-6 shadow-xs"
+                    : "border border-gray-200 hover:border-amber-300 rounded-xl bg-white p-4 hover:shadow-2xs"
                 }`}
               >
                 {/* Question Row (Clickable) */}
@@ -178,14 +178,14 @@ export default function ExtraFaqModal({
                   <span className="text-amber-500 font-black text-lg select-none leading-none shrink-0 transition-transform">
                     {isExpanded ? "↓" : "→"}
                   </span>
-                  <span className="text-gray-950 font-bold text-[16px] sm:text-[17.5px] select-none group-hover:text-blue-600 transition-colors leading-snug tracking-tight">
+                  <span className="text-gray-950 font-bold text-[16px] sm:text-[17.5px] select-none group-hover:text-amber-600 transition-colors leading-snug tracking-tight">
                     {item.question}
                   </span>
                 </button>
 
                 {/* Answer Content (When Expanded) */}
                 {isExpanded && (
-                  <div className="mt-3.5 pt-3.5 border-t border-blue-50 text-[14.5px] sm:text-[15px] text-slate-700 leading-relaxed font-normal antialiased animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="mt-3.5 pt-3.5 border-t border-amber-100/60 text-[14.5px] sm:text-[15px] text-slate-700 leading-relaxed font-normal antialiased animate-in fade-in slide-in-from-top-1 duration-150">
                     {/* 1. Rich Text HTML Content (from RichTextEditor) */}
                     {item.answer && /<[a-z][\s\S]*>/i.test(item.answer) ? (
                       <div

@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
   Check, Info, X, ChevronDown, ChevronUp,
-  Globe, Fuel, Handshake, Plane, Droplets, Zap
+  Globe, Fuel, Handshake, Plane, Droplets, Zap, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -24,20 +24,22 @@ interface CarCardProps {
   daysNumber: number;
   hideBookingControls?: boolean;
   preselectedBookId?: string | null;
+  optionsVariant?: boolean;
 }
 
-function PickupIcon({ pickupType }: { pickupType: string }) {
+function PickupIcon({ pickupType, className }: { pickupType: string; className?: string }) {
   const type = pickupType?.toLowerCase().trim() || '';
+  const cls = className || "text-blue-600 shrink-0 mt-0.5";
   if (type.includes('meet') || type.includes('greet') || type.includes('hand') || type.includes('handover')) {
-    return <Handshake size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+    return <Handshake size={16} className={cls} />;
   }
   if (type.includes('airport') || type.includes('terminal') || type.includes('plane') || type.includes('flight')) {
-    return <Plane size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+    return <Plane size={16} className={cls} />;
   }
   if (type.includes('mineral') || type.includes('water') || type.includes('drop')) {
-    return <Droplets size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+    return <Droplets size={16} className={cls} />;
   }
-  return <Handshake size={16} className="text-blue-600 shrink-0 mt-0.5" />;
+  return <Handshake size={16} className={cls} />;
 }
 
 function PickupLabel({ pickupType }: { pickupType: string }) {
@@ -68,6 +70,107 @@ function getFuelPolicyDescription(policy: string): string {
     return FUEL_POLICY_DESCRIPTIONS['pay to full'];
   }
   return FUEL_POLICY_DESCRIPTIONS['full to full'];
+}
+
+interface MileageDetails {
+  isLimited: boolean;
+  dailyLimit: number;
+  totalLimit: number;
+  unit: string;
+  displayText: string;
+  tooltipText: string;
+}
+
+function resolveMileageDetails(
+  text: string,
+  days: number,
+  vehicle: any,
+  currencyCode: Currency,
+  allRates?: any
+): MileageDetails | null {
+  if (!text) return null;
+  const lower = text.toLowerCase().trim();
+
+  // If explicitly unlimited, do not treat as limited
+  if (lower.includes('unlimited') || lower.includes('بدون تحديد') || lower.includes('غير محدود')) {
+    return null;
+  }
+
+  const isLimited =
+    lower.includes('limited') ||
+    lower.includes('limit') ||
+    lower.includes('محدد') ||
+    lower.includes('اقصى') ||
+    (lower.includes('km') && (lower.includes('day') || lower.includes('يوم')));
+
+  if (!isLimited) return null;
+
+  // Match daily limit number, e.g. "Limited Milage :300 KM", "300 KM", "250 km/day"
+  const match = text.match(/(\d+[\d,]*)\s*(km|kms|كم|كيلومتر|miles|mile|ميل)?/i);
+  if (!match) return null;
+
+  const rawNum = parseInt(match[1].replace(/,/g, ''), 10);
+  if (isNaN(rawNum) || rawNum <= 0) return null;
+
+  const unit = (match[2] || 'KM').toUpperCase();
+  const validDays = Math.max(1, days || 1);
+  const totalLimit = rawNum * validDays;
+  const formattedTotal = totalLimit.toLocaleString();
+  const daysString = `${validDays} ${validDays === 1 ? 'day' : 'days'}`;
+
+  const displayText = `Limited Mileage: ${formattedTotal} ${unit} for ${daysString}`;
+
+  // Check extra price per km from backend
+  const v = vehicle as any;
+  const rawExtraPrice =
+    v?.extra_km_price ??
+    v?.extra_km_fee ??
+    v?.extra_mileage_fee ??
+    v?.extra_mileage_price ??
+    v?.extra_mileage_cost ??
+    v?.over_mileage_fee ??
+    v?.over_mileage_price ??
+    v?.extra_fee_per_km ??
+    v?.price_per_extra_km ??
+    v?.extra_km_charge ??
+    null;
+
+  let extraPriceStr = '';
+  if (rawExtraPrice !== null && rawExtraPrice !== undefined && rawExtraPrice !== '') {
+    const num = Number(rawExtraPrice);
+    if (!isNaN(num) && num > 0) {
+      extraPriceStr = formatPrice(num, currencyCode);
+    } else if (typeof rawExtraPrice === 'string' && rawExtraPrice.trim().length > 0) {
+      extraPriceStr = rawExtraPrice.trim();
+    }
+  }
+
+  // Check if included item has an existing description from supplier
+  const matchingInc = Array.isArray(v?.included)
+    ? v.included.find((i: any) => {
+        const name = (typeof i === 'string' ? i : i?.what_is_included || i?.name || '').toLowerCase();
+        return (name.includes('limit') || name.includes('محدد')) && (name.includes('mile') || name.includes('mila') || name.includes('km'));
+      })
+    : null;
+  const incDesc = matchingInc && typeof matchingInc === 'object' && matchingInc.description ? matchingInc.description.trim() : '';
+
+  let tooltipText = `Total allowance of ${formattedTotal} ${unit} for ${daysString} (${rawNum} ${unit}/day).`;
+  if (extraPriceStr) {
+    tooltipText += ` Additional distance driven beyond this limit will be charged at ${extraPriceStr} per extra ${unit}.`;
+  } else if (incDesc) {
+    tooltipText += ` ${incDesc}`;
+  } else {
+    tooltipText += ` Any additional distance driven beyond this limit will be charged per extra ${unit} upon vehicle return according to supplier terms.`;
+  }
+
+  return {
+    isLimited: true,
+    dailyLimit: rawNum,
+    totalLimit,
+    unit,
+    displayText,
+    tooltipText,
+  };
 }
 
 function ChicTooltip({
@@ -257,7 +360,14 @@ function ChicTooltip({
   );
 }
 
-export default function CarCard({ vehicle, daysNumber, hideBookingControls = false, preselectedBookId = null }: CarCardProps) {
+export default function CarCard({
+  vehicle,
+  daysNumber,
+  hideBookingControls = false,
+  preselectedBookId = null,
+  optionsVariant = false,
+}: CarCardProps) {
+  const isOptionsLayout = Boolean(optionsVariant || hideBookingControls);
   const [showTerms, setShowTerms] = useState(false);
   const [showAllInclusions, setShowAllInclusions] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
@@ -309,6 +419,11 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
   const handlePersistVehicle = () => {
     if (typeof window !== 'undefined') {
       try {
+        const savedExtrasVehicleId = sessionStorage.getItem('autours_extras_vehicle_id');
+        if (savedExtrasVehicleId && String(savedExtrasVehicleId) !== String(vehicle.id)) {
+          sessionStorage.removeItem('autours_selected_extras');
+          sessionStorage.removeItem('autours_extras_vehicle_id');
+        }
         sessionStorage.setItem('autours_selected_vehicle', JSON.stringify(vehicle));
         if (searchParams && searchParams.location) {
           sessionStorage.setItem('autours_search_params', JSON.stringify(searchParams));
@@ -521,8 +636,25 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       })
       .filter(Boolean);
 
+    // Map & calculate limited mileage based on rental days
+    const mileageTooltipMap: Record<string, string> = {};
+    const processedInclusions = inclusions.map(inc => {
+      const mileageInfo = resolveMileageDetails(
+        inc,
+        daysNumber || 1,
+        vehicle,
+        currencyCode as Currency,
+        allRates
+      );
+      if (mileageInfo) {
+        mileageTooltipMap[mileageInfo.displayText] = mileageInfo.tooltipText;
+        return mileageInfo.displayText;
+      }
+      return inc;
+    });
+
     // Filter out any stale generic deposit strings from inclusions
-    const filteredInclusions = inclusions.filter(inc => {
+    const filteredInclusions = processedInclusions.filter(inc => {
       const lower = inc.toLowerCase().trim();
       return !(
         lower === 'deposit' ||
@@ -612,6 +744,7 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
         totalDays: daysNumber || 1,
       },
       inclusions: filteredInclusions,
+      mileageTooltipMap,
       fuelPolicy: typeof vehicle.fuelPolicy === 'string' ? vehicle.fuelPolicy : (vehicle.fuel_policy?.name || (vehicle as any).fuelPolicy?.name || 'Full to Full'),
       pickupType: pickupType,
       freeCancellation: filteredInclusions.some(i => i.toLowerCase().includes('cancel')),
@@ -654,6 +787,23 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
     }
   };
+
+  const displayAddress = useMemo(() => {
+    const selectedBranch =
+      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId)) ||
+      (vehicle as any).branch ||
+      (availableBranches.length > 0 ? availableBranches[0] : null);
+
+    return (
+      selectedBranch?.normalized_name ||
+      selectedBranch?.name ||
+      selectedBranch?.location ||
+      selectedBranch?.adresse ||
+      (vehicle as any).location ||
+      carData.supplier.address ||
+      'Airport Terminal / City Center'
+    );
+  }, [availableBranches, selectedBranchId, vehicle, carData.supplier.address]);
 
   const displayedInclusions = showAllInclusions || hideBookingControls
     ? carData.inclusions
@@ -903,16 +1053,28 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                             ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
                             : "No security deposit is required for this vehicle."))
                         : null;
+                      const mileageDesc = isOptionsLayout ? ((carData as any).mileageTooltipMap?.[inc] || null) : null;
                       return (
                         <div key={i} className="flex items-start gap-1.5 min-w-0">
                           <Check size={14} className="text-green-600 shrink-0 mt-0.5" />
-                          <span className="text-xs font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`text-xs font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
+                            title={depositDesc || mileageDesc || inc}
+                          >
                             <span>{inc}</span>
                           </span>
                           {depositDesc && (
                             <ChicTooltip
                               text={depositDesc}
                               title="Security Deposit"
+                              variant="gold"
+                              position="top"
+                            />
+                          )}
+                          {mileageDesc && (
+                            <ChicTooltip
+                              text={mileageDesc}
+                              title="Mileage Policy"
                               variant="gold"
                               position="top"
                             />
@@ -1124,55 +1286,154 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
                   </div>
                 ))}
               </div>
+
+              {/* If options layout: show address directly under specs */}
+              {isOptionsLayout && (
+                <div className="mt-3.5 flex items-center gap-1.5 text-xs lg:text-sm font-bold text-gray-700">
+                  <button
+                    type="button"
+                    onClick={openMap}
+                    className="shrink-0 p-0.5 text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
+                    title="View location on Google Maps"
+                    aria-label="View location on Google Maps"
+                  >
+                    <Plane size={15} className="rotate-[-45deg] text-gray-700 shrink-0" />
+                  </button>
+                  <div
+                    onClick={openMap}
+                    className="cursor-pointer group/addr truncate"
+                    title="View location on Google Maps"
+                  >
+                    <span className="text-gray-800 underline font-bold group-hover/addr:text-blue-600 transition-colors">
+                      {displayAddress}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col lg:flex-row mb-2 relative gap-y-3 lg:gap-y-0">
-          <div className="flex bg-gray-100 rounded-xl mx-5 lg:mx-0 lg:ml-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0 px-4 py-2.5 flex-wrap items-center justify-start gap-x-4 xl:gap-x-7 gap-y-3 min-w-0">
-            <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
-              {carData.supplier.logo ? (
-                <Image
-                  src={carData.supplier.logo}
-                  alt={`${carData.supplier.name} Logo`}
-                  width={65}
-                  height={28}
-                  unoptimized={carData.supplier.logo?.includes('http')}
-                  className="h-7 w-auto max-w-[65px] object-contain"
-                />
-              ) : (
-                <span className="text-[10px] font-bold text-gray-600">N/A</span>
-              )}
-            </div>
+          <div className="flex bg-gray-100 rounded-xl mx-5 lg:mx-0 lg:ml-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0 px-4 py-2.5 flex-wrap items-center justify-start gap-x-5 xl:gap-x-7 gap-y-3 min-w-0">
+            {isOptionsLayout ? (
+              <>
+                {/* 1. Supplier Logo + Name with Rating Underneath */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm border border-gray-200/60">
+                    {carData.supplier.logo ? (
+                      <Image
+                        src={carData.supplier.logo}
+                        alt={`${carData.supplier.name} Logo`}
+                        width={65}
+                        height={28}
+                        unoptimized={carData.supplier.logo?.includes('http')}
+                        className="h-7 w-auto max-w-[65px] object-contain"
+                      />
+                    ) : (
+                      <span className="text-[10px] font-bold text-gray-600">N/A</span>
+                    )}
+                  </div>
 
-            <div className="min-w-0">
-              <span className="text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
-              <button onClick={() => setShowTerms(true)} className="text-xs font-black text-blue-600 underline hover:text-blue-800 leading-none">Rental Terms</button>
-            </div>
+                  <div className="min-w-0 flex flex-col justify-center">
+                    <span className="text-sm font-black text-gray-900 block truncate leading-tight mb-1">
+                      {carData.supplier.name}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[11px] font-black leading-none">
+                        {carData.supplier.rating}/10
+                      </span>
+                      <div className="flex items-baseline gap-1 leading-none">
+                        <span className="text-[11px] font-black text-gray-800">Excellent</span>
+                        <span className="text-[10px] font-medium text-gray-500">({carData.supplier.reviewsCount}+ reviews)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="bg-[var(--primary)] text-gray-900 px-2 py-1 rounded-md text-sm font-black">{carData.supplier.rating}/10</span>
-              <div className="flex flex-col leading-none">
-                <span className="text-xs font-black text-gray-700">Excellent</span>
-                <span className="text-[10px] font-black text-gray-600">({carData.supplier.reviewsCount}+ reviews)</span>
-              </div>
-            </div>
+                {/* 2. Rental Terms, Fuel Policy, Pick-up side-by-side */}
+                <div className="flex items-center gap-4 xl:gap-6 flex-wrap">
+                  <div className="h-6 w-px bg-gray-300 hidden sm:block shrink-0" />
 
-            {/* Instant Confirmation */}
-            {carData.supplier.instantConfirmation && (
-              <div className="flex items-center gap-1.5 shrink-0">
-                <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                <span className="text-[13.5px] xl:text-[14px] font-black text-gray-900 whitespace-nowrap">Instant Confirmation</span>
-                <ChicTooltip
-                  text="Receive instant booking confirmation right after completing your reservation!"
-                  title="Instant Confirmation"
-                  variant="gold"
-                  align="left"
-                  position="top"
-                />
-              </div>
+                  {/* Rental Terms button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowTerms(true)}
+                    className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs xl:text-sm font-bold underline cursor-pointer shrink-0 transition-colors"
+                  >
+                    <FileText size={16} className="shrink-0 text-blue-600" />
+                    <span>Rental Terms</span>
+                  </button>
+
+                  <div className="h-4 w-px bg-gray-300 hidden sm:block shrink-0" />
+
+                  {/* Fuel Policy */}
+                  <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
+                    <Fuel size={16} className="shrink-0 text-blue-600" />
+                    <span className="cursor-pointer">{carData.fuelPolicy}</span>
+                    <ChicTooltip
+                      text={getFuelPolicyDescription(carData.fuelPolicy)}
+                      title="Fuel Policy"
+                      variant="gold"
+                      align="left"
+                      position="top"
+                    />
+                  </div>
+
+                  <div className="h-4 w-px bg-gray-300 hidden sm:block shrink-0" />
+
+                  {/* Pick-up */}
+                  <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
+                    <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0 mt-0.5" />
+                    <span><PickupLabel pickupType={carData.pickupType} /></span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
+                  {carData.supplier.logo ? (
+                    <Image
+                      src={carData.supplier.logo}
+                      alt={`${carData.supplier.name} Logo`}
+                      width={65}
+                      height={28}
+                      unoptimized={carData.supplier.logo?.includes('http')}
+                      className="h-7 w-auto max-w-[65px] object-contain"
+                    />
+                  ) : (
+                    <span className="text-[10px] font-bold text-gray-600">N/A</span>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <span className="text-sm font-black text-gray-800 block truncate">{carData.supplier.name}</span>
+                  <button onClick={() => setShowTerms(true)} className="text-xs font-black text-blue-600 underline hover:text-blue-800 leading-none">Rental Terms</button>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="bg-[var(--primary)] text-gray-900 px-2 py-1 rounded-md text-sm font-black">{carData.supplier.rating}/10</span>
+                  <div className="flex flex-col leading-none">
+                    <span className="text-xs font-black text-gray-700">Excellent</span>
+                    <span className="text-[10px] font-black text-gray-600">({carData.supplier.reviewsCount}+ reviews)</span>
+                  </div>
+                </div>
+
+                {carData.supplier.instantConfirmation && (
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
+                    <span className="text-[13.5px] xl:text-[14px] font-black text-gray-900 whitespace-nowrap">Instant Confirmation</span>
+                    <ChicTooltip
+                      text="Receive instant booking confirmation right after completing your reservation!"
+                      title="Instant Confirmation"
+                      variant="gold"
+                      align="left"
+                      position="top"
+                    />
+                  </div>
+                )}
+              </>
             )}
-
           </div>
 
           <div className="hidden lg:flex lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 min-w-0 flex-col justify-center items-start gap-2 px-3 lg:px-4">
@@ -1183,87 +1444,136 @@ export default function CarCard({ vehicle, daysNumber, hideBookingControls = fal
 
         <div className="flex flex-col lg:flex-row">
           <div className='flex bg-green-100/35 rounded-xl mx-5 lg:mx-0 lg:ml-4 mb-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0'>
-            <div className="w-[55%] xl:w-[60%] p-2 pt-3 min-w-0">
-              <div className="mb-2">
-                <h4 className="text-xs md:text-sm font-bold text-emerald-800">What is Included!</h4>
-                <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+            {isOptionsLayout ? (
+              <div className="w-full p-4 sm:p-5 pt-3.5 min-w-0">
+                <div className="mb-2.5">
+                  <h4 className="text-xs md:text-sm font-bold text-emerald-900">What is Included!</h4>
+                  <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 xl:gap-x-12 gap-y-2 mt-3">
+                  {displayedInclusions.map((inc, i) => {
+                    const isDeposit = inc.toLowerCase().includes('deposit');
+                    const depositDesc = isDeposit 
+                      ? (carData.depositTerms || (carData.depositAmount > 0 
+                          ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                          : "No security deposit is required for this vehicle."))
+                      : null;
+                    const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
+                    return (
+                      <div key={i} className="flex items-center gap-2 min-w-0">
+                        <Check size={14} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+                        <span
+                          className={`text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
+                          title={depositDesc || mileageDesc || inc}
+                        >
+                          <span>{inc}</span>
+                        </span>
+                        {depositDesc && (
+                          <ChicTooltip
+                            text={depositDesc}
+                            title="Security Deposit"
+                            variant="gold"
+                            position="top"
+                          />
+                        )}
+                        {mileageDesc && (
+                          <ChicTooltip
+                            text={mileageDesc}
+                            title="Mileage Policy"
+                            variant="gold"
+                            position="top"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
-                {displayedInclusions.map((inc, i) => {
-                  const isDeposit = inc.toLowerCase().includes('deposit');
-                  const depositDesc = isDeposit 
-                    ? (carData.depositTerms || (carData.depositAmount > 0 
-                        ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
-                        : "No security deposit is required for this vehicle."))
-                    : null;
-                  return (
-                    <div key={i} className="flex items-start gap-1.5 min-w-0">
-                      <Check size={13} className="text-emerald-600 shrink-0 mt-0.5 md:mt-1 stroke-[2.2]" />
-                      <span className="text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap" title={inc}>
-                        <span>{inc}</span>
-                      </span>
-                      {depositDesc && (
-                        <ChicTooltip
-                          text={depositDesc}
-                          title="Security Deposit"
-                          variant="gold"
-                          position="top"
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {carData.inclusions.length > 6 && !hideBookingControls && (
-                <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-xs font-bold text-gray-800 underline hover:text-gray-600">
-                  {showAllInclusions ? 'Show Less' : 'Show More +'}
-                </button>
-              )}
-            </div>
+            ) : (
+              <>
+                <div className="w-[55%] xl:w-[60%] p-2 pt-3 min-w-0">
+                  <div className="mb-2">
+                    <h4 className="text-xs md:text-sm font-bold text-emerald-800">What is Included!</h4>
+                    <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
+                    {displayedInclusions.map((inc, i) => {
+                      const isDeposit = inc.toLowerCase().includes('deposit');
+                      const depositDesc = isDeposit 
+                        ? (carData.depositTerms || (carData.depositAmount > 0 
+                            ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                            : "No security deposit is required for this vehicle."))
+                        : null;
+                      return (
+                        <div key={i} className="flex items-start gap-1.5 min-w-0">
+                          <Check size={13} className="text-emerald-600 shrink-0 mt-0.5 md:mt-1 stroke-[2.2]" />
+                          <span
+                            className="text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap"
+                            title={depositDesc || inc}
+                          >
+                            <span>{inc}</span>
+                          </span>
+                          {depositDesc && (
+                            <ChicTooltip
+                              text={depositDesc}
+                              title="Security Deposit"
+                              variant="gold"
+                              position="top"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {carData.inclusions.length > 6 && !hideBookingControls && (
+                    <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="mt-2 text-xs font-bold text-gray-800 underline hover:text-gray-600">
+                      {showAllInclusions ? 'Show Less' : 'Show More +'}
+                    </button>
+                  )}
+                </div>
 
-            <div className="w-[48%] xl:w-[44%] p-2.5 pt-6 xl:pt-10 space-y-2.5 min-w-0 flex flex-col justify-center">
-              <div className="flex items-start gap-1.5 min-w-0">
-                <button
-                  type="button"
-                  onClick={openMap}
-                  className="shrink-0 pt-0.5 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
-                  title="View location on Google Maps"
-                  aria-label="View location on Google Maps"
-                >
-                  <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors" />
-                </button>
-                <div
-                  onClick={openMap}
-                  className="flex items-baseline gap-1 min-w-0 cursor-pointer group/addr"
-                  title="View location on Google Maps"
-                >
-                  <span className="text-xs font-bold text-gray-500 shrink-0">Address: </span>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
-                      {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.normalized_name ||
-                      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
-                      availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
-                      carData.supplier.address}
-                    </span>
+                <div className="w-[48%] xl:w-[44%] p-2.5 pt-6 xl:pt-10 space-y-2.5 min-w-0 flex flex-col justify-center">
+                  <div className="flex items-start gap-1.5 min-w-0">
+                    <button
+                      type="button"
+                      onClick={openMap}
+                      className="shrink-0 pt-0.5 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                      title="View location on Google Maps"
+                      aria-label="View location on Google Maps"
+                    >
+                      <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors" />
+                    </button>
+                    <div
+                      onClick={openMap}
+                      className="flex items-baseline gap-1 min-w-0 cursor-pointer group/addr"
+                      title="View location on Google Maps"
+                    >
+                      <span className="text-xs font-bold text-gray-500 shrink-0">Address: </span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs md:text-sm font-black text-gray-800 break-words line-clamp-2 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
+                          {displayAddress}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Fuel size={17} className="text-blue-600 shrink-0" />
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-xs font-bold text-gray-500 shrink-0">Fuel Policy: </span>
+                      <span className="text-xs md:text-sm font-black text-gray-800 break-words">{carData.fuelPolicy}</span>
+                      <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="right" position="top" />
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-1.5 min-w-0">
+                    <PickupIcon pickupType={carData.pickupType} />
+                    <div className="flex items-baseline gap-1 min-w-0">
+                      <span className="text-xs font-bold text-gray-500 shrink-0">Pick-up: </span>
+                      <span className="text-xs md:text-sm font-black text-gray-800 break-words"><PickupLabel pickupType={carData.pickupType} /></span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Fuel size={17} className="text-blue-600 shrink-0" />
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs font-bold text-gray-500 shrink-0">Fuel Policy: </span>
-                  <span className="text-xs md:text-sm font-black text-gray-800 break-words">{carData.fuelPolicy}</span>
-                  <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="right" position="top" />
-                </div>
-              </div>
-              <div className="flex items-start gap-1.5 min-w-0">
-                <PickupIcon pickupType={carData.pickupType} />
-                <div className="flex items-baseline gap-1 min-w-0">
-                  <span className="text-xs font-bold text-gray-500 shrink-0">Pick-up: </span>
-                  <span className="text-xs md:text-sm font-black text-gray-800 break-words"><PickupLabel pickupType={carData.pickupType} /></span>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           <div className="w-full lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 p-4 lg:p-5 pt-4 lg:pt-6 flex flex-col lg:items-start items-start justify-center lg:justify-between gap-5 lg:gap-0 self-stretch">

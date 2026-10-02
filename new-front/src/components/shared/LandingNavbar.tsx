@@ -9,14 +9,26 @@ export default function LandingNavbar() {
   const dispatch = useDispatch();
   const { isMobileMenuOpen } = useSelector((state: RootState) => state.ui);
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
+        window.location.reload();
+      } else {
+        window.location.href = '/';
+      }
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
       <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <Link href="/" className="flex flex-col items-start gap-0">
+          <a href="/" onClick={handleLogoClick} className="flex flex-col items-start gap-0 cursor-pointer">
             <span className="text-2xl xl:text-[25px] 2xl:text-[27px] font-black text-gray-900 tracking-tighter leading-none transition-all">AUTOURS</span>
             <span className="text-[10px] xl:text-[10.5px] 2xl:text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-none transition-all">Explore By Your Own!</span>
-          </Link>
+          </a>
 
           {/* Desktop Navigation - Removed Links */}
           <div className="hidden lg:flex items-center gap-10">

@@ -75,7 +75,7 @@ export default function BookingExtras({
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       {extras.map((extra) => {
         const extraId = extra.key || extra.id;
         const qty = selectedExtras[extraId] || 0;
@@ -92,17 +92,24 @@ export default function BookingExtras({
         return (
           <div
             key={extraId}
-            className="relative bg-white rounded-2xl border border-gray-200/80 shadow-xs transition-all duration-200 z-10 hover:z-20"
+            className={`relative bg-white rounded-2xl border transition-all duration-200 z-10 hover:z-20 overflow-hidden ${
+              isSelected ? "border-primary ring-2 ring-primary/20 shadow-xs" : "border-gray-200/90 shadow-2xs"
+            }`}
           >
             {/* ── Top Header Row with border-b ── */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 bg-white rounded-t-2xl">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h4 className="text-[17px] font-black text-gray-900 tracking-tight">
+            <div className="px-4 py-2.5 sm:px-4.5 sm:py-2.5 border-b border-gray-100 flex items-center justify-between gap-3 bg-white">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-[14.5px] sm:text-[15.5px] font-bold text-gray-900 tracking-tight">
                   {extra.name}
                 </h4>
                 {extra.badge && (
-                  <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#fef3c7] text-[#d97706] tracking-wide">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#fef3c7] text-[#d97706] tracking-wide">
                     {extra.badge}
+                  </span>
+                )}
+                {isSelected && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-250 flex items-center gap-1 shrink-0">
+                    ✓ Added
                   </span>
                 )}
               </div>
@@ -114,16 +121,16 @@ export default function BookingExtras({
                   onMouseEnter={() => setActiveTooltip(extraId)}
                   onMouseLeave={() => setActiveTooltip(null)}
                   onClick={() => setActiveTooltip((prev) => (prev === extraId ? null : extraId))}
-                  className="text-blue-600 hover:text-blue-700 p-0.5 transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full text-blue-600 hover:text-blue-700 hover:bg-blue-50/80 flex items-center justify-center transition-colors cursor-pointer"
                   aria-label={`Details about ${extra.name}`}
                 >
-                  <HelpCircle size={20} className="stroke-[2.2]" />
+                  <HelpCircle size={18} className="stroke-[2.2]" />
                 </button>
 
                 {activeTooltip === extraId && (
-                  <div className="absolute right-0 bottom-full mb-2.5 w-72 p-3.5 bg-[#141b2d] text-white text-xs font-medium rounded-xl shadow-2xl z-50 leading-relaxed pointer-events-none animate-in fade-in zoom-in-95 duration-150">
-                    <p className="text-[12px] text-gray-100 leading-relaxed">{extra.description || "Charged once for the entire rental."}</p>
-                    <div className="mt-2 pt-1.5 border-t border-gray-700/60 text-[11px] text-amber-300/90 font-bold">
+                  <div className="absolute right-0 bottom-full mb-2.5 w-72 p-3 bg-[#141b2d] text-white text-xs font-medium rounded-xl shadow-2xl z-50 leading-relaxed pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                    <p className="text-[11.5px] text-gray-100 leading-relaxed">{extra.description || "Charged once for the entire rental."}</p>
+                    <div className="mt-2 pt-1.5 border-t border-gray-700/60 text-[10.5px] text-amber-300 font-bold">
                       ✓ Charged once for the entire rental duration.
                     </div>
                     {/* Downward pointing arrow */}
@@ -134,52 +141,58 @@ export default function BookingExtras({
             </div>
 
             {/* ── Bottom Body Row: Description + Price & Action Button ── */}
-            <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5 bg-white">
-              <p className="text-[13.5px] text-gray-500 font-medium leading-relaxed max-w-xl">
+            <div className="px-4 py-3 sm:px-4.5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 bg-white">
+              <p className="text-[13px] sm:text-[13.5px] text-gray-600 font-normal leading-relaxed max-w-xl">
                 {extra.description}
               </p>
 
-              <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
+              <div className="flex items-center justify-between sm:justify-end gap-5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                 {/* Price Block */}
                 <div className="text-left sm:text-right">
-                  <div className="text-[16px] sm:text-[17px] font-black text-gray-900 leading-tight">
+                  <div className="text-[15px] sm:text-[16px] font-black text-gray-900 leading-tight">
                     {currencyCode} {displayTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <div className="text-xs text-gray-400 font-medium mt-0.5">
-                    per rental
+                  <div className="text-[10px] text-gray-400 font-semibold uppercase mt-0.5">
+                    {qty > 1 ? (
+                      <span>
+                        {qty} × {displayUnitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencyCode}
+                      </span>
+                    ) : (
+                      "per rental"
+                    )}
                   </div>
                 </div>
 
                 {/* Action Controls */}
                 {extra.type === "quantity" ? (
                   isSelected ? (
-                    <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl p-1 shadow-xs">
+                    <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl p-0.5 shadow-2xs">
                       <button
                         type="button"
                         onClick={() => onChangeExtra(extraId, Math.max(0, qty - 1))}
-                        className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                        className="w-7 h-7 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
                         title="Decrease quantity"
                       >
-                        <Minus size={14} />
+                        <Minus size={13} strokeWidth={2.5} />
                       </button>
-                      <span className="w-6 text-center text-sm font-black text-gray-900 select-none">
+                      <span className="w-5 text-center text-xs font-black text-gray-900 select-none">
                         {qty}
                       </span>
                       <button
                         type="button"
                         onClick={() => onChangeExtra(extraId, Math.min(extra.max_qty || 3, qty + 1))}
-                        className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40 cursor-pointer"
+                        className="w-7 h-7 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40 cursor-pointer"
                         disabled={qty >= (extra.max_qty || 3)}
                         title="Increase quantity"
                       >
-                        <Plus size={14} />
+                        <Plus size={13} strokeWidth={2.5} />
                       </button>
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => onChangeExtra(extraId, 1)}
-                      className="min-w-[110px] px-7 py-2.5 rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50/70 font-bold text-sm transition-all active:scale-95 cursor-pointer text-center"
+                      className="min-w-[95px] px-5 py-2 rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50/70 font-bold text-xs transition-all active:scale-95 cursor-pointer text-center"
                     >
                       Add
                     </button>
@@ -188,7 +201,7 @@ export default function BookingExtras({
                   <button
                     type="button"
                     onClick={() => onChangeExtra(extraId, isSelected ? 0 : 1)}
-                    className="min-w-[110px] px-7 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 cursor-pointer text-center border-2 border-blue-600 text-blue-600 bg-white hover:bg-blue-50/70"
+                    className="min-w-[95px] px-5 py-2 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer text-center border-2 border-blue-600 text-blue-600 bg-white hover:bg-blue-50/70"
                   >
                     {isSelected ? "Remove" : "Add"}
                   </button>

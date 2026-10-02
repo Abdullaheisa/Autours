@@ -14,7 +14,7 @@ import PickupDropoffCard from '@/components/shared/PickupDropoffCard';
 import CarCard from '@/app/search/components/CarCard';
 import BookingChecklist from './components/BookingChecklist';
 import PriceBreakdownCard from './components/PriceBreakdownCard';
-import { ExtraItem, convertExtraPrice } from './components/BookingExtras';
+import BookingExtras, { ExtraItem, convertExtraPrice } from './components/BookingExtras';
 import FlightDetailsInput from './components/FlightDetailsInput';
 import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle, ArrowLeft, PackageCheck } from 'lucide-react';
 import { RootState, AppDispatch } from '@/store';
@@ -182,11 +182,31 @@ function BookingContent() {
     }
     return DEFAULT_EXTRAS;
   });
+  const [isEditingExtras, setIsEditingExtras] = useState(false);
+
   const [selectedExtras, setSelectedExtras] = useState<Record<string, number>>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const currentCarId = searchParams.get('bookId') || searchParams.get('vehicleId');
+        const savedCarId = sessionStorage.getItem('autours_extras_vehicle_id');
+
         const param = searchParams.get('extras');
-        if (param) return JSON.parse(decodeURIComponent(param));
+        if (param) {
+          const parsed = JSON.parse(decodeURIComponent(param));
+          if (currentCarId) {
+            sessionStorage.setItem('autours_extras_vehicle_id', String(currentCarId));
+            sessionStorage.setItem('autours_selected_extras', JSON.stringify(parsed));
+          }
+          return parsed;
+        }
+
+        // If saved vehicle ID does not match current vehicle, reset to {}
+        if (savedCarId && currentCarId && String(savedCarId) !== String(currentCarId)) {
+          sessionStorage.removeItem('autours_selected_extras');
+          sessionStorage.removeItem('autours_extras_vehicle_id');
+          return {};
+        }
+
         const saved = sessionStorage.getItem('autours_selected_extras');
         if (saved) return JSON.parse(saved);
       } catch {
@@ -200,7 +220,13 @@ function BookingContent() {
     const param = searchParams.get('extras');
     if (param) {
       try {
-        setSelectedExtras(JSON.parse(decodeURIComponent(param)));
+        const parsed = JSON.parse(decodeURIComponent(param));
+        setSelectedExtras(parsed);
+        const currentCarId = searchParams.get('bookId') || searchParams.get('vehicleId');
+        if (currentCarId && typeof window !== 'undefined') {
+          sessionStorage.setItem('autours_extras_vehicle_id', String(currentCarId));
+          sessionStorage.setItem('autours_selected_extras', JSON.stringify(parsed));
+        }
       } catch {}
     }
   }, [searchParams]);
@@ -422,6 +448,20 @@ function BookingContent() {
     restoredVehicle ||
     null;
 
+  // Reset extras if selected vehicle ID differs from saved vehicle ID
+  useEffect(() => {
+    if (typeof window !== 'undefined' && selectedVehicle?.id) {
+      try {
+        const savedCarId = sessionStorage.getItem('autours_extras_vehicle_id');
+        if (savedCarId && String(savedCarId) !== String(selectedVehicle.id)) {
+          sessionStorage.removeItem('autours_selected_extras');
+          sessionStorage.removeItem('autours_extras_vehicle_id');
+          setSelectedExtras({});
+        }
+      } catch {}
+    }
+  }, [selectedVehicle?.id]);
+
   // Persist selected vehicle and current search params to sessionStorage whenever they change
   useEffect(() => {
     if (selectedVehicle && typeof window !== 'undefined') {
@@ -572,10 +612,24 @@ function BookingContent() {
 
   // ── Extra change handler ─────────────────────────────────────────────────────
   const handleExtraChange = (id: string, qty: number) => {
-    setSelectedExtras(prev => ({
-      ...prev,
-      [id]: qty,
-    }));
+    setSelectedExtras(prev => {
+      const next = { ...prev };
+      if (qty <= 0) {
+        delete next[id];
+      } else {
+        next[id] = qty;
+      }
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("autours_selected_extras", JSON.stringify(next));
+          const currentCarId = searchParams.get('bookId') || searchParams.get('vehicleId') || selectedVehicle?.id;
+          if (currentCarId) {
+            sessionStorage.setItem("autours_extras_vehicle_id", String(currentCarId));
+          }
+        } catch (e) {}
+      }
+      return next;
+    });
   };
 
   // ── Register then Book ───────────────────────────────────────────────────────
@@ -801,13 +855,7 @@ function BookingContent() {
         {selectedVehicle && (
           <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
         )}
-        <PriceBreakdownCard
-          rentalDays={rentalDays}
-          currencyCode={currencyCode}
-          baseVehiclePrice={baseVehiclePrice}
-          extrasItems={itemizedExtras}
-          grandTotalPrice={grandTotalPrice}
-        />
+        {/* 1. Pick-up and Drop-off Card First */}
         <PickupDropoffCard
           pickupDate={searchStateParams.dateFrom}
           pickupTime={searchStateParams.startTime || '10:00'}
@@ -818,22 +866,22 @@ function BookingContent() {
           fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
           supplierName={selectedVehicle?.supplier?.name}
         />
+        {/* 2. Price Breakdown / Invoice Card Underneath */}
+        <PriceBreakdownCard
+          rentalDays={rentalDays}
+          currencyCode={currencyCode}
+          baseVehiclePrice={baseVehiclePrice}
+          extrasItems={itemizedExtras}
+          grandTotalPrice={grandTotalPrice}
+          onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
+        />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
 
         {/* ── LEFT SIDEBAR: Matches Search Page Width Identically ────────────────────────── */}
         <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
-          {/* 1. Price Breakdown Card (Invoice) */}
-          <PriceBreakdownCard
-            rentalDays={rentalDays}
-            currencyCode={currencyCode}
-            baseVehiclePrice={baseVehiclePrice}
-            extrasItems={itemizedExtras}
-            grandTotalPrice={grandTotalPrice}
-          />
-
-          {/* 2. Pick-up and drop-off Card Underneath the Invoice */}
+          {/* 1. Pick-up and drop-off Card First */}
           <PickupDropoffCard
             pickupDate={searchStateParams.dateFrom}
             pickupTime={searchStateParams.startTime || '10:00'}
@@ -843,6 +891,16 @@ function BookingContent() {
             dropoffBranch={(selectedVehicle as any)?.branch}
             fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
             supplierName={selectedVehicle?.supplier?.name}
+          />
+
+          {/* 2. Price Breakdown Card (Invoice) Underneath */}
+          <PriceBreakdownCard
+            rentalDays={rentalDays}
+            currencyCode={currencyCode}
+            baseVehiclePrice={baseVehiclePrice}
+            extrasItems={itemizedExtras}
+            grandTotalPrice={grandTotalPrice}
+            onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
           />
         </aside>
 
@@ -860,15 +918,61 @@ function BookingContent() {
             )}
           </div>
 
-          {/* ── 1. Checklist Before Pick-up Section ───────────────────────────── */}
-          <BookingChecklist
-            pickupTime={searchStateParams.startTime || '10:00'}
-            depositAmount={selectedVehicle?.deposit}
-            currencyCode={currencyCode}
-          />
+          {/* ── 1. Extras & Add-ons Section (Moved BEFORE Checklist, with In-Place Editing) ── */}
+          {isEditingExtras ? (
+            <div className="bg-white rounded-2xl border-2 border-primary/50 p-5 sm:p-6 shadow-sm space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0">
+                    <PackageCheck size={18} className="stroke-[2.2]" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-gray-900">
+                      Choose &amp; Modify Add-ons
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Select extras for this vehicle — your total price and invoice update in real-time
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingExtras(false)}
+                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-600 text-gray-950 font-bold text-xs transition-all shadow-xs cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
 
-          {/* ── 2. Selected Extras Summary Card (Replaced big extras selector) ── */}
-          {selectedExtrasCount > 0 ? (
+              {extrasList.length > 0 ? (
+                <BookingExtras
+                  extras={extrasList}
+                  selectedExtras={selectedExtras}
+                  onChangeExtra={handleExtraChange}
+                  currencyCode={currencyCode}
+                  allRates={allRates}
+                />
+              ) : (
+                <div className="py-6 text-center text-xs text-gray-500 font-medium">
+                  No add-ons available for this vehicle.
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                <div className="text-xs text-gray-500 font-medium">
+                  {selectedExtrasCount} extra{selectedExtrasCount === 1 ? "" : "s"} selected
+                  {extrasTotalPrice > 0 && ` (+${extrasTotalPrice.toFixed(2)} ${currencyCode})`}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingExtras(false)}
+                  className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-950 font-black text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          ) : selectedExtrasCount > 0 ? (
             <div className="bg-white rounded-2xl border border-gray-200/90 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start sm:items-center gap-3.5">
                 <div className="w-10 h-10 rounded-2xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0 shadow-2xs">
@@ -906,12 +1010,13 @@ function BookingContent() {
                 </div>
               </div>
 
-              <Link
-                href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}&extras=${encodeURIComponent(JSON.stringify(selectedExtras))}`}
+              <button
+                type="button"
+                onClick={() => setIsEditingExtras(true)}
                 className="shrink-0 px-4 py-2 rounded-xl border-2 border-primary hover:bg-primary text-gray-900 font-black text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap"
               >
                 Change Extras
-              </Link>
+              </button>
             </div>
           ) : (selectedVehicle as any)?.has_extras !== false ? (
             <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
@@ -923,14 +1028,22 @@ function BookingContent() {
                   Need child seats, an additional driver, or a GPS system?
                 </span>
               </div>
-              <Link
-                href={`/options?vehicleId=${vehicleId || selectedVehicle?.id}&bookId=${actualVehicleToBook}`}
-                className="px-4 py-1.5 rounded-xl bg-primary/20 hover:bg-primary text-gray-900 font-black text-xs transition-colors shrink-0 whitespace-nowrap"
+              <button
+                type="button"
+                onClick={() => setIsEditingExtras(true)}
+                className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-900 font-black text-xs transition-colors shrink-0 whitespace-nowrap cursor-pointer shadow-2xs"
               >
                 + Add Extras
-              </Link>
+              </button>
             </div>
           ) : null}
+
+          {/* ── 2. Checklist Before Pick-up Section ───────────────────────────── */}
+          <BookingChecklist
+            pickupTime={searchStateParams.startTime || '10:00'}
+            depositAmount={selectedVehicle?.deposit}
+            currencyCode={currencyCode}
+          />
 
           {/* ── 3. Registration & Flight Details Form ─────────────────────────── */}
           <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
@@ -1151,7 +1264,7 @@ function BookingContent() {
                   ) : isManagementAccount ? (
                     'Cannot Book with Management Account'
                   ) : (
-                    `Confirm Booking • ${grandTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currencyCode}`
+                    'Confirm Booking'
                   )}
                 </button>
               </div>

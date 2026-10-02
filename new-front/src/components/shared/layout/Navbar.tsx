@@ -46,16 +46,32 @@ export default function Navbar() {
     open: { opacity: 1, x: 0 }
   };
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Allow normal modifier clicks (Cmd/Ctrl/Shift/Alt or middle click)
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
+        window.location.reload();
+      } else {
+        window.location.href = '/';
+      }
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-[var(--primary)] border-b border-black/10">
       <div className="max-w-7xl xl:max-w-[90rem] 2xl:max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
 
           {/* Logo */}
-          <Link 
+          <a 
             href="/" 
+            onClick={handleLogoClick}
             aria-label="Autours Homepage" // 🚀 حل مشكلة الـ Accessibility للرابط
-            className="flex items-center group transition-transform active:scale-95 shrink-0 focus:outline-none rounded-lg"
+            className="flex items-center group transition-transform active:scale-95 shrink-0 focus:outline-none rounded-lg cursor-pointer"
           >
             {/* 🚀 استخدام next/image و priority للتحميل الفوري كأول عنصر */}
             <Image
@@ -69,7 +85,7 @@ export default function Navbar() {
               fetchPriority="high"
               className="h-12 sm:h-10 md:h-12 xl:h-[50px] 2xl:h-[54px] w-auto object-contain transition-all"
             />
-          </Link>
+          </a>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">

@@ -70,6 +70,8 @@ class Vehicle extends Model
         'custom_price_tiers',
         'deposit_amount',
         'deposit_terms',
+        'extra_km_price',
+        'extra_mileage_fee',
     ];
 
     protected $casts = [

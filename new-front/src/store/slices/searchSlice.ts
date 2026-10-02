@@ -127,6 +127,15 @@ export const fetchVehicles = createAsyncThunk(
   }
 );
 
+function clearSavedExtrasSession() {
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.removeItem('autours_selected_extras');
+      sessionStorage.removeItem('autours_extras_vehicle_id');
+    } catch {}
+  }
+}
+
 const searchSlice = createSlice({
   name: 'search',
   initialState,
@@ -144,6 +153,7 @@ const searchSlice = createSlice({
       state.searchParams = { ...state.searchParams, ...next };
 
       if (isCoreSearchChange) {
+        clearSavedExtrasSession();
         state.hasSearched = false;
         state.vehicles = [];
         state.filteredCategories = [];
@@ -155,6 +165,7 @@ const searchSlice = createSlice({
       }
     },
     startNewSearch: (state) => {
+      clearSavedExtrasSession();
       state.hasSearched = false;
       state.vehicles = [];
       state.filteredCategories = [];
@@ -205,6 +216,7 @@ const searchSlice = createSlice({
       state.currentPage = 1;
     },
     resetForNewSearch: (state) => {
+      clearSavedExtrasSession();
       state.hasSearched = false;
       state.isSearching = true;
       state.isFiltering = true;
@@ -215,7 +227,10 @@ const searchSlice = createSlice({
       state.filterError = null;
       state.searchError = null;
     },
-    resetSearch: () => initialState,
+    resetSearch: () => {
+      clearSavedExtrasSession();
+      return initialState;
+    },
     clearErrors: (state) => {
       state.searchError = null;
       state.filterError = null;
