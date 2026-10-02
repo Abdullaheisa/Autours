@@ -58,6 +58,18 @@ export default function ExtraFaqModal({
     }
   }, [isOpen, title]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   // Handle ESC key
   useEffect(() => {
     if (!isOpen) return;
@@ -107,11 +119,12 @@ export default function ExtraFaqModal({
         ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
+        onTouchMove={(e) => e.preventDefault()}
         aria-hidden="true"
       />
 
@@ -138,7 +151,7 @@ export default function ExtraFaqModal({
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-3.5 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-3.5 custom-scrollbar overscroll-contain">
           {items.map((item, index) => {
             const isExpanded = openIndex === index;
 
