@@ -966,177 +966,304 @@ export default function CarCard({
           </div>
         </div>
 
+        {/* If options layout: show address directly under specs on mobile */}
+        {isOptionsLayout && (
+          <div className="px-4 pb-3 flex items-center gap-1.5 text-xs font-bold text-gray-700">
+            <button
+              type="button"
+              onClick={openMap}
+              className="shrink-0 p-0.5 text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+              title="View location on Google Maps"
+              aria-label="View location on Google Maps"
+            >
+              <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors shrink-0" />
+            </button>
+            <div
+              onClick={openMap}
+              className="cursor-pointer group/addr truncate"
+              title="View location on Google Maps"
+            >
+              <span className="text-gray-800 underline font-bold group-hover/addr:text-blue-600 transition-colors">
+                {displayAddress}
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="mx-4 mb-2 md:mb-2.5">
           <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex flex-col gap-2">
-
-            {/* Row 1: Logo + Name/Terms + Rating */}
-            <div className="flex items-center gap-2.5">
-              {/* Supplier logo */}
-              <div className="bg-white p-1 rounded-lg flex items-center justify-center w-[80px] h-[40px] shrink-0 shadow-sm overflow-hidden border border-gray-100">
-                {carData.supplier.logo ? (
-                  <Image
-                    src={carData.supplier.logo}
-                    alt={`${carData.supplier.name} Logo`}
-                    width={80}
-                    height={40}
-                    unoptimized={carData.supplier.logo?.includes('http')}
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <span className="text-[9px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
-                )}
-              </div>
-
-              {/* Supplier name + Rental terms */}
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-[11px] font-black text-gray-800 truncate">{carData.supplier.name}</span>
-                <button onClick={() => setShowTerms(true)} className="text-[10px] font-bold text-blue-600 underline hover:text-blue-800 whitespace-nowrap leading-none mt-0.5 text-left">
-                  Rental Terms
-                </button>
-              </div>
-
-              {/* Rating */}
-              <div className="flex items-center gap-1 shrink-0 ml-auto">
-                <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-xs font-black">{carData.supplier.rating}/10</span>
-                <div className="flex flex-col leading-none">
-                  <span className="text-[10px] font-black text-gray-700">Excellent</span>
-                  <span className="text-[9px] font-black text-gray-500">({carData.supplier.reviewsCount}+)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: Instant confirmation */}
-            {carData.supplier.instantConfirmation && (
-              <div className="flex items-center gap-1.5 pt-2 border-t border-gray-200">
-                <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
-                <span className="text-[13px] font-black text-gray-900">Instant confirmation</span>
-                <ChicTooltip
-                  text="Receive instant booking confirmation right after completing your reservation!"
-                  title="Instant Confirmation"
-                  variant="gold"
-                  align="left"
-                  position="top"
-                />
-              </div>
-            )}
-
-          </div>
-        </div>
-
-        <div className="px-4 pb-2">
-          <button
-            onClick={() => setShowMobileDetails(!showMobileDetails)}
-            className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-black text-xs uppercase hover:bg-gray-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-          >
-            {showMobileDetails ? <><ChevronUp size={16} /> Less Details</> : <><ChevronDown size={16} /> More Details</>}
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {showMobileDetails && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="overflow-hidden"
-            >
-              <div className="px-4 pb-2.5">
-                <div className="bg-green-50/50 rounded-xl px-3 py-3">
-                  <h4 className="text-sm font-black text-green-700 mb-2">What is Included</h4>
-                  <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3">
-                    {displayedInclusions.map((inc, i) => {
-                      const isDeposit = inc.toLowerCase().includes('deposit');
-                      const depositDesc = isDeposit 
-                        ? (carData.depositTerms || (carData.depositAmount > 0 
-                            ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
-                            : "No security deposit is required for this vehicle."))
-                        : null;
-                      const mileageDesc = isOptionsLayout ? ((carData as any).mileageTooltipMap?.[inc] || null) : null;
-                      return (
-                        <div key={i} className="flex items-start gap-1.5 min-w-0">
-                          <Check size={14} className="text-green-600 shrink-0 mt-0.5" />
-                          <span
-                            className={`text-xs font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
-                            title={depositDesc || mileageDesc || inc}
-                          >
-                            <span>{inc}</span>
-                          </span>
-                          {depositDesc && (
-                            <ChicTooltip
-                              text={depositDesc}
-                              title="Security Deposit"
-                              variant="gold"
-                              position="top"
-                            />
-                          )}
-                          {mileageDesc && (
-                            <ChicTooltip
-                              text={mileageDesc}
-                              title="Mileage Policy"
-                              variant="gold"
-                              position="top"
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
+            {isOptionsLayout ? (
+              <>
+                {/* Row 1: Logo + Name with Rating Underneath */}
+                <div className="flex items-center gap-2.5">
+                  <div className="bg-white p-1 rounded-lg flex items-center justify-center w-[75px] h-[38px] shrink-0 shadow-sm border border-gray-200/60">
+                    {carData.supplier.logo ? (
+                      <Image
+                        src={carData.supplier.logo}
+                        alt={`${carData.supplier.name} Logo`}
+                        width={75}
+                        height={38}
+                        unoptimized={carData.supplier.logo?.includes('http')}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-[9px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
+                    )}
                   </div>
-                  {carData.inclusions.length > 6 && (
-                    <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="text-xs text-end w-full py-3 pr-5 font-black text-gray-700 underline hover:text-gray-900">
-                      {showAllInclusions ? 'Show Less' : 'More +'}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="px-4 pb-4 space-y-2.5">
-                <div className="flex items-start gap-2.5">
-                  <button
-                    type="button"
-                    onClick={openMap}
-                    className="shrink-0 pt-0.5 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
-                    title="View location on Google Maps"
-                    aria-label="View location on Google Maps"
-                  >
-                    <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors" />
-                  </button>
-                  <div
-                    onClick={openMap}
-                    className="cursor-pointer group/addr flex flex-col"
-                    title="View location on Google Maps"
-                  >
-                    <div>
-                      <span className="text-xs font-bold text-gray-500">Address: </span>
-                      <span className="text-sm font-black text-gray-800 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
-                        {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.normalized_name ||
-                          availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
-                          availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
-                          carData.supplier.address}
-                      </span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-black text-gray-900 truncate mb-0.5">{carData.supplier.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[10px] font-black">{carData.supplier.rating}/10</span>
+                      <span className="text-[10px] font-black text-gray-700">Excellent</span>
+                      <span className="text-[9px] font-semibold text-gray-500">({carData.supplier.reviewsCount}+)</span>
                     </div>
                   </div>
                 </div>
+
+                {/* Row 2: Rental Terms, Fuel Policy, Pick-up */}
+                <div className="pt-2 border-t border-gray-200 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-blue-600 font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setShowTerms(true)}
+                    className="flex items-center gap-1 text-blue-600 underline hover:text-blue-800 cursor-pointer"
+                  >
+                    <FileText size={13} className="shrink-0 text-blue-600" />
+                    <span>Rental Terms</span>
+                  </button>
+
+                  <span className="text-gray-300">•</span>
+
+                  <div className="flex items-center gap-1 text-blue-600">
+                    <Fuel size={13} className="shrink-0 text-blue-600" />
+                    <span>{carData.fuelPolicy}</span>
+                    <ChicTooltip
+                      text={getFuelPolicyDescription(carData.fuelPolicy)}
+                      title="Fuel Policy"
+                      variant="gold"
+                      align="left"
+                      position="top"
+                    />
+                  </div>
+
+                  <span className="text-gray-300">•</span>
+
+                  <div className="flex items-center gap-1 text-blue-600">
+                    <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0" />
+                    <span><PickupLabel pickupType={carData.pickupType} /></span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Row 1: Logo + Name/Terms + Rating */}
                 <div className="flex items-center gap-2.5">
-                  <Fuel size={17} className="text-blue-600 shrink-0" />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-500">Fuel Policy: </span>
-                    <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
-                    <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="left" position="top" />
+                  {/* Supplier logo */}
+                  <div className="bg-white p-1 rounded-lg flex items-center justify-center w-[80px] h-[40px] shrink-0 shadow-sm overflow-hidden border border-gray-100">
+                    {carData.supplier.logo ? (
+                      <Image
+                        src={carData.supplier.logo}
+                        alt={`${carData.supplier.name} Logo`}
+                        width={80}
+                        height={40}
+                        unoptimized={carData.supplier.logo?.includes('http')}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-[9px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
+                    )}
+                  </div>
+
+                  {/* Supplier name + Rental terms */}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[11px] font-black text-gray-800 truncate">{carData.supplier.name}</span>
+                    <button onClick={() => setShowTerms(true)} className="text-[10px] font-bold text-blue-600 underline hover:text-blue-800 whitespace-nowrap leading-none mt-0.5 text-left">
+                      Rental Terms
+                    </button>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-1 shrink-0 ml-auto">
+                    <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-xs font-black">{carData.supplier.rating}/10</span>
+                    <div className="flex flex-col leading-none">
+                      <span className="text-[10px] font-black text-gray-700">Excellent</span>
+                      <span className="text-[9px] font-black text-gray-500">({carData.supplier.reviewsCount}+)</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-2.5">
-                  <PickupIcon pickupType={carData.pickupType} />
-                  <div>
-                    <span className="text-xs font-bold text-gray-500">Pick-up: </span>
-                    <span className="text-sm font-black text-gray-800"><PickupLabel pickupType={carData.pickupType} /></span>
+
+                {/* Row 2: Instant confirmation */}
+                {carData.supplier.instantConfirmation && (
+                  <div className="flex items-center gap-1.5 pt-2 border-t border-gray-200">
+                    <img src={assets.icons.instant} alt="" className="w-5 h-5 object-contain shrink-0" aria-hidden="true" />
+                    <span className="text-[13px] font-black text-gray-900">Instant confirmation</span>
+                    <ChicTooltip
+                      text="Receive instant booking confirmation right after completing your reservation!"
+                      title="Instant Confirmation"
+                      variant="gold"
+                      align="left"
+                      position="top"
+                    />
                   </div>
-                </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {isOptionsLayout ? (
+          <div className="px-4 pb-2.5">
+            <div className="bg-green-100/35 rounded-xl px-3.5 py-3">
+              <h4 className="text-xs font-bold text-emerald-900 mb-1">What is Included!</h4>
+              <div className="mt-1 h-0.5 bg-yellow-400 w-full mb-2.5" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
+                {displayedInclusions.map((inc, i) => {
+                  const isDeposit = inc.toLowerCase().includes('deposit');
+                  const depositDesc = isDeposit 
+                    ? (carData.depositTerms || (carData.depositAmount > 0 
+                        ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                        : "No security deposit is required for this vehicle."))
+                    : null;
+                  const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
+                  return (
+                    <div key={i} className="flex items-start gap-1.5 min-w-0">
+                      <Check size={14} className="text-emerald-600 shrink-0 mt-0.5 stroke-[2.5]" />
+                      <span
+                        className={`text-xs font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
+                        title={depositDesc || mileageDesc || inc}
+                      >
+                        <span>{inc}</span>
+                      </span>
+                      {depositDesc && (
+                        <ChicTooltip
+                          text={depositDesc}
+                          title="Security Deposit"
+                          variant="gold"
+                          position="top"
+                        />
+                      )}
+                      {mileageDesc && (
+                        <ChicTooltip
+                          text={mileageDesc}
+                          title="Mileage Policy"
+                          variant="gold"
+                          position="top"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="px-4 pb-2">
+              <button
+                onClick={() => setShowMobileDetails(!showMobileDetails)}
+                className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-black text-xs uppercase hover:bg-gray-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                {showMobileDetails ? <><ChevronUp size={16} /> Less Details</> : <><ChevronDown size={16} /> More Details</>}
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showMobileDetails && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-2.5">
+                    <div className="bg-green-50/50 rounded-xl px-3 py-3">
+                      <h4 className="text-sm font-black text-green-700 mb-2">What is Included</h4>
+                      <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3">
+                        {displayedInclusions.map((inc, i) => {
+                          const isDeposit = inc.toLowerCase().includes('deposit');
+                          const depositDesc = isDeposit 
+                            ? (carData.depositTerms || (carData.depositAmount > 0 
+                                ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                                : "No security deposit is required for this vehicle."))
+                            : null;
+                          return (
+                            <div key={i} className="flex items-start gap-1.5 min-w-0">
+                              <Check size={14} className="text-green-600 shrink-0 mt-0.5" />
+                              <span
+                                className="text-xs font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap"
+                                title={depositDesc || inc}
+                              >
+                                <span>{inc}</span>
+                              </span>
+                              {depositDesc && (
+                                <ChicTooltip
+                                  text={depositDesc}
+                                  title="Security Deposit"
+                                  variant="gold"
+                                  position="top"
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {carData.inclusions.length > 6 && (
+                        <button onClick={() => setShowAllInclusions(!showAllInclusions)} className="text-xs text-end w-full py-3 pr-5 font-black text-gray-700 underline hover:text-gray-900">
+                          {showAllInclusions ? 'Show Less' : 'More +'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="px-4 pb-4 space-y-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <button
+                        type="button"
+                        onClick={openMap}
+                        className="shrink-0 pt-0.5 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                        title="View location on Google Maps"
+                        aria-label="View location on Google Maps"
+                      >
+                        <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors" />
+                      </button>
+                      <div
+                        onClick={openMap}
+                        className="cursor-pointer group/addr flex flex-col"
+                        title="View location on Google Maps"
+                      >
+                        <div>
+                          <span className="text-xs font-bold text-gray-500">Address: </span>
+                          <span className="text-sm font-black text-gray-800 group-hover/addr:text-blue-600 group-hover/addr:underline transition-colors">
+                            {availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.normalized_name ||
+                              availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.name ||
+                              availableBranches.find((b: any) => String(b.id) === String(selectedBranchId))?.adresse ||
+                              carData.supplier.address}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Fuel size={17} className="text-blue-600 shrink-0" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-500">Fuel Policy: </span>
+                        <span className="text-sm font-black text-gray-800">{carData.fuelPolicy}</span>
+                        <ChicTooltip text={getFuelPolicyDescription(carData.fuelPolicy)} title="Fuel Policy" variant="gold" align="left" position="top" />
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <PickupIcon pickupType={carData.pickupType} />
+                      <div>
+                        <span className="text-xs font-bold text-gray-500">Pick-up: </span>
+                        <span className="text-sm font-black text-gray-800"><PickupLabel pickupType={carData.pickupType} /></span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        )}
 
         <div className="p-4 pt-6">
           {(firstPromo || secondPromo) && (
@@ -1293,11 +1420,11 @@ export default function CarCard({
                   <button
                     type="button"
                     onClick={openMap}
-                    className="shrink-0 p-0.5 text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
+                    className="shrink-0 p-0.5 text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
                     title="View location on Google Maps"
                     aria-label="View location on Google Maps"
                   >
-                    <Plane size={15} className="rotate-[-45deg] text-gray-700 shrink-0" />
+                    <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors shrink-0" />
                   </button>
                   <div
                     onClick={openMap}

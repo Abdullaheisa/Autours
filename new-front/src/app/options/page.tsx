@@ -116,25 +116,7 @@ function OptionsContent() {
   const { code: currencyCode, allRates } = useSelector((state: RootState) => state.currency);
 
   // ── Selected Vehicle state & Session Restoration ──
-  const [restoredVehicle, setRestoredVehicle] = useState<Vehicle | null>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = sessionStorage.getItem("autours_selected_vehicle");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return null;
-  });
-
-  const [lockedVehicle, setLockedVehicle] = useState<Vehicle | null>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = sessionStorage.getItem("autours_selected_vehicle");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return null;
-  });
+  const [lockedVehicle, setLockedVehicle] = useState<Vehicle | null>(null);
   const hasLockedRef = useRef(false);
 
   // Restore search session and parameters if page is reloaded
@@ -173,10 +155,6 @@ function OptionsContent() {
 
   useEffect(() => {
     if (!vehicles.length) {
-      if (!lockedVehicle && restoredVehicle) {
-        setLockedVehicle(restoredVehicle);
-        hasLockedRef.current = true;
-      }
       return;
     }
 
@@ -227,13 +205,12 @@ function OptionsContent() {
         }
       }
     }
-  }, [vehicles, vehicleId, bookId, lockedVehicle, restoredVehicle]);
+  }, [vehicles, vehicleId, bookId, lockedVehicle]);
 
   const selectedVehicle =
     lockedVehicle ||
     (vehicleId ? vehicles.find((v) => v.id.toString() === vehicleId) : null) ||
     vehicles[0] ||
-    restoredVehicle ||
     null;
 
   // Persist selected vehicle and current search params to sessionStorage whenever they change
@@ -614,7 +591,7 @@ function OptionsContent() {
               preselectedBookId={actualVehicleToBook}
             />
           )}
-          {/* 1. Pick-up and Drop-off Card First */}
+          {/* 1. Pick-up and Drop-off Card */}
           <PickupDropoffCard
             pickupDate={searchStateParams.dateFrom}
             pickupTime={searchStateParams.startTime || "10:00"}
@@ -625,20 +602,11 @@ function OptionsContent() {
             fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || "Selected Location"}
             supplierName={selectedVehicle?.supplier?.name}
           />
-          {/* 2. Price Breakdown / Invoice Card Underneath */}
-          <PriceBreakdownCard
-            rentalDays={rentalDays}
-            currencyCode={currencyCode}
-            baseVehiclePrice={baseVehiclePrice}
-            extrasItems={itemizedExtras}
-            grandTotalPrice={grandTotalPrice}
-            onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
-          />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* ── LEFT SIDEBAR: Matches Search Page Width Identically ────────────────────────── */}
-          <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
+          <aside className="hidden lg:block lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
             {/* 1. Pick-up and Drop-off Card First */}
             <PickupDropoffCard
               pickupDate={searchStateParams.dateFrom}
@@ -957,6 +925,18 @@ function OptionsContent() {
                 )}
               </div>
             )}
+
+            {/* ── Mobile/Tablet Invoice Under Options as Requested ── */}
+            <div className="lg:hidden">
+              <PriceBreakdownCard
+                rentalDays={rentalDays}
+                currencyCode={currencyCode}
+                baseVehiclePrice={baseVehiclePrice}
+                extrasItems={itemizedExtras}
+                grandTotalPrice={grandTotalPrice}
+                onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
+              />
+            </div>
 
             {/* Bottom Next Step Bar */}
             <div className="p-6 bg-white rounded-3xl border border-gray-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">

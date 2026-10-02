@@ -880,7 +880,7 @@ function BookingContent() {
       <div className="flex flex-col lg:flex-row gap-6 items-start">
 
         {/* ── LEFT SIDEBAR: Matches Search Page Width Identically ────────────────────────── */}
-        <aside className="w-full lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
+        <aside className="hidden lg:block lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
           {/* 1. Pick-up and drop-off Card First */}
           <PickupDropoffCard
             pickupDate={searchStateParams.dateFrom}
@@ -973,21 +973,21 @@ function BookingContent() {
               </div>
             </div>
           ) : selectedExtrasCount > 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200/90 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0 shadow-2xs">
-                  <PackageCheck size={20} className="stroke-[2.2]" />
+            <div className="bg-white rounded-2xl border border-gray-200/90 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 sm:gap-4">
+              <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+                  <PackageCheck size={19} className="stroke-[2.2]" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-black text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2">
+                    <h4 className="text-sm font-black text-gray-900 whitespace-nowrap">
                       Selected Add-ons ({selectedExtrasCount})
                     </h4>
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap shrink-0">
                       Included in Total Price
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
                     {extrasList
                       .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
                       .map((ex) => {
@@ -998,11 +998,11 @@ function BookingContent() {
                         return (
                           <span
                             key={ex.key || ex.id}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-xs font-bold"
+                            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-xs font-bold max-w-full"
                           >
-                            <span className="text-emerald-600 font-black">✓</span>
-                            <span>{ex.name} {qty > 1 ? `(x${qty})` : ""}</span>
-                            <span className="text-gray-400 font-semibold">• {itemTotal.toFixed(2)} {currencyCode}</span>
+                            <span className="text-emerald-600 font-black shrink-0">✓</span>
+                            <span className="truncate">{ex.name} {qty > 1 ? `(x${qty})` : ""}</span>
+                            <span className="text-gray-400 font-semibold shrink-0">• {itemTotal.toFixed(2)} {currencyCode}</span>
                           </span>
                         );
                       })}
@@ -1013,13 +1013,13 @@ function BookingContent() {
               <button
                 type="button"
                 onClick={() => setIsEditingExtras(true)}
-                className="shrink-0 px-4 py-2 rounded-xl border-2 border-primary hover:bg-primary text-gray-900 font-black text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl border-2 border-primary hover:bg-primary text-gray-950 font-black text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap text-center flex items-center justify-center shrink-0"
               >
                 Change Extras
               </button>
             </div>
           ) : (selectedVehicle as any)?.has_extras !== false ? (
-            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
+            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs shadow-xs">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-primary/20 text-gray-900 flex items-center justify-center shrink-0">
                   <PackageCheck size={16} />
@@ -1031,7 +1031,7 @@ function BookingContent() {
               <button
                 type="button"
                 onClick={() => setIsEditingExtras(true)}
-                className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-900 font-black text-xs transition-colors shrink-0 whitespace-nowrap cursor-pointer shadow-2xs"
+                className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-900 font-black text-xs transition-colors shrink-0 whitespace-nowrap cursor-pointer shadow-2xs text-center flex items-center justify-center"
               >
                 + Add Extras
               </button>
