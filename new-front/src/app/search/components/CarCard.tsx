@@ -148,9 +148,9 @@ function resolveMileageDetails(
   // Check if included item has an existing description from supplier
   const matchingInc = Array.isArray(v?.included)
     ? v.included.find((i: any) => {
-        const name = (typeof i === 'string' ? i : i?.what_is_included || i?.name || '').toLowerCase();
-        return (name.includes('limit') || name.includes('محدد')) && (name.includes('mile') || name.includes('mila') || name.includes('km'));
-      })
+      const name = (typeof i === 'string' ? i : i?.what_is_included || i?.name || '').toLowerCase();
+      return (name.includes('limit') || name.includes('محدد')) && (name.includes('mile') || name.includes('mila') || name.includes('km'));
+    })
     : null;
   const incDesc = matchingInc && typeof matchingInc === 'object' && matchingInc.description ? matchingInc.description.trim() : '';
 
@@ -339,11 +339,10 @@ function ChicTooltip({
           >
             <div
               style={{ left: `${tooltipPos.arrowLeft}px` }}
-              className={`absolute w-2.5 h-2.5 bg-slate-950 -translate-x-1/2 rotate-45 border-white/10 ${
-                tooltipPos.placement === 'top'
+              className={`absolute w-2.5 h-2.5 bg-slate-950 -translate-x-1/2 rotate-45 border-white/10 ${tooltipPos.placement === 'top'
                   ? '-bottom-1 border-r border-b'
                   : '-top-1 border-l border-t'
-              }`}
+                }`}
             />
             {title && (
               <div className={`font-black tracking-wider uppercase text-[10px] mb-1.5 ${variantStyles.badge}`}>
@@ -471,7 +470,7 @@ export default function CarCard({
       const target = name.toLowerCase();
       const isAc = (target.includes('air') || target.includes('ac')) && (sName.includes('air') || sName.includes('ac'));
       const isLuggage = (target.includes('bag') || target.includes('luggage') || target.includes('suitcase')) &&
-                        (sName.includes('bag') || sName.includes('luggage') || sName.includes('suitcase'));
+        (sName.includes('bag') || sName.includes('luggage') || sName.includes('suitcase'));
       return (
         sName.includes(target) ||
         target.includes(sName) ||
@@ -631,7 +630,7 @@ export default function CarCard({
           if (parsed && typeof parsed === 'object') {
             val = (parsed.conditionName || parsed.rentalConditionName || parsed.name || parsed.description || val).toString();
           }
-        } catch (e) {}
+        } catch (e) { }
         return val.trim();
       })
       .filter(Boolean);
@@ -886,6 +885,89 @@ export default function CarCard({
     return null;
   }, [discountPercent, carData.price.amount, carData.price.currency]);
 
+  // For options / booking layout: combine inclusions and relevant promos (Free Cancellation, Online Check-in)
+  // into one unified list under "What's included" with identical styling and no duplicates.
+  const optionsInclusions = useMemo(() => {
+    const list: Array<{
+      text: string;
+      tooltip?: string | null;
+      tooltipTitle?: string;
+      tooltipVariant?: 'emerald' | 'gold';
+    }> = [];
+    const baseInclusions = displayedInclusions;
+
+    // Check if cancellation is already present in base inclusions
+    const hasCancelInBase = baseInclusions.some(inc => {
+      const lower = inc.toLowerCase();
+      return lower.includes('cancel') || lower.includes('مجاني') || lower.includes('كنسل');
+    });
+
+    // 1. Free Cancellation promo (if not already in base inclusions, but car has free cancellation)
+    if (!hasCancelInBase && (firstPromo?.toLowerCase().includes('cancel') || carData.freeCancellation)) {
+      list.push({
+        text: firstPromo || 'Free Cancellation',
+        tooltip: firstPromoDesc || getPromoDescription('Free Cancellation'),
+        tooltipTitle: firstPromo || 'Free Cancellation',
+        tooltipVariant: 'emerald',
+      });
+    }
+
+    // 2. Base inclusions (with tooltips for cancellation, deposit, mileage)
+    baseInclusions.forEach(inc => {
+      const isDeposit = inc.toLowerCase().includes('deposit');
+      const depositDesc = isDeposit
+        ? (carData.depositTerms || (carData.depositAmount > 0
+          ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+          : "No security deposit is required for this vehicle."))
+        : null;
+      const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
+
+      const isCancel = inc.toLowerCase().includes('cancel') || inc.toLowerCase().includes('مجاني') || inc.toLowerCase().includes('كنسل');
+      const cancelDesc = isCancel ? (firstPromoDesc || getPromoDescription(inc)) : null;
+
+      list.push({
+        text: inc,
+        tooltip: depositDesc || mileageDesc || cancelDesc,
+        tooltipTitle: isDeposit ? 'Security Deposit' : mileageDesc ? 'Mileage Policy' : isCancel ? inc : undefined,
+        tooltipVariant: isDeposit || mileageDesc ? 'gold' : 'emerald',
+      });
+    });
+
+    // 3. Online Check-in or other non-cancellation promos
+    const otherPromos = [firstPromo, secondPromo, ...remainingPromos].filter(Boolean) as string[];
+    otherPromos.forEach(p => {
+      const pLower = p.toLowerCase();
+      if (pLower.includes('cancel') || pLower.includes('مجاني') || pLower.includes('كنسل')) {
+        return;
+      }
+      const alreadyExists = list.some(item => item.text.toLowerCase().trim() === pLower.trim());
+      if (!alreadyExists) {
+        const pDesc = getPromoDescription(p);
+        const item = {
+          text: p,
+          tooltip: pDesc || null,
+          tooltipTitle: p,
+          tooltipVariant: 'emerald' as const,
+        };
+        if (pLower.includes('check')) {
+          const cancelIdx = list.findIndex(i => {
+            const l = i.text.toLowerCase();
+            return l.includes('cancel') || l.includes('مجاني') || l.includes('كنسل');
+          });
+          if (cancelIdx >= 0) {
+            list.splice(cancelIdx + 1, 0, item);
+          } else {
+            list.unshift(item);
+          }
+        } else {
+          list.push(item);
+        }
+      }
+    });
+
+    return list;
+  }, [displayedInclusions, firstPromo, firstPromoDesc, secondPromo, secondPromoDesc, remainingPromos, carData, currencyCode]);
+
   const renderPromoItem = (promoText: string, promoDesc: string, tooltipPosition: 'top' | 'bottom' = 'top') => {
     if (!promoText) return null;
     return (
@@ -966,95 +1048,166 @@ export default function CarCard({
           </div>
         </div>
 
-        {/* If options layout: show address directly under specs on mobile */}
-        {isOptionsLayout && (
-          <div className="px-4 pb-3 flex items-center gap-1.5 text-xs font-bold text-gray-700">
-            <button
-              type="button"
-              onClick={openMap}
-              className="shrink-0 p-0.5 text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
-              title="View location on Google Maps"
-              aria-label="View location on Google Maps"
-            >
-              <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors shrink-0" />
-            </button>
-            <div
-              onClick={openMap}
-              className="cursor-pointer group/addr truncate"
-              title="View location on Google Maps"
-            >
-              <span className="text-gray-800 underline font-bold group-hover/addr:text-blue-600 transition-colors">
-                {displayAddress}
+        {isOptionsLayout ? (
+          <>
+            {/* Price displayed above the gray box with 15px bottom space */}
+            <div className="px-4 pt-1 pb-[15px] flex flex-col items-start text-left">
+              {originalPriceParts && discountPercent > 0 && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-xs font-bold text-red-500 line-through decoration-red-500 tracking-tight">
+                    {originalPriceParts.currency} {originalPriceParts.amount}
+                  </span>
+                </div>
+              )}
+              <div className="text-2xl font-bold text-gray-950 tracking-tight leading-none">
+                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
+                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
+              </div>
+              <span className="text-xs text-gray-600 font-normal block mt-1.5">
+                Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+              </span>
+              <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
+                Included taxes &amp; fees
               </span>
             </div>
-          </div>
-        )}
 
-        <div className="mx-4 mb-2 md:mb-2.5">
-          <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex flex-col gap-2">
-            {isOptionsLayout ? (
-              <>
-                {/* Row 1: Logo + Name with Rating Underneath */}
-                <div className="flex items-center gap-2.5">
-                  <div className="bg-white p-1 rounded-lg flex items-center justify-center w-[75px] h-[38px] shrink-0 shadow-sm border border-gray-200/60">
-                    {carData.supplier.logo ? (
-                      <Image
-                        src={carData.supplier.logo}
-                        alt={`${carData.supplier.name} Logo`}
-                        width={75}
-                        height={38}
-                        unoptimized={carData.supplier.logo?.includes('http')}
-                        className="w-full h-full object-contain"
+            {/* The Gray Box — single line with all items, horizontally scrollable */}
+            <div className="mx-4 mb-3 bg-gray-100 rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-nowrap overflow-x-auto no-scrollbar">
+              {/* 1. Supplier Logo + Name + Rating */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="bg-white p-1 rounded-lg flex items-center justify-center w-16 h-8 shrink-0 shadow-sm border border-gray-200/60">
+                  {carData.supplier.logo ? (
+                    <Image
+                      src={carData.supplier.logo}
+                      alt={`${carData.supplier.name} Logo`}
+                      width={60}
+                      height={24}
+                      unoptimized={carData.supplier.logo?.includes('http')}
+                      className="h-6 w-auto max-w-[60px] object-contain"
+                    />
+                  ) : (
+                    <span className="text-[10px] font-bold text-gray-600">N/A</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex flex-col justify-center">
+                  <span className="text-xs font-black text-gray-900 block truncate leading-tight mb-0.5">
+                    {carData.supplier.name}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="bg-[var(--primary)] text-gray-900 px-1 py-0.5 rounded text-[10px] font-black leading-none">
+                      {carData.supplier.rating}/10
+                    </span>
+                    <span className="text-[10px] font-black text-gray-800 leading-none">Excellent</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-5 w-px bg-gray-300 shrink-0" />
+
+              {/* 2. Rental Terms */}
+              <button
+                type="button"
+                onClick={() => setShowTerms(true)}
+                className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs font-bold underline cursor-pointer shrink-0 transition-colors"
+              >
+                <FileText size={15} className="shrink-0 text-blue-600" />
+                <span>Rental Terms</span>
+              </button>
+
+              <div className="h-5 w-px bg-gray-300 shrink-0" />
+
+              {/* 3. Fuel Policy */}
+              <div className="flex items-center gap-1.5 text-blue-600 text-xs font-bold shrink-0">
+                <Fuel size={15} className="shrink-0 text-blue-600" />
+                <span className="cursor-pointer">{carData.fuelPolicy}</span>
+                <ChicTooltip
+                  text={getFuelPolicyDescription(carData.fuelPolicy)}
+                  title="Fuel Policy"
+                  variant="gold"
+                  align="left"
+                  position="top"
+                />
+              </div>
+
+              <div className="h-5 w-px bg-gray-300 shrink-0" />
+
+              {/* 4. Pick-up */}
+              <div className="flex items-center gap-1.5 text-blue-600 text-xs font-bold shrink-0">
+                <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0 mt-0.5" />
+                <span><PickupLabel pickupType={carData.pickupType} /></span>
+              </div>
+
+              <div className="h-5 w-px bg-gray-300 shrink-0" />
+
+              {/* 5. Location */}
+              <div className="flex items-center gap-1.5 text-blue-600 text-xs font-bold shrink-0 min-w-0">
+                <button
+                  type="button"
+                  onClick={openMap}
+                  className="shrink-0 p-0.5 text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                  title="View location on Google Maps"
+                  aria-label="View location on Google Maps"
+                >
+                  <Globe size={15} className="text-blue-600 shrink-0" />
+                </button>
+                <div
+                  onClick={openMap}
+                  className="cursor-pointer group/addr truncate max-w-[200px]"
+                  title="View location on Google Maps"
+                >
+                  <span className="text-blue-600 underline font-bold group-hover/addr:text-blue-800 transition-colors">
+                    {displayAddress}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* What's included — always visible, no accordion */}
+            <div className="px-4 pb-4">
+              <div className="mb-3">
+                <div className="inline-flex flex-col">
+                  <h4 className="text-xs sm:text-sm font-extrabold text-gray-900">What's included</h4>
+                  <span className="mt-1.5 h-0.5 w-[calc(100%+20px)] bg-amber-400 rounded-full" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 mt-1">
+                {optionsInclusions.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 min-w-0">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+                    <span className="text-xs font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap">
+                      <span>{item.text}</span>
+                    </span>
+                    {item.tooltip && (
+                      <ChicTooltip
+                        text={item.tooltip}
+                        title={item.tooltipTitle || item.text}
+                        variant={item.tooltipVariant || 'emerald'}
+                        position="top"
                       />
-                    ) : (
-                      <span className="text-[9px] font-bold text-gray-600 text-center px-1">{carData.supplier.name}</span>
                     )}
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-black text-gray-900 truncate mb-0.5">{carData.supplier.name}</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[10px] font-black">{carData.supplier.rating}/10</span>
-                      <span className="text-[10px] font-black text-gray-700">Excellent</span>
-                      <span className="text-[9px] font-semibold text-gray-500">({carData.supplier.reviewsCount}+)</span>
-                    </div>
-                  </div>
-                </div>
+                ))}
+              </div>
+            </div>
 
-                {/* Row 2: Rental Terms, Fuel Policy, Pick-up */}
-                <div className="pt-2 border-t border-gray-200 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-blue-600 font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setShowTerms(true)}
-                    className="flex items-center gap-1 text-blue-600 underline hover:text-blue-800 cursor-pointer"
-                  >
-                    <FileText size={13} className="shrink-0 text-blue-600" />
-                    <span>Rental Terms</span>
-                  </button>
+            {!hideBookingControls && (
+              <div className="px-4 pb-4 pt-2 border-t border-gray-100 flex items-center justify-between">
+                <Link
+                  href={bookUrl}
+                  onClick={handlePersistVehicle}
+                  className="px-6 py-2.5 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all text-center shadow-md ml-auto"
+                >
+                  Book Now
+                </Link>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="mx-4 mb-2 md:mb-2.5">
+              <div className="w-full bg-gray-100 rounded-xl px-3 py-2.5 flex flex-col gap-2">
 
-                  <span className="text-gray-300">•</span>
-
-                  <div className="flex items-center gap-1 text-blue-600">
-                    <Fuel size={13} className="shrink-0 text-blue-600" />
-                    <span>{carData.fuelPolicy}</span>
-                    <ChicTooltip
-                      text={getFuelPolicyDescription(carData.fuelPolicy)}
-                      title="Fuel Policy"
-                      variant="gold"
-                      align="left"
-                      position="top"
-                    />
-                  </div>
-
-                  <span className="text-gray-300">•</span>
-
-                  <div className="flex items-center gap-1 text-blue-600">
-                    <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0" />
-                    <span><PickupLabel pickupType={carData.pickupType} /></span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
                 {/* Row 1: Logo + Name/Terms + Rating */}
                 <div className="flex items-center gap-2.5">
                   {/* Supplier logo */}
@@ -1105,58 +1258,10 @@ export default function CarCard({
                     />
                   </div>
                 )}
-              </>
-            )}
-          </div>
-        </div>
 
-        {isOptionsLayout ? (
-          <div className="px-4 pb-2.5">
-            <div className="bg-green-100/35 rounded-xl px-3.5 py-3">
-              <h4 className="text-xs font-bold text-emerald-900 mb-1">What is Included!</h4>
-              <div className="mt-1 h-0.5 bg-yellow-400 w-full mb-2.5" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
-                {displayedInclusions.map((inc, i) => {
-                  const isDeposit = inc.toLowerCase().includes('deposit');
-                  const depositDesc = isDeposit 
-                    ? (carData.depositTerms || (carData.depositAmount > 0 
-                        ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
-                        : "No security deposit is required for this vehicle."))
-                    : null;
-                  const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
-                  return (
-                    <div key={i} className="flex items-start gap-1.5 min-w-0">
-                      <Check size={14} className="text-emerald-600 shrink-0 mt-0.5 stroke-[2.5]" />
-                      <span
-                        className={`text-xs font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
-                        title={depositDesc || mileageDesc || inc}
-                      >
-                        <span>{inc}</span>
-                      </span>
-                      {depositDesc && (
-                        <ChicTooltip
-                          text={depositDesc}
-                          title="Security Deposit"
-                          variant="gold"
-                          position="top"
-                        />
-                      )}
-                      {mileageDesc && (
-                        <ChicTooltip
-                          text={mileageDesc}
-                          title="Mileage Policy"
-                          variant="gold"
-                          position="top"
-                        />
-                      )}
-                    </div>
-                  );
-                })}
               </div>
             </div>
-          </div>
-        ) : (
-          <>
+
             <div className="px-4 pb-2">
               <button
                 onClick={() => setShowMobileDetails(!showMobileDetails)}
@@ -1176,23 +1281,28 @@ export default function CarCard({
                   className="overflow-hidden"
                 >
                   <div className="px-4 pb-2.5">
-                    <div className="bg-green-50/50 rounded-xl px-3 py-3">
-                      <h4 className="text-sm font-black text-green-700 mb-2">What is Included</h4>
-                      <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3">
+                    <div className="bg-green-100/35 rounded-xl px-3.5 py-3">
+                      <div className="mb-3">
+                        <div className="inline-flex flex-col">
+                          <h4 className="text-xs font-extrabold text-gray-900">What's included</h4>
+                          <span className="mt-1.5 h-0.5 w-[calc(100%+20px)] bg-amber-400 rounded-full" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
                         {displayedInclusions.map((inc, i) => {
                           const isDeposit = inc.toLowerCase().includes('deposit');
-                          const depositDesc = isDeposit 
-                            ? (carData.depositTerms || (carData.depositAmount > 0 
-                                ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
-                                : "No security deposit is required for this vehicle."))
+                          const depositDesc = isDeposit
+                            ? (carData.depositTerms || (carData.depositAmount > 0
+                              ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                              : "No security deposit is required for this vehicle."))
                             : null;
+                          const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
                           return (
-                            <div key={i} className="flex items-start gap-1.5 min-w-0">
-                              <Check size={14} className="text-green-600 shrink-0 mt-0.5" />
+                            <div key={i} className="flex items-center gap-1.5 min-w-0">
+                              <Check size={14} className="text-emerald-600 shrink-0 stroke-[2.5]" />
                               <span
-                                className="text-xs font-bold text-gray-700 break-words flex items-center gap-1.5 flex-wrap"
-                                title={depositDesc || inc}
+                                className={`text-xs font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
+                                title={depositDesc || mileageDesc || inc}
                               >
                                 <span>{inc}</span>
                               </span>
@@ -1200,6 +1310,14 @@ export default function CarCard({
                                 <ChicTooltip
                                   text={depositDesc}
                                   title="Security Deposit"
+                                  variant="gold"
+                                  position="top"
+                                />
+                              )}
+                              {mileageDesc && (
+                                <ChicTooltip
+                                  text={mileageDesc}
+                                  title="Mileage Policy"
                                   variant="gold"
                                   position="top"
                                 />
@@ -1262,110 +1380,109 @@ export default function CarCard({
                 </motion.div>
               )}
             </AnimatePresence>
-          </>
-        )}
 
-        <div className="p-4 pt-6">
-          {(firstPromo || secondPromo) && (
-            <div className="flex flex-wrap gap-2 justify-start mb-4">
-              {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
-              {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'top')}
-            </div>
-          )}
-
-          <div className="flex items-end justify-between gap-3 md:gap-4">
-            <div className="text-left">
-              {originalPriceParts && discountPercent > 0 && (
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-xs md:text-sm font-bold text-red-500 line-through decoration-red-500 tracking-tight">
-                    {originalPriceParts.currency} {originalPriceParts.amount}
-                  </span>
+            <div className="p-4 pt-4">
+              {(firstPromo || secondPromo) && (
+                <div className="flex flex-wrap gap-2 justify-start mb-3">
+                  {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
+                  {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'top')}
                 </div>
               )}
-              <div className="text-xl md:text-2xl font-bold text-gray-950 tracking-tight leading-none">
-                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
-                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
-              </div>
-              <span className="text-sm text-gray-600 font-normal block mt-1.5">
-                Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
-              </span>
-              <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
-                Included taxes &amp; fees
-              </span>
-            </div>
 
-            {!hideBookingControls && (
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                {availableBranches.length > 1 && (
-                  <div className="relative w-full min-w-[160px] max-w-[220px]">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMobileDropdownOpen(!isMobileDropdownOpen);
-                        setIsDesktopDropdownOpen(false);
-                      }}
-                      className="w-full text-xs py-2 px-8 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors font-bold text-gray-700 outline-none cursor-pointer text-center relative"
-                    >
-                      <span className="block truncate">
-                        <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
-                        <span className="text-gray-700 font-extrabold">
-                          {availableBranches.find((b: any) => b.id === selectedBranchId)?.normalized_name || availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
-                        </span>
+              <div className="flex items-end justify-between gap-3 md:gap-4">
+                <div className="text-left">
+                  {originalPriceParts && discountPercent > 0 && (
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-xs md:text-sm font-bold text-red-500 line-through decoration-red-500 tracking-tight">
+                        {originalPriceParts.currency} {originalPriceParts.amount}
                       </span>
-                      <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
-                        <ChevronDown size={14} className={`transition-transform duration-200 ${isMobileDropdownOpen ? 'rotate-180' : ''}`} />
-                      </div>
-                    </button>
+                    </div>
+                  )}
+                  <div className="text-xl md:text-2xl font-bold text-gray-950 tracking-tight leading-none">
+                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
+                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
+                  </div>
+                  <span className="text-sm text-gray-600 font-normal block mt-1.5">
+                    Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+                  </span>
+                  <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
+                    Included taxes &amp; fees
+                  </span>
+                </div>
 
-                    <AnimatePresence>
-                      {isMobileDropdownOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 5 }}
-                          className="absolute z-50 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto no-scrollbar"
+                {!hideBookingControls && (
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    {availableBranches.length > 1 && (
+                      <div className="relative w-full min-w-[160px] max-w-[220px]">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsMobileDropdownOpen(!isMobileDropdownOpen);
+                            setIsDesktopDropdownOpen(false);
+                          }}
+                          className="w-full text-xs py-2 px-8 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors font-bold text-gray-700 outline-none cursor-pointer text-center relative"
                         >
-                          {availableBranches.map((b: any) => {
-                            const isSelected = b.id === selectedBranchId;
-                            return (
-                              <button
-                                key={b.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedBranchId(b.id);
-                                  setIsMobileDropdownOpen(false);
-                                								}}
-                                className={`w-full text-left text-xs py-2.5 px-4 transition-colors font-bold ${
-                                  isSelected
-                                    ? 'bg-[var(--primary)] text-gray-900'
-                                    : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
-                                }`}
-                              >
-                                <span className="font-extrabold">{b.normalized_name || b.name || b.location}</span>
-                              </button>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <span className="block truncate">
+                            <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
+                            <span className="text-gray-700 font-extrabold">
+                              {availableBranches.find((b: any) => b.id === selectedBranchId)?.normalized_name || availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
+                            </span>
+                          </span>
+                          <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${isMobileDropdownOpen ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+
+                        <AnimatePresence>
+                          {isMobileDropdownOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute z-50 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto no-scrollbar"
+                            >
+                              {availableBranches.map((b: any) => {
+                                const isSelected = b.id === selectedBranchId;
+                                return (
+                                  <button
+                                    key={b.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedBranchId(b.id);
+                                      setIsMobileDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left text-xs py-2.5 px-4 transition-colors font-bold ${isSelected
+                                        ? 'bg-[var(--primary)] text-gray-900'
+                                        : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
+                                      }`}
+                                  >
+                                    <span className="font-extrabold">{b.normalized_name || b.name || b.location}</span>
+                                  </button>
+                                );
+                              })}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                    <Link
+                      href={bookUrl}
+                      onClick={handlePersistVehicle}
+                      className="px-4 md:px-6 py-2 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] md:text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
+                    >
+                      Book Now
+                      <span className="sr-only"> for {carData.name}</span>
+                    </Link>
                   </div>
                 )}
-                <Link
-                  href={bookUrl}
-                  onClick={handlePersistVehicle}
-                  className="px-4 md:px-6 py-2 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] md:text-xs uppercase hover:bg-[var(--primary-600)] active:scale-95 transition-all shrink-0 text-center shadow-md"
-                >
-                  Book Now
-                  <span className="sr-only"> for {carData.name}</span>
-                </Link>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="hidden md:block">
-        <div className="flex items-center">
+        <div className="flex items-center justify-between">
           <div className="w-[250px] lg:w-[270px] 2xl:w-[300px] shrink-0 p-3 lg:p-4 flex items-center justify-center self-stretch">
             <Image
               src={imgError ? 'https://via.placeholder.com/400x250?text=No+Image' : (carData.image || 'https://via.placeholder.com/400x250?text=No+Image')}
@@ -1404,8 +1521,8 @@ export default function CarCard({
                   { icon: assets.icons.fuel, val: carData.fuelType, label: '' },
                   { icon: assets.icons.transmission, val: carData.transmission, label: '' }
                 ].map((feat, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className="flex items-center gap-2 w-full min-w-0"
                   >
                     <img src={feat.icon} alt="" className={`object-contain shrink-0 ${(i + 1) % 2 !== 0 ? 'w-8 h-8' : 'w-6 h-6'}`} aria-hidden="true" />
@@ -1414,24 +1531,24 @@ export default function CarCard({
                 ))}
               </div>
 
-              {/* If options layout: show address directly under specs */}
+              {/* Location under specs for tablet only */}
               {isOptionsLayout && (
-                <div className="mt-3.5 flex items-center gap-1.5 text-xs lg:text-sm font-bold text-gray-700">
+                <div className="mt-3 flex lg:hidden items-center gap-1.5 text-blue-600 text-xs sm:text-sm font-bold min-w-0">
                   <button
                     type="button"
                     onClick={openMap}
-                    className="shrink-0 p-0.5 text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+                    className="shrink-0 p-0.5 text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
                     title="View location on Google Maps"
                     aria-label="View location on Google Maps"
                   >
-                    <Globe size={16} className="text-blue-600 hover:text-blue-700 transition-colors shrink-0" />
+                    <Globe size={16} className="text-blue-600 shrink-0" />
                   </button>
                   <div
                     onClick={openMap}
-                    className="cursor-pointer group/addr truncate"
+                    className="cursor-pointer group/addr truncate max-w-[280px] sm:max-w-[340px]"
                     title="View location on Google Maps"
                   >
-                    <span className="text-gray-800 underline font-bold group-hover/addr:text-blue-600 transition-colors">
+                    <span className="text-blue-600 underline font-bold group-hover/addr:text-blue-800 transition-colors">
                       {displayAddress}
                     </span>
                   </div>
@@ -1439,15 +1556,42 @@ export default function CarCard({
               )}
             </div>
           </div>
+
+          {/* Price displayed above the gray box on options layout */}
+          {isOptionsLayout && (
+            <div className="w-auto md:w-[190px] lg:w-[220px] xl:w-[250px] 2xl:w-[270px] shrink-0 px-4 lg:px-5 pt-2 pb-[15px] flex flex-col items-start self-end text-left">
+              {originalPriceParts && discountPercent > 0 && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-sm lg:text-base font-bold text-red-500 line-through decoration-red-500 tracking-tight">
+                    {originalPriceParts.currency} {originalPriceParts.amount}
+                  </span>
+                </div>
+              )}
+              <div className="text-2xl lg:text-[26px] font-bold text-gray-950 tracking-tight leading-none">
+                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
+                {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
+              </div>
+              <span className="text-sm lg:text-[15px] text-gray-600 font-normal block mt-1.5">
+                Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+              </span>
+              <span className="text-xs text-gray-500 font-medium block mt-0.5">
+                Included taxes &amp; fees
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col lg:flex-row mb-2 relative gap-y-3 lg:gap-y-0">
-          <div className="flex bg-gray-100 rounded-xl mx-5 lg:mx-0 lg:ml-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0 px-4 py-2.5 flex-wrap items-center justify-start gap-x-5 xl:gap-x-7 gap-y-3 min-w-0">
+        <div className={`flex ${isOptionsLayout ? 'flex-col mb-3 sm:mb-4' : 'flex-col lg:flex-row mb-2 relative gap-y-3 lg:gap-y-0'}`}>
+          <div className={`flex bg-gray-100 rounded-xl ${
+            isOptionsLayout
+              ? 'mx-5 sm:mx-6 md:mx-7 lg:mx-8 w-[calc(100%-2.5rem)] sm:w-[calc(100%-3rem)] md:w-[calc(100%-3.5rem)] lg:w-[calc(100%-4rem)] px-4 sm:px-6 py-2.5 sm:py-3 items-center flex-nowrap overflow-x-auto no-scrollbar'
+              : 'mx-4 sm:mx-5 lg:mx-0 lg:ml-4 w-[calc(100%-2rem)] sm:w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0 px-3.5 sm:px-4 py-2 sm:py-2.5 items-center justify-start gap-x-2.5 md:gap-x-3.5 xl:gap-x-5 flex-wrap gap-y-3'
+          }`}>
             {isOptionsLayout ? (
-              <>
+              <div className="w-full flex items-center justify-between flex-nowrap min-w-0">
                 {/* 1. Supplier Logo + Name with Rating Underneath */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm border border-gray-200/60">
+                <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                  <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-16 sm:w-20 h-9 sm:h-10 shrink-0 shadow-sm border border-gray-200/60">
                     {carData.supplier.logo ? (
                       <Image
                         src={carData.supplier.logo}
@@ -1455,7 +1599,7 @@ export default function CarCard({
                         width={65}
                         height={28}
                         unoptimized={carData.supplier.logo?.includes('http')}
-                        className="h-7 w-auto max-w-[65px] object-contain"
+                        className="h-6 sm:h-7 w-auto max-w-[65px] object-contain"
                       />
                     ) : (
                       <span className="text-[10px] font-bold text-gray-600">N/A</span>
@@ -1463,59 +1607,76 @@ export default function CarCard({
                   </div>
 
                   <div className="min-w-0 flex flex-col justify-center">
-                    <span className="text-sm font-black text-gray-900 block truncate leading-tight mb-1">
+                    <span className="text-xs sm:text-sm font-black text-gray-900 block truncate leading-tight mb-0.5 sm:mb-1">
                       {carData.supplier.name}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[11px] font-black leading-none">
+                      <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-black leading-none">
                         {carData.supplier.rating}/10
                       </span>
-                      <div className="flex items-baseline gap-1 leading-none">
-                        <span className="text-[11px] font-black text-gray-800">Excellent</span>
-                        <span className="text-[10px] font-medium text-gray-500">({carData.supplier.reviewsCount}+ reviews)</span>
-                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-black text-gray-800 leading-none">Excellent</span>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. Rental Terms, Fuel Policy, Pick-up side-by-side */}
-                <div className="flex items-center gap-4 xl:gap-6 flex-wrap">
-                  <div className="h-6 w-px bg-gray-300 hidden sm:block shrink-0" />
+                <div className="h-5 w-px bg-gray-300 shrink-0" />
 
-                  {/* Rental Terms button */}
+                {/* 2. Rental Terms button */}
+                <button
+                  type="button"
+                  onClick={() => setShowTerms(true)}
+                  className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs xl:text-sm font-bold underline cursor-pointer shrink-0 transition-colors"
+                >
+                  <FileText size={16} className="shrink-0 text-blue-600" />
+                  <span>Rental Terms</span>
+                </button>
+
+                <div className="h-5 w-px bg-gray-300 shrink-0" />
+
+                {/* 3. Fuel Policy */}
+                <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
+                  <Fuel size={16} className="shrink-0 text-blue-600" />
+                  <span className="cursor-pointer">{carData.fuelPolicy}</span>
+                  <ChicTooltip
+                    text={getFuelPolicyDescription(carData.fuelPolicy)}
+                    title="Fuel Policy"
+                    variant="gold"
+                    align="left"
+                    position="top"
+                  />
+                </div>
+
+                <div className="h-5 w-px bg-gray-300 shrink-0" />
+
+                {/* 4. Pick-up */}
+                <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
+                  <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0 mt-0.5" />
+                  <span><PickupLabel pickupType={carData.pickupType} /></span>
+                </div>
+
+                {/* 5. Location / Address - desktop only (lg+) */}
+                <div className="h-5 w-px bg-gray-300 hidden lg:block shrink-0" />
+                <div className="hidden lg:flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0 min-w-0">
                   <button
                     type="button"
-                    onClick={() => setShowTerms(true)}
-                    className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs xl:text-sm font-bold underline cursor-pointer shrink-0 transition-colors"
+                    onClick={openMap}
+                    className="shrink-0 p-0.5 text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                    title="View location on Google Maps"
+                    aria-label="View location on Google Maps"
                   >
-                    <FileText size={16} className="shrink-0 text-blue-600" />
-                    <span>Rental Terms</span>
+                    <Globe size={16} className="text-blue-600 shrink-0" />
                   </button>
-
-                  <div className="h-4 w-px bg-gray-300 hidden sm:block shrink-0" />
-
-                  {/* Fuel Policy */}
-                  <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
-                    <Fuel size={16} className="shrink-0 text-blue-600" />
-                    <span className="cursor-pointer">{carData.fuelPolicy}</span>
-                    <ChicTooltip
-                      text={getFuelPolicyDescription(carData.fuelPolicy)}
-                      title="Fuel Policy"
-                      variant="gold"
-                      align="left"
-                      position="top"
-                    />
-                  </div>
-
-                  <div className="h-4 w-px bg-gray-300 hidden sm:block shrink-0" />
-
-                  {/* Pick-up */}
-                  <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
-                    <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0 mt-0.5" />
-                    <span><PickupLabel pickupType={carData.pickupType} /></span>
+                  <div
+                    onClick={openMap}
+                    className="cursor-pointer group/addr truncate max-w-[280px] lg:max-w-[340px] xl:max-w-none"
+                    title="View location on Google Maps"
+                  >
+                    <span className="text-blue-600 underline font-bold group-hover/addr:text-blue-800 transition-colors">
+                      {displayAddress}
+                    </span>
                   </div>
                 </div>
-              </>
+              </div>
             ) : (
               <>
                 <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-20 h-10 shrink-0 shadow-sm">
@@ -1563,57 +1724,51 @@ export default function CarCard({
             )}
           </div>
 
-          <div className="hidden lg:flex lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 min-w-0 flex-col justify-center items-start gap-2 px-3 lg:px-4">
-            {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
-            {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
-          </div>
+          {!isOptionsLayout && (
+            <div className="hidden lg:flex lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 min-w-0 flex-col justify-center items-start gap-2 px-3 lg:px-4">
+              {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'top')}
+              {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col lg:flex-row">
-          <div className='flex bg-green-100/35 rounded-xl mx-5 lg:mx-0 lg:ml-4 mb-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0'>
+        <div className={`flex ${isOptionsLayout ? 'flex-col' : 'flex-col lg:flex-row'}`}>
+          <div className={`flex ${
+            isOptionsLayout
+              ? 'mx-5 sm:mx-6 md:mx-7 lg:mx-8 mb-4 w-[calc(100%-2.5rem)] sm:w-[calc(100%-3rem)] md:w-[calc(100%-3.5rem)] lg:w-[calc(100%-4rem)]'
+              : 'bg-green-100/35 rounded-xl mx-5 lg:mx-0 lg:ml-4 mb-4 w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0'
+          }`}>
             {isOptionsLayout ? (
-              <div className="w-full p-4 sm:p-5 pt-3.5 min-w-0">
-                <div className="mb-2.5">
-                  <h4 className="text-xs md:text-sm font-bold text-emerald-900">What is Included!</h4>
-                  <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+              <div className="w-full px-4 sm:px-6 pt-1 pb-4 min-w-0">
+                {/* Header — nothing above What's included */}
+                <div className="mb-3">
+                  <div className="inline-flex flex-col">
+                    <h4 className="text-xs md:text-sm font-extrabold text-gray-900">What's included</h4>
+                    <span className="mt-1.5 h-0.5 w-[calc(100%+20px)] bg-amber-400 rounded-full" />
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 xl:gap-x-12 gap-y-2 mt-3">
-                  {displayedInclusions.map((inc, i) => {
-                    const isDeposit = inc.toLowerCase().includes('deposit');
-                    const depositDesc = isDeposit 
-                      ? (carData.depositTerms || (carData.depositAmount > 0 
-                          ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
-                          : "No security deposit is required for this vehicle."))
-                      : null;
-                    const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
-                    return (
-                      <div key={i} className="flex items-center gap-2 min-w-0">
-                        <Check size={14} className="text-emerald-600 shrink-0 stroke-[2.5]" />
-                        <span
-                          className={`text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
-                          title={depositDesc || mileageDesc || inc}
-                        >
-                          <span>{inc}</span>
-                        </span>
-                        {depositDesc && (
-                          <ChicTooltip
-                            text={depositDesc}
-                            title="Security Deposit"
-                            variant="gold"
-                            position="top"
-                          />
-                        )}
-                        {mileageDesc && (
-                          <ChicTooltip
-                            text={mileageDesc}
-                            title="Mileage Policy"
-                            variant="gold"
-                            position="top"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
+
+                {/* Inclusions — single column list with unified styling (promos like Free Cancellation & Online Check-in included inside) */}
+                <div className="flex flex-col gap-2 mt-1">
+                  {optionsInclusions.map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 min-w-0">
+                      <Check size={14} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+                      <span
+                        className={`text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${item.tooltip ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
+                        title={item.tooltip || item.text}
+                      >
+                        <span>{item.text}</span>
+                      </span>
+                      {item.tooltip && (
+                        <ChicTooltip
+                          text={item.tooltip}
+                          title={item.tooltipTitle || item.text}
+                          variant={item.tooltipVariant || 'emerald'}
+                          position="top"
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -1626,17 +1781,18 @@ export default function CarCard({
                   <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
                     {displayedInclusions.map((inc, i) => {
                       const isDeposit = inc.toLowerCase().includes('deposit');
-                      const depositDesc = isDeposit 
-                        ? (carData.depositTerms || (carData.depositAmount > 0 
-                            ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
-                            : "No security deposit is required for this vehicle."))
+                      const depositDesc = isDeposit
+                        ? (carData.depositTerms || (carData.depositAmount > 0
+                          ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+                          : "No security deposit is required for this vehicle."))
                         : null;
+                      const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
                       return (
                         <div key={i} className="flex items-start gap-1.5 min-w-0">
                           <Check size={13} className="text-emerald-600 shrink-0 mt-0.5 md:mt-1 stroke-[2.2]" />
                           <span
-                            className="text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap"
-                            title={depositDesc || inc}
+                            className={`text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap ${mileageDesc ? 'cursor-pointer hover:text-gray-950 transition-colors' : ''}`}
+                            title={depositDesc || mileageDesc || inc}
                           >
                             <span>{inc}</span>
                           </span>
@@ -1644,6 +1800,14 @@ export default function CarCard({
                             <ChicTooltip
                               text={depositDesc}
                               title="Security Deposit"
+                              variant="gold"
+                              position="top"
+                            />
+                          )}
+                          {mileageDesc && (
+                            <ChicTooltip
+                              text={mileageDesc}
+                              title="Mileage Policy"
                               variant="gold"
                               position="top"
                             />
@@ -1703,103 +1867,104 @@ export default function CarCard({
             )}
           </div>
 
-          <div className="w-full lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 p-4 lg:p-5 pt-4 lg:pt-6 flex flex-col lg:items-start items-start justify-center lg:justify-between gap-5 lg:gap-0 self-stretch">
-            {(firstPromo || secondPromo) && (
-              <div className="inline-flex lg:hidden flex-wrap gap-2 items-start">
-                {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'bottom')}
-                {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
-              </div>
-            )}
-
-            <div className="flex flex-row lg:flex-col items-end lg:items-start justify-between w-full lg:gap-3 mt-auto gap-3">
-              <div className="flex flex-col lg:items-start items-start text-left">
-                {originalPriceParts && discountPercent > 0 && (
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-sm lg:text-base font-bold text-red-500 line-through decoration-red-500 tracking-tight">
-                      {originalPriceParts.currency} {originalPriceParts.amount}
-                    </span>
-                  </div>
-                )}
-                <div className="text-2xl lg:text-[26px] font-bold text-gray-950 tracking-tight leading-none">
-                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
-                  {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
-                </div>
-                <span className="text-sm lg:text-[15px] text-gray-600 font-normal block mt-1.5">
-                  Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
-                </span>
-                <span className="text-xs text-gray-500 font-medium block mt-0.5">
-                  Included taxes &amp; fees
-                </span>
-              </div>
-
-              {!hideBookingControls && (
-                <div className="flex flex-col gap-2 items-stretch w-auto lg:w-full">
-                  {availableBranches.length > 1 && (
-                    <div className="relative w-full min-w-[160px] max-w-[200px] lg:max-w-none">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsDesktopDropdownOpen(!isDesktopDropdownOpen);
-                          setIsMobileDropdownOpen(false);
-                        }}
-                        className="w-full text-xs py-2 px-8 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors font-bold text-gray-700 outline-none cursor-pointer text-center relative"
-                      >
-                        <span className="block truncate">
-                          <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
-                          <span className="text-gray-700 font-extrabold">
-                            {availableBranches.find((b: any) => b.id === selectedBranchId)?.normalized_name || availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
-                          </span>
-                        </span>
-                        <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
-                          <ChevronDown size={14} className={`transition-transform duration-200 ${isDesktopDropdownOpen ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-
-                      <AnimatePresence>
-                        {isDesktopDropdownOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 5 }}
-                            className="absolute z-50 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto no-scrollbar"
-                          >
-                            {availableBranches.map((b: any) => {
-                              const isSelected = b.id === selectedBranchId;
-                              return (
-                                <button
-                                  key={b.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedBranchId(b.id);
-                                    setIsDesktopDropdownOpen(false);
-                                  }}
-                                  className={`w-full text-left text-xs py-2.5 px-4 transition-colors font-bold ${
-                                    isSelected
-                                      ? 'bg-[var(--primary)] text-gray-900'
-                                      : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
-                                  }`}
-                                >
-                                  <span className="font-extrabold">{b.normalized_name || b.name || b.location}</span>
-                                </button>
-                              );
-                            })}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )}
-                  <Link
-                    href={bookUrl}
-                    onClick={handlePersistVehicle}
-                    className="w-auto lg:w-full py-2 lg:py-2.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] lg:text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
-                  >
-                    Book Now
-                    <span className="sr-only"> for {carData.name}</span>
-                  </Link>
+          {!isOptionsLayout && (
+            <div className="w-full lg:w-[220px] xl:w-[250px] 2xl:w-[270px] lg:shrink-0 p-4 lg:p-5 pt-4 lg:pt-6 flex flex-col lg:items-start items-start justify-center lg:justify-start gap-5 lg:gap-0 self-start">
+              {(firstPromo || secondPromo) && (
+                <div className="inline-flex lg:hidden flex-wrap gap-2 items-start">
+                  {firstPromo && renderPromoItem(firstPromo, firstPromoDesc, 'bottom')}
+                  {secondPromo && renderPromoItem(secondPromo, secondPromoDesc, 'bottom')}
                 </div>
               )}
+
+              <div className="flex flex-row lg:flex-col items-end lg:items-start justify-between w-full lg:gap-3 mt-auto gap-3">
+                <div className="flex flex-col lg:items-start items-start text-left">
+                  {originalPriceParts && discountPercent > 0 && (
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-sm lg:text-base font-bold text-red-500 line-through decoration-red-500 tracking-tight">
+                        {originalPriceParts.currency} {originalPriceParts.amount}
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-2xl lg:text-[26px] font-bold text-gray-950 tracking-tight leading-none">
+                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
+                    {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
+                  </div>
+                  <span className="text-sm lg:text-[15px] text-gray-600 font-normal block mt-1.5">
+                    Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
+                  </span>
+                  <span className="text-xs text-gray-500 font-medium block mt-0.5">
+                    Included taxes &amp; fees
+                  </span>
+                </div>
+
+                {!hideBookingControls && (
+                  <div className="flex flex-col gap-2 items-stretch w-auto lg:w-full">
+                    {availableBranches.length > 1 && (
+                      <div className="relative w-full min-w-[160px] max-w-[200px] lg:max-w-none">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDesktopDropdownOpen(!isDesktopDropdownOpen);
+                            setIsMobileDropdownOpen(false);
+                          }}
+                          className="w-full text-xs py-2 px-8 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors font-bold text-gray-700 outline-none cursor-pointer text-center relative"
+                        >
+                          <span className="block truncate">
+                            <span className="font-bold text-gray-400 mr-1 rtl:ml-1 text-[10px] uppercase">Pickup: </span>
+                            <span className="text-gray-700 font-extrabold">
+                              {availableBranches.find((b: any) => b.id === selectedBranchId)?.normalized_name || availableBranches.find((b: any) => b.id === selectedBranchId)?.name || availableBranches.find((b: any) => b.id === selectedBranchId)?.location || 'Select Branch'}
+                            </span>
+                          </span>
+                          <div className="absolute inset-y-0 right-2.5 rtl:left-2.5 rtl:right-auto flex items-center pointer-events-none text-gray-500">
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${isDesktopDropdownOpen ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+
+                        <AnimatePresence>
+                          {isDesktopDropdownOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute z-50 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto no-scrollbar"
+                            >
+                              {availableBranches.map((b: any) => {
+                                const isSelected = b.id === selectedBranchId;
+                                return (
+                                  <button
+                                    key={b.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedBranchId(b.id);
+                                      setIsDesktopDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left text-xs py-2.5 px-4 transition-colors font-bold ${isSelected
+                                        ? 'bg-[var(--primary)] text-gray-900'
+                                        : 'text-gray-700 hover:bg-[var(--primary)]/20 hover:text-gray-900'
+                                      }`}
+                                  >
+                                    <span className="font-extrabold">{b.normalized_name || b.name || b.location}</span>
+                                  </button>
+                                );
+                              })}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                    <Link
+                      href={bookUrl}
+                      onClick={handlePersistVehicle}
+                      className="w-auto lg:w-full py-2 lg:py-2.5 px-6 lg:px-0 bg-[var(--primary)] text-gray-900 rounded-xl font-black text-[11px] lg:text-sm uppercase tracking-wide hover:bg-[var(--primary-600)] active:scale-[0.98] transition-all text-center shadow-lg whitespace-nowrap block"
+                    >
+                      Book Now
+                      <span className="sr-only"> for {carData.name}</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
