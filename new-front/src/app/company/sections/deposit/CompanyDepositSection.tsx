@@ -13,7 +13,7 @@ import {
   DollarSign,
   Car,
   Layers,
-  Sparkles,
+  SlidersHorizontal,
   Info,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
@@ -332,7 +332,7 @@ export default function CompanyDepositSection() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                <Sparkles size={16} />
+                <SlidersHorizontal size={16} />
               </div>
               <div>
                 <h2 className="text-sm font-bold text-gray-900 leading-tight">Bulk Deposit Settings</h2>

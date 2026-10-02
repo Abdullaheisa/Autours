@@ -16,9 +16,9 @@ import BookingChecklist from './components/BookingChecklist';
 import PriceBreakdownCard from './components/PriceBreakdownCard';
 import { ExtraItem, convertExtraPrice } from './components/BookingExtras';
 import FlightDetailsInput from './components/FlightDetailsInput';
-import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle, Sparkles, ArrowLeft, PackageCheck } from 'lucide-react';
+import { Check, User, Phone, Globe, Mail, Lock, ChevronDown, AlertTriangle, ArrowLeft, PackageCheck } from 'lucide-react';
 import { RootState, AppDispatch } from '@/store';
-import { fetchVehicles, restoreSearchSession } from '@/store/slices/searchSlice';
+import { restoreSearchSession } from '@/store/slices/searchSlice';
 import { restoreAuth, logout } from '@/store/slices/authSlice';
 import { Vehicle, Currency } from '@/types';
 import { worldCountries } from '@/data/worldCountries';
@@ -173,7 +173,15 @@ function BookingContent() {
   const [flightNumber, setFlightNumber] = useState('');
 
   // ── Extras & Add-ons state (Passed from /options page) ─────────────────────
-  const [extrasList, setExtrasList] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
+  const [extrasList, setExtrasList] = useState<ExtraItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('autours_available_extras');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return DEFAULT_EXTRAS;
+  });
   const [selectedExtras, setSelectedExtras] = useState<Record<string, number>>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -307,17 +315,25 @@ function BookingContent() {
         const parsedDays = savedDays ? parseInt(savedDays, 10) : undefined;
 
         if (parsedVehicle && !lockedVehicle) {
-          setLockedVehicle(parsedVehicle);
+          const vehicleWithCurr = {
+            ...parsedVehicle,
+            price_currency: parsedVehicle.price_currency || savedCurr || 'EGP',
+          };
+          setLockedVehicle(vehicleWithCurr);
           hasLockedRef.current = true;
         }
 
         if ((!searchStateParams.location || !vehicles.length) && (parsedParams || parsedVehicle)) {
+          const vehicleWithCurr = parsedVehicle ? {
+            ...parsedVehicle,
+            price_currency: parsedVehicle.price_currency || savedCurr || 'EGP',
+          } : undefined;
           dispatch(
             restoreSearchSession({
               searchParams: parsedParams || undefined,
               daysNumber: parsedDays || undefined,
-              vehicles: parsedVehicle ? [parsedVehicle] : undefined,
-              fetchedCurrency: savedCurr || undefined,
+              vehicles: vehicleWithCurr ? [vehicleWithCurr] : undefined,
+              fetchedCurrency: savedCurr || parsedVehicle?.price_currency || undefined,
             })
           );
         }
@@ -387,7 +403,12 @@ function BookingContent() {
           (lockedId && v.id === lockedId) || 
           (v.name === lockedName && v.supplier?.id === lockedSupplierId)
         );
-        if (updated && updated.id !== lockedVehicle?.id) {
+        if (
+          updated &&
+          (updated.id !== lockedVehicle?.id ||
+            updated.final_price !== lockedVehicle?.final_price ||
+            updated.price_currency !== lockedVehicle?.price_currency)
+        ) {
           setLockedVehicle(updated);
         }
       }
@@ -405,15 +426,19 @@ function BookingContent() {
   useEffect(() => {
     if (selectedVehicle && typeof window !== 'undefined') {
       try {
-        sessionStorage.setItem('autours_selected_vehicle', JSON.stringify(selectedVehicle));
+        const vehicleToSave = {
+          ...selectedVehicle,
+          price_currency: selectedVehicle.price_currency || fetchedCurrency || 'EGP',
+        };
+        sessionStorage.setItem('autours_selected_vehicle', JSON.stringify(vehicleToSave));
         if (searchStateParams?.location) {
           sessionStorage.setItem('autours_search_params', JSON.stringify(searchStateParams));
         }
         if (daysNumber) {
           sessionStorage.setItem('autours_days_number', String(daysNumber));
         }
-        if (fetchedCurrency) {
-          sessionStorage.setItem('autours_fetched_currency', fetchedCurrency);
+        if (vehicleToSave.price_currency || fetchedCurrency) {
+          sessionStorage.setItem('autours_fetched_currency', vehicleToSave.price_currency || fetchedCurrency || 'EGP');
         }
       } catch (e) {}
     }
@@ -543,22 +568,7 @@ function BookingContent() {
       });
   }, [extrasList, selectedExtras, currencyCode, allRates]);
 
-  // ── Re-fetch on currency change ──────────────────────────────────────────────
-  const doFetch = useCallback(() => {
-    const sp = searchStateParams;
-    if (!sp.location || !sp.dateFrom || !sp.dateTo) return;
-    const backendCurrency = SUPPORTED_BACKEND_CURRENCIES.includes(currencyCode) ? currencyCode : 'AED';
-    dispatch(fetchVehicles({
-      pickupLoc: sp.location,
-      date_from: sp.dateFrom,
-      date_to: sp.dateTo,
-      time_from: sp.startTime || '10:00',
-      time_to: sp.endTime || '10:00',
-      currency: backendCurrency,
-    }));
-  }, [dispatch, searchStateParams, currencyCode]);
 
-  useEffect(() => { doFetch(); }, [currencyCode]);
 
   // ── Extra change handler ─────────────────────────────────────────────────────
   const handleExtraChange = (id: string, qty: number) => {

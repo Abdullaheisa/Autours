@@ -5,7 +5,7 @@ import {
   Globe, Plus, Search, Eye, EyeOff, Pencil, Trash2,
   ChevronDown, ChevronUp, X, Save, Loader2,
   FileText, CheckCircle2, AlertCircle, MapPin, ExternalLink,
-  Check, Filter, Sparkles
+  Check, Filter
 } from "lucide-react";
 import SectionLayout from "@/components/shared/SectionLayout";
 import PageHeader from "@/components/ui/PageHeader";
@@ -485,7 +485,7 @@ export default function CountryPagesSection() {
           >
             <div className="space-y-4">
               <div className="bg-emerald-50/70 border border-emerald-100 rounded-xl p-4 text-xs text-emerald-900 flex items-start gap-3">
-                <Sparkles size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+                <MapPin size={18} className="text-emerald-600 shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
                   <p className="font-bold">Select which cities to include on this Country page:</p>
                   <p className="mt-0.5 text-emerald-800">

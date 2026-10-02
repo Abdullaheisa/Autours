@@ -8,7 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
+  Star,
   ShieldCheck,
   Plus,
   Minus,
@@ -217,7 +217,12 @@ function OptionsContent() {
             (lockedId && v.id === lockedId) ||
             (v.name === lockedName && v.supplier?.id === lockedSupplierId)
         );
-        if (updated && updated.id !== lockedVehicle?.id) {
+        if (
+          updated &&
+          (updated.id !== lockedVehicle?.id ||
+            updated.final_price !== lockedVehicle?.final_price ||
+            updated.price_currency !== lockedVehicle?.price_currency)
+        ) {
           setLockedVehicle(updated);
         }
       }
@@ -235,15 +240,19 @@ function OptionsContent() {
   useEffect(() => {
     if (selectedVehicle && typeof window !== "undefined") {
       try {
-        sessionStorage.setItem("autours_selected_vehicle", JSON.stringify(selectedVehicle));
+        const vehicleToSave = {
+          ...selectedVehicle,
+          price_currency: selectedVehicle.price_currency || fetchedCurrency || 'EGP',
+        };
+        sessionStorage.setItem("autours_selected_vehicle", JSON.stringify(vehicleToSave));
         if (searchStateParams?.location) {
           sessionStorage.setItem("autours_search_params", JSON.stringify(searchStateParams));
         }
         if (daysNumber) {
           sessionStorage.setItem("autours_days_number", String(daysNumber));
         }
-        if (fetchedCurrency) {
-          sessionStorage.setItem("autours_fetched_currency", fetchedCurrency);
+        if (vehicleToSave.price_currency || fetchedCurrency) {
+          sessionStorage.setItem("autours_fetched_currency", vehicleToSave.price_currency || fetchedCurrency || 'EGP');
         }
       } catch (e) {}
     }
@@ -500,9 +509,17 @@ function OptionsContent() {
     if (typeof window !== "undefined") {
       try {
         if (selectedVehicle) {
-          sessionStorage.setItem("autours_selected_vehicle", JSON.stringify(selectedVehicle));
+          const vehicleToSave = {
+            ...selectedVehicle,
+            price_currency: selectedVehicle.price_currency || fetchedCurrency || 'EGP',
+          };
+          sessionStorage.setItem("autours_selected_vehicle", JSON.stringify(vehicleToSave));
+          sessionStorage.setItem("autours_fetched_currency", vehicleToSave.price_currency);
         }
         sessionStorage.setItem("autours_selected_extras", JSON.stringify(selectedExtras));
+        if (extrasList.length > 0) {
+          sessionStorage.setItem("autours_available_extras", JSON.stringify(extrasList));
+        }
       } catch (e) {}
     }
     const extrasQuery = encodeURIComponent(JSON.stringify(selectedExtras));
@@ -724,7 +741,7 @@ function OptionsContent() {
                               </h4>
                               {(extra.badge || extraConfig.defaultBadge) && (
                                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide bg-amber-100/90 text-amber-900 border border-amber-250/70 shadow-2xs shrink-0 flex items-center gap-1">
-                                  <Sparkles size={11} className="text-amber-600" />
+                                  <Star size={11} className="fill-amber-500 text-amber-500" />
                                   {extra.badge || extraConfig.defaultBadge}
                                 </span>
                               )}
@@ -790,8 +807,8 @@ function OptionsContent() {
                                     })}
                                   </span>
                                 </div>
-                                <div className="text-[11px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase mt-0.5">
-                                  per day
+                                <div className="text-[11px] sm:text-xs font-bold text-gray-400 tracking-wider uppercase mt-0.5">
+                                  {rentalDays > 1 ? `Total for ${rentalDays} days` : "Total for rental"}
                                 </div>
                               </div>
 

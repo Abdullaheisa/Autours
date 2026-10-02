@@ -428,7 +428,7 @@ export const vehicleApi = {
     const response = await apiClient.post<any>('/filter/vehicles', cleanPayload(payload as any));
 
     return {
-      filteredVehicles: vehicleMapper.toLocalList(response.filteredVehicles || []),
+      filteredVehicles: vehicleMapper.toLocalList(response.filteredVehicles || [], payload.currency),
       count: response.count || 0,
       daysNumber: response.daysNumber || 0,
       max: response.max || 0,

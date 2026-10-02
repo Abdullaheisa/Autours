@@ -32,6 +32,7 @@ export interface Vehicle {
   image?: string; // Compatibility
   final_price?: number;
   price_in_usd: number;
+  price_currency?: string;
   transmission?: string;
   fuelType?: string;
   seats?: number | string;

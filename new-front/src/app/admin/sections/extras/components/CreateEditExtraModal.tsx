@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, X, Check, HelpCircle, Trash2, Plus, ChevronDown } from "lucide-react";
+import { Layers, X, Check, HelpCircle, Trash2, Plus, ChevronDown } from "lucide-react";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import CustomSelect from "@/components/ui/CustomSelect";
 import RichTextEditor from "@/components/shared/RichTextEditor";
@@ -99,7 +99,7 @@ export default function CreateEditExtraModal({
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary-700 flex items-center justify-center shrink-0">
-              <Sparkles size={20} />
+              <Layers size={20} />
             </div>
             <div>
               <h3 className="text-base font-black text-gray-900">

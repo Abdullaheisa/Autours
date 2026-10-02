@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ExternalLink,
-  Sparkles,
   ChevronDown,
   ChevronUp,
   Car as CarIcon,

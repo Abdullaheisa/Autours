@@ -7,7 +7,6 @@ import {
   Zap,
   Building2,
   Clock,
-  Sparkles,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
@@ -381,7 +380,7 @@ export default function Loader({ fullScreen = true }: { fullScreen?: boolean }) 
         >
           <div className="flex items-center justify-between text-xs font-bold gap-3">
             <span className="flex items-center gap-1.5 text-gray-600 truncate">
-              <Sparkles size={13} className="text-primary animate-pulse shrink-0" />
+              <Zap size={13} className="text-primary animate-pulse shrink-0 fill-primary" />
               Aggregating best rates & verifying live fleet in {resolvedCountry}...
             </span>
             <span className="font-mono text-gray-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 font-extrabold shrink-0">

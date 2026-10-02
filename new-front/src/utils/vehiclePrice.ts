@@ -18,7 +18,12 @@ export function getVehicleDisplayPrice(
 
   const finalPrice = Number(vehicle.final_price);
   if (finalPrice > 0) {
-    const priceCurrency = (fetchedCurrency || vehicle.baseCurrency || 'AED').toUpperCase();
+    const priceCurrency = (
+      vehicle.price_currency ||
+      fetchedCurrency ||
+      vehicle.baseCurrency ||
+      'AED'
+    ).toUpperCase();
     const targetCode = (currencyCode || 'AED').toUpperCase();
     if (priceCurrency !== targetCode) {
       const rateToBase = allRates[priceCurrency] || fallbackRates[priceCurrency] || 1;
@@ -51,6 +56,7 @@ export function getVehicleDepositPrice(
   if (!vehicle) return 0;
   let rawDeposit = Number(vehicle.deposit_amount ?? (vehicle as any)?.deposit ?? 0);
   let depositBaseCurrency = (
+    vehicle.price_currency ||
     fetchedCurrency ||
     vehicle.baseCurrency ||
     (vehicle.branch as any)?.currency ||

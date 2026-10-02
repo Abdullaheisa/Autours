@@ -239,7 +239,11 @@ const searchSlice = createSlice({
         state.daysNumber = action.payload.daysNumber;
       }
       if (action.payload.vehicles && action.payload.vehicles.length > 0) {
-        state.vehicles = action.payload.vehicles;
+        const curr = action.payload.fetchedCurrency || state.fetchedCurrency || 'EGP';
+        state.vehicles = action.payload.vehicles.map((v: any) => ({
+          ...v,
+          price_currency: v.price_currency || curr,
+        }));
         state.count = action.payload.vehicles.length;
       }
       if (action.payload.fetchedCurrency) {
@@ -286,7 +290,14 @@ const searchSlice = createSlice({
         state.isFiltering = false;
         state.hasSearched = true;
 
-        const newVehicles = action.payload.filteredVehicles || [];
+        const searchCurr = action.meta?.arg?.currency || 'EGP';
+        state.fetchedCurrency = searchCurr;
+
+        const rawNewVehicles = action.payload.filteredVehicles || [];
+        const newVehicles = rawNewVehicles.map((v: any) => ({
+          ...v,
+          price_currency: v.price_currency || searchCurr,
+        }));
         const currentPage = action.payload.current_page || 1;
 
         if (currentPage === 1) {
@@ -301,7 +312,6 @@ const searchSlice = createSlice({
         state.daysNumber = action.payload.daysNumber;
         state.maxPrice = action.payload.max;
         state.minPrice = action.payload.min;
-        state.fetchedCurrency = action.meta?.arg?.currency || 'EGP';
 
         state.currentPage = action.payload.current_page || 1;
         state.totalPages = action.payload.last_page || Math.ceil(state.count / state.perPage) || 1;

@@ -1,7 +1,7 @@
 import { Vehicle } from "@/types";
 
 export const vehicleMapper = {
-  toLocal: (raw: any): Vehicle => {
+  toLocal: (raw: any, searchCurrency?: string): Vehicle => {
     const categoryName = typeof raw.category === 'object' ? raw.category?.name : (raw.category || '');
     const supplierRaw = (typeof raw.supplier === 'object' && raw.supplier !== null)
       ? raw.supplier
@@ -49,6 +49,7 @@ export const vehicleMapper = {
         parseFloat(raw.total) ||
         0,
       price_in_usd: parseFloat(raw.price_in_usd) || 0,
+      price_currency: (searchCurrency || raw.price_currency || raw.currency || branch.currency || 'AED').toUpperCase(),
       transmission: specMap['transmission'] || specMap['gear'] || raw.transmission || 'Automatic',
       fuelType: specMap['fuel'] || raw.fuel_type || raw.fuelType || 'Petrol',
       seats: parseInt(specMap['number of seats'] || specMap['seats']) || raw.seats || 5,
@@ -127,8 +128,8 @@ export const vehicleMapper = {
     };
   },
 
-  toLocalList: (rawList: any[]): Vehicle[] => {
+  toLocalList: (rawList: any[], searchCurrency?: string): Vehicle[] => {
     if (!Array.isArray(rawList)) return [];
-    return rawList.map(vehicleMapper.toLocal);
+    return rawList.map((item) => vehicleMapper.toLocal(item, searchCurrency));
   }
 };

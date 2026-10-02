@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { 
   Search, Plus, Trash2, CheckCircle2, XCircle, Loader2, Zap, X, Check, 
-  Edit3, ShieldAlert, Sparkles, Users, ShieldCheck, Settings2 
+  Edit3, ShieldAlert, Tag, Users, ShieldCheck, Settings2 
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionLayout from "@/components/shared/SectionLayout";
@@ -573,7 +573,7 @@ export default function PromosSection() {
     if (n.includes('child') || n.includes('seat') || n.includes('baby')) {
       return <ShieldCheck size={20} className="text-indigo-600" />;
     }
-    return <Sparkles size={20} className="text-amber-500" />;
+    return <Tag size={20} className="text-amber-500" />;
   };
 
   return (
@@ -593,7 +593,7 @@ export default function PromosSection() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-yellow-400/30 border border-amber-400/40 flex items-center justify-center text-amber-600 shadow-sm">
-              <Sparkles size={20} className="fill-amber-400 text-amber-600" />
+              <Tag size={20} className="text-amber-600" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -1147,7 +1147,7 @@ export default function PromosSection() {
                 {/* Is Special Offer Toggle */}
                 <div className="flex items-center justify-between p-3.5 bg-amber-50/60 border border-amber-200 rounded-xl">
                   <div className="flex items-center gap-2.5">
-                    <Sparkles size={18} className="text-amber-600" />
+                    <Tag size={18} className="text-amber-600" />
                     <div>
                       <span className="text-xs font-bold text-gray-900 block">Classify as Special Offer</span>
                       <span className="text-[11px] text-gray-500 block">Shows in the Special Offers top section</span>
