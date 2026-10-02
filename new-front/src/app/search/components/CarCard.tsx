@@ -804,9 +804,26 @@ export default function CarCard({
     );
   }, [availableBranches, selectedBranchId, vehicle, carData.supplier.address]);
 
+  const sortedInclusions = useMemo(() => {
+    const incs = [...(carData.inclusions || [])];
+    const isCancel = (s: string) => {
+      const l = (s || '').toLowerCase();
+      return l.includes('cancel') || l.includes('إلغاء') || l.includes('الغاء') || l.includes('مجاني') || l.includes('كنسل');
+    };
+    const isDeposit = (s: string) => {
+      const l = (s || '').toLowerCase();
+      return l.includes('deposit') || l.includes('تأمين') || l.includes('تامين');
+    };
+    return incs.sort((a, b) => {
+      const aScore = isCancel(a) ? 0 : isDeposit(a) ? 1 : 2;
+      const bScore = isCancel(b) ? 0 : isDeposit(b) ? 1 : 2;
+      return aScore - bScore;
+    });
+  }, [carData.inclusions]);
+
   const displayedInclusions = showAllInclusions || hideBookingControls
-    ? carData.inclusions
-    : carData.inclusions.slice(0, 6);
+    ? sortedInclusions
+    : sortedInclusions.slice(0, 6);
 
   const getPromoDescription = (promoName: string | null) => {
     if (!promoName) return '';
@@ -886,7 +903,7 @@ export default function CarCard({
   }, [discountPercent, carData.price.amount, carData.price.currency]);
 
   // For options / booking layout: combine inclusions and relevant promos (Free Cancellation, Online Check-in)
-  // into one unified list under "What's included" with identical styling and no duplicates.
+  // into one unified list under "What's included" with Free Cancellation ALWAYS FIRST before deposit and everything.
   const optionsInclusions = useMemo(() => {
     const list: Array<{
       text: string;
@@ -896,72 +913,105 @@ export default function CarCard({
     }> = [];
     const baseInclusions = displayedInclusions;
 
-    // Check if cancellation is already present in base inclusions
-    const hasCancelInBase = baseInclusions.some(inc => {
-      const lower = inc.toLowerCase();
-      return lower.includes('cancel') || lower.includes('مجاني') || lower.includes('كنسل');
-    });
+    const isCancelText = (str: string) => {
+      const lower = (str || '').toLowerCase();
+      return lower.includes('cancel') || lower.includes('إلغاء') || lower.includes('الغاء') || lower.includes('مجاني') || lower.includes('كنسل');
+    };
 
-    // 1. Free Cancellation promo (if not already in base inclusions, but car has free cancellation)
-    if (!hasCancelInBase && (firstPromo?.toLowerCase().includes('cancel') || carData.freeCancellation)) {
-      list.push({
-        text: firstPromo || 'Free Cancellation',
+    const isDepositText = (str: string) => {
+      const lower = (str || '').toLowerCase();
+      return lower.includes('deposit') || lower.includes('تأمين') || lower.includes('تامين');
+    };
+
+    // 1. Free Cancellation MUST ALWAYS be first (index 0)
+    const cancelBaseItem = baseInclusions.find(inc => isCancelText(inc));
+    let cancelItem: {
+      text: string;
+      tooltip?: string | null;
+      tooltipTitle?: string;
+      tooltipVariant?: 'emerald' | 'gold';
+    } | null = null;
+
+    if (cancelBaseItem) {
+      cancelItem = {
+        text: cancelBaseItem,
+        tooltip: firstPromoDesc || getPromoDescription(cancelBaseItem) || getPromoDescription('Free Cancellation'),
+        tooltipTitle: cancelBaseItem,
+        tooltipVariant: 'emerald',
+      };
+    } else if (firstPromo && isCancelText(firstPromo)) {
+      cancelItem = {
+        text: firstPromo,
+        tooltip: firstPromoDesc || getPromoDescription(firstPromo),
+        tooltipTitle: firstPromo,
+        tooltipVariant: 'emerald',
+      };
+    } else if (carData.freeCancellation) {
+      cancelItem = {
+        text: 'Free Cancellation',
         tooltip: firstPromoDesc || getPromoDescription('Free Cancellation'),
-        tooltipTitle: firstPromo || 'Free Cancellation',
+        tooltipTitle: 'Free Cancellation',
+        tooltipVariant: 'emerald',
+      };
+    }
+
+    if (cancelItem) {
+      list.push(cancelItem);
+    }
+
+    // 2. Deposit MUST ALWAYS be second (directly after Free Cancellation)
+    const depositBaseItem = baseInclusions.find(inc => isDepositText(inc));
+    if (depositBaseItem) {
+      const depositDesc = carData.depositTerms || (carData.depositAmount > 0
+        ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
+        : "No security deposit is required for this vehicle.");
+      list.push({
+        text: depositBaseItem,
+        tooltip: depositDesc,
+        tooltipTitle: 'Security Deposit',
+        tooltipVariant: 'gold',
+      });
+    }
+
+    // 3. Online Check-in (if present as promo, placed right after cancellation & deposit)
+    const otherPromos = [firstPromo, secondPromo, ...remainingPromos].filter(Boolean) as string[];
+    const checkinPromo = otherPromos.find(p => p.toLowerCase().includes('check'));
+    if (checkinPromo) {
+      const pDesc = getPromoDescription(checkinPromo);
+      list.push({
+        text: checkinPromo,
+        tooltip: pDesc || null,
+        tooltipTitle: checkinPromo,
         tooltipVariant: 'emerald',
       });
     }
 
-    // 2. Base inclusions (with tooltips for cancellation, deposit, mileage)
+    // 4. Remaining base inclusions (excluding cancellation and deposit since they are already #1 and #2)
     baseInclusions.forEach(inc => {
-      const isDeposit = inc.toLowerCase().includes('deposit');
-      const depositDesc = isDeposit
-        ? (carData.depositTerms || (carData.depositAmount > 0
-          ? `Refundable security deposit (${carData.depositCategory || 'Standard'} category) of ${formatPrice(carData.depositAmount, currencyCode as Currency)} collected at counter upon vehicle pickup and released upon return.`
-          : "No security deposit is required for this vehicle."))
-        : null;
-      const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
+      if (isCancelText(inc) || isDepositText(inc)) return; // Already placed first & second!
 
-      const isCancel = inc.toLowerCase().includes('cancel') || inc.toLowerCase().includes('مجاني') || inc.toLowerCase().includes('كنسل');
-      const cancelDesc = isCancel ? (firstPromoDesc || getPromoDescription(inc)) : null;
+      const mileageDesc = (carData as any).mileageTooltipMap?.[inc] || null;
 
       list.push({
         text: inc,
-        tooltip: depositDesc || mileageDesc || cancelDesc,
-        tooltipTitle: isDeposit ? 'Security Deposit' : mileageDesc ? 'Mileage Policy' : isCancel ? inc : undefined,
-        tooltipVariant: isDeposit || mileageDesc ? 'gold' : 'emerald',
+        tooltip: mileageDesc,
+        tooltipTitle: mileageDesc ? 'Mileage Policy' : undefined,
+        tooltipVariant: mileageDesc ? 'gold' : 'emerald',
       });
     });
 
-    // 3. Online Check-in or other non-cancellation promos
-    const otherPromos = [firstPromo, secondPromo, ...remainingPromos].filter(Boolean) as string[];
+    // 4. Any remaining promos (excluding cancel & check-in which were already handled)
     otherPromos.forEach(p => {
-      const pLower = p.toLowerCase();
-      if (pLower.includes('cancel') || pLower.includes('مجاني') || pLower.includes('كنسل')) {
-        return;
-      }
-      const alreadyExists = list.some(item => item.text.toLowerCase().trim() === pLower.trim());
+      if (isCancelText(p) || p.toLowerCase().includes('check')) return;
+      const alreadyExists = list.some(item => item.text.toLowerCase().trim() === p.toLowerCase().trim());
       if (!alreadyExists) {
         const pDesc = getPromoDescription(p);
-        const item = {
+        list.push({
           text: p,
           tooltip: pDesc || null,
           tooltipTitle: p,
-          tooltipVariant: 'emerald' as const,
-        };
-        if (pLower.includes('check')) {
-          const cancelIdx = list.findIndex(i => {
-            const l = i.text.toLowerCase();
-            return l.includes('cancel') || l.includes('مجاني') || l.includes('كنسل');
-          });
-          if (cancelIdx >= 0) {
-            list.splice(cancelIdx + 1, 0, item);
-          } else {
-            list.unshift(item);
-          }
-        } else {
-          list.push(item);
-        }
+          tooltipVariant: 'emerald',
+        });
       }
     });
 
@@ -1048,6 +1098,29 @@ export default function CarCard({
           </div>
         </div>
 
+        {isOptionsLayout && (
+          <div className="px-4 pb-2.5 flex items-center gap-1.5 text-blue-600 text-xs sm:text-sm font-bold min-w-0">
+            <button
+              type="button"
+              onClick={openMap}
+              className="shrink-0 p-0.5 text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+              title="View location on Google Maps"
+              aria-label="View location on Google Maps"
+            >
+              <Globe size={15} className="text-blue-600 shrink-0" />
+            </button>
+            <div
+              onClick={openMap}
+              className="cursor-pointer group/addr truncate max-w-[280px]"
+              title="View location on Google Maps"
+            >
+              <span className="text-blue-600 underline font-bold group-hover/addr:text-blue-800 transition-colors">
+                {displayAddress}
+              </span>
+            </div>
+          </div>
+        )}
+
         {isOptionsLayout ? (
           <>
             {/* Price displayed above the gray box with 15px bottom space */}
@@ -1072,7 +1145,7 @@ export default function CarCard({
             </div>
 
             {/* The Gray Box — single line with all items, horizontally scrollable */}
-            <div className="mx-4 mb-3 bg-gray-100 rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-nowrap overflow-x-auto no-scrollbar">
+            <div className="mx-4 mb-3 bg-gray-100 rounded-xl px-3.5 py-2.5 flex items-center gap-3 sm:gap-4 flex-nowrap overflow-x-auto no-scrollbar">
               {/* 1. Supplier Logo + Name + Rating */}
               <div className="flex items-center gap-2 shrink-0">
                 <div className="bg-white p-1 rounded-lg flex items-center justify-center w-16 h-8 shrink-0 shadow-sm border border-gray-200/60">
@@ -1090,14 +1163,14 @@ export default function CarCard({
                   )}
                 </div>
                 <div className="min-w-0 flex flex-col justify-center">
-                  <span className="text-xs font-black text-gray-900 block truncate leading-tight mb-0.5">
+                  <span className="text-xs sm:text-sm font-black text-gray-900 block truncate leading-tight mb-0.5">
                     {carData.supplier.name}
                   </span>
                   <div className="flex items-center gap-1">
-                    <span className="bg-[var(--primary)] text-gray-900 px-1 py-0.5 rounded text-[10px] font-black leading-none">
+                    <span className="bg-[var(--primary)] text-gray-900 px-1 py-0.5 rounded text-[10px] sm:text-[11px] font-black leading-none">
                       {carData.supplier.rating}/10
                     </span>
-                    <span className="text-[10px] font-black text-gray-800 leading-none">Excellent</span>
+                    <span className="text-[10px] sm:text-[11px] font-black text-gray-800 leading-none">Excellent</span>
                   </div>
                 </div>
               </div>
@@ -1108,17 +1181,17 @@ export default function CarCard({
               <button
                 type="button"
                 onClick={() => setShowTerms(true)}
-                className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs font-bold underline cursor-pointer shrink-0 transition-colors"
+                className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs sm:text-[13px] font-bold underline cursor-pointer shrink-0 transition-colors"
               >
-                <FileText size={15} className="shrink-0 text-blue-600" />
+                <FileText size={16} className="shrink-0 text-blue-600" />
                 <span>Rental Terms</span>
               </button>
 
               <div className="h-5 w-px bg-gray-300 shrink-0" />
 
               {/* 3. Fuel Policy */}
-              <div className="flex items-center gap-1.5 text-blue-600 text-xs font-bold shrink-0">
-                <Fuel size={15} className="shrink-0 text-blue-600" />
+              <div className="flex items-center gap-1.5 text-blue-600 text-xs sm:text-[13px] font-bold shrink-0">
+                <Fuel size={16} className="shrink-0 text-blue-600" />
                 <span className="cursor-pointer">{carData.fuelPolicy}</span>
                 <ChicTooltip
                   text={getFuelPolicyDescription(carData.fuelPolicy)}
@@ -1132,33 +1205,9 @@ export default function CarCard({
               <div className="h-5 w-px bg-gray-300 shrink-0" />
 
               {/* 4. Pick-up */}
-              <div className="flex items-center gap-1.5 text-blue-600 text-xs font-bold shrink-0">
+              <div className="flex items-center gap-1.5 text-blue-600 text-xs sm:text-[13px] font-bold shrink-0">
                 <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0 mt-0.5" />
                 <span><PickupLabel pickupType={carData.pickupType} /></span>
-              </div>
-
-              <div className="h-5 w-px bg-gray-300 shrink-0" />
-
-              {/* 5. Location */}
-              <div className="flex items-center gap-1.5 text-blue-600 text-xs font-bold shrink-0 min-w-0">
-                <button
-                  type="button"
-                  onClick={openMap}
-                  className="shrink-0 p-0.5 text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
-                  title="View location on Google Maps"
-                  aria-label="View location on Google Maps"
-                >
-                  <Globe size={15} className="text-blue-600 shrink-0" />
-                </button>
-                <div
-                  onClick={openMap}
-                  className="cursor-pointer group/addr truncate max-w-[200px]"
-                  title="View location on Google Maps"
-                >
-                  <span className="text-blue-600 underline font-bold group-hover/addr:text-blue-800 transition-colors">
-                    {displayAddress}
-                  </span>
-                </div>
               </div>
             </div>
 
@@ -1166,8 +1215,8 @@ export default function CarCard({
             <div className="px-4 pb-4">
               <div className="mb-3">
                 <div className="inline-flex flex-col">
-                  <h4 className="text-xs sm:text-sm font-extrabold text-gray-900">What's included</h4>
-                  <span className="mt-1.5 h-0.5 w-[calc(100%+20px)] bg-amber-400 rounded-full" />
+                  <h4 className="text-sm sm:text-base font-bold text-emerald-800 tracking-wide">What's included</h4>
+                  <span className="mt-1.5 h-[2.5px] w-[calc(100%+20px)] bg-amber-400 rounded-full" />
                 </div>
               </div>
 
@@ -1284,7 +1333,7 @@ export default function CarCard({
                     <div className="bg-green-100/35 rounded-xl px-3.5 py-3">
                       <div className="mb-3">
                         <div className="inline-flex flex-col">
-                          <h4 className="text-xs font-extrabold text-gray-900">What's included</h4>
+                          <h4 className="text-sm sm:text-base font-bold text-emerald-800">What's included</h4>
                           <span className="mt-1.5 h-0.5 w-[calc(100%+20px)] bg-amber-400 rounded-full" />
                         </div>
                       </div>
@@ -1497,10 +1546,10 @@ export default function CarCard({
             />
           </div>
 
-          <div className="flex-1 p-4 lg:px-4 xl:px-5 lg:py-3 min-w-0 flex flex-col justify-between">
+          <div className="flex-1 py-3 px-2 sm:px-3 lg:px-3.5 min-w-0 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-lg font-bold text-gray-900">{carData.name}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">{carData.name}</h3>
                 <span className="text-xs font-medium text-gray-600">or Similar</span>
                 <ChicTooltip
                   text="The supplier will provide a car with same class and specifications, though the make may vary."
@@ -1510,9 +1559,9 @@ export default function CarCard({
                   position="bottom"
                 />
               </div>
-              <p className="text-xs font-black text-gray-600 mb-4">{carData.type}</p>
+              <p className="text-xs font-black text-gray-600 mb-3 sm:mb-4">{carData.type}</p>
 
-              <div className="grid grid-cols-2 w-full lg:w-[85%] xl:w-[70%] 2xl:w-[55%] gap-x-2 lg:gap-x-4 gap-y-2">
+              <div className="grid grid-cols-2 w-full gap-x-2 sm:gap-x-2.5 lg:gap-x-3 gap-y-2">
                 {[
                   { icon: assets.icons.seats, val: carData.seats, label: 'Seats' },
                   { icon: assets.icons.doors, val: carData.doors, label: 'Doors' },
@@ -1523,17 +1572,19 @@ export default function CarCard({
                 ].map((feat, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 w-full min-w-0"
+                    className="flex items-center gap-1 sm:gap-1.5 w-full min-w-0"
                   >
-                    <img src={feat.icon} alt="" className={`object-contain shrink-0 ${(i + 1) % 2 !== 0 ? 'w-8 h-8' : 'w-6 h-6'}`} aria-hidden="true" />
-                    <span className="text-xs xl:text-sm font-semibold lg:font-bold text-gray-700 truncate">{formatSpecDisplay(feat.val, feat.label)}</span>
+                    <img src={feat.icon} alt="" className="w-5 h-5 sm:w-5.5 sm:h-5.5 object-contain shrink-0" aria-hidden="true" />
+                    <span className="text-[11px] sm:text-xs xl:text-[13px] font-bold text-gray-700 tracking-tight leading-tight" title={formatSpecDisplay(feat.val, feat.label)}>
+                      {formatSpecDisplay(feat.val, feat.label)}
+                    </span>
                   </div>
                 ))}
               </div>
 
-              {/* Location under specs for tablet only */}
+              {/* Location under specs for options layout */}
               {isOptionsLayout && (
-                <div className="mt-3 flex lg:hidden items-center gap-1.5 text-blue-600 text-xs sm:text-sm font-bold min-w-0">
+                <div className="mt-2.5 sm:mt-3 flex items-center gap-1.5 text-blue-600 text-xs sm:text-sm font-bold min-w-0">
                   <button
                     type="button"
                     onClick={openMap}
@@ -1559,22 +1610,22 @@ export default function CarCard({
 
           {/* Price displayed above the gray box on options layout */}
           {isOptionsLayout && (
-            <div className="w-auto md:w-[190px] lg:w-[220px] xl:w-[250px] 2xl:w-[270px] shrink-0 px-4 lg:px-5 pt-2 pb-[15px] flex flex-col items-start self-end text-left">
+            <div className="w-auto md:w-[155px] lg:w-[170px] xl:w-[195px] 2xl:w-[230px] shrink-0 px-2.5 sm:px-3 lg:px-4 pt-2 pb-[15px] flex flex-col items-start self-end text-left">
               {originalPriceParts && discountPercent > 0 && (
                 <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-sm lg:text-base font-bold text-red-500 line-through decoration-red-500 tracking-tight">
+                  <span className="text-xs sm:text-sm lg:text-base font-bold text-red-500 line-through decoration-red-500 tracking-tight">
                     {originalPriceParts.currency} {originalPriceParts.amount}
                   </span>
                 </div>
               )}
-              <div className="text-2xl lg:text-[26px] font-bold text-gray-950 tracking-tight leading-none">
+              <div className="text-xl sm:text-2xl lg:text-[26px] font-bold text-gray-950 tracking-tight leading-none whitespace-nowrap">
                 {formatPriceParts(carData.price.amount, carData.price.currency as Currency).currency}{' '}
                 {formatPriceParts(carData.price.amount, carData.price.currency as Currency).amount}
               </div>
-              <span className="text-sm lg:text-[15px] text-gray-600 font-normal block mt-1.5">
+              <span className="text-xs sm:text-sm lg:text-[15px] text-gray-600 font-normal block mt-1.5 whitespace-nowrap">
                 Total price for {carData.price.totalDays} {carData.price.totalDays === 1 ? 'day' : 'days'}
               </span>
-              <span className="text-xs text-gray-500 font-medium block mt-0.5">
+              <span className="text-[11px] sm:text-xs text-gray-500 font-medium block mt-0.5 whitespace-nowrap">
                 Included taxes &amp; fees
               </span>
             </div>
@@ -1588,7 +1639,7 @@ export default function CarCard({
               : 'mx-4 sm:mx-5 lg:mx-0 lg:ml-4 w-[calc(100%-2rem)] sm:w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0 px-3.5 sm:px-4 py-2 sm:py-2.5 items-center justify-start gap-x-2.5 md:gap-x-3.5 xl:gap-x-5 flex-wrap gap-y-3'
           }`}>
             {isOptionsLayout ? (
-              <div className="w-full flex items-center justify-between flex-nowrap min-w-0">
+              <div className="flex items-center justify-start gap-4 sm:gap-6 md:gap-7 lg:gap-8 flex-nowrap min-w-0">
                 {/* 1. Supplier Logo + Name with Rating Underneath */}
                 <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                   <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-16 sm:w-20 h-9 sm:h-10 shrink-0 shadow-sm border border-gray-200/60">
@@ -1607,35 +1658,35 @@ export default function CarCard({
                   </div>
 
                   <div className="min-w-0 flex flex-col justify-center">
-                    <span className="text-xs sm:text-sm font-black text-gray-900 block truncate leading-tight mb-0.5 sm:mb-1">
+                    <span className="text-sm sm:text-[15px] font-black text-gray-900 block truncate leading-tight mb-0.5 sm:mb-1">
                       {carData.supplier.name}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-black leading-none">
+                      <span className="bg-[var(--primary)] text-gray-900 px-1.5 py-0.5 rounded text-[11px] sm:text-xs font-black leading-none">
                         {carData.supplier.rating}/10
                       </span>
-                      <span className="text-[10px] sm:text-[11px] font-black text-gray-800 leading-none">Excellent</span>
+                      <span className="text-[11px] sm:text-xs font-black text-gray-800 leading-none">Excellent</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="h-5 w-px bg-gray-300 shrink-0" />
+                <div className="h-6 w-px bg-gray-300 shrink-0" />
 
                 {/* 2. Rental Terms button */}
                 <button
                   type="button"
                   onClick={() => setShowTerms(true)}
-                  className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs xl:text-sm font-bold underline cursor-pointer shrink-0 transition-colors"
+                  className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-sm sm:text-[15px] font-bold underline cursor-pointer shrink-0 transition-colors"
                 >
-                  <FileText size={16} className="shrink-0 text-blue-600" />
+                  <FileText size={18} className="shrink-0 text-blue-600" />
                   <span>Rental Terms</span>
                 </button>
 
-                <div className="h-5 w-px bg-gray-300 shrink-0" />
+                <div className="h-6 w-px bg-gray-300 shrink-0" />
 
                 {/* 3. Fuel Policy */}
-                <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
-                  <Fuel size={16} className="shrink-0 text-blue-600" />
+                <div className="flex items-center gap-1.5 text-blue-600 text-sm sm:text-[15px] font-bold shrink-0">
+                  <Fuel size={18} className="shrink-0 text-blue-600" />
                   <span className="cursor-pointer">{carData.fuelPolicy}</span>
                   <ChicTooltip
                     text={getFuelPolicyDescription(carData.fuelPolicy)}
@@ -1646,36 +1697,14 @@ export default function CarCard({
                   />
                 </div>
 
-                <div className="h-5 w-px bg-gray-300 shrink-0" />
+                <div className="h-6 w-px bg-gray-300 shrink-0" />
 
                 {/* 4. Pick-up */}
-                <div className="flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0">
-                  <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0 mt-0.5" />
+                <div className="flex items-center gap-1.5 text-blue-600 text-sm sm:text-[15px] font-bold shrink-0">
+                  <PickupIcon pickupType={carData.pickupType} className="text-blue-600 shrink-0 size-[18px]" />
                   <span><PickupLabel pickupType={carData.pickupType} /></span>
                 </div>
 
-                {/* 5. Location / Address - desktop only (lg+) */}
-                <div className="h-5 w-px bg-gray-300 hidden lg:block shrink-0" />
-                <div className="hidden lg:flex items-center gap-1.5 text-blue-600 text-xs xl:text-sm font-bold shrink-0 min-w-0">
-                  <button
-                    type="button"
-                    onClick={openMap}
-                    className="shrink-0 p-0.5 text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
-                    title="View location on Google Maps"
-                    aria-label="View location on Google Maps"
-                  >
-                    <Globe size={16} className="text-blue-600 shrink-0" />
-                  </button>
-                  <div
-                    onClick={openMap}
-                    className="cursor-pointer group/addr truncate max-w-[280px] lg:max-w-[340px] xl:max-w-none"
-                    title="View location on Google Maps"
-                  >
-                    <span className="text-blue-600 underline font-bold group-hover/addr:text-blue-800 transition-colors">
-                      {displayAddress}
-                    </span>
-                  </div>
-                </div>
               </div>
             ) : (
               <>
@@ -1743,8 +1772,8 @@ export default function CarCard({
                 {/* Header — nothing above What's included */}
                 <div className="mb-3">
                   <div className="inline-flex flex-col">
-                    <h4 className="text-xs md:text-sm font-extrabold text-gray-900">What's included</h4>
-                    <span className="mt-1.5 h-0.5 w-[calc(100%+20px)] bg-amber-400 rounded-full" />
+                    <h4 className="text-base sm:text-[17px] md:text-lg font-bold text-emerald-800 tracking-wide">What's included</h4>
+                    <span className="mt-1.5 h-[2.5px] w-[calc(100%+20px)] bg-amber-400 rounded-full" />
                   </div>
                 </div>
 
@@ -1775,8 +1804,8 @@ export default function CarCard({
               <>
                 <div className="w-[55%] xl:w-[60%] p-2 pt-3 min-w-0">
                   <div className="mb-2">
-                    <h4 className="text-xs md:text-sm font-bold text-emerald-800">What is Included!</h4>
-                    <div className="mt-2 h-0.5 bg-yellow-400 w-full" />
+                    <h4 className="text-base sm:text-[17px] md:text-lg font-bold text-emerald-800 tracking-wide">What is Included!</h4>
+                    <div className="mt-2 h-[2.5px] bg-yellow-400 w-full" />
                   </div>
                   <div className="grid grid-cols-2 gap-x-1 gap-y-1.5 mt-3">
                     {displayedInclusions.map((inc, i) => {
