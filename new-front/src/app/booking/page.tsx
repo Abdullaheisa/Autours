@@ -850,31 +850,11 @@ function BookingContent() {
           )}
         </div>
 
-      {/* Mobile Summary + Car */}
+      {/* Mobile Car Card */}
       <div className="lg:hidden mb-6 space-y-4">
         {selectedVehicle && (
           <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
         )}
-        {/* 1. Pick-up and Drop-off Card First */}
-        <PickupDropoffCard
-          pickupDate={searchStateParams.dateFrom}
-          pickupTime={searchStateParams.startTime || '10:00'}
-          dropoffDate={searchStateParams.dateTo}
-          dropoffTime={searchStateParams.endTime || '10:00'}
-          pickupBranch={(selectedVehicle as any)?.branch}
-          dropoffBranch={(selectedVehicle as any)?.branch}
-          fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
-          supplierName={selectedVehicle?.supplier?.name}
-        />
-        {/* 2. Price Breakdown / Invoice Card Underneath */}
-        <PriceBreakdownCard
-          rentalDays={rentalDays}
-          currencyCode={currencyCode}
-          baseVehiclePrice={baseVehiclePrice}
-          extrasItems={itemizedExtras}
-          grandTotalPrice={grandTotalPrice}
-          onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
-        />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -1044,6 +1024,31 @@ function BookingContent() {
             depositAmount={selectedVehicle?.deposit}
             currencyCode={currencyCode}
           />
+
+          {/* ── Mobile/Tablet: Pick-up & Invoice (Price Breakdown) BEFORE Data Form ── */}
+          <div className="lg:hidden space-y-4">
+            {/* 1. Pick-up and Drop-off Card First */}
+            <PickupDropoffCard
+              pickupDate={searchStateParams.dateFrom}
+              pickupTime={searchStateParams.startTime || '10:00'}
+              dropoffDate={searchStateParams.dateTo}
+              dropoffTime={searchStateParams.endTime || '10:00'}
+              pickupBranch={(selectedVehicle as any)?.branch}
+              dropoffBranch={(selectedVehicle as any)?.branch}
+              fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
+              supplierName={selectedVehicle?.supplier?.name}
+            />
+
+            {/* 2. Price Breakdown / Invoice Card Underneath */}
+            <PriceBreakdownCard
+              rentalDays={rentalDays}
+              currencyCode={currencyCode}
+              baseVehiclePrice={baseVehiclePrice}
+              extrasItems={itemizedExtras}
+              grandTotalPrice={grandTotalPrice}
+              onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
+            />
+          </div>
 
           {/* ── 3. Registration & Flight Details Form ─────────────────────────── */}
           <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
