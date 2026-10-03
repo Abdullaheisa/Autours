@@ -336,8 +336,19 @@ function BookingContent() {
         setShowCountryDropdown(false);
       }
     };
+
+    const handleScroll = () => {
+      setShowTitleDropdown(false);
+      setShowMobileCodeDropdown(false);
+      setShowCountryDropdown(false);
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   // ── Vehicle selection (locked to prevent re-fetch swaps & restored from session) ─
@@ -1159,64 +1170,62 @@ function BookingContent() {
                 )}
 
                 {/* Row 1: Title + First Name + Last Name */}
-                <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <div className="flex gap-3 sm:contents">
-                    {/* Custom Title Dropdown (compact width, centered text, Mr / Mrs / Miss / Ms) */}
-                    <div ref={titleDropdownRef} className="w-[82px] shrink-0 relative">
-                      <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 text-center">Title</label>
-                      <button
-                        type="button"
-                        onClick={() => setShowTitleDropdown(!showTitleDropdown)}
-                        className="w-full flex items-center justify-between pl-3 pr-2 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold text-gray-900 bg-white transition-all cursor-pointer shadow-2xs hover:border-gray-300"
-                      >
-                        <span className="flex-1 text-center font-bold">{gender}</span>
-                        <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showTitleDropdown ? 'rotate-180' : ''}`} />
-                      </button>
+                <div className="md:col-span-2 grid grid-cols-[82px_1fr] sm:grid-cols-[82px_1fr_1fr] gap-3 sm:gap-4">
+                  {/* Custom Title Dropdown (compact width, centered text, Mr / Mrs / Miss / Ms) */}
+                  <div ref={titleDropdownRef} className="w-[82px] relative">
+                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 text-center">Title</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowTitleDropdown(!showTitleDropdown)}
+                      className="w-full flex items-center justify-between pl-3 pr-2 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold text-gray-900 bg-white transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                    >
+                      <span className="flex-1 text-center font-bold">{gender}</span>
+                      <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showTitleDropdown ? 'rotate-180' : ''}`} />
+                    </button>
 
-                      {showTitleDropdown && (
-                        <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                          {['Mr.', 'Mrs.', 'Miss', 'Ms.'].map((title) => {
-                            const isSelected = gender === title;
-                            return (
-                              <button
-                                key={title}
-                                type="button"
-                                onClick={() => {
-                                  setGender(title);
-                                  setShowTitleDropdown(false);
-                                }}
-                                className={`w-full text-center py-2 text-xs sm:text-sm font-bold transition-colors cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-amber-400/20 text-gray-950 font-black'
-                                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-950'
-                                }`}
-                              >
-                                {title}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* First Name (smaller box) */}
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">First Name</label>
-                      <div className="relative">
-                        <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          placeholder="First name..."
-                          className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
-                        />
+                    {showTitleDropdown && (
+                      <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-30 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                        {['Mr.', 'Mrs.', 'Miss', 'Ms.'].map((title) => {
+                          const isSelected = gender === title;
+                          return (
+                            <button
+                              key={title}
+                              type="button"
+                              onClick={() => {
+                                setGender(title);
+                                setShowTitleDropdown(false);
+                              }}
+                              className={`w-full text-center py-2 text-xs sm:text-sm font-bold transition-colors cursor-pointer ${
+                                isSelected
+                                  ? 'bg-amber-400/20 text-gray-950 font-black'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-950'
+                              }`}
+                            >
+                              {title}
+                            </button>
+                          );
+                        })}
                       </div>
+                    )}
+                  </div>
+
+                  {/* First Name (smaller box) */}
+                  <div className="min-w-0">
+                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">First Name</label>
+                    <div className="relative">
+                      <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="First name..."
+                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                      />
                     </div>
                   </div>
 
                   {/* Last Name (smaller box) */}
-                  <div className="flex-1 min-w-0">
+                  <div className="col-span-2 sm:col-span-1 min-w-0">
                     <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Last Name</label>
                     <div className="relative">
                       <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -1249,7 +1258,7 @@ function BookingContent() {
                       </button>
 
                       {showMobileCodeDropdown && (
-                        <div className="absolute top-full left-0 mt-1.5 w-60 sm:w-64 bg-white border border-gray-150 rounded-xl shadow-xl z-50 py-1.5 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+                        <div className="absolute top-full left-0 mt-1.5 w-60 sm:w-64 bg-white border border-gray-150 rounded-xl shadow-xl z-30 py-1.5 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
                           {COUNTRY_CODES.map((c) => {
                             const isSelected = mobileCode === `+${c.code}`;
                             return (
@@ -1306,7 +1315,7 @@ function BookingContent() {
                       <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
                     </button>
                     {showCountryDropdown && (
-                      <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-30 max-h-60 overflow-y-auto py-1 animate-in fade-in zoom-in-95 duration-150">
                         {worldCountries.map((c) => {
                           const isSelected = country === c.name;
                           return (
