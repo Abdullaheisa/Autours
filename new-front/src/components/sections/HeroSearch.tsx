@@ -541,10 +541,10 @@ export default function HeroSearch({
                       : 'border-white hover:border-[#f9d602]'
                   }`}
                 >
-                  <span className={`w-full text-center text-sm sm:text-base md:text-[16px] font-bold select-none -translate-x-2.5 sm:-translate-x-3 truncate ${
+                  <span className={`w-full text-center text-sm sm:text-base md:text-[16px] font-bold select-none -translate-x-2.5 sm:-translate-x-3 truncate whitespace-nowrap ${
                     startDate ? 'text-gray-900' : 'text-gray-400'
                   }`}>
-                    {startDate ? format(startDate, 'dd/MM/yyyy') : 'From'}
+                    {startDate ? format(startDate, 'd MMM yyyy') : 'From'}
                   </span>
                   <Calendar size={18} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>
@@ -610,10 +610,10 @@ export default function HeroSearch({
                       : 'border-white hover:border-[#f9d602]'
                   }`}
                 >
-                  <span className={`w-full text-center text-sm sm:text-base md:text-[16px] font-bold select-none -translate-x-2.5 sm:-translate-x-3 truncate ${
+                  <span className={`w-full text-center text-sm sm:text-base md:text-[16px] font-bold select-none -translate-x-2.5 sm:-translate-x-3 truncate whitespace-nowrap ${
                     endDate ? 'text-gray-900' : 'text-gray-400'
                   }`}>
-                    {endDate ? format(endDate, 'dd/MM/yyyy') : 'To'}
+                    {endDate ? format(endDate, 'd MMM yyyy') : 'To'}
                   </span>
                   <Calendar size={18} className="text-gray-400 shrink-0 absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </button>

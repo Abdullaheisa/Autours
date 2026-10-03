@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { MapPin, Clock, Phone, Building2 } from "lucide-react";
+import { formatDate } from "@/utils/format";
 
 export interface PickupDropoffCardProps {
   pickupDate?: string | null;
@@ -38,18 +39,9 @@ export interface PickupDropoffCardProps {
 
 function formatDateString(dateStr?: string | null, timeStr?: string | null): string {
   if (!dateStr) return "Select date";
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return `${dateStr} ${timeStr || ""}`.trim();
-    const formatted = d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    return `${formatted} ${timeStr || "10:00"}`;
-  } catch {
-    return `${dateStr} ${timeStr || ""}`.trim();
-  }
+  const formatted = formatDate(dateStr);
+  if (!formatted) return `${dateStr} ${timeStr || ""}`.trim();
+  return `${formatted} ${timeStr || "10:00"}`;
 }
 
 export default function PickupDropoffCard({

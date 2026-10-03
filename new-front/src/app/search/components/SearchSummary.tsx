@@ -3,6 +3,7 @@
 import { useSelector } from 'react-redux';
 import { CheckCircle2, Calendar, Clock, Pencil, SlidersHorizontal } from 'lucide-react';
 import { RootState } from '@/store';
+import { formatDate } from '@/utils/format';
 
 interface SearchSummaryProps {
   onEditClick?: () => void;
@@ -14,12 +15,6 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
   const { searchParams, count, daysNumber } = useSelector((state: RootState) => state.search);
   const currencyCode = useSelector((state: RootState) => state.currency.code);
   const locationText = searchParams.locationLabel || searchParams.location || '';
-
-  const formatDisplayDate = (dateStr: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-sm">
@@ -42,7 +37,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
               {locationText || 'Select Location'}
             </p>
             <p className="text-[10px] text-gray-500 mt-0.5">
-              {searchParams.dateFrom ? formatDisplayDate(searchParams.dateFrom) : '--'}
+              {searchParams.dateFrom ? formatDate(searchParams.dateFrom) : '--'}
               {' '}
               {searchParams.startTime || '10:00'}
             </p>
@@ -63,7 +58,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
               {locationText || 'Select Location'}
             </p>
             <p className="text-[10px] text-gray-500 mt-0.5">
-              {searchParams.dateTo ? formatDisplayDate(searchParams.dateTo) : '--'}
+              {searchParams.dateTo ? formatDate(searchParams.dateTo) : '--'}
               {' '}
               {searchParams.endTime || '10:00'}
             </p>
@@ -96,7 +91,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
             <div className="flex items-center gap-x-3 gap-y-1 text-sm font-normal text-gray-600 pl-6 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <Calendar size={15} />
-                {searchParams.dateFrom}
+                {formatDate(searchParams.dateFrom)}
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock size={15} />
@@ -119,7 +114,7 @@ export default function SearchSummary({ onEditClick, hideEditButton, forceMobile
             <div className="flex items-center gap-x-3 gap-y-1 text-sm font-normal text-gray-600 pl-6 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <Calendar size={15} />
-                {searchParams.dateTo}
+                {formatDate(searchParams.dateTo)}
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock size={15} />

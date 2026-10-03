@@ -23,6 +23,7 @@ import { bookingApi } from '@/services/api';
 import { Vehicle, Currency } from '@/types';
 import { getVehicleImageUrl } from '@/utils/getImageUrl';
 import { getVehicleDisplayPrice } from '@/utils/vehiclePrice';
+import { formatDate } from '@/utils/format';
 
 interface InChatBookingFormProps {
   vehicle: Vehicle;
@@ -731,11 +732,7 @@ export default function InChatBookingForm({
                 <CalendarIcon className="w-3 h-3 text-amber-500" />
               </div>
               <div className="text-xs font-black text-gray-950 mt-1 truncate">
-                {parseIsoDate(dateFrom).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                })}
+                {formatDate(dateFrom)}
               </div>
               {/* Embedded Time Picker */}
               <div className="flex items-center gap-1 mt-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1 shadow-2xs" onClick={(e) => e.stopPropagation()}>
@@ -766,11 +763,7 @@ export default function InChatBookingForm({
                 <CalendarIcon className="w-3 h-3 text-amber-500" />
               </div>
               <div className="text-xs font-black text-gray-950 mt-1 truncate">
-                {parseIsoDate(dateTo).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                })}
+                {formatDate(dateTo)}
               </div>
               {/* Embedded Time Picker */}
               <div className="flex items-center gap-1 mt-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1 shadow-2xs" onClick={(e) => e.stopPropagation()}>

@@ -282,19 +282,19 @@ export default function ResultsSearchBar({
               type="button"
               onClick={() => setShowCalendar(!showCalendar)}
               aria-label="Select pickup date" // 🚀 Accessibility Fix
-              className="flex items-center gap-2 px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex items-center gap-1.5 px-2.5 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs sm:text-[13px] font-bold text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary whitespace-nowrap overflow-hidden"
             >
-              <Calendar size={16} className="text-gray-400" aria-hidden="true" />
-              {startDate ? format(startDate, 'yyyy/MM/dd') : 'Pickup'}
+              <Calendar size={14} className="text-gray-400 shrink-0" aria-hidden="true" />
+              <span className="truncate">{startDate ? format(startDate, 'd MMM yyyy') : 'Pickup'}</span>
             </button>
             <button
               type="button"
               onClick={() => setShowCalendar(!showCalendar)}
               aria-label="Select return date" // 🚀 Accessibility Fix
-              className="flex items-center gap-2 px-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex items-center gap-1.5 px-2.5 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs sm:text-[13px] font-bold text-gray-800 hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary whitespace-nowrap overflow-hidden"
             >
-              <Calendar size={16} className="text-gray-400" aria-hidden="true" />
-              {endDate ? format(endDate, 'yyyy/MM/dd') : 'Return'}
+              <Calendar size={14} className="text-gray-400 shrink-0" aria-hidden="true" />
+              <span className="truncate">{endDate ? format(endDate, 'd MMM yyyy') : 'Return'}</span>
             </button>
           </div>
         </div>

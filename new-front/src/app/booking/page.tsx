@@ -1027,50 +1027,56 @@ function BookingContent() {
                 </div>
               </div>
             ) : selectedExtrasCount > 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-200/90 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 sm:gap-4">
-                <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
-                    <PackageCheck size={19} className="stroke-[2.2]" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2">
-                      <h4 className="text-sm font-black text-gray-900 whitespace-nowrap">
-                        Selected Add-ons ({selectedExtrasCount})
+              <div className="bg-white rounded-2xl border border-gray-200/90 p-4 sm:p-5 shadow-xs">
+                <div className="flex items-start justify-between gap-3.5 sm:gap-4 mb-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                    <div className="inline-flex flex-col">
+                      <h4 className="text-sm sm:text-base font-bold text-gray-900 tracking-wide">
+                        Selected Extras ({selectedExtrasCount})
                       </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap shrink-0">
-                        Included in Total Price
-                      </span>
+                      <span className="mt-1.5 h-[2.5px] w-full bg-amber-400 rounded-full" />
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
-                      {extrasList
-                        .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
-                        .map((ex) => {
-                          const qty = selectedExtras[ex.key || ex.id];
-                          const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
-                          const baseCurrency = ex.currency || "USD";
-                          const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
-                          return (
-                            <span
-                              key={ex.key || ex.id}
-                              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-xs font-bold max-w-full"
-                            >
-                              <span className="text-emerald-600 font-black shrink-0">✓</span>
-                              <span className="truncate">{ex.name} {qty > 1 ? `(x${qty})` : ""}</span>
-                              <span className="text-gray-400 font-semibold shrink-0">• {itemTotal.toFixed(2)} {currencyCode}</span>
-                            </span>
-                          );
-                        })}
-                    </div>
+                    <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap shrink-0 self-start mt-0.5">
+                      Included in Total Price
+                    </span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingExtras(true)}
+                    className="px-4 py-2 rounded-xl border-2 border-primary hover:bg-primary text-gray-950 font-black text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap text-center flex items-center justify-center shrink-0"
+                  >
+                    Change Extras
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsEditingExtras(true)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl border-2 border-primary hover:bg-primary text-gray-950 font-black text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap text-center flex items-center justify-center shrink-0"
-                >
-                  Change Extras
-                </button>
+                <div className="flex flex-col gap-2 mt-2">
+                  {extrasList
+                    .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
+                    .map((ex) => {
+                      const qty = selectedExtras[ex.key || ex.id];
+                      const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
+                      const baseCurrency = ex.currency || "USD";
+                      const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
+                      return (
+                        <div
+                          key={ex.key || ex.id}
+                          className="flex items-center gap-2 min-w-0"
+                        >
+                          <Check size={14} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+                          <span className="text-xs sm:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap">
+                            <span className="text-gray-900 font-bold">{ex.name}</span>
+                            {qty > 1 && (
+                              <span className="text-[11px] font-extrabold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60">
+                                x{qty}
+                              </span>
+                            )}
+                            <span className="text-gray-500 font-medium">• {itemTotal.toFixed(2)} {currencyCode}</span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             ) : (selectedVehicle as any)?.has_extras !== false ? (
               <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs shadow-xs">

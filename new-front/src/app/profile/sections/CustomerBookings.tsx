@@ -13,6 +13,7 @@ import ReviewModal from "../components/ReviewModal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getLocationDisplayLabel, getLocationPickupValue } from "@/utils/location";
+import { formatDate } from "@/utils/format";
 
 export default function CustomerBookings() {
   const { user: sessionUser } = useSelector((state: RootState) => state.auth);
@@ -243,7 +244,7 @@ export default function CustomerBookings() {
                         {v.branch ? getLocationDisplayLabel(v.branch) : `${v.branch?.address || ''}, ${v.branch?.city || ''}`}
                       </p>
                       <p className="text-xs font-medium text-gray-700 mt-1">
-                        {rental.start_date} {rental.start_time ? `(${rental.start_time})` : ''}
+                        {formatDate(rental.start_date)} {rental.start_time ? `(${rental.start_time})` : ''}
                       </p>
                     </div>
                   </div>
@@ -255,7 +256,7 @@ export default function CustomerBookings() {
                         {v.branch ? getLocationDisplayLabel(v.branch) : `${v.branch?.address || ''}, ${v.branch?.city || ''}`}
                       </p>
                       <p className="text-xs font-medium text-gray-700 mt-1">
-                        {rental.end_date} {rental.end_time ? `(${rental.end_time})` : ''}
+                        {formatDate(rental.end_date)} {rental.end_time ? `(${rental.end_time})` : ''}
                       </p>
                     </div>
                   </div>

@@ -1610,7 +1610,7 @@ export default function CarCard({
 
           {/* Price displayed above the gray box on options layout */}
           {isOptionsLayout && (
-            <div className="w-auto md:w-[155px] lg:w-[170px] xl:w-[195px] 2xl:w-[230px] shrink-0 px-2.5 sm:px-3 lg:px-4 pt-2 pb-[15px] flex flex-col items-start self-end text-left">
+            <div className="w-auto shrink-0 pl-2 pr-5 sm:pr-6 md:pr-7 lg:pr-8 pt-2 pb-[15px] flex flex-col items-start self-end text-left">
               {originalPriceParts && discountPercent > 0 && (
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="text-xs sm:text-sm lg:text-base font-bold text-red-500 line-through decoration-red-500 tracking-tight">

@@ -104,7 +104,7 @@ function formatDisplayDate(dateStr: string) {
   const d = parseIsoDate(dateStr);
   if (!d) return dateStr;
   try {
-    return format(d, 'dd/MM/yyyy');
+    return format(d, 'd MMM yyyy');
   } catch {
     return dateStr;
   }

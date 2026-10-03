@@ -230,7 +230,7 @@ export default function MonthlyBookingsChart({ isMaximized = false, onMaximize, 
     const start = periodNum === 1 ? p1Start : p2Start;
     const end = periodNum === 1 ? p1End : p2End;
     if (!start || !end) return `Period ${periodNum}`;
-    return `${format(start, 'dd/MM/yyyy')} to ${format(end, 'dd/MM/yyyy')}`;
+    return `${format(start, 'd MMM yyyy')} to ${format(end, 'd MMM yyyy')}`;
   };
 
   // Compare Chart Data Preparation
@@ -444,7 +444,7 @@ export default function MonthlyBookingsChart({ isMaximized = false, onMaximize, 
                       <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Date Range</span>
                       <span className="text-xs font-bold text-gray-800 truncate">
                         {p1Start && p1End 
-                          ? `${format(p1Start, 'dd/MM/yyyy')} - ${format(p1End, 'dd/MM/yyyy')}`
+                          ? `${format(p1Start, 'd MMM yyyy')} - ${format(p1End, 'd MMM yyyy')}`
                           : 'Select Dates'
                         }
                       </span>
@@ -519,7 +519,7 @@ export default function MonthlyBookingsChart({ isMaximized = false, onMaximize, 
                       <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Date Range</span>
                       <span className="text-xs font-bold text-gray-800 truncate">
                         {p2Start && p2End 
-                          ? `${format(p2Start, 'dd/MM/yyyy')} - ${format(p2End, 'dd/MM/yyyy')}`
+                          ? `${format(p2Start, 'd MMM yyyy')} - ${format(p2End, 'd MMM yyyy')}`
                           : 'Select Dates'
                         }
                       </span>
