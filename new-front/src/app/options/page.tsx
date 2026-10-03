@@ -630,42 +630,17 @@ function OptionsContent() {
               onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
             />
 
-            {/* 3. Supplier Card Under Invoice (Desktop only) */}
-            {selectedVehicle?.supplier && (
-              <div className="bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="bg-white p-1.5 rounded-xl flex items-center justify-center w-20 h-11 shrink-0 border border-gray-150 shadow-2xs overflow-hidden">
-                    {selectedVehicle.supplier.logo ? (
-                      <img
-                        src={getLogoUrl(selectedVehicle.supplier.logo)}
-                        alt={`${selectedVehicle.supplier.name} Logo`}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span className="text-xs font-bold text-gray-600 truncate">{selectedVehicle.supplier.name}</span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Car Supplier
-                    </span>
-                    <span className="text-sm font-black text-gray-900 block truncate">
-                      {selectedVehicle.supplier.name}
-                    </span>
-                  </div>
-                </div>
-
-                {selectedVehicle.supplier.rating && (
-                  <div className="flex flex-col items-end shrink-0 leading-tight">
-                    <span className="bg-[var(--primary)] text-gray-900 px-2 py-0.5 rounded-lg text-xs font-black">
-                      {selectedVehicle.supplier.rating}/10
-                    </span>
-                    <span className="text-[10px] font-black text-gray-700 mt-0.5">Excellent</span>
-                  </div>
-                )}
+            {/* 3. Supplier Logo Card Under Invoice (Desktop only) */}
+            {selectedVehicle?.supplier?.logo && (
+              <div className="bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs flex items-center justify-center">
+                <img
+                  src={getLogoUrl(selectedVehicle.supplier.logo)}
+                  alt={`${selectedVehicle.supplier.name || 'Supplier'} Logo`}
+                  className="max-h-14 w-auto object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLElement).closest('div.rounded-2xl')?.remove();
+                  }}
+                />
               </div>
             )}
           </aside>

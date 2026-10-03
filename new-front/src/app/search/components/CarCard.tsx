@@ -1639,7 +1639,7 @@ export default function CarCard({
               : 'mx-4 sm:mx-5 lg:mx-0 lg:ml-4 w-[calc(100%-2rem)] sm:w-[calc(100%-2.5rem)] lg:w-auto lg:flex-1 lg:min-w-0 px-3.5 sm:px-4 py-2 sm:py-2.5 items-center justify-start gap-x-2.5 md:gap-x-3.5 xl:gap-x-5 flex-wrap gap-y-3'
           }`}>
             {isOptionsLayout ? (
-              <div className="flex items-center justify-start gap-4 sm:gap-6 md:gap-7 lg:gap-8 flex-nowrap min-w-0">
+              <div className="flex items-center justify-start gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 min-[1301px]:gap-6 flex-nowrap min-w-0 pr-4 sm:pr-6">
                 {/* 1. Supplier Logo + Name with Rating Underneath */}
                 <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                   <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-16 sm:w-20 h-9 sm:h-10 shrink-0 shadow-sm border border-gray-200/60">

@@ -454,7 +454,8 @@ class SupplierIntegrationService
      */
     private function splitCustomerName(string $fullName): array
     {
-        $parts = preg_split('/\s+/', trim($fullName), 2);
+        $clean = preg_replace('/^(Mr\.?|Mrs\.?|Miss|Ms\.?)\s+/i', '', trim($fullName));
+        $parts = preg_split('/\s+/', trim($clean), 2);
 
         return [
             'first' => $parts[0] ?? '',

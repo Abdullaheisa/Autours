@@ -82,8 +82,16 @@ class RegisterController extends Controller
                 $role = 'customer';
             }
 
+            $fullName = trim($request->name ?? '');
+            if ($request->filled('first_name') && $request->filled('last_name')) {
+                $fullName = trim($request->first_name . ' ' . $request->last_name);
+            } elseif (empty($fullName) && $request->filled('first_name')) {
+                $fullName = trim($request->first_name);
+            }
+
             $user = User::create([
-                'name' => $request->name,
+                'name' => $fullName,
+                'gender' => $request->gender ?? null,
                 'phone_num' => $request->phone,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),

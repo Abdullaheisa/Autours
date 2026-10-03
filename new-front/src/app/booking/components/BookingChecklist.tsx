@@ -24,9 +24,12 @@ export default function BookingChecklist({
     <div className="space-y-4">
       {/* ── Main Checklist Card ── */}
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 sm:p-7">
-        <h3 className="text-[19px] font-black text-gray-900 tracking-tight mb-5">
-          Your checklist before pick-up:
-        </h3>
+        <div className="inline-flex flex-col mb-5">
+          <h3 className="text-base sm:text-[17px] md:text-lg font-bold tracking-wide text-gray-900">
+            Your Checklist
+          </h3>
+          <span className="mt-1 block h-[2.5px] w-full rounded-full bg-amber-400" />
+        </div>
 
         <div className="divide-y divide-gray-100">
           {/* 1. Pick-up Time */}

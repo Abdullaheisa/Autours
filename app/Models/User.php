@@ -69,6 +69,25 @@ class User extends Authenticatable
         'extras_pricing' => 'array',
     ];
 
+    protected $appends = [
+        'first_name',
+        'last_name',
+    ];
+
+    public function getFirstNameAttribute()
+    {
+        $clean = preg_replace('/^(Mr\.?|Mrs\.?|Miss|Ms\.?)\s+/i', '', trim($this->name ?? ''));
+        $parts = preg_split('/\s+/', trim($clean), 2);
+        return $parts[0] ?? '';
+    }
+
+    public function getLastNameAttribute()
+    {
+        $clean = preg_replace('/^(Mr\.?|Mrs\.?|Miss|Ms\.?)\s+/i', '', trim($this->name ?? ''));
+        $parts = preg_split('/\s+/', trim($clean), 2);
+        return $parts[1] ?? '';
+    }
+
     public function vehicles() {
         return $this->hasMany(Vehicle::class, 'supplier', 'id');
     }

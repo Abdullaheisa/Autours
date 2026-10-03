@@ -284,6 +284,27 @@ class BookingsController extends Controller
 
             $supplierPaymentMethod = User::query()->with(['paymentMethods'])->find($vehicleWithPrice->supplier);
             $vehicle = Vehicle::query()->with('branch')->find($request->id);
+
+            // Update customer details if provided on booking form
+            $customer = auth()->user();
+            if ($customer && $customer->role === 'customer') {
+                $customerUpdates = [];
+                if ($request->filled('first_name') && $request->filled('last_name')) {
+                    $customerUpdates['name'] = trim($request->first_name . ' ' . $request->last_name);
+                } elseif ($request->filled('name')) {
+                    $customerUpdates['name'] = trim($request->name);
+                }
+                if ($request->filled('gender')) {
+                    $customerUpdates['gender'] = $request->gender;
+                }
+                if ($request->filled('phone')) {
+                    $customerUpdates['phone_num'] = $request->phone;
+                }
+                if (!empty($customerUpdates)) {
+                    $customer->update($customerUpdates);
+                }
+            }
+
             $item = new Rental();
             $item->customer_id = auth()->user()->id;
             $item->supplier_id = $vehicleWithPrice->supplier;

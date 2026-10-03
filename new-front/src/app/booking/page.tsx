@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useCallback, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getLogoUrl } from '@/utils/getImageUrl';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '@/components/shared/layout/Navbar';
 import Footer from '@/components/shared/layout/Footer';
@@ -24,38 +23,39 @@ import { restoreAuth, logout } from '@/store/slices/authSlice';
 import { Vehicle, Currency } from '@/types';
 import { worldCountries } from '@/data/worldCountries';
 import { getVehicleDisplayPrice } from '@/utils/vehiclePrice';
+import { getLogoUrl } from '@/utils/getImageUrl';
 
 // ─── Country codes (same as legacy project) ───────────────────────────────────
 const COUNTRY_CODES = [
-  { country: 'Algeria',              code: '213', iso: 'DZ', flag: '🇩🇿' },
-  { country: 'Australia',            code: '61',  iso: 'AU', flag: '🇦🇺' },
-  { country: 'Bahrain',              code: '973', iso: 'BH', flag: '🇧🇭' },
-  { country: 'Canada',               code: '1',   iso: 'CA', flag: '🇨🇦' },
-  { country: 'Egypt',                code: '20',  iso: 'EG', flag: '🇪🇬' },
-  { country: 'France',               code: '33',  iso: 'FR', flag: '🇫🇷' },
-  { country: 'Germany',              code: '49',  iso: 'DE', flag: '🇩🇪' },
-  { country: 'India',                code: '91',  iso: 'IN', flag: '🇮🇳' },
-  { country: 'Iraq',                 code: '964', iso: 'IQ', flag: '🇮🇶' },
-  { country: 'Jordan',               code: '962', iso: 'JO', flag: '🇯🇴' },
-  { country: 'Kuwait',               code: '965', iso: 'KW', flag: '🇰🇼' },
-  { country: 'Lebanon',              code: '961', iso: 'LB', flag: '🇱🇧' },
-  { country: 'Libya',                code: '218', iso: 'LY', flag: '🇱🇾' },
-  { country: 'Morocco',              code: '212', iso: 'MA', flag: '🇲🇦' },
-  { country: 'Oman',                 code: '968', iso: 'OM', flag: '🇴🇲' },
-  { country: 'Pakistan',             code: '92',  iso: 'PK', flag: '🇵🇰' },
-  { country: 'Palestine',            code: '970', iso: 'PS', flag: '🇵🇸' },
-  { country: 'Qatar',                code: '974', iso: 'QA', flag: '🇶🇦' },
-  { country: 'Saudi Arabia',         code: '966', iso: 'SA', flag: '🇸🇦' },
-  { country: 'Syria',                code: '963', iso: 'SY', flag: '🇸🇾' },
-  { country: 'Tunisia',              code: '216', iso: 'TN', flag: '🇹🇳' },
-  { country: 'Turkey',               code: '90',  iso: 'TR', flag: '🇹🇷' },
+  { country: 'Algeria', code: '213', iso: 'DZ', flag: '🇩🇿' },
+  { country: 'Australia', code: '61', iso: 'AU', flag: '🇦🇺' },
+  { country: 'Bahrain', code: '973', iso: 'BH', flag: '🇧🇭' },
+  { country: 'Canada', code: '1', iso: 'CA', flag: '🇨🇦' },
+  { country: 'Egypt', code: '20', iso: 'EG', flag: '🇪🇬' },
+  { country: 'France', code: '33', iso: 'FR', flag: '🇫🇷' },
+  { country: 'Germany', code: '49', iso: 'DE', flag: '🇩🇪' },
+  { country: 'India', code: '91', iso: 'IN', flag: '🇮🇳' },
+  { country: 'Iraq', code: '964', iso: 'IQ', flag: '🇮🇶' },
+  { country: 'Jordan', code: '962', iso: 'JO', flag: '🇯🇴' },
+  { country: 'Kuwait', code: '965', iso: 'KW', flag: '🇰🇼' },
+  { country: 'Lebanon', code: '961', iso: 'LB', flag: '🇱🇧' },
+  { country: 'Libya', code: '218', iso: 'LY', flag: '🇱🇾' },
+  { country: 'Morocco', code: '212', iso: 'MA', flag: '🇲🇦' },
+  { country: 'Oman', code: '968', iso: 'OM', flag: '🇴🇲' },
+  { country: 'Pakistan', code: '92', iso: 'PK', flag: '🇵🇰' },
+  { country: 'Palestine', code: '970', iso: 'PS', flag: '🇵🇸' },
+  { country: 'Qatar', code: '974', iso: 'QA', flag: '🇶🇦' },
+  { country: 'Saudi Arabia', code: '966', iso: 'SA', flag: '🇸🇦' },
+  { country: 'Syria', code: '963', iso: 'SY', flag: '🇸🇾' },
+  { country: 'Tunisia', code: '216', iso: 'TN', flag: '🇹🇳' },
+  { country: 'Turkey', code: '90', iso: 'TR', flag: '🇹🇷' },
   { country: 'United Arab Emirates', code: '971', iso: 'AE', flag: '🇦🇪' },
-  { country: 'United Kingdom',       code: '44',  iso: 'GB', flag: '🇬🇧' },
-  { country: 'United States',        code: '1',   iso: 'US', flag: '🇺🇸' },
+  { country: 'United Kingdom', code: '44', iso: 'GB', flag: '🇬🇧' },
+  { country: 'United States', code: '1', iso: 'US', flag: '🇺🇸' },
 ];
 
 const SUPPORTED_BACKEND_CURRENCIES = [
-  'USD', 'EUR', 'GBP', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD', 
+  'USD', 'EUR', 'GBP', 'EGP', 'SAR', 'AED', 'QAR', 'OMR', 'KWD', 'BHD',
   'JOD', 'MAD', 'TRY', 'GEL', 'CHF', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'PLN'
 ];
 
@@ -124,24 +124,24 @@ const DEFAULT_EXTRAS: ExtraItem[] = [
 
 const extractLaravelError = (errorResponse: any): string => {
   if (!errorResponse) return '';
-  
+
   if (typeof errorResponse === 'object') {
     return errorResponse.error || errorResponse.message || '';
   }
-  
+
   if (typeof errorResponse === 'string') {
     if (errorResponse.includes('<!DOCTYPE html>') || errorResponse.includes('html')) {
       const msgMatch = errorResponse.match(/class="exception-message"[^>]*>([\s\S]*?)<\/h2>/i)
-                    || errorResponse.match(/<h2 class="exception-name[^>]*>([\s\S]*?)<\/h2>/i)
-                    || errorResponse.match(/class="exception-message-wrapper"[^>]*>([\s\S]*?)<\/div>/i)
-                    || errorResponse.match(/<title>(.*?)<\/title>/i)
-                    || errorResponse.match(/<h1>(.*?)<\/h1>/i);
+        || errorResponse.match(/<h2 class="exception-name[^>]*>([\s\S]*?)<\/h2>/i)
+        || errorResponse.match(/class="exception-message-wrapper"[^>]*>([\s\S]*?)<\/div>/i)
+        || errorResponse.match(/<title>(.*?)<\/title>/i)
+        || errorResponse.match(/<h1>(.*?)<\/h1>/i);
       if (msgMatch) {
         const clean = msgMatch[1].replace(/<[^>]*>/g, '').trim();
         if (clean) return `Server Error: ${clean}`;
       }
     }
-    
+
     try {
       const parsed = JSON.parse(errorResponse);
       return parsed.error || parsed.message || '';
@@ -149,7 +149,7 @@ const extractLaravelError = (errorResponse: any): string => {
       // not JSON
     }
   }
-  
+
   return '';
 };
 
@@ -165,7 +165,8 @@ function BookingContent() {
 
   // ── Registration form state ──────────────────────────────────────────────────
   const [gender, setGender] = useState('Mr.');
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [mobileCode, setMobileCode] = useState('+20');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
@@ -179,7 +180,7 @@ function BookingContent() {
       try {
         const saved = sessionStorage.getItem('autours_available_extras');
         if (saved) return JSON.parse(saved);
-      } catch {}
+      } catch { }
     }
     return DEFAULT_EXTRAS;
   });
@@ -228,7 +229,7 @@ function BookingContent() {
           sessionStorage.setItem('autours_extras_vehicle_id', String(currentCarId));
           sessionStorage.setItem('autours_selected_extras', JSON.stringify(parsed));
         }
-      } catch {}
+      } catch { }
     }
   }, [searchParams]);
 
@@ -255,12 +256,24 @@ function BookingContent() {
   // ── Profile prefill: only runs for authenticated customers ──────────────────
   const applyProfileData = useCallback((profile: any) => {
     if (!profile) return;
-    const nameParts = (profile.name || '').split(' ');
-    const title = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts[0] : 'Mr.';
-    const name = nameParts[0] === 'Mr.' || nameParts[0] === 'Mrs.' ? nameParts.slice(1).join(' ') : (profile.name || '');
+    const nameParts = (profile.name || '').trim().split(/\s+/);
+    let title = 'Mr.';
+    let fName = '';
+    let lName = '';
+
+    const validTitles = ['Mr.', 'Mrs.', 'Miss', 'Ms.', 'Mr', 'Mrs', 'Miss', 'Ms'];
+    if (validTitles.includes(nameParts[0])) {
+      title = nameParts[0].endsWith('.') || nameParts[0] === 'Miss' ? nameParts[0] : `${nameParts[0]}.`;
+      fName = nameParts[1] || '';
+      lName = nameParts.slice(2).join(' ') || '';
+    } else {
+      fName = nameParts[0] || '';
+      lName = nameParts.slice(1).join(' ') || '';
+    }
 
     setGender(title);
-    setFullName(name);
+    setFirstName(fName);
+    setLastName(lName);
     setEmail(profile.email || '');
     if (profile.country) setCountry(profile.country);
 
@@ -303,7 +316,29 @@ function BookingContent() {
 
   // ── UI state ─────────────────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTitleDropdown, setShowTitleDropdown] = useState(false);
+  const [showMobileCodeDropdown, setShowMobileCodeDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+
+  const titleDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileCodeDropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (titleDropdownRef.current && !titleDropdownRef.current.contains(e.target as Node)) {
+        setShowTitleDropdown(false);
+      }
+      if (mobileCodeDropdownRef.current && !mobileCodeDropdownRef.current.contains(e.target as Node)) {
+        setShowMobileCodeDropdown(false);
+      }
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ── Vehicle selection (locked to prevent re-fetch swaps & restored from session) ─
   const bookId = searchParams.get('bookId');
@@ -312,7 +347,7 @@ function BookingContent() {
       try {
         const saved = sessionStorage.getItem('autours_selected_vehicle');
         if (saved) return JSON.parse(saved);
-      } catch {}
+      } catch { }
     }
     return null;
   });
@@ -322,7 +357,7 @@ function BookingContent() {
       try {
         const saved = sessionStorage.getItem('autours_selected_vehicle');
         if (saved) return JSON.parse(saved);
-      } catch {}
+      } catch { }
     }
     return null;
   });
@@ -424,10 +459,10 @@ function BookingContent() {
       const lockedId = lockedVehicle?.id;
       const lockedName = lockedVehicle?.name;
       const lockedSupplierId = lockedVehicle?.supplier?.id;
-      
+
       if (lockedName) {
-        const updated = vehicles.find((v: Vehicle) => 
-          (lockedId && v.id === lockedId) || 
+        const updated = vehicles.find((v: Vehicle) =>
+          (lockedId && v.id === lockedId) ||
           (v.name === lockedName && v.supplier?.id === lockedSupplierId)
         );
         if (
@@ -459,7 +494,7 @@ function BookingContent() {
           sessionStorage.removeItem('autours_extras_vehicle_id');
           setSelectedExtras({});
         }
-      } catch {}
+      } catch { }
     }
   }, [selectedVehicle?.id]);
 
@@ -481,7 +516,7 @@ function BookingContent() {
         if (vehicleToSave.price_currency || fetchedCurrency) {
           sessionStorage.setItem('autours_fetched_currency', vehicleToSave.price_currency || fetchedCurrency || 'EGP');
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [selectedVehicle, searchStateParams, daysNumber, fetchedCurrency]);
 
@@ -506,7 +541,7 @@ function BookingContent() {
             if (diff > 0) return diff;
           }
         }
-      } catch {}
+      } catch { }
     }
     return 1;
   }, [daysNumber, searchStateParams]);
@@ -557,13 +592,13 @@ function BookingContent() {
         vehicle_id: currentVehicleId ?? undefined,
       })
       .then((res: any) => {
-        const items = Array.isArray(res?.data) 
-          ? res.data 
-          : Array.isArray(res?.data?.data) 
-          ? res.data.data 
-          : Array.isArray(res) 
-          ? res 
-          : [];
+        const items = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+            ? res.data.data
+            : Array.isArray(res)
+              ? res
+              : [];
         setExtrasList(items);
       })
       .catch(() => {
@@ -627,7 +662,7 @@ function BookingContent() {
           if (currentCarId) {
             sessionStorage.setItem("autours_extras_vehicle_id", String(currentCarId));
           }
-        } catch (e) {}
+        } catch (e) { }
       }
       return next;
     });
@@ -644,8 +679,9 @@ function BookingContent() {
     }
 
     // Validate
-    if (!gender) { toast.error('Please select Mr/Mrs'); return; }
-    if (!fullName.trim()) { toast.error('Please enter your full name'); return; }
+    if (!gender) { toast.error('Please select a title (Mr/Mrs/Miss/Ms)'); return; }
+    if (!firstName.trim()) { toast.error('Please enter your first name'); return; }
+    if (!lastName.trim()) { toast.error('Please enter your last name'); return; }
     if (!mobileCode) { toast.error('Please select phone code'); return; }
     if (!phone.trim()) { toast.error('Please enter a valid phone number'); return; }
     if (!country) { toast.error('Please select your country'); return; }
@@ -702,8 +738,12 @@ function BookingContent() {
         // If not authenticated via login, attempt registration for new customer
         if (!authSuccessful) {
           try {
+            const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
             const regRes: any = await apiClient.post('/post/user/data', {
-              name: `${gender} ${fullName.trim()}`,
+              name: combinedFullName,
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              full_name: combinedFullName,
               gender,
               phone: phone.trim(),
               mobile_code: mobileCode,
@@ -777,6 +817,8 @@ function BookingContent() {
       const driverAge = searchParams.get('driver_age') || searchParams.get('age') || (searchStateParams.driverAge ? String(searchStateParams.driverAge) : '30');
       const residenceCountry = searchParams.get('residence_country') || searchParams.get('countryName') || searchStateParams.residenceCountry || 'United Arab Emirates';
 
+      const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+
       await toast.promise(
         bookingApi.create({
           id: actualVehicleToBook,
@@ -793,6 +835,12 @@ function BookingContent() {
           flight_number: flightNumber.trim() || undefined,
           extras: formattedExtras.length > 0 ? formattedExtras : undefined,
           extras_price: extrasTotalPrice,
+          // Driver details sent to backend
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          name: combinedFullName,
+          gender: gender,
+          phone: `${mobileCode}${phone.trim()}`,
         }),
         {
           loading: 'Processing your booking...',
@@ -851,224 +899,18 @@ function BookingContent() {
           )}
         </div>
 
-      {/* Mobile Car Card */}
-      <div className="lg:hidden mb-6 space-y-4">
-        {selectedVehicle && (
-          <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
-        )}
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
-
-        {/* ── LEFT SIDEBAR: Matches Search Page Width Identically ────────────────────────── */}
-        <aside className="hidden lg:block lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
-          {/* 1. Pick-up and drop-off Card First */}
-          <PickupDropoffCard
-            pickupDate={searchStateParams.dateFrom}
-            pickupTime={searchStateParams.startTime || '10:00'}
-            dropoffDate={searchStateParams.dateTo}
-            dropoffTime={searchStateParams.endTime || '10:00'}
-            pickupBranch={(selectedVehicle as any)?.branch}
-            dropoffBranch={(selectedVehicle as any)?.branch}
-            fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
-            supplierName={selectedVehicle?.supplier?.name}
-          />
-
-          {/* 2. Price Breakdown Card (Invoice) Underneath */}
-          <PriceBreakdownCard
-            rentalDays={rentalDays}
-            currencyCode={currencyCode}
-            baseVehiclePrice={baseVehiclePrice}
-            extrasItems={itemizedExtras}
-            grandTotalPrice={grandTotalPrice}
-            onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
-          />
-
-          {/* 3. Supplier Card Under Invoice (Desktop only) */}
-          {selectedVehicle?.supplier && (
-            <div className="bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="bg-white p-1.5 rounded-xl flex items-center justify-center w-20 h-11 shrink-0 border border-gray-150 shadow-2xs overflow-hidden">
-                  {selectedVehicle.supplier.logo ? (
-                    <img
-                      src={getLogoUrl(selectedVehicle.supplier.logo)}
-                      alt={`${selectedVehicle.supplier.name} Logo`}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <span className="text-xs font-bold text-gray-600 truncate">{selectedVehicle.supplier.name}</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Car Supplier
-                  </span>
-                  <span className="text-sm font-black text-gray-900 block truncate">
-                    {selectedVehicle.supplier.name}
-                  </span>
-                </div>
-              </div>
-
-              {selectedVehicle.supplier.rating && (
-                <div className="flex flex-col items-end shrink-0 leading-tight">
-                  <span className="bg-[var(--primary)] text-gray-900 px-2 py-0.5 rounded-lg text-xs font-black">
-                    {selectedVehicle.supplier.rating}/10
-                  </span>
-                  <span className="text-[10px] font-black text-gray-700 mt-0.5">Excellent</span>
-                </div>
-              )}
-            </div>
+        {/* Mobile Car Card */}
+        <div className="lg:hidden mb-6 space-y-4">
+          {selectedVehicle && (
+            <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
           )}
-        </aside>
+        </div>
 
-        {/* ── RIGHT CONTENT: Matches Search Page Width Identically ───────────────────── */}
-        <div className="flex-1 w-full min-w-0 space-y-4">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-          {/* Desktop Car Card */}
-          <div className="hidden lg:block">
-            {selectedVehicle ? (
-              <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
-            ) : (
-              <div className="p-8 bg-white rounded-2xl border border-gray-100 text-center text-gray-500">
-                No vehicle selected.
-              </div>
-            )}
-          </div>
-
-          {/* ── 1. Extras & Add-ons Section (Moved BEFORE Checklist, with In-Place Editing) ── */}
-          {isEditingExtras ? (
-            <div className="bg-white rounded-2xl border-2 border-primary/50 p-5 sm:p-6 shadow-sm space-y-4 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0">
-                    <PackageCheck size={18} className="stroke-[2.2]" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black text-gray-900">
-                      Choose &amp; Modify Add-ons
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      Select extras for this vehicle — your total price and invoice update in real-time
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingExtras(false)}
-                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-600 text-gray-950 font-bold text-xs transition-all shadow-xs cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-
-              {extrasList.length > 0 ? (
-                <BookingExtras
-                  extras={extrasList}
-                  selectedExtras={selectedExtras}
-                  onChangeExtra={handleExtraChange}
-                  currencyCode={currencyCode}
-                  allRates={allRates}
-                />
-              ) : (
-                <div className="py-6 text-center text-xs text-gray-500 font-medium">
-                  No add-ons available for this vehicle.
-                </div>
-              )}
-
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                <div className="text-xs text-gray-500 font-medium">
-                  {selectedExtrasCount} extra{selectedExtrasCount === 1 ? "" : "s"} selected
-                  {extrasTotalPrice > 0 && ` (+${extrasTotalPrice.toFixed(2)} ${currencyCode})`}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingExtras(false)}
-                  className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-950 font-black text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          ) : selectedExtrasCount > 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200/90 p-4 sm:p-5 shadow-xs">
-              {/* Header row: Extras title on the left, Change Extras button on the right (parallel at the top) */}
-              <div className="flex items-center justify-between gap-4">
-                <div className="inline-flex flex-col">
-                  <div className="flex items-center gap-2.5">
-                    <h4 className="text-base sm:text-[17px] md:text-lg font-bold text-emerald-800 tracking-wide">Extras</h4>
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap">
-                      Included in Total Price
-                    </span>
-                  </div>
-                  <span className="mt-1.5 h-[2.5px] w-full bg-amber-400 rounded-full" />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsEditingExtras(true)}
-                  className="px-4 py-1.5 sm:py-2 rounded-xl border border-primary hover:bg-primary text-gray-950 font-bold text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap text-center flex items-center justify-center shrink-0"
-                >
-                  Change Extras
-                </button>
-              </div>
-
-              {/* Items list: each choice on a separate line under each other */}
-              <div className="flex flex-col gap-2 mt-3.5">
-                {extrasList
-                  .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
-                  .map((ex) => {
-                    const qty = selectedExtras[ex.key || ex.id];
-                    const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
-                    const baseCurrency = ex.currency || "USD";
-                    const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
-                    return (
-                      <div
-                        key={ex.key || ex.id}
-                        className="flex items-center gap-2 min-w-0"
-                      >
-                        <Check size={14} className="text-emerald-600 shrink-0 stroke-[2.5]" />
-                        <span className="text-xs md:text-sm font-semibold text-gray-700 break-words flex items-center gap-1.5 flex-wrap">
-                          <span>{ex.name} {qty > 1 ? `(x${qty})` : ""}</span>
-                          <span className="text-gray-400 font-medium">• {itemTotal.toFixed(2)} {currencyCode}</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          ) : (selectedVehicle as any)?.has_extras !== false ? (
-            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-primary/20 text-gray-900 flex items-center justify-center shrink-0">
-                  <PackageCheck size={16} />
-                </div>
-                <span className="text-gray-600 font-medium">
-                  Need child seats, an additional driver, or a GPS system?
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEditingExtras(true)}
-                className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-900 font-black text-xs transition-colors shrink-0 whitespace-nowrap cursor-pointer shadow-2xs text-center flex items-center justify-center"
-              >
-                + Add Extras
-              </button>
-            </div>
-          ) : null}
-
-          {/* ── 2. Checklist Before Pick-up Section ───────────────────────────── */}
-          <BookingChecklist
-            pickupTime={searchStateParams.startTime || '10:00'}
-            depositAmount={selectedVehicle?.deposit}
-            currencyCode={currencyCode}
-          />
-
-          {/* ── Mobile/Tablet: Pick-up & Invoice (Price Breakdown) BEFORE Data Form ── */}
-          <div className="lg:hidden space-y-4">
-            {/* 1. Pick-up and Drop-off Card First */}
+          {/* ── LEFT SIDEBAR: Matches Search Page Width Identically ────────────────────────── */}
+          <aside className="hidden lg:block lg:w-[250px] xl:w-[280px] 2xl:w-[320px] shrink-0 space-y-4">
+            {/* 1. Pick-up and drop-off Card First */}
             <PickupDropoffCard
               pickupDate={searchStateParams.dateFrom}
               pickupTime={searchStateParams.startTime || '10:00'}
@@ -1080,7 +922,7 @@ function BookingContent() {
               supplierName={selectedVehicle?.supplier?.name}
             />
 
-            {/* 2. Price Breakdown / Invoice Card Underneath */}
+            {/* 2. Price Breakdown Card (Invoice) Underneath */}
             <PriceBreakdownCard
               rentalDays={rentalDays}
               currencyCode={currencyCode}
@@ -1089,239 +931,499 @@ function BookingContent() {
               grandTotalPrice={grandTotalPrice}
               onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
             />
-          </div>
 
-          {/* ── 3. Registration & Flight Details Form ─────────────────────────── */}
-          <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
-            <div className="mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-                  <User size={16} className="text-gray-900" />
-                </div>
-                <h2 className="text-[20px] font-black tracking-tight text-gray-900">
-                  Driver &amp; Booking Information
-                </h2>
+            {/* 3. Supplier Logo Card Under Invoice (Desktop only) */}
+            {selectedVehicle?.supplier?.logo && (
+              <div className="bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs flex items-center justify-center">
+                <img
+                  src={getLogoUrl(selectedVehicle.supplier.logo)}
+                  alt={`${selectedVehicle.supplier.name || 'Supplier'} Logo`}
+                  className="max-h-14 w-auto object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLElement).closest('div.rounded-2xl')?.remove();
+                  }}
+                />
               </div>
-              <p className="text-sm text-gray-500 mt-1 ml-11">
-                Complete your details and flight info to confirm your reservation
-              </p>
-            </div>
+            )}
+          </aside>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* ── RIGHT CONTENT: Matches Search Page Width Identically ───────────────────── */}
+          <div className="flex-1 w-full min-w-0 space-y-4">
 
-              {/* ── Management Account Alert Banner ───────────────────────────── */}
-              {isManagementAccount && (
-                <div className="md:col-span-2 p-4 sm:p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3.5 text-amber-900 shadow-sm">
-                  <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={22} />
-                  <div className="flex-1 text-xs sm:text-sm">
-                    <p className="font-bold text-amber-950 text-sm sm:text-base">
-                      {loggedInUser?.role === 'admin' ? 'Administrator Account' : 'Company / Supplier Account'} ({loggedInUser?.email})
-                    </p>
-                    <p className="text-amber-800 mt-1 leading-relaxed">
-                      Car rental bookings can only be placed by <strong>Customer</strong> accounts. Company and Administrator accounts are not permitted to book vehicles.
-                    </p>
-                    <div className="mt-3 flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => dispatch(logout())}
-                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
-                      >
-                        Log Out to Book as Customer
-                      </button>
-                    </div>
-                  </div>
+            {/* Desktop Car Card */}
+            <div className="hidden lg:block">
+              {selectedVehicle ? (
+                <CarCard vehicle={selectedVehicle} daysNumber={rentalDays} hideBookingControls={true} preselectedBookId={actualVehicleToBook} />
+              ) : (
+                <div className="p-8 bg-white rounded-2xl border border-gray-100 text-center text-gray-500">
+                  No vehicle selected.
                 </div>
               )}
+            </div>
 
-              {/* Gender + Full Name */}
-              <div className="flex flex-col sm:flex-row gap-3 md:col-span-1">
-                <div className="w-full sm:w-28 shrink-0">
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Title</label>
-                  <div className="relative">
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-semibold text-gray-900 bg-white appearance-none cursor-pointer"
-                    >
-                      <option value="Mr.">Mr.</option>
-                      <option value="Mrs.">Mrs.</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            {/* ── 1. Extras & Add-ons Section (Moved BEFORE Checklist, with In-Place Editing) ── */}
+            {isEditingExtras ? (
+              <div className="bg-white rounded-2xl border-2 border-primary/50 p-5 sm:p-6 shadow-sm space-y-4 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0">
+                      <PackageCheck size={18} className="stroke-[2.2]" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-gray-900">
+                        Choose &amp; Modify Add-ons
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Select extras for this vehicle — your total price and invoice update in real-time
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Full Name</label>
-                  <div className="relative">
-                    <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Enter full name..."
-                      className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Phone Code + Phone */}
-              <div className="md:col-span-1">
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative w-full sm:w-28 shrink-0">
-                    <select
-                      value={mobileCode}
-                      onChange={(e) => setMobileCode(e.target.value)}
-                      className="w-full pl-3 pr-8 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs font-semibold text-gray-900 bg-white appearance-none cursor-pointer"
-                    >
-                      {COUNTRY_CODES.map((c) => (
-                        <option key={`${c.iso}-${c.code}`} value={`+${c.code}`}>
-                          {c.country} (+{c.code})
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Phone number..."
-                    className="flex-1 px-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-
-              {/* Country */}
-              <div className="md:col-span-2">
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Country</label>
-                <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="w-full flex items-center justify-between gap-2 px-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 bg-white"
+                    onClick={() => setIsEditingExtras(false)}
+                    className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-600 text-gray-950 font-bold text-xs transition-all shadow-xs cursor-pointer"
                   >
-                    <span className="flex items-center gap-2 text-left">
-                      <Globe size={16} className="text-gray-400 shrink-0" />
-                      <span className={country ? 'text-gray-900' : 'text-gray-400'}>
-                        {country || 'Select country...'}
-                      </span>
-                    </span>
-                    <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                    Done
                   </button>
-                  {showCountryDropdown && (
-                    <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
-                      {worldCountries.map((c) => (
-                        <button
-                          key={c.name}
-                          type="button"
-                          onClick={() => { setCountry(c.name); setShowCountryDropdown(false); }}
-                          className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700"
-                        >
-                          {c.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                </div>
+
+                {extrasList.length > 0 ? (
+                  <BookingExtras
+                    extras={extrasList}
+                    selectedExtras={selectedExtras}
+                    onChangeExtra={handleExtraChange}
+                    currencyCode={currencyCode}
+                    allRates={allRates}
+                  />
+                ) : (
+                  <div className="py-6 text-center text-xs text-gray-500 font-medium">
+                    No add-ons available for this vehicle.
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                  <div className="text-xs text-gray-500 font-medium">
+                    {selectedExtrasCount} extra{selectedExtrasCount === 1 ? "" : "s"} selected
+                    {extrasTotalPrice > 0 && ` (+${extrasTotalPrice.toFixed(2)} ${currencyCode})`}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingExtras(false)}
+                    className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-950 font-black text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer"
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
-
-              {/* Email + Password */}
-              <div className={`md:col-span-2 grid grid-cols-1 ${isCustomer ? "grid-cols-1" : "md:grid-cols-2"} gap-4`}>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
-                  <div className="relative">
-                    <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="E-mail..."
-                      className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
-                    />
+            ) : selectedExtrasCount > 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-200/90 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 sm:gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-primary/20 text-gray-950 flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+                    <PackageCheck size={19} className="stroke-[2.2]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2">
+                      <h4 className="text-sm font-black text-gray-900 whitespace-nowrap">
+                        Selected Add-ons ({selectedExtrasCount})
+                      </h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap shrink-0">
+                        Included in Total Price
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
+                      {extrasList
+                        .filter((ex) => (selectedExtras[ex.key || ex.id] || 0) > 0)
+                        .map((ex) => {
+                          const qty = selectedExtras[ex.key || ex.id];
+                          const basePrice = ex.price !== undefined ? ex.price : (ex.price_usd || 0);
+                          const baseCurrency = ex.currency || "USD";
+                          const itemTotal = convertExtraPrice(basePrice, baseCurrency, currencyCode, allRates) * qty;
+                          return (
+                            <span
+                              key={ex.key || ex.id}
+                              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-xs font-bold max-w-full"
+                            >
+                              <span className="text-emerald-600 font-black shrink-0">✓</span>
+                              <span className="truncate">{ex.name} {qty > 1 ? `(x${qty})` : ""}</span>
+                              <span className="text-gray-400 font-semibold shrink-0">• {itemTotal.toFixed(2)} {currencyCode}</span>
+                            </span>
+                          );
+                        })}
+                    </div>
                   </div>
                 </div>
-                {!isCustomer && (
-                  <div>
-                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Password</label>
-                    <div className="relative">
-                      <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Account password..."
-                        className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
-                      />
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditingExtras(true)}
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl border-2 border-primary hover:bg-primary text-gray-950 font-black text-xs transition-all cursor-pointer shadow-xs whitespace-nowrap text-center flex items-center justify-center shrink-0"
+                >
+                  Change Extras
+                </button>
+              </div>
+            ) : (selectedVehicle as any)?.has_extras !== false ? (
+              <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-primary/20 text-gray-900 flex items-center justify-center shrink-0">
+                    <PackageCheck size={16} />
+                  </div>
+                  <span className="text-gray-600 font-medium">
+                    Need child seats, an additional driver, or a GPS system?
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingExtras(true)}
+                  className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl bg-primary hover:bg-primary-600 text-gray-900 font-black text-xs transition-colors shrink-0 whitespace-nowrap cursor-pointer shadow-2xs text-center flex items-center justify-center"
+                >
+                  + Add Extras
+                </button>
+              </div>
+            ) : null}
+
+            {/* ── 2. Checklist Before Pick-up Section ───────────────────────────── */}
+            <BookingChecklist
+              pickupTime={searchStateParams.startTime || '10:00'}
+              depositAmount={selectedVehicle?.deposit}
+              currencyCode={currencyCode}
+            />
+
+            {/* ── Mobile/Tablet: Pick-up & Invoice (Price Breakdown) BEFORE Data Form ── */}
+            <div className="lg:hidden space-y-4">
+              {/* 1. Pick-up and Drop-off Card First */}
+              <PickupDropoffCard
+                pickupDate={searchStateParams.dateFrom}
+                pickupTime={searchStateParams.startTime || '10:00'}
+                dropoffDate={searchStateParams.dateTo}
+                dropoffTime={searchStateParams.endTime || '10:00'}
+                pickupBranch={(selectedVehicle as any)?.branch}
+                dropoffBranch={(selectedVehicle as any)?.branch}
+                fallbackLocation={searchStateParams.locationLabel || searchStateParams.location || 'Selected Location'}
+                supplierName={selectedVehicle?.supplier?.name}
+              />
+
+              {/* 2. Price Breakdown / Invoice Card Underneath */}
+              <PriceBreakdownCard
+                rentalDays={rentalDays}
+                currencyCode={currencyCode}
+                baseVehiclePrice={baseVehiclePrice}
+                extrasItems={itemizedExtras}
+                grandTotalPrice={grandTotalPrice}
+                onRemoveExtra={(id) => handleExtraChange(String(id), 0)}
+              />
+            </div>
+
+            {/* ── 3. Registration & Flight Details Form ─────────────────────────── */}
+            <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
+              <div className="mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shrink-0">
+                    <User size={16} className="text-gray-900" />
+                  </div>
+                  <div className="inline-flex flex-col">
+                    <h2 className="text-base sm:text-[17px] md:text-lg font-bold tracking-wide text-gray-900">
+                      Driver Details
+                    </h2>
+                    <span className="mt-1 block h-[2.5px] w-full rounded-full bg-amber-400" />
+                  </div>
+                </div>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1 ml-11">
+                  Complete your details and flight info to confirm your reservation
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {/* ── Management Account Alert Banner ───────────────────────────── */}
+                {isManagementAccount && (
+                  <div className="md:col-span-2 p-4 sm:p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3.5 text-amber-900 shadow-sm">
+                    <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={22} />
+                    <div className="flex-1 text-xs sm:text-sm">
+                      <p className="font-bold text-amber-950 text-sm sm:text-base">
+                        {loggedInUser?.role === 'admin' ? 'Administrator Account' : 'Company / Supplier Account'} ({loggedInUser?.email})
+                      </p>
+                      <p className="text-amber-800 mt-1 leading-relaxed">
+                        Car rental bookings can only be placed by <strong>Customer</strong> accounts. Company and Administrator accounts are not permitted to book vehicles.
+                      </p>
+                      <div className="mt-3 flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => dispatch(logout())}
+                          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
+                        >
+                          Log Out to Book as Customer
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* ── Flight Details (Optional) ─────────────────────────────────── */}
-              <div className="md:col-span-2 pt-2 border-t border-gray-100">
-                <FlightDetailsInput
-                  value={flightNumber}
-                  onChange={setFlightNumber}
-                />
-              </div>
+                {/* Row 1: Title + First Name + Last Name */}
+                <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <div className="flex gap-3 sm:contents">
+                    {/* Custom Title Dropdown (compact width, centered text, Mr / Mrs / Miss / Ms) */}
+                    <div ref={titleDropdownRef} className="w-[82px] shrink-0 relative">
+                      <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 text-center">Title</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowTitleDropdown(!showTitleDropdown)}
+                        className="w-full flex items-center justify-between pl-3 pr-2 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold text-gray-900 bg-white transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                      >
+                        <span className="flex-1 text-center font-bold">{gender}</span>
+                        <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showTitleDropdown ? 'rotate-180' : ''}`} />
+                      </button>
 
-              {/* ── Checkboxes ────────────────────────────────────────────────── */}
-              <div className="pt-4 border-t border-gray-100 space-y-4 md:col-span-2">
+                      {showTitleDropdown && (
+                        <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                          {['Mr.', 'Mrs.', 'Miss', 'Ms.'].map((title) => {
+                            const isSelected = gender === title;
+                            return (
+                              <button
+                                key={title}
+                                type="button"
+                                onClick={() => {
+                                  setGender(title);
+                                  setShowTitleDropdown(false);
+                                }}
+                                className={`w-full text-center py-2 text-xs sm:text-sm font-bold transition-colors cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-amber-400/20 text-gray-950 font-black'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-950'
+                                }`}
+                              >
+                                {title}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
 
-                <CheckboxItem
-                  checked={rememberMe}
-                  onChange={setRememberMe}
-                  label="Remember me on this device."
-                />
+                    {/* First Name (smaller box) */}
+                    <div className="flex-1 min-w-0">
+                      <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">First Name</label>
+                      <div className="relative">
+                        <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="First name..."
+                          className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-                <CheckboxItem
-                  checked={rentalTerms}
-                  onChange={setRentalTerms}
-                  label={
-                    <>
-                      I confirm that I have read, understood, and agree with the{' '}
-                      <a href="#" className="text-blue-600 hover:underline font-semibold">Rental Terms</a>
-                      {' '}&amp;{' '}
-                      <a href="#" className="text-blue-600 hover:underline font-semibold">Autours Terms</a>.
-                    </>
-                  }
-                />
+                  {/* Last Name (smaller box) */}
+                  <div className="flex-1 min-w-0">
+                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Last Name</label>
+                    <div className="relative">
+                      <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Last name..."
+                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                <CheckboxItem
-                  checked={subscribeEmails}
-                  onChange={setSubscribeEmails}
-                  label="Subscribe me to promotional emails."
-                />
-              </div>
+                {/* Row 2: Custom Phone Code Dropdown + Phone Input */}
+                <div className="md:col-span-1">
+                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
+                  <div className="flex gap-2.5">
+                    {/* Custom Phone Code Dropdown */}
+                    <div ref={mobileCodeDropdownRef} className="relative w-36 sm:w-40 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowMobileCodeDropdown(!showMobileCodeDropdown)}
+                        className="w-full flex items-center justify-between gap-1.5 pl-3 pr-2.5 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold text-gray-900 bg-white transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                      >
+                        <span className="truncate text-left font-bold text-gray-900">
+                          {mobileCode} ({COUNTRY_CODES.find(c => `+${c.code}` === mobileCode)?.country || ''})
+                        </span>
+                        <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showMobileCodeDropdown ? 'rotate-180' : ''}`} />
+                      </button>
 
-              {/* ── Submit Button ─────────────────────────────────────────────── */}
-              <div className="pt-2 md:col-span-2">
-                <button
-                  onClick={handleBook}
-                  disabled={isSubmitting || isManagementAccount}
-                  className="w-full py-4 px-8 bg-primary text-gray-900 rounded-xl font-black text-[16px] transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/10 cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
-                      Processing...
-                    </>
-                  ) : isManagementAccount ? (
-                    'Cannot Book with Management Account'
-                  ) : (
-                    'Confirm Booking'
+                      {showMobileCodeDropdown && (
+                        <div className="absolute top-full left-0 mt-1.5 w-60 sm:w-64 bg-white border border-gray-150 rounded-xl shadow-xl z-50 py-1.5 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+                          {COUNTRY_CODES.map((c) => {
+                            const isSelected = mobileCode === `+${c.code}`;
+                            return (
+                              <button
+                                key={`${c.iso}-${c.code}`}
+                                type="button"
+                                onClick={() => {
+                                  setMobileCode(`+${c.code}`);
+                                  setShowMobileCodeDropdown(false);
+                                }}
+                                className={`w-full flex items-center justify-between px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors cursor-pointer text-left ${
+                                  isSelected
+                                    ? 'bg-amber-400/15 text-gray-950 font-bold'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-950'
+                                }`}
+                              >
+                                <span className="truncate">
+                                  <span className="font-bold text-gray-900">+{c.code}</span>
+                                  <span className="text-gray-500 ml-1.5 font-normal">({c.country})</span>
+                                </span>
+                                {isSelected && <Check size={14} className="text-amber-600 shrink-0 stroke-[2.5]" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Phone number..."
+                      className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Country (half-width box) */}
+                <div className="md:col-span-1">
+                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Country</label>
+                  <div ref={countryDropdownRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                      className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 bg-white cursor-pointer shadow-2xs hover:border-gray-300 transition-all"
+                    >
+                      <span className="flex items-center gap-2 text-left truncate">
+                        <Globe size={16} className="text-gray-400 shrink-0" />
+                        <span className={country ? 'text-gray-900 truncate font-semibold' : 'text-gray-400'}>
+                          {country || 'Select country...'}
+                        </span>
+                      </span>
+                      <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showCountryDropdown && (
+                      <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 animate-in fade-in zoom-in-95 duration-150">
+                        {worldCountries.map((c) => {
+                          const isSelected = country === c.name;
+                          return (
+                            <button
+                              key={c.name}
+                              type="button"
+                              onClick={() => { setCountry(c.name); setShowCountryDropdown(false); }}
+                              className={`w-full flex items-center justify-between px-4 py-2 hover:bg-gray-50 text-sm font-medium transition-colors cursor-pointer text-left ${
+                                isSelected ? 'bg-amber-400/15 text-gray-950 font-bold' : 'text-gray-700'
+                              }`}
+                            >
+                              <span>{c.name}</span>
+                              {isSelected && <Check size={14} className="text-amber-600 shrink-0 stroke-[2.5]" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email + Password */}
+                <div className={`md:col-span-2 grid grid-cols-1 ${isCustomer ? "grid-cols-1" : "md:grid-cols-2"} gap-4`}>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="E-mail..."
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                      />
+                    </div>
+                  </div>
+                  {!isCustomer && (
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Password</label>
+                      <div className="relative">
+                        <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Account password..."
+                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                        />
+                      </div>
+                    </div>
                   )}
-                </button>
-              </div>
+                </div>
 
+                {/* ── Flight Details (Optional) ─────────────────────────────────── */}
+                <div className="md:col-span-2 pt-2 border-t border-gray-100">
+                  <FlightDetailsInput
+                    value={flightNumber}
+                    onChange={setFlightNumber}
+                  />
+                </div>
+
+                {/* ── Checkboxes ────────────────────────────────────────────────── */}
+                <div className="pt-4 border-t border-gray-100 space-y-4 md:col-span-2">
+
+                  <CheckboxItem
+                    checked={rememberMe}
+                    onChange={setRememberMe}
+                    label="Remember me on this device."
+                  />
+
+                  <CheckboxItem
+                    checked={rentalTerms}
+                    onChange={setRentalTerms}
+                    label={
+                      <>
+                        I confirm that I have read, understood, and agree with the{' '}
+                        <a href="#" className="text-blue-600 hover:underline font-semibold">Rental Terms</a>
+                        {' '}&amp;{' '}
+                        <a href="#" className="text-blue-600 hover:underline font-semibold">Autours Terms</a>.
+                      </>
+                    }
+                  />
+
+                  <CheckboxItem
+                    checked={subscribeEmails}
+                    onChange={setSubscribeEmails}
+                    label="Subscribe me to promotional emails."
+                  />
+                </div>
+
+                {/* ── Submit Button ─────────────────────────────────────────────── */}
+                <div className="pt-2 md:col-span-2">
+                  <button
+                    onClick={handleBook}
+                    disabled={isSubmitting || isManagementAccount}
+                    className="w-full py-4 px-8 bg-primary text-gray-900 rounded-xl font-black text-[16px] transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/10 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : isManagementAccount ? (
+                      'Cannot Book with Management Account'
+                    ) : (
+                      'Confirm Booking'
+                    )}
+                  </button>
+                </div>
+
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  );
 }
 
 // ─── Reusable Checkbox ─────────────────────────────────────────────────────────

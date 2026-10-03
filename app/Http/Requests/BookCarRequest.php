@@ -35,6 +35,11 @@ class BookCarRequest extends FormRequest
             'extras_price' => 'nullable|numeric|min:0',
             'driver_age' => 'nullable|string|max:20',
             'residence_country' => 'nullable|string|max:100',
+            'first_name' => 'nullable|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'name' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:30',
         ];
     }
 }
