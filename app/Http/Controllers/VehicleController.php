@@ -341,11 +341,11 @@ class VehicleController extends Controller
                         $branchKey = "{$vSupplierId}_{$vBranchId}_{$catExtra->id}";
                         $companyKey = "{$vSupplierId}_{$catExtra->id}";
 
-                        $isEnabled = true; // default enabled for active catalog extra
+                        $isEnabled = false;
                         if (isset($branchOverrides[$branchKey])) {
-                            $isEnabled = $branchOverrides[$branchKey];
+                            $isEnabled = (bool)$branchOverrides[$branchKey];
                         } elseif (isset($companyOverrides[$companyKey])) {
-                            $isEnabled = $companyOverrides[$companyKey];
+                            $isEnabled = (bool)$companyOverrides[$companyKey];
                         }
 
                         if ($isEnabled) {
@@ -1789,7 +1789,7 @@ class VehicleController extends Controller
                         ? $bOverrides->get($catExtra->id)
                         : $cOverrides->get($catExtra->id);
 
-                    $isEnabled = $override ? (bool)$override->is_enabled : true;
+                    $isEnabled = $override ? (bool)$override->is_enabled : false;
                     if ($isEnabled) {
                         $hasExtras = true;
                         break;

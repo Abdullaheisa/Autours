@@ -298,17 +298,23 @@ class BookingsController extends Controller
                     $customerUpdates['gender'] = $request->gender;
                 }
                 if ($request->filled('phone')) {
-                    $phoneExists = \App\Models\User::where('phone_num', $request->phone)
-                        ->where('id', '!=', $customer->id)
-                        ->exists();
-                    if ($phoneExists) {
-                        // Throw exception to be caught by the outer try-catch block
-                        throw new \Exception("The phone number is already registered to another account.");
+                    $newPhone = trim($request->phone);
+                    if ($newPhone !== $customer->phone_num) {
+                        $phoneExists = User::where('id', '!=', $customer->id)
+                            ->where('phone_num', $newPhone)
+                            ->exists();
+                        if ($phoneExists) {
+                            throw new \Exception("The phone number is already registered to another account.");
+                        }
+                        $customerUpdates['phone_num'] = $newPhone;
                     }
-                    $customerUpdates['phone_num'] = $request->phone;
                 }
                 if (!empty($customerUpdates)) {
-                    $customer->update($customerUpdates);
+                    try {
+                        $customer->update($customerUpdates);
+                    } catch (\Throwable $profileEx) {
+                        Log::warning('Could not update customer profile during booking: ' . $profileEx->getMessage());
+                    }
                 }
             }
 

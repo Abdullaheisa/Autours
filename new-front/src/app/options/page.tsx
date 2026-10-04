@@ -336,6 +336,13 @@ function OptionsContent() {
   useEffect(() => {
     if (!selectedVehicle && !vehicleId && !actualVehicleToBook) return;
 
+    if ((selectedVehicle as any)?.has_extras === false) {
+      setIsLoadingExtras(false);
+      setExtrasLoaded(true);
+      setExtrasList([]);
+      return;
+    }
+
     const supplierId =
       selectedVehicle?.supplier?.id ||
       (selectedVehicle as any)?.supplier_id ||
@@ -551,6 +558,8 @@ function OptionsContent() {
         }
         if (extrasList.length > 0) {
           sessionStorage.setItem("autours_available_extras", JSON.stringify(extrasList));
+        } else {
+          sessionStorage.removeItem("autours_available_extras");
         }
       } catch (e) {}
     }

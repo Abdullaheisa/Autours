@@ -59,68 +59,7 @@ const SUPPORTED_BACKEND_CURRENCIES = [
   'JOD', 'MAD', 'TRY', 'GEL', 'CHF', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'PLN'
 ];
 
-const DEFAULT_EXTRAS: ExtraItem[] = [
-  {
-    id: 'additional_driver',
-    name: 'Additional Driver',
-    description: 'Share the driving with an additional qualified driver on the rental agreement.',
-    price: 15.00,
-    currency: 'USD',
-    type: 'boolean',
-    max_qty: 1,
-    badge: 'Popular',
-  },
-  {
-    id: 'booster_cushion',
-    name: 'Booster Cushion',
-    description: 'For older children (approx. 4–11 years, 15–36 kg) to ensure safe seatbelt positioning.',
-    price: 10.00,
-    currency: 'USD',
-    type: 'quantity',
-    max_qty: 3,
-    badge: null,
-  },
-  {
-    id: 'child_booster_seat',
-    name: 'Child Booster Seat',
-    description: 'High-back booster seat suitable for children from 15 to 36 kg.',
-    price: 12.00,
-    currency: 'USD',
-    type: 'quantity',
-    max_qty: 3,
-    badge: 'Family Favorite',
-  },
-  {
-    id: 'infant_seat',
-    name: 'Infant Seat',
-    description: 'Rear-facing safety seat designed for infants from birth up to 13 kg.',
-    price: 15.00,
-    currency: 'USD',
-    type: 'quantity',
-    max_qty: 2,
-    badge: null,
-  },
-  {
-    id: 'gps',
-    name: 'Navigation System (GPS)',
-    description: 'Portable satellite navigation system with up-to-date maps and voice directions.',
-    price: 20.00,
-    currency: 'USD',
-    type: 'boolean',
-    max_qty: 1,
-    badge: 'Recommended',
-  },
-  {
-    id: 'toddler_seat',
-    name: 'Toddler Seat',
-    description: 'Forward-facing seat with 5-point harness for toddlers from 9 to 18 kg.',
-    price: 12.00,
-    currency: 'USD',
-    type: 'quantity',
-    max_qty: 3,
-    badge: null,
-  },
-];
+const DEFAULT_EXTRAS: ExtraItem[] = [];
 
 const extractLaravelError = (errorResponse: any): string => {
   if (!errorResponse) return '';
@@ -182,7 +121,7 @@ function BookingContent() {
         if (saved) return JSON.parse(saved);
       } catch { }
     }
-    return DEFAULT_EXTRAS;
+    return [];
   });
   const [isEditingExtras, setIsEditingExtras] = useState(false);
 
@@ -233,19 +172,32 @@ function BookingContent() {
     }
   }, [searchParams]);
 
+  // Effective current user: prefer Redux state, fallback to localStorage/sessionStorage
+  const storedUserJson = typeof window !== 'undefined'
+    ? (localStorage.getItem('user') || sessionStorage.getItem('user'))
+    : null;
+  const storedUser = useMemo(() => {
+    if (!storedUserJson) return null;
+    try {
+      return JSON.parse(storedUserJson);
+    } catch {
+      return null;
+    }
+  }, [storedUserJson]);
+
+  const activeUser = loggedInUser || storedUser;
+
   const isCustomer = Boolean(
-    isAuthenticated &&
-    loggedInUser &&
-    loggedInUser.role === 'customer' &&
-    email &&
-    loggedInUser.email?.toLowerCase().trim() === email.toLowerCase().trim() &&
-    (typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null)
+    (isAuthenticated || (typeof window !== 'undefined' && Boolean(localStorage.getItem('token') || sessionStorage.getItem('token')))) &&
+    activeUser &&
+    (activeUser.role === 'customer' || !activeUser.role || activeUser.role === 'user') &&
+    !['admin', 'supplier', 'active_supplier'].includes(activeUser.role || '')
   );
 
   const isManagementAccount = Boolean(
-    isAuthenticated &&
-    loggedInUser &&
-    (loggedInUser.role === 'admin' || loggedInUser.role === 'supplier' || loggedInUser.role === 'active_supplier')
+    (isAuthenticated || (typeof window !== 'undefined' && Boolean(localStorage.getItem('token') || sessionStorage.getItem('token')))) &&
+    activeUser &&
+    (activeUser.role === 'admin' || activeUser.role === 'supplier' || activeUser.role === 'active_supplier')
   );
 
   // Prefill details if already logged in as customer
@@ -302,12 +254,18 @@ function BookingContent() {
     }
   }, []);
 
-  // Mount-time fetch: only for customer accounts
+  const lastFilledUserIdRef = useRef<string | number | null>(null);
+
+  // Mount-time fetch & autofill: only for authenticated customer accounts
   useEffect(() => {
-    if (isCustomer && loggedInUser) {
-      applyProfileData(loggedInUser);
+    if (isCustomer && activeUser) {
+      const currentIdentifier = activeUser.id ?? activeUser.email ?? 'logged-in';
+      if (lastFilledUserIdRef.current !== currentIdentifier) {
+        applyProfileData(activeUser);
+        lastFilledUserIdRef.current = currentIdentifier;
+      }
     }
-  }, [isCustomer, loggedInUser, applyProfileData]);
+  }, [isCustomer, activeUser, applyProfileData]);
 
   // ── Checkboxes ───────────────────────────────────────────────────────────────
   const [rememberMe, setRememberMe] = useState(true);
@@ -595,6 +553,11 @@ function BookingContent() {
 
     const currentVehicleId = selectedVehicle?.id || vehicleId || undefined;
 
+    if ((selectedVehicle as any)?.has_extras === false) {
+      setExtrasList([]);
+      return;
+    }
+
     extrasPricingApi
       .getPricing({
         supplier_id: supplierId,
@@ -613,7 +576,7 @@ function BookingContent() {
         setExtrasList(items);
       })
       .catch(() => {
-        // Keep fallback
+        setExtrasList([]);
       });
   }, [selectedVehicle, bookId, vehicleId, (searchStateParams as any)?.country]);
 
@@ -802,6 +765,10 @@ function BookingContent() {
         }
       }
 
+      if (customerToken) {
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${customerToken}`;
+      }
+
       // Step 2: Prepare formatted extras and book vehicle
       const formattedExtras = extrasList
         .filter((e) => (selectedExtras[e.key || e.id] || 0) > 0)
@@ -887,7 +854,7 @@ function BookingContent() {
 
         {/* Back Link */}
         <div className="mb-4">
-          {(selectedVehicle as any)?.has_extras === false ? (
+          {(selectedVehicle as any)?.has_extras === false || extrasList.length === 0 ? (
             <Link
               href="/search"
               className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors group cursor-pointer"
@@ -1078,7 +1045,7 @@ function BookingContent() {
                     })}
                 </div>
               </div>
-            ) : (selectedVehicle as any)?.has_extras !== false ? (
+            ) : Boolean((selectedVehicle as any)?.has_extras) && extrasList.length > 0 ? (
               <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs shadow-xs">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-primary/20 text-gray-900 flex items-center justify-center shrink-0">
@@ -1133,19 +1100,28 @@ function BookingContent() {
             {/* ── 3. Registration & Flight Details Form ─────────────────────────── */}
             <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-gray-100 shadow-sm">
               <div className="mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shrink-0">
-                    <User size={16} className="text-gray-900" />
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shrink-0">
+                      <User size={16} className="text-gray-900" />
+                    </div>
+                    <div className="inline-flex flex-col">
+                      <h2 className="text-base sm:text-[17px] md:text-lg font-bold tracking-wide text-gray-900">
+                        Driver Details
+                      </h2>
+                      <span className="mt-1 block h-[2.5px] w-full rounded-full bg-amber-400" />
+                    </div>
                   </div>
-                  <div className="inline-flex flex-col">
-                    <h2 className="text-base sm:text-[17px] md:text-lg font-bold tracking-wide text-gray-900">
-                      Driver Details
-                    </h2>
-                    <span className="mt-1 block h-[2.5px] w-full rounded-full bg-amber-400" />
-                  </div>
+                  {isCustomer && (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <Lock size={12} className="text-emerald-700" /> Logged in: {activeUser?.name || activeUser?.email}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs sm:text-sm text-gray-500 mt-1 ml-11">
-                  Complete your details and flight info to confirm your reservation
+                  {isCustomer
+                    ? 'Your profile details are linked and verified for this reservation.'
+                    : 'Complete your details and flight info to confirm your reservation'}
                 </p>
               </div>
 
@@ -1182,14 +1158,21 @@ function BookingContent() {
                     <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 text-center">Title</label>
                     <button
                       type="button"
-                      onClick={() => setShowTitleDropdown(!showTitleDropdown)}
-                      className="w-full flex items-center justify-between pl-3 pr-2 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold text-gray-900 bg-white transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                      disabled={isCustomer}
+                      onClick={() => !isCustomer && setShowTitleDropdown(!showTitleDropdown)}
+                      className={`w-full flex items-center justify-between pl-3 pr-2 py-2.5 sm:py-3 rounded-xl border focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold transition-all shadow-2xs ${
+                        isCustomer
+                          ? 'bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed select-none'
+                          : 'border-gray-200 text-gray-900 bg-white cursor-pointer hover:border-gray-300'
+                      }`}
                     >
                       <span className="flex-1 text-center font-bold">{gender}</span>
-                      <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showTitleDropdown ? 'rotate-180' : ''}`} />
+                      {!isCustomer && (
+                        <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showTitleDropdown ? 'rotate-180' : ''}`} />
+                      )}
                     </button>
 
-                    {showTitleDropdown && (
+                    {!isCustomer && showTitleDropdown && (
                       <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-30 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                         {['Mr.', 'Mrs.', 'Miss', 'Ms.'].map((title) => {
                           const isSelected = gender === title;
@@ -1222,10 +1205,15 @@ function BookingContent() {
                       <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
+                        disabled={isCustomer}
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         placeholder="First name..."
-                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                        className={`w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium placeholder:text-gray-400 ${
+                          isCustomer
+                            ? 'bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed select-none'
+                            : 'border-gray-200 text-gray-900 bg-white'
+                        }`}
                       />
                     </div>
                   </div>
@@ -1237,10 +1225,15 @@ function BookingContent() {
                       <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
+                        disabled={isCustomer}
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         placeholder="Last name..."
-                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                        className={`w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium placeholder:text-gray-400 ${
+                          isCustomer
+                            ? 'bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed select-none'
+                            : 'border-gray-200 text-gray-900 bg-white'
+                        }`}
                       />
                     </div>
                   </div>
@@ -1254,16 +1247,23 @@ function BookingContent() {
                     <div ref={mobileCodeDropdownRef} className="relative w-36 sm:w-40 shrink-0">
                       <button
                         type="button"
-                        onClick={() => setShowMobileCodeDropdown(!showMobileCodeDropdown)}
-                        className="w-full flex items-center justify-between gap-1.5 pl-3 pr-2.5 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold text-gray-900 bg-white transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                        disabled={isCustomer}
+                        onClick={() => !isCustomer && setShowMobileCodeDropdown(!showMobileCodeDropdown)}
+                        className={`w-full flex items-center justify-between gap-1.5 pl-3 pr-2.5 py-3 rounded-xl border focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-xs sm:text-sm font-semibold transition-all shadow-2xs ${
+                          isCustomer
+                            ? 'bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed select-none'
+                            : 'border-gray-200 text-gray-900 bg-white cursor-pointer hover:border-gray-300'
+                        }`}
                       >
-                        <span className="truncate text-left font-bold text-gray-900">
+                        <span className="truncate text-left font-bold">
                           {mobileCode} ({COUNTRY_CODES.find(c => `+${c.code}` === mobileCode)?.country || ''})
                         </span>
-                        <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showMobileCodeDropdown ? 'rotate-180' : ''}`} />
+                        {!isCustomer && (
+                          <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showMobileCodeDropdown ? 'rotate-180' : ''}`} />
+                        )}
                       </button>
 
-                      {showMobileCodeDropdown && (
+                      {!isCustomer && showMobileCodeDropdown && (
                         <div className="absolute top-full left-0 mt-1.5 w-60 sm:w-64 bg-white border border-gray-150 rounded-xl shadow-xl z-30 py-1.5 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
                           {COUNTRY_CODES.map((c) => {
                             const isSelected = mobileCode === `+${c.code}`;
@@ -1295,10 +1295,15 @@ function BookingContent() {
 
                     <input
                       type="tel"
+                      disabled={isCustomer}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                       placeholder="Phone number..."
-                      className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                      className={`flex-1 min-w-0 px-4 py-3 rounded-xl border focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium placeholder:text-gray-400 ${
+                        isCustomer
+                          ? 'bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed select-none'
+                          : 'border-gray-200 text-gray-900 bg-white'
+                      }`}
                     />
                   </div>
                 </div>
@@ -1309,18 +1314,25 @@ function BookingContent() {
                   <div ref={countryDropdownRef} className="relative">
                     <button
                       type="button"
-                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                      className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 bg-white cursor-pointer shadow-2xs hover:border-gray-300 transition-all"
+                      disabled={isCustomer}
+                      onClick={() => !isCustomer && setShowCountryDropdown(!showCountryDropdown)}
+                      className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium shadow-2xs transition-all ${
+                        isCustomer
+                          ? 'bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed select-none'
+                          : 'border-gray-200 text-gray-900 bg-white cursor-pointer hover:border-gray-300'
+                      }`}
                     >
                       <span className="flex items-center gap-2 text-left truncate">
                         <Globe size={16} className="text-gray-400 shrink-0" />
-                        <span className={country ? 'text-gray-900 truncate font-semibold' : 'text-gray-400'}>
+                        <span className={country ? 'truncate font-semibold' : 'text-gray-400'}>
                           {country || 'Select country...'}
                         </span>
                       </span>
-                      <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                      {!isCustomer && (
+                        <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                      )}
                     </button>
-                    {showCountryDropdown && (
+                    {!isCustomer && showCountryDropdown && (
                       <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-gray-150 rounded-xl shadow-xl z-30 max-h-60 overflow-y-auto py-1 animate-in fade-in zoom-in-95 duration-150">
                         {worldCountries.map((c) => {
                           const isSelected = country === c.name;
@@ -1351,10 +1363,15 @@ function BookingContent() {
                       <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="email"
+                        disabled={isCustomer}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="E-mail..."
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                        className={`w-full pl-10 pr-4 py-3 rounded-xl border focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm font-medium placeholder:text-gray-400 ${
+                          isCustomer
+                            ? 'bg-gray-100 text-gray-600 border-gray-200 cursor-not-allowed select-none'
+                            : 'border-gray-200 text-gray-900 bg-white'
+                        }`}
                       />
                     </div>
                   </div>

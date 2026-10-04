@@ -246,6 +246,8 @@ export default function AdminExtrasPricingSection() {
     return Array.from(new Set(overviewData.map((s) => s.country).filter(Boolean))).sort() as string[];
   }, [overviewData]);
 
+  const isSupplierDisabled = (s: any) => Boolean(s.is_all_disabled || (s.effective_enabled_count ?? 0) === 0);
+
   const filteredOverviewData = useMemo(() => {
     return overviewData.filter((s) => {
       // 1. Text search
@@ -260,8 +262,8 @@ export default function AdminExtrasPricingSection() {
       }
 
       // 2. Status filter
-      if (overviewStatusFilter === "enabled" && s.is_all_disabled) return false;
-      if (overviewStatusFilter === "disabled" && !s.is_all_disabled) return false;
+      if (overviewStatusFilter === "enabled" && isSupplierDisabled(s)) return false;
+      if (overviewStatusFilter === "disabled" && !isSupplierDisabled(s)) return false;
 
       // 3. Country filter
       if (overviewCountryFilter !== "all" && s.country !== overviewCountryFilter) return false;
@@ -692,7 +694,7 @@ export default function AdminExtrasPricingSection() {
               </div>
               <div>
                 <div className="text-xl font-black text-emerald-600">
-                  {overviewData.filter((s) => !s.is_all_disabled).length}
+                  {overviewData.filter((s) => !isSupplierDisabled(s)).length}
                 </div>
                 <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
                   Active Add-ons Enabled
@@ -706,7 +708,7 @@ export default function AdminExtrasPricingSection() {
               </div>
               <div>
                 <div className="text-xl font-black text-rose-600">
-                  {overviewData.filter((s) => s.is_all_disabled).length}
+                  {overviewData.filter((s) => isSupplierDisabled(s)).length}
                 </div>
                 <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
                   All Add-ons Cancelled / Disabled
@@ -873,7 +875,7 @@ export default function AdminExtrasPricingSection() {
                             className={`company-fallback-badge w-full h-full items-center justify-center font-black text-xs uppercase rounded-lg ${
                               logoUrl ? "hidden" : "flex"
                             } ${
-                              supplier.is_all_disabled
+                              isSupplierDisabled(supplier)
                                 ? "bg-rose-50 text-rose-700"
                                 : "bg-emerald-50 text-emerald-800"
                             }`}
@@ -890,7 +892,7 @@ export default function AdminExtrasPricingSection() {
                                 {supplier.country}
                               </span>
                             )}
-                            {supplier.is_all_disabled ? (
+                            {isSupplierDisabled(supplier) ? (
                               <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                                 <XCircle size={12} /> All Extras Disabled
                               </span>
@@ -908,7 +910,7 @@ export default function AdminExtrasPricingSection() {
 
                       {/* Supplier Actions & Chevron */}
                       <div className="flex items-center gap-2 flex-wrap shrink-0">
-                        {supplier.is_all_disabled ? (
+                        {isSupplierDisabled(supplier) ? (
                           <button
                             type="button"
                             onClick={(e) => {

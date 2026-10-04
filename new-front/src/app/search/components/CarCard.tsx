@@ -439,7 +439,7 @@ export default function CarCard({
     }
   };
 
-  const hasExtras = (vehicle as any).has_extras !== false;
+  const hasExtras = Boolean((vehicle as any)?.has_extras);
   const targetBookingPage = hasExtras ? '/options' : '/booking';
   const bookUrl = `${targetBookingPage}?vehicleId=${vehicle.id}&bookId=${selectedBranchId ? (branchVehicleIds[selectedBranchId] || vehicle.id) : vehicle.id}`;
 

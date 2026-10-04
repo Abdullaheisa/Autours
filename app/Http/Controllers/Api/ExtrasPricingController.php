@@ -130,28 +130,28 @@ class ExtrasPricingController extends Controller
 
         $branchCurrency = $this->resolveScopeCurrency($branchObj, $country, $supplierId ? (int)$supplierId : null);
 
+        // If no supplier can be resolved, do not return any company extras
+        if (!$supplierId) {
+            return response()->json([
+                'status' => true,
+                'data' => []
+            ]);
+        }
+
         $extras = Extra::where('is_active', true)->orderBy('id')->get();
 
         // Check legacy overrides on User model
         $legacyOverrides = [];
-        if ($supplierId) {
-            $supplierUser = User::find($supplierId);
-            if ($supplierUser && is_array($supplierUser->extras_pricing)) {
-                $legacyOverrides = $supplierUser->extras_pricing;
-            }
+        $supplierUser = User::find($supplierId);
+        if ($supplierUser && is_array($supplierUser->extras_pricing)) {
+            $legacyOverrides = $supplierUser->extras_pricing;
         }
 
-        // Determine if supplier has any configured extras in supplier_extras table
-        $supplierHasConfiguredExtras = false;
-        if ($supplierId) {
-            $supplierHasConfiguredExtras = SupplierExtra::where('supplier_id', $supplierId)->exists();
-        }
-
-        $result = $extras->map(function ($item) use ($supplierId, $branchId, $country, $legacyOverrides, $supplierHasConfiguredExtras, $branchCurrency) {
+        $result = $extras->map(function ($item) use ($supplierId, $branchId, $country, $legacyOverrides, $branchCurrency) {
             $override = null;
 
             // 1. Branch level override (highest priority)
-            if ($supplierId && $branchId) {
+            if ($branchId) {
                 $override = SupplierExtra::where('supplier_id', $supplierId)
                     ->where('branch_id', $branchId)
                     ->where('extra_id', $item->id)
@@ -159,7 +159,7 @@ class ExtrasPricingController extends Controller
             }
 
             // 2. Country level override (medium priority)
-            if (!$override && $supplierId && $country) {
+            if (!$override && $country) {
                 $override = SupplierExtra::where('supplier_id', $supplierId)
                     ->where('country', $country)
                     ->whereNull('branch_id')
@@ -168,7 +168,7 @@ class ExtrasPricingController extends Controller
             }
 
             // 3. Company level override (base priority)
-            if (!$override && $supplierId) {
+            if (!$override) {
                 $override = SupplierExtra::where('supplier_id', $supplierId)
                     ->whereNull('branch_id')
                     ->whereNull('country')
@@ -176,23 +176,24 @@ class ExtrasPricingController extends Controller
                     ->first();
             }
 
-            $basePrice = (float)$item->price;
-            $profitPercent = (float)($item->profit_percent ?? 0);
-
-            // Default to catalog active status unless explicitly overridden
-            $isEnabled = (bool)$item->is_active;
+            $basePrice = 0;
+            $profitPercent = 0;
+            $isEnabled = false;
 
             if ($override) {
                 $isEnabled = (bool)$override->is_enabled;
-                if ((float)$override->custom_price > 0) {
-                    $basePrice = (float)$override->custom_price;
-                }
+                $basePrice = (float)$override->custom_price;
                 if ((float)$override->profit_percent > 0) {
                     $profitPercent = (float)$override->profit_percent;
                 }
             } elseif (isset($legacyOverrides[$item->key])) {
                 $basePrice = (float)$legacyOverrides[$item->key];
                 $isEnabled = true;
+            }
+
+            // Strictly only return extras that the company has enabled! No demo fallback!
+            if (!$isEnabled) {
+                return null;
             }
 
             $finalPrice = $profitPercent > 0 
@@ -215,14 +216,11 @@ class ExtrasPricingController extends Controller
                 'max_qty' => (int)($item->max_qty ?? 1),
                 'badge' => $item->badge,
                 'is_active' => (bool)$item->is_active,
-                'is_enabled' => $isEnabled,
+                'is_enabled' => true,
                 'supplier_id' => $supplierId,
                 'branch_id' => $branchId,
             ];
-        })->filter(function ($item) {
-            // Only keep extras that are enabled for this supplier/branch
-            return $item['is_enabled'] === true;
-        })->values();
+        })->filter()->values();
 
         return response()->json([
             'status' => true,
@@ -428,8 +426,8 @@ class ExtrasPricingController extends Controller
                 'max_qty'        => (int)($extra->max_qty ?? 1),
                 'badge'          => $extra->badge,
                 // Supplier-specific fields
-                'enabled'        => $override ? (bool)$override->is_enabled : true,
-                'custom_price'   => $override ? (float)$override->custom_price : (float)$extra->price,
+                'enabled'        => $override ? (bool)$override->is_enabled : false,
+                'custom_price'   => $override ? (float)$override->custom_price : 0,
                 'profit_percent' => $override ? (float)$override->profit_percent : 0,
             ];
         });
@@ -540,8 +538,8 @@ class ExtrasPricingController extends Controller
                 'type'           => $extra->type ?? 'boolean',
                 'max_qty'        => (int)($extra->max_qty ?? 1),
                 'badge'          => $extra->badge,
-                'enabled'        => $override ? (bool)$override->is_enabled : (bool)$extra->is_active,
-                'custom_price'   => $override ? (float)$override->custom_price : (float)$extra->price,
+                'enabled'        => $override ? (bool)$override->is_enabled : false,
+                'custom_price'   => $override ? (float)$override->custom_price : 0,
                 'profit_percent' => $override ? (float)$override->profit_percent : (float)($extra->profit_percent ?? 0),
             ];
         });
@@ -702,18 +700,17 @@ class ExtrasPricingController extends Controller
             $disabledCount = $companyOverrides->where('is_enabled', false)->count();
             $enabledCount = $companyOverrides->where('is_enabled', true)->count();
 
-            $isAllDisabled = ($activeExtrasCount > 0 && $disabledCount >= $activeExtrasCount);
-            $effectiveEnabledCount = $isAllDisabled ? 0 : ($companyOverrides->isEmpty() ? $activeExtrasCount : $enabledCount);
+            $isAllDisabled = ($enabledCount === 0);
+            $effectiveEnabledCount = $enabledCount;
 
-            $branches = ($supplier->branches ?? collect())->map(function ($branch) use ($supplier, $allOverrides, $activeExtrasCount, $isAllDisabled) {
+            $branches = ($supplier->branches ?? collect())->map(function ($branch) use ($supplier, $allOverrides, $isAllDisabled) {
                 $branchOverrides = $allOverrides->where('supplier_id', $supplier->id)
                     ->where('branch_id', $branch->id);
 
-                $bDisabled = $branchOverrides->where('is_enabled', false)->count();
                 $bEnabled = $branchOverrides->where('is_enabled', true)->count();
 
                 $branchAllDisabled = $branchOverrides->isNotEmpty()
-                    ? ($activeExtrasCount > 0 && $bDisabled >= $activeExtrasCount)
+                    ? ($bEnabled === 0)
                     : $isAllDisabled;
 
                 return [
