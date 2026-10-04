@@ -33,7 +33,7 @@ trait BeraIntegrationTrait
         $pickupTime = Carbon::parse($rental->start_time)->format('H:i');
         $returnTime = Carbon::parse($rental->end_time)->format('H:i');
         
-        $pickupLoc = $rental->vehicle->branch->abriviation ?? '';
+        $pickupLoc = $rental->vehicle->branch->station_id ?? $rental->vehicle->branch->abriviation ?? '';
         $returnLoc = $pickupLoc; // Can be adapted if dropoff is different
         
         $vehicles = $service->getVehicles($pickupLoc, $returnLoc, $pickupDate, $returnDate, $pickupTime, $returnTime);
@@ -43,7 +43,7 @@ trait BeraIntegrationTrait
         
         // Find vehicle by ID or md5(name)
         $targetId = '';
-        if (preg_match('/\[bera:(.+?)\]/', $rental->vehicle->description, $matches)) {
+        if (preg_match('/\[Bera-ID:(.+?)\]/i', $rental->vehicle->description, $matches)) {
             $targetId = $matches[1];
         } else {
             throw new \Exception("Vehicle description does not contain bera tag");
@@ -73,18 +73,25 @@ trait BeraIntegrationTrait
         
         $payload = [
             'reservationToken' => $reservationToken,
-            'vehicleId' => $vehicleId,
-            'campaignId' => 0,
-            'customerDetail' => [
-                'firstName' => trim($customer),
-                'lastName' => trim($lastName),
+            'customer' => [
+                'name' => trim($customer),
+                'surname' => trim($lastName),
+                'phoneNumber' => $phone,
                 'email' => $email,
-                'phone' => $phone,
-                'birthDate' => '1990-01-01',
-                'tcNumber' => '11111111111',
+                'birthDay' => '01.01.1990',
+                'personalNumber' => '11111111111'
             ],
-            'flightNumber' => $rental->flight_number ?? '',
-            'extras' => []
+            'pricing' => [
+                'paidAmount' => 0
+            ],
+            'payment' => [
+                'paymentType' => 4,
+                'extraPricePayToDelivery' => true,
+                'oneWayFeePayToDelivery' => true
+            ],
+            'flightNumberArrival' => $rental->flight_number ?? '',
+            'extras' => [],
+            'agencyReservationReference' => 'ATR-' . $rental->id
         ];
         
         $response = $service->createReservation($payload);

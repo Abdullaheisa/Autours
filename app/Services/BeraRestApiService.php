@@ -115,8 +115,20 @@ class BeraRestApiService
         $response = Http::withToken($this->token)
             ->post("{$this->baseUrl}/reservations/save", $payload);
 
-        if ($response->successful() && $response->json('success') === true) {
-            return $response->json('data');
+        if ($response->successful()) {
+            if ($response->json('success') === true) {
+                return $response->json('data');
+            } else {
+                $body = $response->json();
+                $msg = $body['message'] ?? 'Unknown API Error';
+                if (!empty($body['serviceMessage'])) {
+                    $svc = json_decode($body['serviceMessage'], true);
+                    if (!empty($svc['errors'])) {
+                        $msg .= ' | ' . json_encode($svc['errors']);
+                    }
+                }
+                throw new \Exception("Bera API Error: " . $msg);
+            }
         }
 
         Log::error('BeraRestApi: createReservation failed', [
@@ -125,7 +137,7 @@ class BeraRestApiService
             'request' => $payload,
         ]);
 
-        return null;
+        throw new \Exception("Bera API connection failed (HTTP " . $response->status() . ")");
     }
 
     public function cancelReservation(string $reservationNumber, string $customerEmail, string $cancelNote): bool
