@@ -915,11 +915,13 @@ export default function AdminExtrasPricingSection() {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleToggleSupplierExtras(supplier.supplier_id, true);
+                              setSelectedSupplierId(String(supplier.supplier_id));
+                              setSelectedBranchOverrideId("");
+                              setActiveTab("overrides");
                             }}
                             className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
                           >
-                            <CheckCircle2 size={13} /> Enable All Extras
+                            <CheckCircle2 size={13} /> Enable &amp; Set Pricing
                           </button>
                         ) : (
                           <button
@@ -998,7 +1000,9 @@ export default function AdminExtrasPricingSection() {
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleToggleSupplierExtras(supplier.supplier_id, true, branch.id);
+                                        setSelectedSupplierId(String(supplier.supplier_id));
+                                        setSelectedBranchOverrideId(String(branch.id));
+                                        setActiveTab("overrides");
                                       }}
                                       className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold cursor-pointer transition-colors"
                                     >

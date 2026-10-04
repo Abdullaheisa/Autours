@@ -273,17 +273,6 @@ export default function CompanyExtrasPricingSection() {
         showAction={false}
       />
 
-      {/* Global Currency Notice */}
-      <div className="mt-4 p-3.5 bg-blue-50/90 border border-blue-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs text-blue-950">
-        <div className="flex items-center gap-2.5">
-          <span className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
-            $
-          </span>
-          <p className="leading-relaxed">
-            <strong>Standard Currency:</strong> All extra add-on prices are entered in <strong>USD ($)</strong>. When customers view or book your cars, add-on prices automatically convert to the customer's selected currency using live exchange rates, identical to vehicle pricing.
-          </p>
-        </div>
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3 mt-4">
@@ -568,7 +557,7 @@ export default function CompanyExtrasPricingSection() {
                   className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
                   <CheckCircle2 size={13} />
-                  تفعيل كل الأوبشن بنقرة واحدة
+                  Enable All Extras
                 </button>
                 <button
                   type="button"
@@ -577,7 +566,7 @@ export default function CompanyExtrasPricingSection() {
                   className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 active:scale-95 disabled:opacity-50 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
                   <XCircle size={13} />
-                  إلغاء كل الأوبشن بنقرة واحدة
+                  Disable All Extras
                 </button>
               </div>
             </div>
@@ -591,14 +580,14 @@ export default function CompanyExtrasPricingSection() {
                   <XCircle size={20} />
                 </div>
                 <div>
-                  <p className="font-black text-sm text-rose-950">جميع الأوبشن والإضافات ملغاة ومعطلة لهذا النطاق</p>
+                  <p className="font-black text-sm text-rose-950">All extras and options are disabled for this scope</p>
                   <p className="text-rose-700 text-xs mt-0.5">
-                    لن تظهر أي إضافات للعملاء في البحث وصفحة الحجز لسيارات هذا النطاق (
+                    No extras will be shown to customers in search results or checkout for cars under this scope (
                     <strong>
                       {scope === "company"
-                        ? "الشركة بالكامل"
+                        ? "Whole Company"
                         : scope === "country"
-                        ? `دولة ${selectedCountry}`
+                        ? `Country: ${selectedCountry}`
                         : selectedBranchName}
                     </strong>
                     ).
@@ -611,7 +600,7 @@ export default function CompanyExtrasPricingSection() {
                 onClick={() => handleDirectToggleAll(true)}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shrink-0 cursor-pointer transition-colors shadow-xs flex items-center gap-1.5"
               >
-                <CheckCircle2 size={13} /> تفعيل كل الإضافات الآن
+                <CheckCircle2 size={13} /> Enable All Extras Now
               </button>
             </div>
           )}

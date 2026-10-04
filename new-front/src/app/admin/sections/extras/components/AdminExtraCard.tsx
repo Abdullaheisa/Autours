@@ -76,21 +76,9 @@ export default function AdminExtraCard({
       </div>
 
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-black text-gray-900">
-              {custPrice.toFixed(2)}
-            </span>
-            <span className="text-[10px] text-gray-400 font-semibold">/ rental</span>
-          </div>
-          {pp > 0 && (
-            <div className="text-[10px] mt-0.5">
-              <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200/60 font-bold">
-                +{pp}% profit
-              </span>
-              <span className="text-gray-400 ml-1">Cost: {base.toFixed(2)}</span>
-            </div>
-          )}
+        <div className="text-[11px] font-bold text-gray-400 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
+          Priced in Bulk / Per-Company
         </div>
 
         <div className="flex items-center gap-1">
