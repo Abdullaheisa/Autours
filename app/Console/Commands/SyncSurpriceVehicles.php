@@ -306,7 +306,9 @@ class SyncSurpriceVehicles extends Command
 
                     $vehicleInfo = $priceData['vehicle'];
                     $vehicleName = trim($vehicleInfo['description'] ?? $vehicleInfo['vehMakeModel'] ?? $groupId);
-                    $vehicleName = $this->normalizeVehicleName($vehicleName);
+                    $sippCode = (string) ($vehicleInfo['code'] ?? '');
+                    $transValue = \App\Services\SippDecoder::getLocalTransmissionName($sippCode);
+                    $vehicleName = $this->extractFirstVehicleName($vehicleName, $transValue);
                     $photoUrl = $vehicleInfo['pictureURL'] ?? null;
 
                     $dayPrice = $priceData['day_price'];
@@ -387,6 +389,7 @@ class SyncSurpriceVehicles extends Command
                     if ($existingVehicle) {
                         $vehicle = $existingVehicle;
                         $updateData = [
+                            'name' => $vehicleName,
                             'price' => $dayPrice,
                             'week_price' => $weekPrice,
                             'month_price' => $monthPrice,

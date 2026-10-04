@@ -109,6 +109,11 @@ class Kernel extends ConsoleKernel
          $schedule->command('zagel:sync-branches')->dailyAt('11:00')->withoutOverlapping();
          $schedule->command('zagel:sync-vehicles')->dailyAt('11:15')->withoutOverlapping();
 
+         // Sync Bera branches and full vehicles daily, prices every 2 hours
+         $schedule->command('bera:sync-branches --real')->dailyAt('01:00');
+         $schedule->command('bera:sync-vehicles --real')->dailyAt('01:15')->withoutOverlapping();
+         $schedule->command('bera:sync-vehicles --prices-only --real')->everyTwoHours()->withoutOverlapping();
+
          // Sync exchange rates every 4 hours without overlapping
          $schedule->command('sync:exchange-rates')->everyFourHours()->withoutOverlapping();
      }   
