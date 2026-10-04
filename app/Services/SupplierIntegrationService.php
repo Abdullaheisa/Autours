@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Services\BeraRestApiService;
+
 use App\Models\Rental;
 use App\Models\User;
 use Carbon\Carbon;
@@ -10,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class SupplierIntegrationService
 {
+    use BeraIntegrationTrait;
+
     /**
      * Send rental data to supplier's API or webhook based on integration type.
      *
@@ -28,6 +32,10 @@ class SupplierIntegrationService
         }
 
         // Route to the appropriate integration based on type
+        if ($supplier->integration_type === 'bera') {
+            return $this->sendViaBera($rental, $supplier, $eventType);
+        }
+
         if ($supplier->integration_type === 'kolaycar') {
             return $this->sendViaKolaycar($rental, $supplier, $eventType);
         }
@@ -127,6 +135,12 @@ class SupplierIntegrationService
     private function shouldSendToSupplier(User $supplier): bool
     {
         // For Kolaycar suppliers, we only need integration enabled + credentials
+        if ($supplier->integration_type === 'bera') {
+            return $supplier->integration === true
+                && !empty($supplier->api_key)
+                && !empty($supplier->api_password);
+        }
+
         if ($supplier->integration_type === 'kolaycar') {
             return $supplier->integration === true
                 && !empty($supplier->api_key)
@@ -597,7 +611,10 @@ class SupplierIntegrationService
              return;
         }
 
-        if ($supplier->integration_type === 'kolaycar') {
+        if ($supplier->integration_type === 'bera') {
+            $service = new BeraRestApiService($supplier->api_key, $supplier->api_password);
+            $this->createBeraReservation($service, $rental, $supplier);
+        } elseif ($supplier->integration_type === 'kolaycar') {
             $service = new KolaycarApiService($supplier->api_key, $supplier->api_password);
             $this->createKolaycarReservation($service, $rental, $supplier);
         } elseif ($supplier->integration_type === 'greenmotion') {
