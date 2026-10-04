@@ -182,6 +182,14 @@ class SyncBeraVehicles extends AbstractKolaycarVehicleSyncCommand
                     continue;
                 }
 
+                $vehicleName = str_ireplace(
+                    ['-Manuel-Benzin', '-Automatic-Benzin', '-Manuel-Dizel', '-Automatic-Dizel', '-Manuel', '-Automatic', '-Benzin', '-Dizel', ' Manuel', ' Automatic', ' Benzin', ' Dizel'], 
+                    '', 
+                    $vehicleName
+                );
+                $vehicleName = str_replace('-', ' ', $vehicleName);
+                $vehicleName = trim(preg_replace('/\s+/', ' ', $vehicleName));
+
                 $normalizedName = $this->normalizeVehicleName($vehicleName);
                 $transValue = $sipp ? \App\Services\SippDecoder::getLocalTransmissionName($sipp) : ($transmission ? $this->normalizeTransmission($transmission) : 'Manual');
 

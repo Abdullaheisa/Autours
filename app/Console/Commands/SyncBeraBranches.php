@@ -143,10 +143,10 @@ class SyncBeraBranches extends Command
             if (!empty($normData['airport_id'])) {
                 $branchData['airport_id'] = $normData['airport_id'];
                 $branchData['name'] = $normData['normalized_name'];
+                $branchData['adresse'] = $normData['normalized_name']; // Use normalized name for address so car card shows the branch name
                 $branchData['location'] = $normData['location'];
                 $branchData['city'] = $normData['location'];
                 $branchData['country'] = $normData['country'] ?? $branchData['country'];
-                $branchData['abriviation'] = $normData['abriviation'] ?? $branchData['abriviation'];
                 $branchData['location_type'] = 'Airport';
             } else {
                 $branchData['airport_id'] = null;
